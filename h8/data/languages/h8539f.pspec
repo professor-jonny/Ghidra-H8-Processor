@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+H8/539F Processor Spec for Ghidra
+ Based on the H8/520 pspec with corrections for H8/539F-specific peripherals.
+
+ Memory map (Maximum/Advanced mode, 24-bit addressing):
+   0x000000 - 0x01FFFF : 128KB internal flash ROM (vector table starts at 0x0000)
+   0xEE80   - 0xFFFF   : Internal RAM (~4.5KB, addresses vary — confirm from H8/538-539 HW manual)
+   0xFE80   - 0xFFFF   : On-chip peripheral I/O registers
+
+ Vector table: 80 vectors × 4 bytes = 0x0000–0x013C
+ Address convention used by Mitsubishi ROMs:
+   IDA/logical address = file offset + 0x10000
+   Ghidra: load ROM at base address 0x10000 OR load raw and set up segments accordingly.
+   The pspec symbols below use the RAW file offset form (0x0000 = file byte 0).
+
+ Interrupt vector assignments from H8/538-539 Hardware Manual (OMC942723072).
+ These differ from the H8/520 vector map in the NOTES.TXT reference material.
+ Vector numbers and SCI assignments should be verified against Table 4-1 of the
+ H8/538-539 Hardware Manual before treating as authoritative.
+-->
+<processor_spec>
+ <programcounter register="PC"/>
+ <data_space space="ram" />
+
+ <default_memory_blocks>
+   <!-- Internal RAM + I/O: single block covers 0xEE80–0xFFFF.
+        H8/539F on-chip RAM starts at 0xEE80 (ecurom.idc); I/O registers begin at
+        0xFE80 within the same region. Peripheral names are supplied by default_symbols.
+        Confirm exact RAM start/end from H8/538-539 Hardware Manual §2 memory map. -->
+   <memory_block name="RAM" start_address="ram:0xEE80" length="0x1180" mode="rwv" initialized="false"/>
+ </default_memory_blocks>
+
+ <default_symbols>
+   <!--
+     INTERRUPT VECTOR TABLE
+     H8/539F — 80 vectors, 4 bytes each, at ROM file offsets 0x0000–0x013C.
+     When loaded with base address 0x10000, these are at 0x10000–0x1013C.
+     The symbols below use the raw offsets (pre-base-address).
+
+     Vector assignments (from H8/538-539 HW Manual, Table 4-1):
+       0  = Reset (power-on PC)
+       1  = Reserved
+       2  = Invalid instruction
+       3  = DIVXU (divide by zero)
+       4  = TRAP/VS
+       5–7 = Reserved
+       8  = Address error
+       9  = Trace
+       10 = Reserved
+       11 = NMI
+       12–15 = Reserved
+       16–31 = TRAPA #0–#15
+       32 = IRQ0
+       33 = IRQ1
+       34 = IRQ2
+       35 = IRQ3
+       36 = IRQ4
+       37 = IRQ5
+       38 = IRQ6
+       39 = IRQ7
+       40 = FRT1.ICI (Input Capture)
+       41 = FRT1.OCIA (Output Compare A)
+       42 = FRT1.OCIB (Output Compare B)
+       43 = FRT1.FOVI (Overflow)
+       44 = FRT2.ICI
+       45 = FRT2.OCIA
+       46 = FRT2.OCIB
+       47 = FRT2.FOVI
+       48 = SCI3.ERI  (H8/539F has SCI3 at 0xFEC0, SCI1 at 0xFEC8, SCI2 at 0xFED0)
+       49 = SCI3.RXI
+       50 = SCI3.TXI
+       51 = SCI3.TEI
+       52 = SCI1.ERI
+       53 = SCI1.RXI  (TCU receive handler in the RVR transmission ROM)
+       54 = SCI1.TXI
+       55 = SCI1.TEI
+       56 = SCI2.ERI
+       57 = SCI2.RXI
+       58 = SCI2.TXI
+       59 = SCI2.TEI
+       60 = ADC.ADI
+       61–63 = Reserved
+       64–79 = Reserved / additional timers (H8/539F specific)
+
+     IMPORTANT: The SCI numbering above (SCI3/SCI1/SCI2 in that order at vectors 48–59)
+     is derived from the ecureom.idc register addresses and the empirical finding that
+     vector 53 = SCI1.RXI in the RVR transmission ROM. Cross-check against the
+     H8/538-539 Hardware Manual §4 interrupt vector table before finalising.
+   -->
+
+   <!-- Vector 0: Reset — power-on PC (entry point) -->
+   <symbol name="vec_reset" address="ram:0x000000" type="code_ptr" entry="true"/>
+   <!-- Vector 2: Invalid instruction -->
+   <symbol name="vec_invalid_insn" address="ram:0x000008" type="code_ptr" entry="true"/>
+   <!-- Vector 3: DIVXU -->
+   <symbol name="vec_divxu" address="ram:0x00000C" type="code_ptr" entry="true"/>
+   <!-- Vector 4: TRAP/VS -->
+   <symbol name="vec_trap_vs" address="ram:0x000010" type="code_ptr" entry="true"/>
+   <!-- Vector 8: Address error -->
+   <symbol name="vec_addr_error" address="ram:0x000020" type="code_ptr" entry="true"/>
+   <!-- Vector 9: Trace -->
+   <symbol name="vec_trace" address="ram:0x000024" type="code_ptr" entry="true"/>
+   <!-- Vector 11: NMI -->
+   <symbol name="vec_nmi" address="ram:0x00002C" type="code_ptr" entry="true"/>
+   <!-- Vectors 16–31: TRAPA #0–#15 -->
+   <symbol name="vec_trapa0"  address="ram:0x000040" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa1"  address="ram:0x000044" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa2"  address="ram:0x000048" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa3"  address="ram:0x00004C" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa4"  address="ram:0x000050" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa5"  address="ram:0x000054" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa6"  address="ram:0x000058" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa7"  address="ram:0x00005C" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa8"  address="ram:0x000060" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa9"  address="ram:0x000064" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa10" address="ram:0x000068" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa11" address="ram:0x00006C" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa12" address="ram:0x000070" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa13" address="ram:0x000074" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa14" address="ram:0x000078" type="code_ptr" entry="true"/>
+   <symbol name="vec_trapa15" address="ram:0x00007C" type="code_ptr" entry="true"/>
+   <!-- Vectors 32–39: IRQ0–IRQ7 -->
+   <symbol name="vec_irq0" address="ram:0x000080" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq1" address="ram:0x000084" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq2" address="ram:0x000088" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq3" address="ram:0x00008C" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq4" address="ram:0x000090" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq5" address="ram:0x000094" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq6" address="ram:0x000098" type="code_ptr" entry="true"/>
+   <symbol name="vec_irq7" address="ram:0x00009C" type="code_ptr" entry="true"/>
+   <!-- Vectors 40–43: FRT1 -->
+   <symbol name="vec_frt1_ici"  address="ram:0x0000A0" type="code_ptr" entry="true"/>
+   <symbol name="vec_frt1_ocia" address="ram:0x0000A4" type="code_ptr" entry="true"/>
+   <symbol name="vec_frt1_ocib" address="ram:0x0000A8" type="code_ptr" entry="true"/>
+   <symbol name="vec_frt1_fovi" address="ram:0x0000AC" type="code_ptr" entry="true"/>
+   <!-- Vectors 44–47: FRT2 -->
+   <symbol name="vec_frt2_ici"  address="ram:0x0000B0" type="code_ptr" entry="true"/>
+   <symbol name="vec_frt2_ocia" address="ram:0x0000B4" type="code_ptr" entry="true"/>
+   <symbol name="vec_frt2_ocib" address="ram:0x0000B8" type="code_ptr" entry="true"/>
+   <symbol name="vec_frt2_fovi" address="ram:0x0000BC" type="code_ptr" entry="true"/>
+   <!-- Vectors 48–51: SCI3 (0xFEC0) -->
+   <symbol name="vec_sci3_eri" address="ram:0x0000C0" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci3_rxi" address="ram:0x0000C4" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci3_txi" address="ram:0x0000C8" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci3_tei" address="ram:0x0000CC" type="code_ptr" entry="true"/>
+   <!-- Vectors 52–55: SCI1 (0xFEC8) — vec_sci1_rxi = vector 53 = the TCU receive handler -->
+   <symbol name="vec_sci1_eri" address="ram:0x0000D0" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci1_rxi" address="ram:0x0000D4" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci1_txi" address="ram:0x0000D8" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci1_tei" address="ram:0x0000DC" type="code_ptr" entry="true"/>
+   <!-- Vectors 56–59: SCI2 (0xFED0) -->
+   <symbol name="vec_sci2_eri" address="ram:0x0000E0" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci2_rxi" address="ram:0x0000E4" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci2_txi" address="ram:0x0000E8" type="code_ptr" entry="true"/>
+   <symbol name="vec_sci2_tei" address="ram:0x0000EC" type="code_ptr" entry="true"/>
+   <!-- Vector 60: ADC -->
+   <symbol name="vec_adc_adi" address="ram:0x0000F0" type="code_ptr" entry="true"/>
+
+   <!--
+     H8/539F ON-CHIP PERIPHERAL REGISTER NAMES
+     Extracted from ecurom.idc H8RegisterNames() function.
+     All addresses are absolute byte addresses in the H8/500 I/O address space.
+   -->
+
+   <!-- SCI3 (Serial Communication Interface 3) at 0xFEC0 -->
+   <symbol name="SCI3_SMR" address="ram:0xFEC0" entry="false"/>
+   <symbol name="SCI3_BRR" address="ram:0xFEC1" entry="false"/>
+   <symbol name="SCI3_SCR" address="ram:0xFEC2" entry="false"/>
+   <symbol name="SCI3_TDR" address="ram:0xFEC3" entry="false"/>
+   <symbol name="SCI3_SSR" address="ram:0xFEC4" entry="false"/>
+   <symbol name="SCI3_RDR" address="ram:0xFEC5" entry="false"/>
+
+   <!-- SCI1 (Serial Communication Interface 1) at 0xFEC8 -->
+   <symbol name="SCI1_SMR" address="ram:0xFEC8" entry="false"/>
+   <symbol name="SCI1_BRR" address="ram:0xFEC9" entry="false"/>
+   <symbol name="SCI1_SCR" address="ram:0xFECA" entry="false"/>
+   <symbol name="SCI1_TDR" address="ram:0xFECB" entry="false"/>
+   <symbol name="SCI1_SSR" address="ram:0xFECC" entry="false"/>
+   <symbol name="SCI1_RDR" address="ram:0xFECD" entry="false"/>
+
+   <!-- SCI2 (Serial Communication Interface 2) at 0xFED0 -->
+   <symbol name="SCI2_SMR" address="ram:0xFED0" entry="false"/>
+   <symbol name="SCI2_BRR" address="ram:0xFED1" entry="false"/>
+   <symbol name="SCI2_SCR" address="ram:0xFED2" entry="false"/>
+   <symbol name="SCI2_TDR" address="ram:0xFED3" entry="false"/>
+   <symbol name="SCI2_SSR" address="ram:0xFED4" entry="false"/>
+   <symbol name="SCI2_RDR" address="ram:0xFED5" entry="false"/>
+
+   <!-- Port I/O direction and data registers -->
+   <symbol name="P1DDR" address="ram:0xFE80" entry="false"/>
+   <symbol name="P2DDR" address="ram:0xFE81" entry="false"/>
+   <symbol name="P1DR"  address="ram:0xFE82" entry="false"/>
+   <symbol name="P2DR"  address="ram:0xFE83" entry="false"/>
+   <symbol name="P3DDR" address="ram:0xFE84" entry="false"/>
+   <symbol name="P4DDR" address="ram:0xFE85" entry="false"/>
+   <symbol name="P3DR"  address="ram:0xFE86" entry="false"/>
+   <symbol name="P4DR"  address="ram:0xFE87" entry="false"/>
+   <symbol name="P5DDR" address="ram:0xFE88" entry="false"/>
+   <symbol name="P6DDR" address="ram:0xFE89" entry="false"/>
+   <symbol name="P5DR"  address="ram:0xFE8A" entry="false"/>
+   <symbol name="P6DR"  address="ram:0xFE8B" entry="false"/>
+   <symbol name="P7DDR" address="ram:0xFE8C" entry="false"/>
+   <symbol name="P7DR"  address="ram:0xFE8E" entry="false"/>
+   <symbol name="P8DR"  address="ram:0xFE8F" entry="false"/>
+   <symbol name="PADDR" address="ram:0xFE91" entry="false"/>
+   <symbol name="P9DR"  address="ram:0xFE92" entry="false"/>
+   <symbol name="PADR"  address="ram:0xFE93" entry="false"/>
+   <symbol name="PBDDR" address="ram:0xFE94" entry="false"/>
+   <symbol name="PCDDR" address="ram:0xFE95" entry="false"/>
+   <symbol name="PBDR"  address="ram:0xFE96" entry="false"/>
+   <symbol name="PCDR"  address="ram:0xFE97" entry="false"/>
+   <symbol name="PBPCR" address="ram:0xFE98" entry="false"/>
+   <symbol name="PCPCR" address="ram:0xFE99" entry="false"/>
+   <symbol name="oCR"   address="ram:0xFE9A" entry="false"/>
+
+   <!-- A/D Converter result registers -->
+   <symbol name="ADDR0H" address="ram:0xFEA0" entry="false"/>
+   <symbol name="ADDR0L" address="ram:0xFEA1" entry="false"/>
+   <symbol name="ADDR1H" address="ram:0xFEA2" entry="false"/>
+   <symbol name="ADDR1L" address="ram:0xFEA3" entry="false"/>
+   <symbol name="ADDR2H" address="ram:0xFEA4" entry="false"/>
+   <symbol name="ADDR2L" address="ram:0xFEA5" entry="false"/>
+   <symbol name="ADDR3H" address="ram:0xFEA6" entry="false"/>
+   <symbol name="ADDR3L" address="ram:0xFEA7" entry="false"/>
+   <symbol name="ADDR4H" address="ram:0xFEA8" entry="false"/>
+   <symbol name="ADDR4L" address="ram:0xFEA9" entry="false"/>
+   <symbol name="ADDR5H" address="ram:0xFEAA" entry="false"/>
+   <symbol name="ADDR5L" address="ram:0xFEAB" entry="false"/>
+   <symbol name="ADDR6H" address="ram:0xFEAC" entry="false"/>
+   <symbol name="ADDR6L" address="ram:0xFEAD" entry="false"/>
+   <symbol name="ADDR7H" address="ram:0xFEAE" entry="false"/>
+   <symbol name="ADDR7L" address="ram:0xFEAF" entry="false"/>
+   <symbol name="ADDR8H" address="ram:0xFEB0" entry="false"/>
+   <symbol name="ADDR8L" address="ram:0xFEB1" entry="false"/>
+   <symbol name="ADDR9H" address="ram:0xFEB2" entry="false"/>
+   <symbol name="ADDR9L" address="ram:0xFEB3" entry="false"/>
+   <symbol name="ADDRAH" address="ram:0xFEB4" entry="false"/>
+   <symbol name="ADDRAL" address="ram:0xFEB5" entry="false"/>
+   <symbol name="ADDRBH" address="ram:0xFEB6" entry="false"/>
+   <symbol name="ADDRBL" address="ram:0xFEB7" entry="false"/>
+   <symbol name="ADCSR"  address="ram:0xFEB8" entry="false"/>
+   <symbol name="ADCR"   address="ram:0xFEB9" entry="false"/>
+
+   <!-- Miscellaneous control registers -->
+   <symbol name="PACR"   address="ram:0xFEDA" entry="false"/>
+   <symbol name="P67CR"  address="ram:0xFEDB" entry="false"/>
+   <symbol name="ADTRGR" address="ram:0xFEDC" entry="false"/>
+   <symbol name="IRQFR"  address="ram:0xFEDE" entry="false"/>
+   <symbol name="BCR"    address="ram:0xFEDF" entry="false"/>
+
+   <!-- Flash Memory Control Registers -->
+   <symbol name="FLMCR"    address="ram:0xFEE0" entry="false"/>
+   <symbol name="FLM_EBR1" address="ram:0xFEE1" entry="false"/>
+   <symbol name="FLM_EBR2" address="ram:0xFEE2" entry="false"/>
+   <symbol name="FLMER"    address="ram:0xFEEC" entry="false"/>
+   <symbol name="FLMSR"    address="ram:0xFEED" entry="false"/>
+
+   <!-- PWM Registers -->
+   <symbol name="PWM1_TCR"  address="ram:0xFEF0" entry="false"/>
+   <symbol name="PWM1_DTR"  address="ram:0xFEF1" entry="false"/>
+   <symbol name="PWM1_TCNT" address="ram:0xFEF2" entry="false"/>
+   <symbol name="PWM2_TCR"  address="ram:0xFEF4" entry="false"/>
+   <symbol name="PWM2_DTR"  address="ram:0xFEF5" entry="false"/>
+   <symbol name="PWM2_TCNT" address="ram:0xFEF6" entry="false"/>
+   <symbol name="PWM3_TCR"  address="ram:0xFEF8" entry="false"/>
+   <symbol name="PWM3_DTR"  address="ram:0xFEF9" entry="false"/>
+   <symbol name="PWM3_TCNT" address="ram:0xFEFA" entry="false"/>
+
+   <!-- Interrupt Controller -->
+   <symbol name="INTC_IPRA" address="ram:0xFF00" entry="false"/>
+   <symbol name="INTC_IPRB" address="ram:0xFF01" entry="false"/>
+   <symbol name="INTC_IPRC" address="ram:0xFF02" entry="false"/>
+   <symbol name="INTC_IPRD" address="ram:0xFF03" entry="false"/>
+   <symbol name="INTC_IPRE" address="ram:0xFF04" entry="false"/>
+   <symbol name="INTC_IPRF" address="ram:0xFF05" entry="false"/>
+
+   <!-- DTC (Data Transfer Controller) -->
+   <symbol name="DTC_DTEA" address="ram:0xFF08" entry="false"/>
+   <symbol name="DTC_DTEB" address="ram:0xFF09" entry="false"/>
+   <symbol name="DTC_DTEC" address="ram:0xFF0A" entry="false"/>
+   <symbol name="DTC_DTED" address="ram:0xFF0B" entry="false"/>
+   <symbol name="DTC_DTEE" address="ram:0xFF0C" entry="false"/>
+   <symbol name="DTC_DTEF" address="ram:0xFF0D" entry="false"/>
+
+   <!-- Watchdog Timer -->
+   <symbol name="WDT_TCSR" address="ram:0xFF10" entry="false"/>
+   <symbol name="WDT_TCNT" address="ram:0xFF11" entry="false"/>
+
+   <!-- System / Bus Control -->
+   <symbol name="WSC_WCR"    address="ram:0xFF14" entry="false"/>
+   <symbol name="RAMCR"      address="ram:0xFF15" entry="false"/>
+   <symbol name="BSC_ARBT"   address="ram:0xFF16" entry="false"/>
+   <symbol name="BSC_AR3T"   address="ram:0xFF17" entry="false"/>
+   <symbol name="SYSC_MDCR"  address="ram:0xFF19" entry="false"/>
+   <symbol name="SYSC_SBYCR" address="ram:0xFF1A" entry="false"/>
+   <symbol name="SYSC_BRCR"  address="ram:0xFF1B" entry="false"/>
+   <symbol name="SYSC_NMICR" address="ram:0xFF1C" entry="false"/>
+   <symbol name="SYSC_IRQCR" address="ram:0xFF1D" entry="false"/>
+   <symbol name="SYSC_writeCR" address="ram:0xFF1E" entry="false"/>
+   <symbol name="SYSC_RSTCSR" address="ram:0xFF1F" entry="false"/>
+
+   <!-- Timer 1 (16-bit, Channel A) -->
+   <symbol name="T1CRH"  address="ram:0xFF20" entry="false"/>
+   <symbol name="T1CRL"  address="ram:0xFF21" entry="false"/>
+   <symbol name="T1SRAH" address="ram:0xFF22" entry="false"/>
+   <symbol name="T1SRAL" address="ram:0xFF23" entry="false"/>
+   <symbol name="T1OERA" address="ram:0xFF24" entry="false"/>
+   <symbol name="TMDRA"  address="ram:0xFF25" entry="false"/>
+   <symbol name="T1CNTH" address="ram:0xFF26" entry="false"/>
+   <symbol name="T1CNTL" address="ram:0xFF27" entry="false"/>
+   <symbol name="T1GR1H" address="ram:0xFF28" entry="false"/>
+   <symbol name="T1GR1L" address="ram:0xFF29" entry="false"/>
+   <symbol name="T1GR2H" address="ram:0xFF2A" entry="false"/>
+   <symbol name="T1GR2L" address="ram:0xFF2B" entry="false"/>
+   <symbol name="T1DR1H" address="ram:0xFF2C" entry="false"/>
+   <symbol name="T1DR1L" address="ram:0xFF2D" entry="false"/>
+   <symbol name="T1DR2H" address="ram:0xFF2E" entry="false"/>
+   <symbol name="T1DR2L" address="ram:0xFF2F" entry="false"/>
+
+   <!-- Timer 1 (Channel B) -->
+   <symbol name="TSTR"   address="ram:0xFF30" entry="false"/>
+   <symbol name="T1CRA"  address="ram:0xFF31" entry="false"/>
+   <symbol name="T1SRBH" address="ram:0xFF32" entry="false"/>
+   <symbol name="T1SRBL" address="ram:0xFF33" entry="false"/>
+   <symbol name="T1OERB" address="ram:0xFF34" entry="false"/>
+   <symbol name="TMDRB"  address="ram:0xFF35" entry="false"/>
+   <symbol name="T1GR3H" address="ram:0xFF38" entry="false"/>
+   <symbol name="T1GR3L" address="ram:0xFF39" entry="false"/>
+   <symbol name="T1GR4H" address="ram:0xFF3A" entry="false"/>
+   <symbol name="T1GR4L" address="ram:0xFF3B" entry="false"/>
+   <symbol name="T1DR3H" address="ram:0xFF3C" entry="false"/>
+   <symbol name="T1DR3L" address="ram:0xFF3D" entry="false"/>
+   <symbol name="T1DR4H" address="ram:0xFF3E" entry="false"/>
+   <symbol name="T1DR4L" address="ram:0xFF3F" entry="false"/>
+
+   <!-- Timer 2 -->
+   <symbol name="T2CRH"  address="ram:0xFF40" entry="false"/>
+   <symbol name="T2CRL"  address="ram:0xFF41" entry="false"/>
+   <symbol name="T2SRH"  address="ram:0xFF42" entry="false"/>
+   <symbol name="T2SRL"  address="ram:0xFF43" entry="false"/>
+   <symbol name="T2OER"  address="ram:0xFF44" entry="false"/>
+   <symbol name="T2CNTH" address="ram:0xFF46" entry="false"/>
+   <symbol name="T2CNTL" address="ram:0xFF47" entry="false"/>
+   <symbol name="T2GR1H" address="ram:0xFF48" entry="false"/>
+   <symbol name="T2GR1L" address="ram:0xFF49" entry="false"/>
+   <symbol name="T2GR2H" address="ram:0xFF4A" entry="false"/>
+   <symbol name="T2GR2L" address="ram:0xFF4B" entry="false"/>
+   <symbol name="T2DR1H" address="ram:0xFF4C" entry="false"/>
+   <symbol name="T2DR1L" address="ram:0xFF4D" entry="false"/>
+   <symbol name="T2DR2H" address="ram:0xFF4E" entry="false"/>
+   <symbol name="T2DR2L" address="ram:0xFF4F" entry="false"/>
+
+   <!-- Timer 3 -->
+   <symbol name="T3CRH"  address="ram:0xFF50" entry="false"/>
+   <symbol name="T3CRL"  address="ram:0xFF51" entry="false"/>
+   <symbol name="T3SRH"  address="ram:0xFF52" entry="false"/>
+   <symbol name="T3SRL"  address="ram:0xFF53" entry="false"/>
+   <symbol name="T3OER"  address="ram:0xFF54" entry="false"/>
+   <symbol name="T3CNTH" address="ram:0xFF56" entry="false"/>
+   <symbol name="T3CNTL" address="ram:0xFF57" entry="false"/>
+   <symbol name="T3GR1H" address="ram:0xFF58" entry="false"/>
+   <symbol name="T3GR1L" address="ram:0xFF59" entry="false"/>
+   <symbol name="T3GR2H" address="ram:0xFF5A" entry="false"/>
+   <symbol name="T3GR2L" address="ram:0xFF5B" entry="false"/>
+   <symbol name="T3DR1H" address="ram:0xFF5C" entry="false"/>
+   <symbol name="T3DR1L" address="ram:0xFF5D" entry="false"/>
+   <symbol name="T3DR2H" address="ram:0xFF5E" entry="false"/>
+   <symbol name="T3DR2L" address="ram:0xFF5F" entry="false"/>
+
+   <!-- Timer 4 -->
+   <symbol name="T4CRH"  address="ram:0xFF60" entry="false"/>
+   <symbol name="T4CRL"  address="ram:0xFF61" entry="false"/>
+   <symbol name="T4SRH"  address="ram:0xFF62" entry="false"/>
+   <symbol name="T4SRL"  address="ram:0xFF63" entry="false"/>
+   <symbol name="T4OER"  address="ram:0xFF64" entry="false"/>
+   <symbol name="T4CNTH" address="ram:0xFF66" entry="false"/>
+   <symbol name="T4CNTL" address="ram:0xFF67" entry="false"/>
+   <symbol name="T4GR1H" address="ram:0xFF68" entry="false"/>
+   <symbol name="T4GR1L" address="ram:0xFF69" entry="false"/>
+   <symbol name="T4GR2H" address="ram:0xFF6A" entry="false"/>
+   <symbol name="T4GR2L" address="ram:0xFF6B" entry="false"/>
+   <symbol name="T4DR1H" address="ram:0xFF6C" entry="false"/>
+   <symbol name="T4DR1L" address="ram:0xFF6D" entry="false"/>
+   <symbol name="T4DR2H" address="ram:0xFF6E" entry="false"/>
+   <symbol name="T4DR2L" address="ram:0xFF6F" entry="false"/>
+
+   <!-- Timer 5 -->
+   <symbol name="T5CRH"  address="ram:0xFF70" entry="false"/>
+   <symbol name="T5CRL"  address="ram:0xFF71" entry="false"/>
+   <symbol name="T5SRH"  address="ram:0xFF72" entry="false"/>
+   <symbol name="T5SRL"  address="ram:0xFF73" entry="false"/>
+   <symbol name="T5OER"  address="ram:0xFF74" entry="false"/>
+   <symbol name="T5CNTH" address="ram:0xFF76" entry="false"/>
+   <symbol name="T5CNTL" address="ram:0xFF77" entry="false"/>
+   <symbol name="T5GR1H" address="ram:0xFF78" entry="false"/>
+   <symbol name="T5GR1L" address="ram:0xFF79" entry="false"/>
+   <symbol name="T5GR2H" address="ram:0xFF7A" entry="false"/>
+   <symbol name="T5GR2L" address="ram:0xFF7B" entry="false"/>
+   <symbol name="T5DR1H" address="ram:0xFF7C" entry="false"/>
+   <symbol name="T5DR1L" address="ram:0xFF7D" entry="false"/>
+   <symbol name="T5DR2H" address="ram:0xFF7E" entry="false"/>
+   <symbol name="T5DR2L" address="ram:0xFF7F" entry="false"/>
+
+   <!-- Timer 6 -->
+   <symbol name="T6CRH"  address="ram:0xFF80" entry="false"/>
+   <symbol name="T6CRL"  address="ram:0xFF81" entry="false"/>
+   <symbol name="T6SRH"  address="ram:0xFF82" entry="false"/>
+   <symbol name="T6SRL"  address="ram:0xFF83" entry="false"/>
+   <symbol name="T6OER"  address="ram:0xFF84" entry="false"/>
+   <symbol name="T6CNTH" address="ram:0xFF86" entry="false"/>
+   <symbol name="T6CNTL" address="ram:0xFF87" entry="false"/>
+   <symbol name="T6GR1H" address="ram:0xFF88" entry="false"/>
+   <symbol name="T6GR1L" address="ram:0xFF89" entry="false"/>
+   <symbol name="T6GR2H" address="ram:0xFF8A" entry="false"/>
+   <symbol name="T6GR2L" address="ram:0xFF8B" entry="false"/>
+
+   <!-- Timer 7 -->
+   <symbol name="T7CRH"  address="ram:0xFF90" entry="false"/>
+   <symbol name="T7CRL"  address="ram:0xFF91" entry="false"/>
+   <symbol name="T7SRH"  address="ram:0xFF92" entry="false"/>
+   <symbol name="T7SRL"  address="ram:0xFF93" entry="false"/>
+   <symbol name="T7OER"  address="ram:0xFF94" entry="false"/>
+   <symbol name="T7CNTH" address="ram:0xFF96" entry="false"/>
+   <symbol name="T7CNTL" address="ram:0xFF97" entry="false"/>
+   <symbol name="T7GR1H" address="ram:0xFF98" entry="false"/>
+   <symbol name="T7GR1L" address="ram:0xFF99" entry="false"/>
+   <symbol name="T7GR2H" address="ram:0xFF9A" entry="false"/>
+   <symbol name="T7GR2L" address="ram:0xFF9B" entry="false"/>
+
+   <!-- Multifunction Timer (MLT) -->
+   <symbol name="MLTCR"  address="ram:0xFFA0" entry="false"/>
+   <symbol name="MLTBR"  address="ram:0xFFA1" entry="false"/>
+   <symbol name="MLTMAR" address="ram:0xFFA2" entry="false"/>
+   <symbol name="MLTAR"  address="ram:0xFFA3" entry="false"/>
+
+   <!-- Multiplier registers -->
+   <symbol name="MULT_CA"  address="ram:0xFFB0" entry="false"/>
+   <symbol name="MULT_CB"  address="ram:0xFFB2" entry="false"/>
+   <symbol name="MULT_CC"  address="ram:0xFFB4" entry="false"/>
+   <symbol name="MULT_XH"  address="ram:0xFFB6" entry="false"/>
+   <symbol name="MULT_H"   address="ram:0xFFB8" entry="false"/>
+   <symbol name="MULT_L"   address="ram:0xFFBA" entry="false"/>
+   <symbol name="MULT_MR"  address="ram:0xFFBC" entry="false"/>
+   <symbol name="MULT_MMR" address="ram:0xFFBE" entry="false"/>
+
+   <!--
+     Known anchor points from RVR Mitsubishi ECU ROM analysis (file-offset form):
+       RVR transmission ROM file offset 0x16267 = SCI1 RXI handler (vector 53 target)
+       RAM cells of interest: 0xF25C, 0xF25E (receive buffer), 0xF3A2 (status flag byte)
+   -->
+ </default_symbols>
+</processor_spec>
