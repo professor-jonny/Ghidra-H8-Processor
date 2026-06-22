@@ -15,19 +15,22 @@ define alignment=1;
 
 #define space DATA type=ram_space size=4;
 #define space CODE type=ram_space size=4 default;
-define space ram type=ram_space size=3 default;
+define space ram      type=ram_space    size=4 default;
 define space register type=register_space size=1;
 
 define register offset=0x0 size=2 [ R0  R1  R2  R3  R4  R5   _    FP    _   _    SP];
 define register offset=0x0 size=1 [_ _ _ _ _ _ _ _ _ _ _ _ _ FPH _ _ _ _ _ TP _ _];
-define register offset=0x0d size=3 [FP24];
-define register offset=0x13 size=3 [SP24];
+# SP24 and FP24 are 4-byte Ghidra pseudo-registers representing TP:SP and TP:FP
+# The hardware computes these as (TP << 16) | SP and (TP << 16) | FP
+# They are kept in sync by the PUSH/POP macros and stack instructions
+define register offset=0x90 size=4 [SP24];
+define register offset=0x94 size=4 [FP24];
 define register offset=0x20 size=2 [_ SR];
 define register offset=0x20 size=1 [_ _ _ CCR _ DP EP _ BR];
 define register offset=0x40 size=4 [contextreg];
 define register offset=0x60 size=1 [CF VF ZF NF];
 define register offset=0x80 size=1 [CP];
-define register offset=0x80 size=3 [PC];
+define register offset=0x80 size=4 [PC];
 define register offset=0x81 size=2 [PC16];
 
 define context contextreg
@@ -219,13 +222,15 @@ macro CollectFlags()
 macro PUSH(val)
 {
 	SP24 = SP24 - 2;
+	SP   = SP24:2;
 	*:2 SP24 = val;
 }
 
 macro POP(reg)
 {
-	reg = *:2 SP24;
+	reg  = *:2 SP24;
 	SP24 = SP24 + 2;
+	SP   = SP24:2;
 }
 
 macro subflags(op1, op2)
@@ -275,7 +280,7 @@ macro CheckDivide(divisor)
 	#goto inst_next;
 
 	# # I don't know if exceptions should be encoded in the PCode, but I expect it'll make the decompilation messy, so probably not.
-	# #vectorAddress:3 = *[ram]:3 0xD:3; # DIVXU is at 0xC is maximum mode, but offset by 1 to account for the padding up to 32-bit pointers in memory
+	# #vectorAddress:4 = *:3 0xD:3; # DIVXU is at 0xC is maximum mode, but offset by 1 to account for the padding up to 32-bit pointers in memory
 	# #call [vectorAddress];
 
 	#<Ok>
@@ -368,10 +373,10 @@ s16: "#"^disp16^":16"                   is disp16 { export *[const]:2 disp16; }
 # Rs24: register-indirect page target for PJMP/PJSR.
 # Per H8/500 Programming Manual 2.2.33/2.2.34: low byte of Rn -> CP (page),
 # all of Rn+1 -> PC. n must be even (0, 2, 4, or 6=FP/SP pair).
-Rs24: "R0" is Rs = 0 { local addr:3 = (zext(R0:1) << 16) | zext(R1); export addr; }
-Rs24: "R2" is Rs = 2 { local addr:3 = (zext(R2:1) << 16) | zext(R3); export addr; }
-Rs24: "R4" is Rs = 4 { local addr:3 = (zext(R4:1) << 16) | zext(R5); export addr; }
-Rs24: "FP" is Rs = 6 { local addr:3 = (zext(FP:1) << 16) | zext(SP); export addr; }
+Rs24: "R0" is Rs = 0 { local addr:4 = (zext(R0:1) << 16) | zext(R1); export addr; }
+Rs24: "R2" is Rs = 2 { local addr:4 = (zext(R2:1) << 16) | zext(R3); export addr; }
+Rs24: "R4" is Rs = 4 { local addr:4 = (zext(R4:1) << 16) | zext(R5); export addr; }
+Rs24: "FP" is Rs = 6 { local addr:4 = (zext(FP:1) << 16) | zext(SP); export addr; }
 Rs32: "R0" is Rs = 0 { value:4 = (zext(R0) << 16) | zext(R1); export value; }
 Rs32: "R2" is Rs = 2 { value:4 = (zext(R2) << 16) | zext(R3); export value; }
 Rs32: "R4" is Rs = 4 { value:4 = (zext(R4) << 16) | zext(R5); export value; }
@@ -382,48 +387,48 @@ Rn32: "R4" is Rn = 4 { value:4 = (zext(R4) << 16) | zext(R5); export value; }
 Rn32: "FP" is Rn = 6 { value:4 = (zext(FP) << 16) | zext(SP); export value; }
 
 addr8_br: addr8 is addr8 {
-	local addr:3 = (zext(BR) << 8) | addr8;
+	local addr:4 = (zext(BR) << 8) | addr8;
 	export addr;
 }
 
-addr16_dp:        addr16             is addr16 { local addr:3 = (zext(DP) << 16)| (addr16);  export addr; }
+addr16_dp:        addr16             is addr16 { local addr:4 = (zext(DP) << 16)| (addr16);  export addr; }
 
-disp8_banked:     disp8              is disp8  & targetBase=0 { local addrLo:2 = (R0 + disp8); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=1 { local addrLo:2 = (R1 + disp8); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=2 { local addrLo:2 = (R2 + disp8); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=3 { local addrLo:2 = (R3 + disp8); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=4 { local addrLo:2 = (R4 + disp8); local addr:3 = (zext(EP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=5 { local addrLo:2 = (R5 + disp8); local addr:3 = (zext(EP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=6 { local addrLo:2 = (FP + disp8); local addr:3 = (zext(TP) << 16) | zext(addrLo);  export addr; }
-disp8_banked:     disp8              is disp8  & targetBase=7 { local addrLo:2 = (SP + disp8); local addr:3 = (zext(TP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=0 { local addrLo:2 = (R0 + disp8); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=1 { local addrLo:2 = (R1 + disp8); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=2 { local addrLo:2 = (R2 + disp8); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=3 { local addrLo:2 = (R3 + disp8); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=4 { local addrLo:2 = (R4 + disp8); local addr:4 = (zext(EP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=5 { local addrLo:2 = (R5 + disp8); local addr:4 = (zext(EP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=6 { local addrLo:2 = (FP + disp8); local addr:4 = (zext(TP) << 16) | zext(addrLo);  export addr; }
+disp8_banked:     disp8              is disp8  & targetBase=7 { local addrLo:2 = (SP + disp8); local addr:4 = (zext(TP) << 16) | zext(addrLo);  export addr; }
 
-disp16_banked:    disp16             is disp16 & targetBase=0 { local addrLo:2 = (R0 + disp16); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=1 { local addrLo:2 = (R1 + disp16); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=2 { local addrLo:2 = (R2 + disp16); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=3 { local addrLo:2 = (R3 + disp16); local addr:3 = (zext(DP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=4 { local addrLo:2 = (R4 + disp16); local addr:3 = (zext(EP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=5 { local addrLo:2 = (R5 + disp16); local addr:3 = (zext(EP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=6 { local addrLo:2 = (FP + disp16); local addr:3 = (zext(TP) << 16) | zext(addrLo);  export addr; }
-disp16_banked:    disp16             is disp16 & targetBase=7 { local addrLo:2 = (SP + disp16); local addr:3 = (zext(TP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=0 { local addrLo:2 = (R0 + disp16); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=1 { local addrLo:2 = (R1 + disp16); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=2 { local addrLo:2 = (R2 + disp16); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=3 { local addrLo:2 = (R3 + disp16); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=4 { local addrLo:2 = (R4 + disp16); local addr:4 = (zext(EP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=5 { local addrLo:2 = (R5 + disp16); local addr:4 = (zext(EP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=6 { local addrLo:2 = (FP + disp16); local addr:4 = (zext(TP) << 16) | zext(addrLo);  export addr; }
+disp16_banked:    disp16             is disp16 & targetBase=7 { local addrLo:2 = (SP + disp16); local addr:4 = (zext(TP) << 16) | zext(addrLo);  export addr; }
 
-#Rn_banked:        Rn                 is Rn { local addr:3 = zext(Rn); bankify(addr, (&:1 Rn) >> 1); export addr; }
-Rn_banked:       "R0"              is Rn=0 { local addr:3 = (zext(DP) << 16) | zext(R0); export addr; }
-Rn_banked:       "R1"              is Rn=1 { local addr:3 = (zext(DP) << 16) | zext(R1); export addr; }
-Rn_banked:       "R2"              is Rn=2 { local addr:3 = (zext(DP) << 16) | zext(R2); export addr; }
-Rn_banked:       "R3"              is Rn=3 { local addr:3 = (zext(DP) << 16) | zext(R3); export addr; }
-Rn_banked:       "R4"              is Rn=4 { local addr:3 = (zext(EP) << 16) | zext(R4); export addr; }
-Rn_banked:       "R5"              is Rn=5 { local addr:3 = (zext(EP) << 16) | zext(R5); export addr; }
-Rn_banked:       "FP"              is Rn=6 { local addr:3 = FP24                       ; export addr; }
-Rn_banked:       "SP"              is Rn=7 { local addr:3 = SP24                       ; export addr; }
+#Rn_banked:        Rn                 is Rn { local addr:4 = zext(Rn); bankify(addr, (&:1 Rn) >> 1); export addr; }
+Rn_banked:       "R0"              is Rn=0 { local addr:4 = (zext(DP) << 16) | zext(R0); export addr; }
+Rn_banked:       "R1"              is Rn=1 { local addr:4 = (zext(DP) << 16) | zext(R1); export addr; }
+Rn_banked:       "R2"              is Rn=2 { local addr:4 = (zext(DP) << 16) | zext(R2); export addr; }
+Rn_banked:       "R3"              is Rn=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
+Rn_banked:       "R4"              is Rn=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
+Rn_banked:       "R5"              is Rn=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
+Rn_banked:       "FP"              is Rn=6 { local addr:4 = FP24                       ; export addr; }
+Rn_banked:       "SP"              is Rn=7 { local addr:4 = SP24                       ; export addr; }
 
-Rs_banked:       "R0"              is Rs=0 { local addr:3 = (zext(DP) << 16) | zext(R0); export addr; }
-Rs_banked:       "R1"              is Rs=1 { local addr:3 = (zext(DP) << 16) | zext(R1); export addr; }
-Rs_banked:       "R2"              is Rs=2 { local addr:3 = (zext(DP) << 16) | zext(R2); export addr; }
-Rs_banked:       "R3"              is Rs=3 { local addr:3 = (zext(DP) << 16) | zext(R3); export addr; }
-Rs_banked:       "R4"              is Rs=4 { local addr:3 = (zext(EP) << 16) | zext(R4); export addr; }
-Rs_banked:       "R5"              is Rs=5 { local addr:3 = (zext(EP) << 16) | zext(R5); export addr; }
-Rs_banked:       "FP"              is Rs=6 { local addr:3 = FP24                       ; export addr; }
-Rs_banked:       "SP"              is Rs=7 { local addr:3 = SP24                       ; export addr; }
+Rs_banked:       "R0"              is Rs=0 { local addr:4 = (zext(DP) << 16) | zext(R0); export addr; }
+Rs_banked:       "R1"              is Rs=1 { local addr:4 = (zext(DP) << 16) | zext(R1); export addr; }
+Rs_banked:       "R2"              is Rs=2 { local addr:4 = (zext(DP) << 16) | zext(R2); export addr; }
+Rs_banked:       "R3"              is Rs=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
+Rs_banked:       "R4"              is Rs=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
+Rs_banked:       "R5"              is Rs=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
+Rs_banked:       "FP"              is Rs=6 { local addr:4 = FP24                       ; export addr; }
+Rs_banked:       "SP"              is Rs=7 { local addr:4 = SP24                       ; export addr; }
 
 r0_push: "R0 " is reglist0=1 { SP24 = SP24 - 2; *:2 SP24 = R0; }
 r1_push: "R1 " is reglist1=1 { SP24 = SP24 - 2; *:2 SP24 = R1; }
@@ -1563,22 +1568,22 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 #       jump only (cannot cross a page boundary), so CP is left unchanged here.
 :jmp       "@"^Rn_banked                   is opcode_special=0x11; mode = 13 & sz = 0 & Rn_banked
 {
-	addr:3 = (zext(CP) << 16) | zext(Rn_banked:2);
+	addr:4 = (zext(CP) << 16) | zext(Rn_banked:2);
 	goto [addr];
 }
 :jmp       "@"^addr16_dp^":16"         is opcode_special=0x10; addr16_dp [targetBase=0;]
 {
-	addr:3 = zext(*:2 addr16_dp) | (zext(CP) << 16);
+	addr:4 = zext(*:2 addr16_dp) | (zext(CP) << 16);
 	goto [addr];
 }
 :jmp       "@("^disp8^":8,"^Rs_banked^")"  is opcode_special=0x11; opcode=28 & Rs_banked; disp8
 {
-	addr:3 = zext(*:2 (Rs_banked + disp8)) | (zext(CP) << 16);
+	addr:4 = zext(*:2 (Rs_banked + disp8)) | (zext(CP) << 16);
 	goto [addr];
 }
 :jmp       "@("^disp16_banked^":8,"^Rs^")" is opcode_special=0x11; opcode=30 & Rs; disp16_banked [targetBase=Rs;]
 {
-	addr:3 = zext(*:2 disp16_banked) | (zext(CP) << 16);
+	addr:4 = zext(*:2 disp16_banked) | (zext(CP) << 16);
 	goto [addr];
 }
 
@@ -1594,18 +1599,18 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :jsr       "@"^Rn_banked is opcode_special=0x11; mode=13 & sz=1 & Rn_banked
 {
-	pcNext:3 = inst_next;
+	pcNext:4 = inst_next;
 	    SP24 = SP24 - 2;
 	*:2 SP24 = pcNext[0,16];
-	  addr:3 = (zext(CP) << 16) | zext(*:2 Rn_banked);
+	  addr:4 = (zext(CP) << 16) | zext(*:2 Rn_banked);
 	    call   [addr];
 }
 :jsr       "@"^addr16^":16" is opcode_special=0x18; addr16
 {
-	pcNext:3 = inst_next;
+	pcNext:4 = inst_next;
 	SP24 = SP24 - 2;
 	*:2 SP24 = pcNext[0,16];
-	addr:3 = (zext(CP) << 16) | addr16;
+	addr:4 = (zext(CP) << 16) | addr16;
 	call [addr];
 }
 
@@ -1613,18 +1618,18 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :pjsr    absaddr24  is opcode_special=3; absaddr24
 {
-    pcNext:3 = inst_next;
+    pcNext:4 = inst_next;
 	    SP24 = SP24 - 2;
 	*:2 SP24 = pcNext[0,16];
 	    SP24 = SP24 - 2;
 	*:2 SP24 = zext(pcNext[16,8]);
 	#   CP   = (absaddr24(2));      # may not be necessary, since I've aligned CP with PC, and the `call` instruction will set the whole 24-bit register
-	  #addr:3 = absaddr24;
+	  #addr:4 = absaddr24;
 	    call    absaddr24 ;
 }
 :pjsr       "@"^Rs24      is opcode_special=0x11; opcode=0x18 & Rs24
 {
-    pcNext:3 = inst_next;
+    pcNext:4 = inst_next;
 	    SP24 = SP24 - 2;
 	*:2 SP24 = pcNext[0,16];
 	    SP24 = SP24 - 2;
@@ -1634,12 +1639,12 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #:pjsr      "@"^Rs        is opcode_special=0x11; Rs & opcode=0x18
 #{
 #	rsNext:1 = &Rs + 2;
-#    pcNext:3 = inst_next;
+#    pcNext:4 = inst_next;
 #	    SP24 = SP24 - 2;
 #	*:2 SP24 = pcNext[0,16];
 #	    SP24 = SP24 - 2;
 #	*:2 SP24 = zext(pcNext[16,8]);
-#	  addr:3 = (zext(Rs[0,8]) << 16) | zext(*[register]:2 rsNext);
+#	  addr:4 = (zext(Rs[0,8]) << 16) | zext(*[register]:2 rsNext);
 #	    call   [addr];
 #}
 
@@ -1647,14 +1652,14 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :bsr    reloffs8           is opcode_special=0x0e; reloffs8
 {
-	pcNext:3 = inst_next;
+	pcNext:4 = inst_next;
 	SP24 = SP24 - 2;
 	*:2 SP24 = pcNext[0,16];
 	call reloffs8;
 }
 :bsr    reloffs16          is opcode_special=0x1e; reloffs16
 {
-	pcNext:3 = inst_next;
+	pcNext:4 = inst_next;
 	SP24 = SP24 - 2;
 	*:2 SP24 = pcNext[0,16];
 	call reloffs16;
@@ -1695,8 +1700,9 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :rts                                    is opcode_special=0x19
 {
-	pc24:3 = (zext(CP) << 16) | zext(*:2 SP24);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
 	SP24 = SP24 + 2;
+	SP = SP24:2;
 	return [pc24];
 }
 
@@ -1708,8 +1714,9 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 	cpword:2 = *:2 SP24;
 	CP = cpword:1;
 	SP24 = SP24 + 2;
-	pc24:3 = (zext(CP) << 16) | zext(*:2 SP24);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
 	SP24 = SP24 + 2;
+	SP = SP24:2;
 	return [pc24];
 }
 
@@ -1717,18 +1724,18 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :prtd    s8                             is opcode_special=0x11; opcode_special=0x14; s8
 {
-	cp24:3 = zext(*:1 SP24) << 16;
+	cp24:4 = zext(*:1 SP24) << 16;
 	SP24 = SP24 + 2;
-	pc24:3  = zext(*:2 SP24) | cp24;
+	pc24:4  = zext(*:2 SP24) | cp24;
 	SP24 = SP24 + 2;
 	SP24 = SP24 + sext(s8);
 	return [pc24];
 }
 :prtd    s16                            is opcode_special=0x11; opcode_special=0x1C; s16
 {
-	cp24:3 = zext(*:1 SP24) << 16;
+	cp24:4 = zext(*:1 SP24) << 16;
 	SP24 = SP24 + 2;
-	pc24:3  = zext(*:2 SP24) | cp24;
+	pc24:4  = zext(*:2 SP24) | cp24;
 	SP24 = SP24 + 2;
 	SP24 = SP24 + sext(s16);
 	return [pc24];
@@ -1746,7 +1753,7 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 	CP = cp16:1;
 	SP24 = SP24 + 2;
 
-	pc24:3 = (zext(CP) << 16) | zext(*:2 SP24);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
 	SP24 = SP24 + 2;
 	return [pc24];
 }
@@ -1761,11 +1768,11 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 }
 
 r6b_disp8: "@("^disp8^":8","FP"^")" is disp8 {
-	local addr:3 = FP24 + disp8;
+	local addr:4 = FP24 + disp8;
 	export *:1 addr;
 }
 r6w_disp8: "@("^disp8^":8","FP"^")" is disp8 {
-	local addr:3 = FP24 + disp8;
+	local addr:4 = FP24 + disp8;
 	export *:2 addr;
 }
 
@@ -1823,12 +1830,12 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * addr
 #        no flags
 :trapa "#"^trapVector    is opcode_special=8; opcode47=1 & trapVector
 {
-	addr:3 = inst_next;
+	addr:4 = inst_next;
 	PUSH(addr[0,16]);
 	PUSH(addr[16,8]);
 	PUSH(SR[0,16]);
-	tvec:3 = trapVector;
-	call [*[ram]:3 tvec];
+	tvec:4 = trapVector;
+	call [*:4 tvec];
 }
 
 :nop                    is opcode_special=0 { }
@@ -1839,8 +1846,8 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * addr
 :"trap/vs"               is opcode_special=0x05
 {
 	if (!$(VF)) goto inst_next;
-	vectorAddress:3 = *[ram]:3 0x10:3;
-	nextpc:3 = inst_next;
+	vectorAddress:4 = *:4 0x10:4;
+	nextpc:4 = inst_next;
 	lo:2 = nextpc:2;
 	hi:2 = zext(nextpc[16,8]);
 	PUSH(lo);
@@ -1858,7 +1865,7 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * addr
 #                        Opcode: 0x30 data
 :rtd    s8              is opcode_special=0x30; s8
 {
-	pc24:3 = (zext(CP) << 16) | zext(*:2 SP24);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
 	SP24 = SP24 + 2;
 	SP24 = SP24 + sext(s8);
 	return [pc24];
@@ -1868,7 +1875,7 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * addr
 #                        Opcode: 0x34 data(H) data(L)
 :rtd    s16             is opcode_special=0x34; s16
 {
-	pc24:3 = (zext(CP) << 16) | zext(*:2 SP24);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
 	SP24 = SP24 + 2;
 	SP24 = SP24 + sext(s16);
 	return [pc24];
