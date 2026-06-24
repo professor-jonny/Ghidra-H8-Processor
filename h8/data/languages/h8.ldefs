@@ -21,7 +21,7 @@
             processorspec="h8539f.pspec"
             id="H8:BE:32:H8539F">
     <description>H8/539F processor</description>
-    <compiler name="default" spec="h8.cspec" id="default"/>
+    <compiler name="default" spec="h8539f.cspec" id="default"/>
   </language>
   <language processor="H8"
             endian="big"

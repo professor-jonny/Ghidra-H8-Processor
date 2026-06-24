@@ -18,20 +18,28 @@ define alignment=1;
 define space ram      type=ram_space    size=4 default;
 define space register type=register_space size=1;
 
-define register offset=0x0 size=2 [ R0  R1  R2  R3  R4  R5   _    FP    _   _    SP];
-define register offset=0x0 size=1 [_ _ _ _ _ _ _ _ _ _ _ _ _ FPH _ _ _ _ _ TP _ _];
-# SP24 and FP24 are 4-byte Ghidra pseudo-registers representing TP:SP and TP:FP
-# The hardware computes these as (TP << 16) | SP and (TP << 16) | FP
-# They are kept in sync by the PUSH/POP macros and stack instructions
-define register offset=0x90 size=4 [SP24];
-define register offset=0x94 size=4 [FP24];
-define register offset=0x20 size=2 [_ SR];
-define register offset=0x20 size=1 [_ _ _ CCR _ DP EP _ BR];
-define register offset=0x40 size=4 [contextreg];
-define register offset=0x60 size=1 [CF VF ZF NF];
-define register offset=0x80 size=1 [CP];
-define register offset=0x80 size=4 [PC];
-define register offset=0x81 size=2 [PC16];
+# --- General purpose registers (2 bytes each, offsets 0x00-0x0F) ---
+define register offset=0x00 size=2 [ R0 R1 R2 R3 R4 R5 FP SP ];
+# --- Control/segment registers (1 byte each, offsets 0x10-0x17) ---
+# TP is at 0x13 (matches old size=1 row index 19 -> byte 19 = 0x13)
+define register offset=0x10 size=1 [ CP DP EP TP BR _ _ _ ];
+# --- Status register (2 bytes at 0x20, CCR byte at 0x21) ---
+define register offset=0x20 size=2 [ SR ];
+define register offset=0x48 size=1 [ CCR ];
+# --- Individual flag pseudo-registers (1 byte each, offsets 0x24-0x27) ---
+define register offset=0x24 size=1 [ CF VF ZF NF ];
+# --- PC (4 bytes at 0x28) ---
+define register offset=0x28 size=4 [ PC ];
+# --- 24-bit pseudo stack/frame pointers (4 bytes, offsets 0x30-0x37) ---
+define register offset=0x30 size=4 [ SP24 ];
+define register offset=0x34 size=4 [ FP24 ];
+# --- Context register for SLEIGH (4 bytes at 0x40) ---
+define register offset=0x40 size=4 [ contextreg ];
+define register offset=0x4C size=1 [ FPH ];
+# PC16 removed — was defined at offset 0x81 (mid-parent within PC at 0x80 size=4)
+# but was never referenced anywhere in the slaspec (dead definition).
+# Removed 2026-06-23: suspected cause of encodeTranslator() serialization failure
+# that produces "Marshaling error: syntax error" in DecompInterface.openProgram().
 
 define context contextreg
 	targetBase = (0,2)
@@ -221,16 +229,16 @@ macro CollectFlags()
 
 macro PUSH(val)
 {
-	SP24 = SP24 - 2;
-	SP   = SP24:2;
+	SP = SP - 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = val;
 }
 
 macro POP(reg)
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	reg  = *:2 SP24;
-	SP24 = SP24 + 2;
-	SP   = SP24:2;
+	SP   = SP + 2;
 }
 
 macro subflags(op1, op2)
@@ -318,17 +326,17 @@ macro stdflags(val)
 }
 
 macro bankify(addr, reg) {
-	dp24:3 = zext(DP);
-	ep24:3 = zext(EP);
-	tp24:3 = zext(TP);
-	add24:3 = zext(addr);
+	dp24:4 = zext(DP);
+	ep24:4 = zext(EP);
+	tp24:4 = zext(TP);
+	add24:4 = zext(addr);
 	add24 = (((zext((reg & 4) == 0) * dp24) | (zext((reg & 6) == 4) * ep24) | (zext((reg & 6) == 6) * tp24)) << 16) | add24;
 	addr = add24;
 }
 
 macro bankify_dp(addr) {
-	dp32:3 = zext(DP);
-	add32:3 = zext(addr);
+	dp32:4 = zext(DP);
+	add32:4 = zext(addr);
 	add32 = (dp32 << 16) | add32;
 	addr = add32;
 }
@@ -339,7 +347,7 @@ macro bankify_dp(addr) {
 #}
 
 macro SetShortAbs16(addr, val) {
-	ptr:3 = zext(addr) | zext(BR) << 8;
+	ptr:4 = zext(addr) | (zext(BR) << 8);
 	*:2 ptr = val;
 }
 
@@ -418,8 +426,8 @@ Rn_banked:       "R2"              is Rn=2 { local addr:4 = (zext(DP) << 16) | z
 Rn_banked:       "R3"              is Rn=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
 Rn_banked:       "R4"              is Rn=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
 Rn_banked:       "R5"              is Rn=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
-Rn_banked:       "FP"              is Rn=6 { local addr:4 = FP24                       ; export addr; }
-Rn_banked:       "SP"              is Rn=7 { local addr:4 = SP24                       ; export addr; }
+Rn_banked:       "FP"              is Rn=6 { local addr:4 = (zext(TP) << 16) | zext(FP); export addr; }
+Rn_banked:       "SP"              is Rn=7 { local addr:4 = (zext(TP) << 16) | zext(SP); export addr; }
 
 Rs_banked:       "R0"              is Rs=0 { local addr:4 = (zext(DP) << 16) | zext(R0); export addr; }
 Rs_banked:       "R1"              is Rs=1 { local addr:4 = (zext(DP) << 16) | zext(R1); export addr; }
@@ -427,17 +435,17 @@ Rs_banked:       "R2"              is Rs=2 { local addr:4 = (zext(DP) << 16) | z
 Rs_banked:       "R3"              is Rs=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
 Rs_banked:       "R4"              is Rs=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
 Rs_banked:       "R5"              is Rs=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
-Rs_banked:       "FP"              is Rs=6 { local addr:4 = FP24                       ; export addr; }
-Rs_banked:       "SP"              is Rs=7 { local addr:4 = SP24                       ; export addr; }
+Rs_banked:       "FP"              is Rs=6 { local addr:4 = (zext(TP) << 16) | zext(FP); export addr; }
+Rs_banked:       "SP"              is Rs=7 { local addr:4 = (zext(TP) << 16) | zext(SP); export addr; }
 
-r0_push: "R0 " is reglist0=1 { SP24 = SP24 - 2; *:2 SP24 = R0; }
-r1_push: "R1 " is reglist1=1 { SP24 = SP24 - 2; *:2 SP24 = R1; }
-r2_push: "R2 " is reglist2=1 { SP24 = SP24 - 2; *:2 SP24 = R2; }
-r3_push: "R3 " is reglist3=1 { SP24 = SP24 - 2; *:2 SP24 = R3; }
-r4_push: "R4 " is reglist4=1 { SP24 = SP24 - 2; *:2 SP24 = R4; }
-r5_push: "R5 " is reglist5=1 { SP24 = SP24 - 2; *:2 SP24 = R5; }
-fp_push: "FP " is reglist6=1 { SP24 = SP24 - 2; *:2 SP24 = FP; }
-sp_push: "SP " is reglist7=1 { SP24 = SP24 - 2; *:2 SP24 = SP; }
+r0_push: "R0 " is reglist0=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R0; }
+r1_push: "R1 " is reglist1=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R1; }
+r2_push: "R2 " is reglist2=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R2; }
+r3_push: "R3 " is reglist3=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R3; }
+r4_push: "R4 " is reglist4=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R4; }
+r5_push: "R5 " is reglist5=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R5; }
+fp_push: "FP " is reglist6=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = FP; }
+sp_push: "SP " is reglist7=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = SP; }
 r0_push:       is reglist0=0 { }
 r1_push:       is reglist1=0 { }
 r2_push:       is reglist2=0 { }
@@ -446,14 +454,14 @@ r4_push:       is reglist4=0 { }
 r5_push:       is reglist5=0 { }
 fp_push:       is reglist6=0 { }
 sp_push:       is reglist7=0 { }
-sp_pop:  "SP " is reglist7=1 { SP = *:2 SP24; SP24 = SP24 + 2; }
-fp_pop:  "FP " is reglist6=1 { FP = *:2 SP24; SP24 = SP24 + 2; }
-r5_pop:  "R5 " is reglist5=1 { R5 = *:2 SP24; SP24 = SP24 + 2; }
-r4_pop:  "R4 " is reglist4=1 { R4 = *:2 SP24; SP24 = SP24 + 2; }
-r3_pop:  "R3 " is reglist3=1 { R3 = *:2 SP24; SP24 = SP24 + 2; }
-r2_pop:  "R2 " is reglist2=1 { R2 = *:2 SP24; SP24 = SP24 + 2; }
-r1_pop:  "R1 " is reglist1=1 { R1 = *:2 SP24; SP24 = SP24 + 2; }
-r0_pop:  "R0 " is reglist0=1 { R0 = *:2 SP24; SP24 = SP24 + 2; }
+sp_pop:  "SP " is reglist7=1 { SP24 = (zext(TP) << 16) | zext(SP); SP = *:2 SP24; }
+fp_pop:  "FP " is reglist6=1 { SP24 = (zext(TP) << 16) | zext(SP); FP = *:2 SP24; SP = SP + 2; }
+r5_pop:  "R5 " is reglist5=1 { SP24 = (zext(TP) << 16) | zext(SP); R5 = *:2 SP24; SP = SP + 2; }
+r4_pop:  "R4 " is reglist4=1 { SP24 = (zext(TP) << 16) | zext(SP); R4 = *:2 SP24; SP = SP + 2; }
+r3_pop:  "R3 " is reglist3=1 { SP24 = (zext(TP) << 16) | zext(SP); R3 = *:2 SP24; SP = SP + 2; }
+r2_pop:  "R2 " is reglist2=1 { SP24 = (zext(TP) << 16) | zext(SP); R2 = *:2 SP24; SP = SP + 2; }
+r1_pop:  "R1 " is reglist1=1 { SP24 = (zext(TP) << 16) | zext(SP); R1 = *:2 SP24; SP = SP + 2; }
+r0_pop:  "R0 " is reglist0=1 { SP24 = (zext(TP) << 16) | zext(SP); R0 = *:2 SP24; SP = SP + 2; }
 r0_pop:        is reglist0=0 { }
 r1_pop:        is reglist1=0 { }
 r2_pop:        is reglist2=0 { }
@@ -471,10 +479,10 @@ eab_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz
 eaw_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; disp8     { tmp = (Rn_banked + disp8);  export *:2 tmp; }
 eab_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; disp16    { tmp = (Rn_banked + disp16); export *:1 tmp; }
 eaw_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; disp16    { tmp = (Rn_banked + disp16); export *:2 tmp; }
-eab_predec:       "@-SP"                    is Rn=7 & mode = 11 & sz = 0                        { SP24 = SP24 - 2; export *:1 SP24; }
-eaw_predec:       "@-SP"                    is Rn=7 & mode = 11 & sz = 1                        { SP24 = SP24 - 2; export *:2 SP24; }
-eab_postinc:      "@SP+"                    is Rn=7 & mode = 12 & sz = 0                        { tmp = SP24; SP24 = SP24 + 2; export *:1 tmp; }
-eaw_postinc:      "@SP+"                    is Rn=7 & mode = 12 & sz = 1                        { tmp = SP24; SP24 = SP24 + 2; export *:2 tmp; }
+eab_predec:       "@-SP"                    is Rn=7 & mode = 11 & sz = 0                        { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:1 SP24; }
+eaw_predec:       "@-SP"                    is Rn=7 & mode = 11 & sz = 1                        { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:2 SP24; }
+eab_postinc:      "@SP+"                    is Rn=7 & mode = 12 & sz = 0                        { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:1 tmp; }
+eaw_postinc:      "@SP+"                    is Rn=7 & mode = 12 & sz = 1                        { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:2 tmp; }
 eab_predec:       "@-"^Rn_banked            is Rn_banked & mode = 11 & sz = 0                   { Rn_banked = Rn_banked - 1; export *:1 Rn_banked; }
 eaw_predec:       "@-"^Rn_banked            is Rn_banked & mode = 11 & sz = 1                   { Rn_banked = Rn_banked - 2; export *:2 Rn_banked; }
 eab_postinc:      "@"^Rn_banked^"+"         is Rn_banked & mode = 12 & sz = 0                   { tmp = Rn_banked; Rn_banked = Rn_banked + 1; export *:1 tmp; }
@@ -490,7 +498,7 @@ eaw_abs16:        "@"^addr16_dp^":16"   is Rn = 5 & mode = 1 & sz = 1; addr16_dp
 eab_imm8:         i8                        is Rn=4 & sz=0 & mode=0; i8           { export *[const]:1 i8; }
 eaw_imm16:        i16                       is Rn=4 & sz=1 & mode=0; i16          { export *[const]:2 i16; }
 
-reloffs8:  reloc is disp8        [ reloc=(inst_next & 0xFF0000) | ((inst_next+disp8) & 0xFFFF);  ] { export * reloc; }
+reloffs8:  reloc is disp8        [ reloc=(inst_next & 0xFF0000) | ((inst_next+disp8)  & 0xFFFF); ] { export * reloc; }
 reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+disp16) & 0xFFFF); ] { export * reloc; }
 
 
@@ -1588,11 +1596,27 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 }
 
 #absaddr24: "@"^addr24^":24" is addr24 { export *[const]:3 addr24; }
-absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
+absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 
 # PJMP  @aa:24             Page jump
 #       no flags
-:pjmp      absaddr24 is opcode_special=0x13; absaddr24 { goto absaddr24; }
+# NOTE: absaddr24 exports *[const]:4 addr24, which is a DEREFERENCED LOAD from
+# that constant address, not the bare address itself. Used directly as
+# `goto absaddr24;` (no brackets), this made Ghidra treat the destination as an
+# indirect jump through a pointer stored AT addr24, rather than a jump TO
+# addr24 - producing "could not flow into non-existent memory" and showing the
+# target as DAT_0000xxxx (a data reference) instead of a clean code label, with
+# the disassembly's trailing "= 04h"/"= ??" being the (irrelevant) dereferenced
+# byte value. Fixed by using the raw addr24 token value directly (not
+# absaddr24's broken export) zero-extended into a local addr:4, then
+# `goto [addr];` - matching every other jmp/jsr constructor in this file (see
+# :jmp and :jsr above, which all compute into a local `addr` from a raw address
+# token and use `goto [addr]` / `call [addr]`, never a *[const] dereference).
+:pjmp      "@"^addr24^":24" is opcode_special=0x13; addr24
+{
+	addr:4 = zext(addr24:3);
+	goto [addr];
+}
 :pjmp      "@"^Rs24        is opcode_special=0x11; opcode=0x19 & Rs24 { goto [Rs24]; }
 
 # JSR   <EA>               Jump to subroutine
@@ -1600,7 +1624,8 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 :jsr       "@"^Rn_banked is opcode_special=0x11; mode=13 & sz=1 & Rn_banked
 {
 	pcNext:4 = inst_next;
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
 	  addr:4 = (zext(CP) << 16) | zext(*:2 Rn_banked);
 	    call   [addr];
@@ -1608,7 +1633,8 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 :jsr       "@"^addr16^":16" is opcode_special=0x18; addr16
 {
 	pcNext:4 = inst_next;
-	SP24 = SP24 - 2;
+	SP = SP - 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
 	addr:4 = (zext(CP) << 16) | addr16;
 	call [addr];
@@ -1616,23 +1642,35 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 
 # PJSR  <EA>               Page jump to subroutine
 #       no flags
-:pjsr    absaddr24  is opcode_special=3; absaddr24
+# NOTE: absaddr24 exports *[const]:4 addr24 - a DEREFERENCED LOAD from that
+# constant address, not the bare address. `call absaddr24;` (no brackets) made
+# Ghidra treat the call target as a pointer stored AT addr24, not addr24
+# itself - this is the same bug fixed in :pjmp above, and explains both the
+# DAT_0000fe7e reference and "= ??" seen on pjsr in earlier disassembly dumps,
+# and the abandoned `#addr:4 = absaddr24;` attempt commented out below (that
+# would have copied the dereferenced value, not the address - same flaw).
+# Fixed identically to :pjmp: raw addr24 token, zero-extended into a local
+# addr:4, then `call [addr];`.
+:pjsr    "@"^addr24^":24"  is opcode_special=3; addr24
 {
     pcNext:4 = inst_next;
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = zext(pcNext[16,8]);
-	#   CP   = (absaddr24(2));      # may not be necessary, since I've aligned CP with PC, and the `call` instruction will set the whole 24-bit register
-	  #addr:4 = absaddr24;
-	    call    absaddr24 ;
+	    addr:4 = zext(addr24:3);
+	    call    [addr];
 }
 :pjsr       "@"^Rs24      is opcode_special=0x11; opcode=0x18 & Rs24
 {
     pcNext:4 = inst_next;
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = zext(pcNext[16,8]);
 	    call   [Rs24];
 }
@@ -1653,14 +1691,16 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 :bsr    reloffs8           is opcode_special=0x0e; reloffs8
 {
 	pcNext:4 = inst_next;
-	SP24 = SP24 - 2;
+	SP = SP - 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
 	call reloffs8;
 }
 :bsr    reloffs16          is opcode_special=0x1e; reloffs16
 {
 	pcNext:4 = inst_next;
-	SP24 = SP24 - 2;
+	SP = SP - 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
 	call reloffs16;
 }
@@ -1669,17 +1709,19 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :link      "FP",s8                      is mode=1 & sz=0 & Rn=7; s8
 {
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = FP;
-	    FP24 = SP24;
-	    SP24 = SP24 + sext(s8);
+	    FP = SP;
+	    SP = SP + sext(s8);
 }
 :link      "FP",s16                     is mode=1 & sz=1 & Rn=7; s16
 {
-	    SP24 = SP24 - 2;
+	    SP = SP - 2;
+	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = FP;
 	    FP   = SP;
-	    SP24 = SP24 + sext(s16);
+	    SP = SP + sext(s16);
 }
 
 # MOV:E #xx:8,Rd           Move data:E, short format
@@ -1700,9 +1742,9 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :rts                                    is opcode_special=0x19
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
-	SP24 = SP24 + 2;
-	SP = SP24:2;
+	SP = SP + 2;
 	return [pc24];
 }
 
@@ -1711,12 +1753,13 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       Per H8/500 Programming Manual 2.2.36: @SP+ -> CP, then @SP+ -> PC.
 :prts                                   is opcode_special=0x11; opcode_special=0x19
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	cpword:2 = *:2 SP24;
 	CP = cpword:1;
-	SP24 = SP24 + 2;
+	SP = SP + 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
-	SP24 = SP24 + 2;
-	SP = SP24:2;
+	SP = SP + 2;
 	return [pc24];
 }
 
@@ -1724,20 +1767,24 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :prtd    s8                             is opcode_special=0x11; opcode_special=0x14; s8
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	cp24:4 = zext(*:1 SP24) << 16;
-	SP24 = SP24 + 2;
+	SP = SP + 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4  = zext(*:2 SP24) | cp24;
-	SP24 = SP24 + 2;
-	SP24 = SP24 + sext(s8);
+	SP = SP + 2;
+	SP = SP + sext(s8);
 	return [pc24];
 }
 :prtd    s16                            is opcode_special=0x11; opcode_special=0x1C; s16
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	cp24:4 = zext(*:1 SP24) << 16;
-	SP24 = SP24 + 2;
+	SP = SP + 2;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4  = zext(*:2 SP24) | cp24;
-	SP24 = SP24 + 2;
-	SP24 = SP24 + sext(s16);
+	SP = SP + 2;
+	SP = SP + sext(s16);
 	return [pc24];
 }
 
@@ -1745,16 +1792,19 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       flags are restored from the stack
 :rte                                    is opcode_special=0xA
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	SR = *:2 SP24;
 	SpreadFlags();
-	SP24 = SP24 + 2;
+	SP = SP + 2;
 
+	SP24 = (zext(TP) << 16) | zext(SP);
 	cp16 = *:2 SP24;
 	CP = cp16:1;
-	SP24 = SP24 + 2;
+	SP = SP + 2;
 
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
-	SP24 = SP24 + 2;
+	SP = SP + 2;
 	return [pc24];
 }
 
@@ -1762,17 +1812,18 @@ absaddr24: "@"^addr24^":24" is addr24 { export * addr24; }
 #       no flags
 :unlk    "FP"                           is opcode_special=0xF
 {
-	SP24 =     FP24;
+	SP =       FP;
+	SP24 = (zext(TP) << 16) | zext(SP);
 	  FP = *:2 SP24;
-	SP24 = SP24 + 2;
+	SP = SP + 2;
 }
 
 r6b_disp8: "@("^disp8^":8","FP"^")" is disp8 {
-	local addr:4 = FP24 + disp8;
+	local addr:4 = (zext(TP) << 16) | zext(FP + disp8);
 	export *:1 addr;
 }
 r6w_disp8: "@("^disp8^":8","FP"^")" is disp8 {
-	local addr:4 = FP24 + disp8;
+	local addr:4 = (zext(TP) << 16) | zext(FP + disp8);
 	export *:2 addr;
 }
 
@@ -1802,6 +1853,34 @@ r6w_disp8: "@("^disp8^":8","FP"^")" is disp8 {
 
 # Bcc   disp               Branch conditionally
 #       no flags
+# NOTE: bra (cc=0, "Branch Always") is split out from the generic cc-table path
+# below. Per IDA SDK ins.cpp, bra is CF_USE1|CF_STOP (true unconditional jump,
+# no fallthrough), while every other condition (including brn, "Branch Never")
+# is CF_USE1 only (fallthrough preserved). The generic `cc` table exports a
+# constant 1:1 for cond=0, which previously produced `if (1) goto reloffs8;` -
+# still a conditional-goto pcode shape that keeps a fallthrough edge at
+# disassembly-flow time, even though it always takes the branch.
+# `cc` is a subtable (built from the `cond` token field), so it cannot be
+# constrained directly with `cc=0` syntax - SLEIGH rejected that with
+# "Constraining currently undefined operand: cc". Constrain on the underlying
+# `cond` field instead; SLEIGH prefers the more specific `cond=0` pattern over
+# the general `cc` match, so this only affects bra.
+# `cc` must still be matched in the pattern (not just `cond`) so the `:b^cc`
+# print piece has an operand to interpolate - omitting it produced
+# "operand cc is undefined" from sleigh. Matching `cc` alongside `cond=0` is
+# fine: since `cc` is built from `cond`, constraining `cond=0` forces `cc` to
+# resolve deterministically to the "ra" production anyway.
+# NOTE: the 16-bit-displacement form below is NOT split out the same way.
+# opcode47=3 & cond=0 is byte-identical to opcode_special=0x30, which collides
+# with the existing `:rtd s8 is opcode_special=0x30` constructor further down
+# this file ("Constructors with identical patterns" from sleigh). This is a
+# pre-existing ISA-level ambiguity between bra's 16-bit-offset encoding and
+# rtd's 8-bit-displacement encoding sharing the same opcode byte - not
+# something this fix can resolve without deeper investigation into how real
+# hardware/IDA disambiguates the two (likely on a later byte, not this one).
+# Left as a known limitation: the 16-bit bra encoding still keeps a spurious
+# fallthrough edge. Flagging in HANDOFF.md rather than guessing at a fix here.
+:b^cc      "#"^reloffs8^":8"    is   opcode47=2 & cond=0 & cc; reloffs8 { goto reloffs8; }
 :b^cc      "#"^reloffs8^":8"    is   opcode47=2 & cc; reloffs8 { if (cc) goto reloffs8; }
 :b^cc      "#"^reloffs16^":16"  is   opcode47=3 & cc; reloffs16 { if (cc) goto reloffs16; }
 
@@ -1825,7 +1904,7 @@ r6w_disp8: "@("^disp8^":8","FP"^")" is disp8 {
 	if (Rs != 0xFFFF) goto reloffs8;
 }
 
-trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * address; }
+trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export *[const]:4 address; }
 # TRAPA  #xx               Trap always
 #        no flags
 :trapa "#"^trapVector    is opcode_special=8; opcode47=1 & trapVector
@@ -1865,9 +1944,10 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * addr
 #                        Opcode: 0x30 data
 :rtd    s8              is opcode_special=0x30; s8
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
-	SP24 = SP24 + 2;
-	SP24 = SP24 + sext(s8);
+	SP = SP + 2;
+	SP = SP + sext(s8);
 	return [pc24];
 }
 
@@ -1875,9 +1955,10 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export * addr
 #                        Opcode: 0x34 data(H) data(L)
 :rtd    s16             is opcode_special=0x34; s16
 {
+	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
-	SP24 = SP24 + 2;
-	SP24 = SP24 + sext(s16);
+	SP = SP + 2;
+	SP = SP + sext(s16);
 	return [pc24];
 }
 

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<compiler_spec>
+  <data_organization>
+    <default_alignment value="2" />
+    <machine_alignment value="2" />
+    <pointer_size value="4" />
+    <default_pointer_alignment value="2" />
+    <size_alignment_map>
+      <entry size="1" alignment="1" />
+      <entry size="2" alignment="2" />
+      <entry size="4" alignment="2" />
+    </size_alignment_map>
+  </data_organization>
+
+  <funcptr align="2" />
+
+  <global><range space="ram" first="0x00010000" last="0x0002FFFF"/></global>
+
+  <stackpointer register="SP" space="ram" growth="negative"/>
+
+  <returnaddress><varnode space="stack" offset="0x0" size="2"/></returnaddress>
+
+  <default_proto>
+    <prototype name="__stdcall" extrapop="2" stackshift="2">
+      <input>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R1"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R2"/>
+        </pentry>
+        <pentry minsize="1" maxsize="512" align="2">
+          <addr offset="4" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+      </output>
+      <killedbycall>
+        <register name="R0"/>
+        <register name="R1"/>
+        <register name="R2"/>
+      </killedbycall>
+      <unaffected>
+        <register name="R3"/>
+        <register name="R4"/>
+        <register name="R5"/>
+        <register name="FP"/>
+        <register name="SP"/>
+        <register name="SP24"/>
+      </unaffected>
+    </prototype>
+  </default_proto>
+
+  <!-- PRTS is a page return: pops CP word (2 bytes) then PC word (2 bytes) = 4 bytes total -->
+  <prototype name="__stdcall_far" extrapop="2" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    </unaffected>
+  </prototype>
+
+</compiler_spec>
