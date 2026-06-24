@@ -5,15 +5,23 @@ H8/539F Processor Spec for Ghidra
  Based on the H8/520 pspec with corrections for H8/539F-specific peripherals.
 
  Memory map (Maximum/Advanced mode, 24-bit addressing):
-   0x000000 - 0x01FFFF : 128KB internal flash ROM (vector table starts at 0x0000)
-   0xEE80   - 0xFFFF   : Internal RAM (~4.5KB, addresses vary — confirm from H8/538-539 HW manual)
+   H8/539 on-chip ROM: H'10000-H'2FFFF (128KB total).
+   H'00000-H'03FFF is a read-only mirror of H'10000-H'13FFF - NOT modelled here;
+   this firmware's vector table uses 0x1xxxx-range addresses exclusively (confirmed).
+   Source: Hitachi H8/538, H8/539 Hardware Manual (OMC942723072) ?18 "ROM", ?16 Mode 7.
+
+   CORRECT Ghidra import: Raw Binary, base address 0x00010000.
+   128KB dump maps as ram:0x00010000-ram:0x0002FFFF.
+
+   0x010000 - 0x02FFFF : 128KB internal flash ROM (vector table at 0x10000-0x1013C)
+   0xEE80   - 0xFFFF   : Internal RAM (~4.5KB - confirm from H8/538-539 HW manual)
    0xFE80   - 0xFFFF   : On-chip peripheral I/O registers
 
- Vector table: 80 vectors × 4 bytes = 0x0000–0x013C
+ Vector table: 80 vectors x 4 bytes = 0x10000-0x1013C
  Address convention used by Mitsubishi ROMs:
    IDA/logical address = file offset + 0x10000
-   Ghidra: load ROM at base address 0x10000 OR load raw and set up segments accordingly.
-   The pspec symbols below use the RAW file offset form (0x0000 = file byte 0).
+   Ghidra: load ROM as Raw Binary at base address 0x00010000.
+   The pspec symbols below use logical addresses (= file offset + 0x10000).
 
  Interrupt vector assignments from H8/538-539 Hardware Manual (OMC942723072).
  These differ from the H8/520 vector map in the NOTES.TXT reference material.
@@ -25,19 +33,19 @@ H8/539F Processor Spec for Ghidra
  <data_space space="ram" />
 
  <default_memory_blocks>
-   <!-- Internal RAM + I/O: single block covers 0xEE80–0xFFFF.
+   <!-- Internal RAM + I/O: single block covers 0xEE80-0xFFFF.
         H8/539F on-chip RAM starts at 0xEE80 (ecurom.idc); I/O registers begin at
         0xFE80 within the same region. Peripheral names are supplied by default_symbols.
-        Confirm exact RAM start/end from H8/538-539 Hardware Manual §2 memory map. -->
+        Confirm exact RAM start/end from H8/538-539 Hardware Manual ?2 memory map. -->
    <memory_block name="RAM" start_address="ram:0xEE80" length="0x1180" mode="rwv" initialized="false"/>
  </default_memory_blocks>
 
  <default_symbols>
    <!--
      INTERRUPT VECTOR TABLE
-     H8/539F — 80 vectors, 4 bytes each, at ROM file offsets 0x0000–0x013C.
-     When loaded with base address 0x10000, these are at 0x10000–0x1013C.
-     The symbols below use the raw offsets (pre-base-address).
+     H8/539F - 80 vectors, 4 bytes each, at logical addresses 0x10000-0x1013C.
+     (file offsets 0x0000-0x013C; logical = file offset + 0x10000)
+     Symbols below use logical addresses, matching the 0x10000 import base.
 
      Vector assignments (from H8/538-539 HW Manual, Table 4-1):
        0  = Reset (power-on PC)
@@ -45,13 +53,13 @@ H8/539F Processor Spec for Ghidra
        2  = Invalid instruction
        3  = DIVXU (divide by zero)
        4  = TRAP/VS
-       5–7 = Reserved
+       5-7 = Reserved
        8  = Address error
        9  = Trace
        10 = Reserved
        11 = NMI
-       12–15 = Reserved
-       16–31 = TRAPA #0–#15
+       12-15 = Reserved
+       16-31 = TRAPA #0-#15
        32 = IRQ0
        33 = IRQ1
        34 = IRQ2
@@ -81,82 +89,82 @@ H8/539F Processor Spec for Ghidra
        58 = SCI2.TXI
        59 = SCI2.TEI
        60 = ADC.ADI
-       61–63 = Reserved
-       64–79 = Reserved / additional timers (H8/539F specific)
+       61-63 = Reserved
+       64-79 = Reserved / additional timers (H8/539F specific)
 
-     IMPORTANT: The SCI numbering above (SCI3/SCI1/SCI2 in that order at vectors 48–59)
+     IMPORTANT: The SCI numbering above (SCI3/SCI1/SCI2 in that order at vectors 48-59)
      is derived from the ecureom.idc register addresses and the empirical finding that
      vector 53 = SCI1.RXI in the RVR transmission ROM. Cross-check against the
-     H8/538-539 Hardware Manual §4 interrupt vector table before finalising.
+     H8/538-539 Hardware Manual ?4 interrupt vector table before finalising.
    -->
 
-   <!-- Vector 0: Reset — power-on PC (entry point) -->
-   <symbol name="vec_reset"        address="ram:0x00000000" type="code_ptr"/>
+   <!-- Vector 0: Reset - power-on PC (entry point) -->
+   <symbol name="vec_reset"        address="ram:0x00010000" type="code_ptr"/>
    <!-- Vector 2: Invalid instruction -->
-   <symbol name="vec_invalid_insn" address="ram:0x00000008" type="code_ptr"/>
+   <symbol name="vec_invalid_insn" address="ram:0x00010008" type="code_ptr"/>
    <!-- Vector 3: DIVXU -->
-   <symbol name="vec_divxu"        address="ram:0x0000000C" type="code_ptr"/>
+   <symbol name="vec_divxu"        address="ram:0x0001000C" type="code_ptr"/>
    <!-- Vector 4: TRAP/VS -->
-   <symbol name="vec_trap_vs" address="ram:0x00000010" type="code_ptr"/>
+   <symbol name="vec_trap_vs" address="ram:0x00010010" type="code_ptr"/>
    <!-- Vector 8: Address error -->
-   <symbol name="vec_addr_error" address="ram:0x00000020" type="code_ptr"/>
+   <symbol name="vec_addr_error" address="ram:0x00010020" type="code_ptr"/>
    <!-- Vector 9: Trace -->
-   <symbol name="vec_trace" address="ram:0x00000024" type="code_ptr"/>
+   <symbol name="vec_trace" address="ram:0x00010024" type="code_ptr"/>
    <!-- Vector 11: NMI -->
-   <symbol name="vec_nmi" address="ram:0x0000002C" type="code_ptr"/>
-   <!-- Vectors 16–31: TRAPA #0–#15 -->
-   <symbol name="vec_trapa0"  address="ram:0x00000040" type="code_ptr"/>
-   <symbol name="vec_trapa1"  address="ram:0x00000044" type="code_ptr"/>
-   <symbol name="vec_trapa2"  address="ram:0x00000048" type="code_ptr"/>
-   <symbol name="vec_trapa3"  address="ram:0x0000004C" type="code_ptr"/>
-   <symbol name="vec_trapa4"  address="ram:0x00000050" type="code_ptr"/>
-   <symbol name="vec_trapa5"  address="ram:0x00000054" type="code_ptr"/>
-   <symbol name="vec_trapa6"  address="ram:0x00000058" type="code_ptr"/>
-   <symbol name="vec_trapa7"  address="ram:0x0000005C" type="code_ptr"/>
-   <symbol name="vec_trapa8"  address="ram:0x00000060" type="code_ptr"/>
-   <symbol name="vec_trapa9"  address="ram:0x00000064" type="code_ptr"/>
-   <symbol name="vec_trapa10" address="ram:0x00000068" type="code_ptr"/>
-   <symbol name="vec_trapa11" address="ram:0x0000006C" type="code_ptr"/>
-   <symbol name="vec_trapa12" address="ram:0x00000070" type="code_ptr"/>
-   <symbol name="vec_trapa13" address="ram:0x00000074" type="code_ptr"/>
-   <symbol name="vec_trapa14" address="ram:0x00000078" type="code_ptr"/>
-   <symbol name="vec_trapa15" address="ram:0x0000007C" type="code_ptr"/>
-   <!-- Vectors 32–39: IRQ0–IRQ7 -->
-   <symbol name="vec_irq0" address="ram:0x00000080" type="code_ptr"/>
-   <symbol name="vec_irq1" address="ram:0x00000084" type="code_ptr"/>
-   <symbol name="vec_irq2" address="ram:0x00000088" type="code_ptr"/>
-   <symbol name="vec_irq3" address="ram:0x0000008C" type="code_ptr"/>
-   <symbol name="vec_irq4" address="ram:0x00000090" type="code_ptr"/>
-   <symbol name="vec_irq5" address="ram:0x00000094" type="code_ptr"/>
-   <symbol name="vec_irq6" address="ram:0x00000098" type="code_ptr"/>
-   <symbol name="vec_irq7" address="ram:0x0000009C" type="code_ptr"/>
-   <!-- Vectors 40–43: FRT1 -->
-   <symbol name="vec_frt1_ici"  address="ram:0x000000A0" type="code_ptr"/>
-   <symbol name="vec_frt1_ocia" address="ram:0x000000A4" type="code_ptr"/>
-   <symbol name="vec_frt1_ocib" address="ram:0x000000A8" type="code_ptr"/>
-   <symbol name="vec_frt1_fovi" address="ram:0x000000AC" type="code_ptr"/>
-   <!-- Vectors 44–47: FRT2 -->
-   <symbol name="vec_frt2_ici"  address="ram:0x000000B0" type="code_ptr"/>
-   <symbol name="vec_frt2_ocia" address="ram:0x000000B4" type="code_ptr"/>
-   <symbol name="vec_frt2_ocib" address="ram:0x000000B8" type="code_ptr"/>
-   <symbol name="vec_frt2_fovi" address="ram:0x000000BC" type="code_ptr"/>
-   <!-- Vectors 48–51: SCI3 (0xFEC0) -->
-   <symbol name="vec_sci3_eri" address="ram:0x000000C0" type="code_ptr"/>
-   <symbol name="vec_sci3_rxi" address="ram:0x000000C4" type="code_ptr"/>
-   <symbol name="vec_sci3_txi" address="ram:0x000000C8" type="code_ptr"/>
-   <symbol name="vec_sci3_tei" address="ram:0x000000CC" type="code_ptr"/>
-   <!-- Vectors 52–55: SCI1 (0xFEC8) — vec_sci1_rxi = vector 53 = the TCU receive handler -->
-   <symbol name="vec_sci1_eri" address="ram:0x000000D0" type="code_ptr"/>
-   <symbol name="vec_sci1_rxi" address="ram:0x000000D4" type="code_ptr"/>
-   <symbol name="vec_sci1_txi" address="ram:0x000000D8" type="code_ptr"/>
-   <symbol name="vec_sci1_tei" address="ram:0x000000DC" type="code_ptr"/>
-   <!-- Vectors 56–59: SCI2 (0xFED0) -->
-   <symbol name="vec_sci2_eri" address="ram:0x000000E0" type="code_ptr"/>
-   <symbol name="vec_sci2_rxi" address="ram:0x000000E4" type="code_ptr"/>
-   <symbol name="vec_sci2_txi" address="ram:0x000000E8" type="code_ptr"/>
-   <symbol name="vec_sci2_tei" address="ram:0x000000EC" type="code_ptr"/>
+   <symbol name="vec_nmi" address="ram:0x0001002C" type="code_ptr"/>
+   <!-- Vectors 16-31: TRAPA #0-#15 -->
+   <symbol name="vec_trapa0"  address="ram:0x00010040" type="code_ptr"/>
+   <symbol name="vec_trapa1"  address="ram:0x00010044" type="code_ptr"/>
+   <symbol name="vec_trapa2"  address="ram:0x00010048" type="code_ptr"/>
+   <symbol name="vec_trapa3"  address="ram:0x0001004C" type="code_ptr"/>
+   <symbol name="vec_trapa4"  address="ram:0x00010050" type="code_ptr"/>
+   <symbol name="vec_trapa5"  address="ram:0x00010054" type="code_ptr"/>
+   <symbol name="vec_trapa6"  address="ram:0x00010058" type="code_ptr"/>
+   <symbol name="vec_trapa7"  address="ram:0x0001005C" type="code_ptr"/>
+   <symbol name="vec_trapa8"  address="ram:0x00010060" type="code_ptr"/>
+   <symbol name="vec_trapa9"  address="ram:0x00010064" type="code_ptr"/>
+   <symbol name="vec_trapa10" address="ram:0x00010068" type="code_ptr"/>
+   <symbol name="vec_trapa11" address="ram:0x0001006C" type="code_ptr"/>
+   <symbol name="vec_trapa12" address="ram:0x00010070" type="code_ptr"/>
+   <symbol name="vec_trapa13" address="ram:0x00010074" type="code_ptr"/>
+   <symbol name="vec_trapa14" address="ram:0x00010078" type="code_ptr"/>
+   <symbol name="vec_trapa15" address="ram:0x0001007C" type="code_ptr"/>
+   <!-- Vectors 32-39: IRQ0-IRQ7 -->
+   <symbol name="vec_irq0" address="ram:0x00010080" type="code_ptr"/>
+   <symbol name="vec_irq1" address="ram:0x00010084" type="code_ptr"/>
+   <symbol name="vec_irq2" address="ram:0x00010088" type="code_ptr"/>
+   <symbol name="vec_irq3" address="ram:0x0001008C" type="code_ptr"/>
+   <symbol name="vec_irq4" address="ram:0x00010090" type="code_ptr"/>
+   <symbol name="vec_irq5" address="ram:0x00010094" type="code_ptr"/>
+   <symbol name="vec_irq6" address="ram:0x00010098" type="code_ptr"/>
+   <symbol name="vec_irq7" address="ram:0x0001009C" type="code_ptr"/>
+   <!-- Vectors 40-43: FRT1 -->
+   <symbol name="vec_frt1_ici"  address="ram:0x000100A0" type="code_ptr"/>
+   <symbol name="vec_frt1_ocia" address="ram:0x000100A4" type="code_ptr"/>
+   <symbol name="vec_frt1_ocib" address="ram:0x000100A8" type="code_ptr"/>
+   <symbol name="vec_frt1_fovi" address="ram:0x000100AC" type="code_ptr"/>
+   <!-- Vectors 44-47: FRT2 -->
+   <symbol name="vec_frt2_ici"  address="ram:0x000100B0" type="code_ptr"/>
+   <symbol name="vec_frt2_ocia" address="ram:0x000100B4" type="code_ptr"/>
+   <symbol name="vec_frt2_ocib" address="ram:0x000100B8" type="code_ptr"/>
+   <symbol name="vec_frt2_fovi" address="ram:0x000100BC" type="code_ptr"/>
+   <!-- Vectors 48-51: SCI3 (0xFEC0) -->
+   <symbol name="vec_sci3_eri" address="ram:0x000100C0" type="code_ptr"/>
+   <symbol name="vec_sci3_rxi" address="ram:0x000100C4" type="code_ptr"/>
+   <symbol name="vec_sci3_txi" address="ram:0x000100C8" type="code_ptr"/>
+   <symbol name="vec_sci3_tei" address="ram:0x000100CC" type="code_ptr"/>
+   <!-- Vectors 52-55: SCI1 (0xFEC8) - vec_sci1_rxi = vector 53 = the TCU receive handler -->
+   <symbol name="vec_sci1_eri" address="ram:0x000100D0" type="code_ptr"/>
+   <symbol name="vec_sci1_rxi" address="ram:0x000100D4" type="code_ptr"/>
+   <symbol name="vec_sci1_txi" address="ram:0x000100D8" type="code_ptr"/>
+   <symbol name="vec_sci1_tei" address="ram:0x000100DC" type="code_ptr"/>
+   <!-- Vectors 56-59: SCI2 (0xFED0) -->
+   <symbol name="vec_sci2_eri" address="ram:0x000100E0" type="code_ptr"/>
+   <symbol name="vec_sci2_rxi" address="ram:0x000100E4" type="code_ptr"/>
+   <symbol name="vec_sci2_txi" address="ram:0x000100E8" type="code_ptr"/>
+   <symbol name="vec_sci2_tei" address="ram:0x000100EC" type="code_ptr"/>
    <!-- Vector 60: ADC -->
-   <symbol name="vec_adc_adi" address="ram:0x000000F0" type="code_ptr"/>
+   <symbol name="vec_adc_adi" address="ram:0x000100F0" type="code_ptr"/>
 
    <!--
      H8/539F ON-CHIP PERIPHERAL REGISTER NAMES
@@ -446,8 +454,9 @@ H8/539F Processor Spec for Ghidra
    <symbol name="MULT_MMR" address="ram:0xFFBE" entry="false"/>
 
    <!--
-     Known anchor points from RVR Mitsubishi ECU ROM analysis (file-offset form):
-       RVR transmission ROM file offset 0x16267 = SCI1 RXI handler (vector 53 target)
+     Known anchor points from RVR Mitsubishi ECU ROM analysis (logical address form):
+       RVR transmission ROM ram:0x00026267 = SCI1 RXI handler (vector 53 target)
+         (file offset 0x16267 + base 0x10000 = 0x26267)
        RAM cells of interest: 0xF25C, 0xF25E (receive buffer), 0xF3A2 (status flag byte)
    -->
  </default_symbols>
