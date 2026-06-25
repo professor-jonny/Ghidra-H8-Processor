@@ -56,30 +56,38 @@ Click OK to finish the import, then double-click the file to open it in the Code
 In Ghidra's Script Manager (`Window > Script Manager`), find and run:
 
 ```
-ecu_full_setup.py   (category: MitsubishiECU)
+h8539_ecu_master_setup.py   (category: MitsubishiECU)
 ```
 
-This script will:
+The script presents a GUI dialog for each step so you can toggle them individually.
+It will:
+
 1. Validate the import base address (aborts with a clear message if wrong)
 2. Create the on-chip RAM memory block (`0xEE80-0xFFFF`)
 3. Set CP/DP/TP context registers over both ROM pages
 4. Read the reset vector and create the `entry` function
 5. Test the decompiler -- aborts if it fails so you don't waste time on a broken analysis
 6. Run auto-analysis (finds ~600+ functions on a typical ECU ROM)
-7. Apply EcuFlash XML table labels (optional -- see below)
+7. Apply EcuFlash XML table labels (optional -- file browser prompt, ROM ID verified before labelling)
+8. Run the ROM header scraper (optional -- MUT table, scaling tables, 2D/3D value tables by byte pattern)
 
 ### 4. EcuFlash XML labels (optional)
 
-If you have an EcuFlash ROM definition XML for your specific ECU, edit the `XML_PATH`
-variable at the top of `ecu_full_setup.py` to point at it before running:
+If you have an EcuFlash ROM definition XML for your specific ECU, select it via the
+file browser when prompted at Step 7. The script verifies the ROM ID against the XML
+before applying any labels -- a mismatch skips labelling with a clear warning.
 
-```python
-XML_PATH = r"C:\path\to\your\21000011_1997-2001_RVR_X3_Mt__4g63t_.xml"
-```
+Tables are labeled at their **header address** (the address code xrefs point to), not
+the raw data address in the XML:
 
-Set `XML_PATH = ""` to skip this step. The XML files in `test\rvr\` are examples.
-The script follows `<include>` references automatically, so you only need to point at
-the top-level ROM XML.
+- 2D tables: labeled at `xml_addr - 4`
+- 3D tables: labeled at `xml_addr - 7`
+- 1D scalars: labeled at `xml_addr` directly (no header)
+
+`<include>` references in the XML are followed automatically.
+
+If no XML is selected, the script offers to run the ROM scraper as a fallback.
+
 
 ### 5. Finding additional functions
 
@@ -106,16 +114,56 @@ h8\data\languages\
     h8538f.pspec        -- H8/538F processor spec
 
 test\
-    ecu_full_setup.py   -- Ghidra script: full ROM setup (run this first)
+    h8539_ecu_master_setup.py  -- Ghidra script: full ROM setup with GUI (run this first)
     rvr\                -- example ROM files and EcuFlash XMLs
 
 datasheets\h8539f\      -- Hitachi hardware/programming manuals
 ```
 
-## Known limitations
+## Known limitations and future work
 
-- The 16-bit displacement form of `bra` (byte 0x30) has an opcode collision with `rtd`
+### H8/539F
+
+- The 16-bit displacement form of `bra` (byte `0x30`) has an opcode collision with `rtd`
   in the current SLEIGH encoding model. The 8-bit form (used by all tested ROMs) is correct.
+  Unlikely to affect real ECU ROMs.
+
+- `prtd` (far return with immediate stack pop) is not modelled for stack purge accounting.
+  Functions using `prtd #n` to clean caller-pushed arguments will have slightly wrong stack
+  accounting in the decompiler. Would require a plugin equivalent to Ghidra's
+  `X86FunctionPurgeAnalyzer` to resolve automatically.
+
+- The decompiler may report "unable to track spacebase fully for stack" on some functions
+  despite `SP24` being declared unaffected in the cspec. This can cause local variables to
+  be missed or incorrectly assigned in decompiler output.
+
+- Some preserved registers (R3-R5, FP) may still appear as explicit push/pop in decompiler
+  output for functions that use them as general-purpose callee-saved registers.
+
+- `patternconstraints.xml` does not include `H8:BE:32:H8539F`, so the function-start byte
+  pattern in `patterns.xml` is inactive for H8/539F ROMs. Verify the pattern against real
+  ECU ROM prologues and add the language ID to `patternconstraints.xml` if it matches.
+
+### H8/520 (upstream, unverified)
+
+- `ADC_ADI_vector` in `h8520.pspec` is assigned the same address as `SCI1_ERI_vector`
+  (`ram:0x00D0`) -- one is wrong. Needs checking against the H8/520 hardware manual.
+
+- `<default_memory_blocks>` in `h8520.pspec` is commented out -- no RAM block is created
+  automatically when loading an H8/520 ROM.
+
+### H8/538F (upstream, unverified)
+
+- `<data_space space="ram" />` is missing from `h8538f.pspec`.
+
+- The RAM block in `h8538f.pspec` is `initialized="true"` spanning `0x0000` for `0xF000`
+  bytes, covering code space rather than on-chip RAM only. Should be uninitialised and
+  sized to actual RAM only.
+
+- No peripheral register symbols exist in `h8538f.pspec`. The H8/538 shares the same
+  peripheral map as the H8/539F. The full register map from `h8539f.pspec` can be ported
+  across, excluding the flash control registers (`FLMCR`, `FLM_EBR1/2`, `FLMER`, `FLMSR`)
+  which are 539F-specific (the 538 is EPROM, not flash).
 
 ## References
 
