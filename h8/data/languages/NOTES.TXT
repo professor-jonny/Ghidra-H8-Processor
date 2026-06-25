@@ -127,16 +127,61 @@ N	Exception
 48	Internal interrupt 8:   Timer.CMIA
 49	Internal interrupt 9:   Timer.CMIB
 50	Internal interrupt 10:  Timer.OVI
-51	Internal interrupt 11:  
+51	Internal interrupt 11:
 52	Internal interrupt 12:  SCI1.ERI
 53	Internal interrupt 13:  SCI1.RXI
 54	Internal interrupt 14:  SCI1.TXI
-55	Internal interrupt 15:  
+55	Internal interrupt 15:
 56	Internal interrupt 16:  SCI2.ERI
 57	Internal interrupt 17:  SCI2.RXI
 58	Internal interrupt 18:  SCI2.TXI
-59	Internal interrupt 19:  
-60	Internal interrupt 20:  ADC.ADI    
-61	Internal interrupt 21:   
-62	Internal interrupt 22:   
-63	Internal interrupt 23:   
+59	Internal interrupt 19:
+60	Internal interrupt 20:  ADC.ADI
+61	Internal interrupt 21:
+62	Internal interrupt 22:
+63	Internal interrupt 23:
+
+
+__________________________________________________________________________________________
+=== H8/520 and H8/538F variant bugs (found during H8/539F development) ===
+
+--- h8520.pspec ---
+
+BUG: ADC_ADI_vector is mapped to ram:0x00D0, which is the same address as
+SCI1_ERI_vector. One of these is wrong. Cross-check against the H8/520 hardware
+manual vector table to determine the correct address for ADC_ADI.
+
+BUG: <default_memory_blocks> is commented out entirely. No RAM block is created
+automatically when loading an H8/520 ROM. The block definitions inside the comment
+(ram at 0x20000, ROM mirror at 0x0000) need to be verified against the H8/520
+hardware manual and re-enabled once confirmed correct.
+
+NOTE: The <context_data> block sets CP, DP, TP, EP, BR, FPH all to zero as static
+global defaults. This is adequate for single-page ROMs but will misidentify
+cross-page far calls in any multi-page H8/520 application. The H8/539F setup script
+approach (setting context registers per address range at import time) is more correct
+for paged ROMs.
+
+--- h8538f.pspec ---
+
+BUG: <data_space space="ram" /> declaration is missing. The H8/520 pspec and the
+H8/539F pspec both have this. Without it Ghidra may not correctly identify the data
+address space for the H8/538F language.
+
+BUG: The RAM block is defined as initialized="true" with length 0xF000 starting at
+0x0000. This covers code space, not just RAM. The block should be uninitialised and
+sized to actual on-chip RAM only. Verify against H8/538 hardware manual section 2.
+
+MISSING: No peripheral register symbols at all. The H8/538 shares the same peripheral
+set as the H8/539F (SCI, ADC, ports, timers, interrupt controller, DTC, WDT,
+multiplier) at the same I/O addresses. The full register map from h8539f.pspec can be
+ported to h8538f.pspec directly, with the exception of the flash memory control
+registers (FLMCR, FLM_EBR1, FLM_EBR2, FLMER, FLMSR) which are 539F-specific --
+the 538 uses EPROM, not flash.
+
+--- patternconstraints.xml ---
+
+BUG: patterns.xml is only wired up to H8:BE:16:H8520Max. The H8:BE:32:H8539F
+language is not listed, so the function-start byte patterns have no effect when
+analysing 539F ROMs. Add an H8:BE:32:H8539F entry if the prologue pattern in
+patterns.xml matches real ECU ROM function starts (verify first).

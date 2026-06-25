@@ -1,133 +1,89 @@
-# Hitachi H8/500 Processor Module for Ghidra
+# Changelog
 
-A Ghidra processor module for the Hitachi H8/500 family, with full support for the
-**H8/539F** as used in Mitsubishi ECUs (RVR, Evo5, etc.).
+All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
-Forked and substantially extended from [c4ashley/ghidra-h8-500](https://github.com/c4ashley/ghidra-h8-500)
-(which itself extended [Hurricos](https://git.laboratoryb.org/hurricos/ghidra-h8-500)).
-H8/539F-specific work by [professor-jonny](https://github.com/professor-jonny).
+---
 
-## Features
+## [Unreleased]
 
-- Full H8/539F instruction set (cross-checked against IDA SDK `src/module/h8500/`)
-- Working decompiler -- produces C output via Ghidra's decompiler window
-- 32-bit flat address space (`H8:BE:32:H8539F`) matching the chip's maximum mode
-- Correct ROM memory map: 128KB mapped at `0x10000-0x2FFFF` (per hardware manual)
-- On-chip RAM at `0xEE80-0xFFFF` created automatically by the setup script
-- Full H8/539F peripheral register map in `h8539f.pspec` (SCI1/2/3, timers, ADC, ports)
-- Also supports H8/520 and H8/538F (separate language IDs)
+### Added — `test/h8539_ecu_master_setup.py` (replaces `ecu_full_setup.py`)
 
-## Install
+Complete rewrite of the ECU setup script as a single all-in-one file with an
+interactive GUI. Each of the 8 steps is individually toggleable via Ghidra's
+built-in `askYesNo` / `askFile` dialogs -- no need to edit variables before running.
 
-1. Make sure Ghidra is installed. Note the path to its install directory.
-2. Edit `h8\data\languages\Makefile` -- set `GHIDRADIR` to your Ghidra install path.
-3. Run `make && make install` from the `h8\data\languages\` directory.
+**Step 1 — Base address validation** (always runs)
+Checks that a ROM block exists at `0x00010000`. Aborts with a clear message if the
+ROM was imported at the wrong address.
 
-Alternatively, copy the contents of `h8\data\languages\` into:
-```
-<GhidraInstall>\Ghidra\Processors\h8\data\languages\
-```
-and run `sleigh.bat` (Windows) or `sleigh` (Linux/Mac) from `<GhidraInstall>\support\`
-to recompile the `.sla`:
-```powershell
-.\sleigh.bat "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.slaspec" `
-             "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.sla"
-```
+**Step 2 — On-chip RAM block**
+Creates an uninitialised volatile RAM block at `0xEE80–0xFFFF` (4480 bytes).
+Skips silently if the block already exists, so it is safe to re-run.
 
-## Opening a ROM in Ghidra
+**Step 3 — CP/DP/TP context registers**
+Sets page-context registers over both ROM pages so the SLEIGH disassembler resolves
+far calls correctly: CP=1 over page 1, CP=2 over page 2, DP=1 and TP=0 over the
+full ROM range.
 
-### 1. Import
+**Step 4 — Reset vector / entry function**
+Reads the CP and PC words at `ROM_BASE`, computes the flat 32-bit entry address, pins
+the CP register at that point, disassembles from it, and creates the `entry` function.
 
-- **File > Import File**, select your `.hex` or `.bin` ROM file.
-- Format: **Raw Binary**
-- Language: **H8:BE:32:H8539F**
-- Under **Options**, set **Base Address** to `0x00010000`
+**Step 5 — Decompiler health check** (always runs, gates Step 6)
+Opens the decompiler interface and verifies it initialises cleanly against the current
+program. Aborts before auto-analysis if the decompiler is broken, saving time on a
+failed run.
 
-  > This is critical. The H8/539F's ROM is physically mapped starting at H'10000, not H'00000.
-  > Getting this wrong will cause all far-call targets to be off by 0x10000.
+**Step 6 — Auto-analysis**
+Calls `analyzeAll()`. Reports the function count on completion.
 
-### 2. Do NOT click Analyze yet
+**Step 7 — EcuFlash XML table labelling**
+Prompts for an XML file via a native file-browser dialog. Before applying any labels
+the script reads `<internalidaddress>` and `<internalidhex>` from the XML and compares
+them against the actual ROM bytes -- a mismatch skips labelling with a clear warning
+rather than silently applying wrong labels.
 
-Click OK to finish the import, then double-click the file to open it in the Code Browser.
-**Do not click "Analyze" when prompted** -- use the setup script instead.
+Label placement:
+- 2D tables: labeled at `xml_addr - 4` (header address, where code xrefs point)
+- 3D tables: labeled at `xml_addr - 7`
+- 1D scalars: labeled at `xml_addr` directly (no ROM header exists)
 
-### 3. Run the setup script
+Plate comments record table name, category, type, scaling, and both header and data
+addresses. `<include>` chains are followed recursively with cycle detection.
 
-In Ghidra's Script Manager (`Window > Script Manager`), find and run:
+If no XML is chosen the script immediately offers to run the ROM scraper as a fallback.
 
-```
-ecu_full_setup.py   (category: MitsubishiECU)
-```
+**Step 8 — ROM header scraper**
+Four separate passes:
 
-This script will:
-1. Validate the import base address (aborts with a clear message if wrong)
-2. Create the on-chip RAM memory block (`0xEE80-0xFFFF`)
-3. Set CP/DP/TP context registers over both ROM pages
-4. Read the reset vector and create the `entry` function
-5. Test the decompiler -- aborts if it fails so you don't waste time on a broken analysis
-6. Run auto-analysis (finds ~600+ functions on a typical ECU ROM)
-7. Apply EcuFlash XML table labels (optional -- see below)
+- **8a MUT table** -- 256 × 2-byte RAM pointer entries at fixed offset `0x1FAD0`.
+  Labels each entry in ROM and the corresponding RAM variable.
+- **8b Scaling tables** -- 6-byte header pattern `[F0-F7] xx [E0-FE] xx 00 [02-90]`.
+  Sanity-checks the first three data words (max delta 0x1000). Labels output and
+  input RAM pointers.
+- **8c 3D value tables** -- 7-byte header `0x03 | pad | X-ptr (word) | Y-ptr (word) | nrows`.
+  Sanity-checks first three data words (max delta 0x4000). Labels X/Y axis RAM
+  variables and advances the scan past the detected data block.
+- **8c 2D value tables** -- 4-byte header `0x02 | pad | axis-ptr (word)`.
+  Same sanity check and scan-advance logic.
 
-### 4. EcuFlash XML labels (optional)
+All passes use `getPrimarySymbol()` for existence checks (avoids the deprecated
+`hasNext` iterator bug). Existing labels are never overwritten; plate comments are
+append-only and deduplicated.
 
-If you have an EcuFlash ROM definition XML for your specific ECU, edit the `XML_PATH`
-variable at the top of `ecu_full_setup.py` to point at it before running:
+### Changed
 
-```python
-XML_PATH = r"C:\path\to\your\21000011_1997-2001_RVR_X3_Mt__4g63t_.xml"
-```
+- Script renamed from `ecu_full_setup.py` to `h8539_ecu_master_setup.py`.
+- XML path is no longer a hardcoded variable at the top of the file -- it is now
+  selected at runtime via `askFile()`.
+- ROM ID verification added to Step 7; previously labels were applied without checking
+  whether the XML matched the loaded ROM.
+- Table labels now target the **header address** (`xml_addr - header_size`) rather than
+  the raw XML data address, aligning labels with code cross-references.
+- 1D scalars correctly labeled at `xml_addr` directly (no header offset applied).
 
-Set `XML_PATH = ""` to skip this step. The XML files in `test\rvr\` are examples.
-The script follows `<include>` references automatically, so you only need to point at
-the top-level ROM XML.
+---
 
-### 5. Finding additional functions
+## Earlier history
 
-Auto-analysis will find most functions but may miss some. To find un-disassembled code:
-
-- Search Memory (`Search > Memory`) for the byte pattern `11 19` (mnemonic `prts` --
-  the far-call return instruction used by most functions). Look for hits not already
-  inside a defined function.
-- Similarly search for `19` alone (`rts`, near-call return).
-
-## File layout
-
-```
-h8\data\languages\
-    h8539f.slaspec      -- H8/539F instruction set (SLEIGH source)
-    h8539f.sla          -- compiled SLEIGH binary (generated by sleigh)
-    h8539f.pspec        -- processor spec: peripheral registers, default symbols
-    h8539f.cspec        -- compiler spec: calling conventions, stack, global ranges
-    h8.cspec            -- shared compiler spec for H8/520 and H8/538F
-    h8.ldefs            -- language definitions (all variants)
-    h8520.slaspec       -- H8/520 instruction set
-    h8538f.slaspec      -- H8/538F instruction set
-    h8520.pspec         -- H8/520 processor spec
-    h8538f.pspec        -- H8/538F processor spec
-
-test\
-    ecu_full_setup.py   -- Ghidra script: full ROM setup (run this first)
-    rvr\                -- example ROM files and EcuFlash XMLs
-
-source\
-    ghidra-h8-300\      -- H8/300H reference implementation (used during development)
-    Ghidra-H8-Processor-main\  -- original OZVR4 stub (reference only)
-    ida-sdk-main\src\module\h8500\  -- IDA Pro H8/500 source (ground truth reference)
-    mitsubishi-h8-539-rom-scraper-main\  -- ROM scraper tool
-    scripts\ecurom.idc  -- IDA auto-analysis script with H8/539F peripheral register map
-
-datasheets\h8539f\      -- Hitachi hardware/programming manuals
-```
-
-## Known limitations
-
-- The 16-bit displacement form of `bra` (byte 0x30) has an opcode collision with `rtd`
-  in the current SLEIGH encoding model. The 8-bit displacement form (used by all tested
-  ROMs) is correct. This is unlikely to affect real ECU ROMs.
-
-## References
-
-- Hitachi H8/538, H8/539 Hardware Manual (OMC942723072) -- `datasheets\h8539f\H8 538-539.pdf`
-- H8/500 Series Programming Manual -- `datasheets\h8539f\H8 500 programming.pdf`
-- IDA SDK H8/500 module: `source\ida-sdk-main\src\module\h8500\` (authoritative opcode reference)
-- EcuFlash ROM definitions: https://github.com/RomRaider/opengarages (community ROM XMLs)
+Initial H8/539F language core, pspec, cspec, and slaspec work -- see git log.
