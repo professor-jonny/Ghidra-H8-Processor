@@ -144,6 +144,15 @@ datasheets\h8539f\      -- Hitachi hardware/programming manuals
   pattern in `patterns.xml` is inactive for H8/539F ROMs. Verify the pattern against real
   ECU ROM prologues and add the language ID to `patternconstraints.xml` if it matches.
 
+- Opcode field value 29 (which covers byte 0xE8-0xEF, the mov:f word-size / extended @(d:8,Rn)
+  form per IDA's 0xE0-0xEF MAP4 row) has zero constructors in this slaspec. That's the precise,
+  evidence-backed gap. opcode=28 only has a single narrow constructor (jmp gated by
+  opcode_special=0x11), not the general @(d:8,Rn),Rn move form the IDA reference shows for
+  that whole byte range. This matches our hand-decode exactly: byte 0xEE (opcode=29, Rd/Rs=6)
+  has no matching constructor at all in the SLEIGH file, so the disassembler either falls
+  through to an unintended default or fails — consistent with the decompiler hitting
+  "bad instruction" partway through.
+
 ### H8/520 (upstream, unverified)
 
 - `ADC_ADI_vector` in `h8520.pspec` is assigned the same address as `SCI1_ERI_vector`
