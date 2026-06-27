@@ -6,6 +6,78 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ## [Unreleased]
 
+### Fixed — `h8539f.slaspec`: Multiple bad-instruction decode failures
+
+A comprehensive rework of the SLEIGH instruction set to resolve several categories of
+`Unable to resolve constructor` / `?? xxh` bad-instruction errors observed across ECU ROMs.
+
+#### MAP4 dispatch (`?? EEh` — opcode prefix `0xE0`–`0xEF`)
+
+The MAP4 opcode range routes to immediate-to-register `mov:g` forms via a second byte.
+There was no `map4b` token or constructors for this prefix — the entire range was
+unrecognised. Added a new `map4b` token (`m4op`, `m4sz`, `m4Rn` fields) and three new
+constructors:
+
+- `mov:"g.b" #imm8, Rn` — m4op=0, m4sz=0 (covers the failing `EE 06 04` → `mov:g.b #0x4, R6` case)
+- `mov:"g.w" #imm8 (sign-extended), Rn` — m4op=0, m4sz=1
+- `mov:"g.w" #imm16, Rn` — m4op=1, m4sz=0
+
+#### `cmp:g` cross-EA constructors (`?? DCh`)
+
+`cmp:g` (opcode_special=4/5) was missing constructors for mixed EA/immediate widths.
+Byte `0xDC` selects a word-indirect EA (`@R4`), but a byte-immediate second byte is a
+valid H8 encoding per IDA SDK `ana.cpp`. Added:
+
+- `cmp:"g.b" i8, eaw_*` (all word EAs) — opcode_special=4, zero-extends `i8` to word
+- `cmp:"g.w" i16, eab_*` (all byte EAs) — opcode_special=5, symmetric counterpart
+
+#### `bra` unconditional branch spurious fallthrough
+
+The generic `cc` table returned `1:1` for `cond=0` (branch-always), producing
+`if (1) goto target` pcode — a conditional-goto shape that keeps a phantom fallthrough
+edge. Split `bra` out with a `cond=0` constraint to emit a bare `goto reloffs8` with no
+condition, eliminating the spurious edge. The 16-bit displacement form (`bra:16`) shares
+opcode `0x30` with `rtd s8` — an ISA-level ambiguity, left as a known limitation.
+
+> **SLEIGH modelling note.** The hardware is unambiguous — `bra` never falls through.
+> The split is a workaround for SLEIGH's `cc` table not distinguishing conditional from
+> unconditional branch shape; it correctly represents the silicon behaviour.
+
+#### `pjmp` / `pjsr` indirect dereference fix
+
+Both instructions previously used `absaddr24` which exports `*[const]:4 addr24` — a
+dereference of the address constant rather than a direct call to it. This caused Ghidra
+to render targets as `DAT_0000xxxx` pointer loads instead of clean code labels. Fixed
+by computing `addr:4 = zext(addr24:3)` and using `goto [addr]` / `call [addr]` directly,
+consistent with all other jmp/jsr constructors in the file.
+
+#### `prts` two-byte encoding
+
+`prts` (far return) was matched on `opcode_special=0x19` alone — identical to `rts`
+(near return), making the two indistinguishable. Corrected to the proper two-byte
+sequence `0x11 0x19`.
+
+#### `prtd` far return-and-deallocate (s8 and s16 forms)
+
+Both forms were missing entirely. Added constructors for `prtd s8` (prefix `0x11 0x14`)
+and `prtd s16` (prefix `0x11 0x1C`), each popping CP and PC then adjusting SP by the
+signed immediate.
+
+#### Register layout: `PC16` removed, `FPH` added
+
+`PC16` was a dead definition (offset `0x81`, mid-parent inside `PC` at `0x80 size=4`)
+never referenced anywhere in the slaspec. Suspected cause of
+`encodeTranslator(): Marshaling error: syntax error` in `DecompInterface.openProgram()`.
+Removed. Added `FPH` at offset `0x4C` to support `orc/andc/xorc TP` side-effects
+propagating into the frame pointer high byte.
+
+> **SLEIGH modelling note.** The `PC16` removal is a workaround for a SLEIGH serialisation
+> constraint — SLEIGH does not permit a named sub-register at a misaligned offset within a
+> 4-byte parent. The removal was not driven by the hardware spec (the H8/500 does have a
+> 16-bit PC view), but it was a dead definition with no references, so removing it has no
+> effect on disassembly or decompilation correctness. `FPH` is architecturally correct —
+> the high byte of FP is genuinely modified by `orc/andc/xorc TP` on the silicon.
+
 ### Added — `test/h8539_ecu_master_setup.py` (replaces `ecu_full_setup.py`)
 
 Complete rewrite of the ECU setup script as a single all-in-one file with an
