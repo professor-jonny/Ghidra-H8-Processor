@@ -85,6 +85,21 @@ define token special(8)
 	opcode_special = (0,7)
 ;
 
+# MAP4 second byte (follows first byte 0xE0-0xEF, opcode47=14).
+# m4op[7:4] selects the operation family:
+#   0x0X = mov:g.b #imm8, Rn  (byte immediate to register, Rn = m4byte & 7)
+#   0x1X = mov:g.w #imm8/:16, Rn  (word immediate to register)
+#   0x8X = mov:g load EA -> Rn
+#   0x9X = mov:g store Rn -> EA
+# m4Rn[2:0] = register operand; m4sz[3] = 0 (byte) / 1 (word) for immediate forms.
+define token map4b(8)
+	m4Rn   = (0, 2)
+	m4sz   = (3, 3)
+	m4op   = (4, 7)
+	m4full = (0, 7)
+;
+attach variables [ m4Rn ] [ R0 R1 R2 R3 R4 R5 FP SP ];
+
 define token addrByte(8)    addr8  = (0, 7);
 define token addrWord(16)   addr16 = (0, 15);
 define token addrLong(24)   addr24 = (0, 23);
@@ -584,8 +599,31 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :mov:"g.w"    i16,eab_abs8_br           is eab_abs8_br     ; opcode_special=7; i16                 { eab_abs8_br [0,8] = i16[0,8];       stdflags(i16[0,8]); }
 :mov:"g.w"    i16,eab_abs16             is eab_abs16;        opcode_special=7; i16                 { eab_abs16   [0,8] = i16[0,8];       stdflags(i16[0,8]); }
 
-# ADD:G <EAs>,Rd           Add, general format
-#       N: result s< 0
+# MOV:G MAP4 variants (first byte 0xE0-0xEF, opcode47=14)
+#
+# Byte 1 (0xE0-0xEF): instr8 token — opcode47=14 identifies MAP4 dispatch.
+#                     Bits[2:0] of byte 1 are the MAP4 page-select index (ignored here).
+# Byte 2: map4b token — m4op[7:4] selects operation; m4Rn[2:0] is the register operand;
+#                       m4sz[3] distinguishes byte (0) from word (1) for immediate forms.
+# Byte 3+: immediate data if applicable.
+#
+# Constructors put opcode47=14 on the instr8 token (byte 1) first, then the map4b
+# constraints after the semicolon (byte 2).  This avoids the "Mismatched tokens"
+# error that occurs when EA subtables (which anchor addrMode as their leading token)
+# are placed before opcode47 in the pattern.
+#
+# --- MAP4 immediate-to-register forms ---
+# m4op=0, m4sz=0: mov:g.b #imm8, Rn  (byte 2 = 0x00-0x07, byte 3 = imm8)
+# Covers the failing EE 06 04 case: byte1=0xEE, byte2=0x06 (m4op=0,m4sz=0,m4Rn=6=R6),
+# byte3=0x04 → mov:g.b #0x4:8, R6
+:mov:"g.b"  "#"^imm8^":8",m4Rn   is opcode47=14; m4op=0 & m4sz=0 & m4Rn; imm8  { local v:1 = imm8:1; m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v == 0); $(VF) = 0; }
+# m4op=0, m4sz=1: mov:g.w #imm8 (sign-extended), Rn  (byte 2 = 0x08-0x0F)
+:mov:"g.w"  "#"^imm8^":8",m4Rn   is opcode47=14; m4op=0 & m4sz=1 & m4Rn; imm8  { local v:2 = sext(imm8:1); m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v == 0); $(VF) = 0; }
+# m4op=1, m4sz=0: mov:g.w #imm16, Rn  (byte 2 = 0x10-0x17, bytes 3-4 = imm16)
+:mov:"g.w"  "#"^imm16^":16",m4Rn  is opcode47=14; m4op=1 & m4sz=0 & m4Rn; imm16 { local v:2 = imm16:2; m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v == 0); $(VF) = 0; }
+
+
+# ADD:G <EAs>,Rd           Add, general format#       N: result s< 0
 #       Z: result == 0
 #       V: signed overflow: signed computed result is not the same as the mathematical result assuming signed inputs
 #       C: unsigned overflow: result u< Rd_original
@@ -1211,6 +1249,19 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :cmp:"g.b"    i8,eab_abs16             is eab_abs16;     opcode_special=4; i8  { subflags(eab_abs16, i8); }
 :cmp:"g.b"    i8,eaw_abs16             is eaw_abs16;     opcode_special=4; i8  { subflags(eaw_abs16, zext(i8)); } # TODO: Confirm in hardware if this opcode zero- or sign-extends the immediate.
 :cmp:"g.b"    i8,eab_imm8              is eab_imm8;      opcode_special=4; i8  { subflags(eab_imm8, i8); }
+# The eaw_* (word-EA) variants below were previously missing for opcode_special=4 (byte immediate).
+# This is the fix for the "Bad Instruction ... DCh" decode failure: byte1=0xDC selects eaw_indirect
+# (mode=13 & sz=1, i.e. word-sized register-indirect @R4), byte2=0x04 selects opcode_special=4
+# (byte immediate per ana.cpp's H8500_cmp_g case, which keys byte-vs-word purely off byte2's value,
+# independent of the EA's own width) -- giving cmp:g.b #imm8,@R4 (3 bytes: DC 04 <imm8>).
+# Zero-extension matches the existing eaw_abs16 case above for consistency; unconfirmed on hardware.
+:cmp:"g.b"    i8,eaw_direct            is eaw_direct;    opcode_special=4; i8  { subflags(eaw_direct, zext(i8)); }
+:cmp:"g.b"    i8,eaw_indirect          is eaw_indirect;  opcode_special=4; i8  { subflags(eaw_indirect, zext(i8)); }
+:cmp:"g.b"    i8,eaw_disp8             is eaw_disp8;     opcode_special=4; i8  { subflags(eaw_disp8, zext(i8)); }
+:cmp:"g.b"    i8,eaw_disp16            is eaw_disp16;    opcode_special=4; i8  { subflags(eaw_disp16, zext(i8)); }
+:cmp:"g.b"    i8,eaw_predec            is eaw_predec;    opcode_special=4; i8  { subflags(eaw_predec, zext(i8)); }
+:cmp:"g.b"    i8,eaw_postinc           is eaw_postinc;   opcode_special=4; i8  { subflags(eaw_postinc, zext(i8)); }
+:cmp:"g.b"    i8,eaw_abs8_br           is eaw_abs8_br;   opcode_special=4; i8  { subflags(eaw_abs8_br, zext(i8)); }
 :cmp:"g.w"    i16,eaw_direct           is eaw_direct;    opcode_special=5; i16 { subflags(eaw_direct, i16); }
 :cmp:"g.w"    i16,eaw_indirect         is eaw_indirect;  opcode_special=5; i16 { subflags(eaw_indirect, i16); }
 :cmp:"g.w"    i16,eaw_disp8            is eaw_disp8;     opcode_special=5; i16 { subflags(eaw_disp8, i16); }
@@ -1219,6 +1270,16 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :cmp:"g.w"    i16,eaw_postinc          is eaw_postinc;   opcode_special=5; i16 { subflags(eaw_postinc, i16); }
 :cmp:"g.w"    i16,eaw_abs8_br          is eaw_abs8_br;   opcode_special=5; i16 { subflags(eaw_abs8_br, i16); }
 :cmp:"g.w"    i16,eaw_abs16            is eaw_abs16;     opcode_special=5; i16 { subflags(eaw_abs16, i16); }
+# The eab_* (byte-EA) variants below were previously missing for opcode_special=5 (word immediate),
+# the symmetric counterpart of the fix above.
+:cmp:"g.w"    i16,eab_direct           is eab_direct;    opcode_special=5; i16 { tmp:1 = eab_direct:1; subflags(zext(tmp), i16); }
+:cmp:"g.w"    i16,eab_indirect         is eab_indirect;  opcode_special=5; i16 { subflags(zext(eab_indirect), i16); }
+:cmp:"g.w"    i16,eab_disp8            is eab_disp8;     opcode_special=5; i16 { subflags(zext(eab_disp8), i16); }
+:cmp:"g.w"    i16,eab_disp16           is eab_disp16;    opcode_special=5; i16 { subflags(zext(eab_disp16), i16); }
+:cmp:"g.w"    i16,eab_predec           is eab_predec;    opcode_special=5; i16 { subflags(zext(eab_predec), i16); }
+:cmp:"g.w"    i16,eab_postinc          is eab_postinc;   opcode_special=5; i16 { subflags(zext(eab_postinc), i16); }
+:cmp:"g.w"    i16,eab_abs8_br          is eab_abs8_br;   opcode_special=5; i16 { subflags(zext(eab_abs8_br), i16); }
+:cmp:"g.w"    i16,eab_abs16            is eab_abs16;     opcode_special=5; i16 { subflags(zext(eab_abs16), i16); }
 :cmp:"g.b"    i16,eaw_imm16            is eaw_imm16;     opcode_special=5; i16 { subflags(eaw_imm16, i16); }
 
 # CMP:E #xx:8,Rd           Compare:E, short format
