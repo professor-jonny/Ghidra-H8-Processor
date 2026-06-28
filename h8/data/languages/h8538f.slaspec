@@ -1,0 +1,40 @@
+define endian=big;
+
+define alignment=2;
+
+define space ram type=ram_space size=2 default;
+define space register type=register_space size=1;
+
+define register offset=0x0 size=2 [R0 R1 R2 R3 R4 R5 FP SP PC];
+
+# The SR has 8 flags.
+# Taking a cue from x86, define pseudo-registers for each flag
+# separately; otherwise decompilation is a mess
+define register offset=0x20 size=1 [T I2 I1 I0 N Z V C];
+
+define register offset=0x30 size=1 [CP DP EP TP BR];
+
+# Address mode stuff
+# see https://downloads.laboratoryb.org/insight/documents/H8/H8_500_programming.pdf#page=27
+define token data8 (8)
+    amode  = (0,3)
+    asz    = (4,4)   # Literally just Sz from pg27
+    arn    = (5,7) # which register
+    disp8   = (0,7)
+    addr8  = (0,7)
+    imm8   = (0,7)
+;
+
+define token data16 (16) # For when you have two bytes of address or displacement in your extension
+    disp16 = (0,15)
+    addr16 = (0,15)
+    imm16  = (0,15)
+;
+
+define token op (8)
+    # No fucking clue what I'd put here to say which operator is used
+    op8 = (0,7)
+;
+
+
+:MOV.W is op8=0x5f { }

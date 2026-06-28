@@ -1,0 +1,277 @@
+<rom>
+    <romid>
+        <xmlid>21451005</xmlid>
+        <internalidaddress>1020a</internalidaddress>
+        <internalidhex>21451005</internalidhex>
+        <caseid>MD352554</caseid>
+        <ecuid>TM2145</ecuid>
+        <market>JDM</market>
+        <make>Mitsubishi</make>
+        <model>RVR</model>
+        <submodel>X3</submodel>
+        <transmission>4-AT (INVECS-II, F4A4-family)</transmission>
+        <flashmethod>mitsukernel</flashmethod>
+        <memmodel>H8539F</memmodel>
+    </romid>
+
+    <include>RVR_ATbase</include>
+
+    <notes>
+2012/11/19 [Tactrix] Updated to standardized file naming.
+2024 [Analysis] Extended with tables found and verified by direct binary analysis of the
+ROM dump. Address convention: XML address = file byte offset + 0x10000. ROM ID bytes
+21 45 10 05 confirmed at file offset 0x020A.
+
+This is an INVECS-II adaptive transmission. The shift-point, shift-pressure, and
+shift-time tables below are the factory BASELINE/default calibration and the bounds
+within which the adaptive "learning" logic is allowed to drift at runtime. Per Mitsubishi
+service documentation, the actual learned values live in the TCU's volatile RAM (lost on
+battery/ECU disconnect on this generation), NOT written back to this ROM - so nothing in
+this file changes as the transmission "learns" your driving style. Tuning these tables
+changes the baseline the adaptive logic starts from and the envelope it can move within,
+not the live learned state itself.
+
+Tables are split into two sections:
+  1. CONFIRMED - address, scaling, and axis verified directly against real ROM data
+     (values checked for physically sensible shape: e.g. pressure rising with load,
+     shift speed increasing under power, etc).
+  2. CANDIDATE / UNCONFIRMED - a real 2D/3D table header was found at this address with a
+     plausible-looking axis, but the row/column dimensions and/or what the table actually
+     controls have NOT been confirmed against vehicle behavior. Treat these as a
+     starting point to verify in EcuFlash/TunerPro (e.g. watch the value change live via
+     MUT logging while operating the corresponding function) before trusting the layout.
+    </notes>
+
+    <!-- ============================================================ -->
+    <!-- CONFIRMED TABLES                                              -->
+    <!-- ============================================================ -->
+
+    <!-- Axes (already defined in RVR_ATbase.xml, listed here for reference):
+         TPS axis        @ 0x1152A, 32 elements, scaling Throttle%16
+         AUTO_LOAD axis  @ 0x11BB4, 16 elements, scaling AUTO_LOAD
+    -->
+
+    <table name="Auto: 1 -&gt; 2" category="Auto Shift Points" address="11d08" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 2 -&gt; 1" category="Auto Shift Points" address="11d2c" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 2 -&gt; 3" category="Auto Shift Points" address="11d50" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 3 -&gt; 2" category="Auto Shift Points" address="11d74" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 3 -&gt; 4" category="Auto Shift Points" address="11d98" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 4 -&gt; 3" category="Auto Shift Points" address="11dbc" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 4 -&gt; 5" category="Auto Shift Points" address="11de0" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Auto: 5 -&gt; 4" category="Auto Shift Points" address="11e04" type="2D" level="3" scaling="VehicleSpeedAT">
+        <table name="Throttle Position" address="1152a" type="Y Axis" elements="32" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 1 -&gt; 2" category="Auto Shift Pressure" address="11bfe" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 2 -&gt; 3" category="Auto Shift Pressure" address="11c12" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 3 -&gt; 4" category="Auto Shift Pressure" address="11c26" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 4 -&gt; 5" category="Auto Shift Pressure" address="11c3a" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 2 -&gt; 1" category="Auto Shift Pressure" address="11c9e" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 3 -&gt; 2" category="Auto Shift Pressure" address="11cb2" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 4 -&gt; 3" category="Auto Shift Pressure" address="11cc6" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Pressure: 5 -&gt; 4" category="Auto Shift Pressure" address="11cda" type="2D" level="3" scaling="ShiftPressure">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Time: 1 -&gt; 2" category="Auto Shift Time" address="11c4e" type="2D" level="3" scaling="ShiftTime">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Time: 2 -&gt; 3" category="Auto Shift Time" address="11c62" type="2D" level="3" scaling="ShiftTime">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Time: 3 -&gt; 4" category="Auto Shift Time" address="11c76" type="2D" level="3" scaling="ShiftTime">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <table name="Shift Time: 4 -&gt; 5" category="Auto Shift Time" address="11c8a" type="2D" level="3" scaling="ShiftTime">
+        <table name="AUTO_LOAD" address="11bb4" type="Y Axis" elements="16" scaling="Throttle%16"/>
+    </table>
+
+    <!-- Identification block - confirmed against this ROM's own header/metadata -->
+
+    <table name="Software Version" category="Identification" address="1020a" type="2D" level="4" scaling="Hex8">
+        <table name="Byte Position" type="Static X Axis" elements="4">
+            <data>b1</data>
+            <data>b2</data>
+            <data>b3</data>
+            <data>b4</data>
+        </table>
+    </table>
+
+    <table name="ECUID" category="Identification" address="2fefa" type="2D" level="4" scaling="ASCII">
+        <table name="Byte Position" type="Static Y Axis" elements="6">
+            <data>b1</data>
+            <data>b2</data>
+            <data>b3</data>
+            <data>b4</data>
+            <data>b5</data>
+            <data>b6</data>
+        </table>
+    </table>
+
+    <table name="Case Part Number" category="Identification" address="10218" type="3D" level="4" scaling="Hex8">
+        <table name="Part Number" type="Static X Axis" elements="3">
+            <data>PN2 .</data>
+            <data>PN3 .</data>
+            <data>PN4 .</data>
+        </table>
+        <table name="PN1" address="10217" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
+    </table>
+
+    <table name="ECUID Logger" category="Identification" address="10208" type="1D" level="4" scaling="Hex16"/>
+
+    <table name="MUT Table" category="MUT" address="2fcd0" type="3D" level="4" scaling="Hex16">
+        <table name="X" type="Static X Axis" elements="16">
+            <data>0</data><data>1</data><data>2</data><data>3</data>
+            <data>4</data><data>5</data><data>6</data><data>7</data>
+            <data>8</data><data>9</data><data>A</data><data>B</data>
+            <data>C</data><data>D</data><data>E</data><data>F</data>
+        </table>
+        <table name="Y" type="Static Y Axis" elements="16">
+            <data>MUT0X .</data><data>MUT1X .</data><data>MUT2X .</data><data>MUT3X .</data>
+            <data>MUT4X .</data><data>MUT5X .</data><data>MUT6X .</data><data>MUT7X .</data>
+            <data>MUT8X .</data><data>MUT9X .</data><data>MUTAX .</data><data>MUTBX .</data>
+            <data>MUTCX .</data><data>MUTDX .</data><data>MUTEX .</data><data>MUTFX .</data>
+        </table>
+    </table>
+
+    <!-- ============================================================ -->
+    <!-- CANDIDATE / UNCONFIRMED TABLES                                -->
+    <!-- A real table header (scaling-table or 2D/3D value-table       -->
+    <!-- pattern) was found at each address below. The axis RAM       -->
+    <!-- pointer and breakpoint values decode to physically plausible -->
+    <!-- numbers (RPM, %, etc), but row/column counts and the actual  -->
+    <!-- function controlled have NOT been verified against real      -->
+    <!-- vehicle behavior. Names are best-guess based on axis shape   -->
+    <!-- and surrounding context only - verify before trusting.       -->
+    <!-- ============================================================ -->
+
+    <!-- Candidate scaling/axis tables (header format confirmed correct,
+         decode to clean monotonic breakpoint sequences) -->
+
+    <table name="UNCONFIRMED - Lock-up Engagement RPM Axis (candidate)" category="Lock-up Control (unconfirmed)" address="22314" type="1D" level="5" scaling="RPM">
+        <!-- self-pointer RAM 0xF698, 4 elements: 900, 1200, 2000, 3000 RPM.
+             Plausible torque-converter lock-up engagement RPM breakpoints. -->
+    </table>
+
+    <table name="UNCONFIRMED - Lock-up Engagement RPM Axis #2 (candidate)" category="Lock-up Control (unconfirmed)" address="224a8" type="1D" level="5" scaling="RPM">
+        <!-- self-pointer RAM 0xF6A8, 16 elements: 2400-16800 RPM in 960 RPM steps.
+             Range/step size looks too large/regular for engine RPM directly;
+             may be a different unit (e.g. raw timer ticks) rather than RPM -
+             verify scaling before use. -->
+    </table>
+
+    <table name="UNCONFIRMED - Throttle/Load Axis A (candidate)" category="Lock-up Control (unconfirmed)" address="208b8" type="1D" level="5" scaling="uint16">
+        <!-- self-pointer RAM 0xF3A6, 5 elements: 35, 60, 100, 125, 150.
+             Shared by several nearby 3D value tables (see below). Units
+             unconfirmed - could be a load/TPS-derived value or a temperature. -->
+    </table>
+
+    <table name="UNCONFIRMED - Throttle/Load Axis B (candidate)" category="Lock-up Control (unconfirmed)" address="208aa" type="1D" level="5" scaling="RPM">
+        <!-- self-pointer RAM 0xF3A4, 4 elements: 1080, 1300, 1600, 1980.
+             RPM-shaped values; paired with Axis A above in several 3D tables. -->
+    </table>
+
+    <table name="UNCONFIRMED - Vehicle Speed Axis (candidate)" category="Auto Shift Points (unconfirmed)" address="21908" type="1D" level="5" scaling="uint8">
+        <!-- self-pointer RAM 0xF000, 8 elements: 90,100,110,120,130,140,150,160.
+             Could be a vehicle-speed or RPM breakpoint set used by a shift-quality
+             or kickdown-related table not yet identified. -->
+    </table>
+
+    <table name="UNCONFIRMED - Axis C (candidate)" category="Miscellaneous (unconfirmed)" address="22140" type="1D" level="5" scaling="uint16">
+        <!-- self-pointer RAM 0xF5F0, 17 elements: 0,64,128...1024 (linear, step 64) -->
+    </table>
+
+    <table name="UNCONFIRMED - Axis D (candidate)" category="Miscellaneous (unconfirmed)" address="2217e" type="1D" level="5" scaling="uint16">
+        <!-- self-pointer RAM 0xF652, 16 elements: 16,32,48...256 (linear, step 16) -->
+    </table>
+
+    <!-- Candidate value tables - 3D headers found referencing the axes above.
+         Dimensions assumed 4 rows (per header height byte) x axis-B element
+         count columns; NOT independently verified. -->
+
+    <table name="UNCONFIRMED - Lock-up/Shift Quality Map 1 (candidate)" category="Lock-up Control (unconfirmed)" address="220c2" type="3D" level="5" swapxy="true" scaling="uint8">
+        <table name="Throttle/Load Axis B" address="208aa" type="X Axis" elements="4" scaling="RPM"/>
+        <table name="Throttle/Load Axis A" address="208b8" type="Y Axis" elements="5" scaling="uint16"/>
+    </table>
+
+    <table name="UNCONFIRMED - Lock-up/Shift Quality Map 2 (candidate)" category="Lock-up Control (unconfirmed)" address="220de" type="3D" level="5" swapxy="true" scaling="uint8">
+        <table name="Throttle/Load Axis B" address="208aa" type="X Axis" elements="4" scaling="RPM"/>
+        <table name="Throttle/Load Axis A" address="208b8" type="Y Axis" elements="5" scaling="uint16"/>
+        <!-- Mostly flat low values (8s) - could be a minimum-pressure floor table -->
+    </table>
+
+    <table name="UNCONFIRMED - Lock-up/Shift Quality Map 3 (candidate)" category="Lock-up Control (unconfirmed)" address="220fa" type="3D" level="5" swapxy="true" scaling="uint8">
+        <table name="Throttle/Load Axis B" address="208aa" type="X Axis" elements="4" scaling="RPM"/>
+        <table name="Throttle/Load Axis A" address="208b8" type="Y Axis" elements="5" scaling="uint16"/>
+    </table>
+
+    <!-- Several more value tables of similar shape were found in this region
+         (file offsets approx 0x12116-0x126A8 in ROM, XML addr 0x22116-0x226A8)
+         using axis pairs (0x2330/0x2369c, 0x2237c/0x2369e, 0x223ba/0x2369e,
+         0x223f8/0x236a0) - not individually listed here as neither their
+         dimensions nor purpose are confirmed. They sit in the same code region
+         as the lock-up/shift-quality tables above and are likely related
+         (possibly per-gear or per-temperature variants of the same control).
+         Recommend locating these properly once Ghidra disassembly of the
+         surrounding code is available, rather than guessing further from
+         raw bytes alone. -->
+
+    <table name="UNCONFIRMED - Large table A (candidate, dimensions unknown)" category="Miscellaneous (unconfirmed)" address="224a0" type="2D" level="5" scaling="uint8">
+        <!-- 2D-style header at this address, axis self-pointer RAM 0xF3A6.
+             Only 8 bytes of data before next header - possibly a small lookup
+             or part of a larger structure that was mis-split during scanning. -->
+    </table>
+
+    <table name="UNCONFIRMED - Large table B (candidate, dimensions unknown)" category="Miscellaneous (unconfirmed)" address="22504" type="2D" level="5" scaling="uint8">
+        <!-- axis self-pointer RAM 0xEFE4. Repeating value of 70 for first 13+
+             bytes then continues for ~194 bytes total - shape suggests this may
+             actually be TWO OR MORE tables back to back that a naive scan
+             merged together. Needs proper re-verification. -->
+    </table>
+
+</rom>
