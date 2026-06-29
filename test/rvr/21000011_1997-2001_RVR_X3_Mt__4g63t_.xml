@@ -19,6 +19,7 @@
 
 	<notes>2012/11/19 [Tactrix] Updated to standardized file naming.
 2024 [Analysis] Corrected and extended table definitions from ROM binary analysis.
+2025 [Ghidra] Reclassified 4x "Unknown Early 3D [f3a8/f3aa]" tables from Unknown/fuel-injector-guess to Transmission/TCU, based on confirmed disassembly tracing (see tcu_torque_target_ramp_calc, tcu_slip_control_init, tcu_rx_main_scheduler). Axis scaling for these 4 tables is still tentative -- only the subsystem identity changed.
 ROM ID: 21 00 00 11 at file offset 0x021A. XML address = file_offset + 0x10000.
 Key axes confirmed from ROM data:
   RPM axis @2d2b0: 500-7000 RPM (14 elem), @2d332: 0-11000 RPM (18 elem)
@@ -511,5 +512,471 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		</table>
 		<table name="PN1" address="1024e" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
+
+
+
+	<!-- ===== UNKNOWN / PARTIALLY IDENTIFIED TABLES =========================== -->
+	<!--                                                                         -->
+	<!-- RAM axis pointer identities (confirmed from decompiler analysis):       -->
+	<!--   0xeff4 = computed engine LOAD (MAF-derived, 27 table refs)            -->
+	<!--            location: between MAF Scaling and Air Temp Comp              -->
+	<!--   0xeffc = engine COOLANT TEMP (19 table refs)                          -->
+	<!--            location: post-start enrich, accel enrich, cranking area     -->
+	<!--   0xefea = RPM (14 table refs, ascending RPM-shaped data)               -->
+	<!--            location: between fuel maps and open-loop tables              -->
+	<!--   0xefe0 = ISCV demand / error (12 table refs)                          -->
+	<!--            location: ISCV stepper context (FUN_0001774a)                -->
+	<!--   0xeff8 = Engine Speed / RPM (same region as Decel Fuel Cut Retard)    -->
+	<!--   0xefee = Lambda / AFR (slowly-descending data toward 0x80=stoich)     -->
+	<!--   0xeffe = O2 sensor voltage correction                                 -->
+	<!--   0xeffa = Coolant Temp or Time-after-start (3 identical-data tables)   -->
+	<!--   0xeffc = Coolant Temp (confirmed from cranking/enrichment context)    -->
+	<!--   0xeff2 = Load (closed-loop fuel correction area)                      -->
+	<!--   0xeff6 = Load or RPM (single table near ignition maps)                -->
+	<!--   0xeff0 = Load (near ignition maps and idle correction)                -->
+	<!--                                                                         -->
+	<!-- 3D axis pairs (confirmed from decompiler):                              -->
+	<!--   f3ac/f3ae = Open-loop lambda correction, cylinder bank 1 (FUN_2a971) -->
+	<!--   f3b0/f3b2 = Open-loop lambda correction, cylinder bank 2 (FUN_2a678) -->
+	<!--   f3a8/f3aa = Lambda correction variant (related bank, FUN_2b0b0)      -->
+	<!--   f3a4/f3a6 = Timing correction (near ignition maps)                   -->
+	<!--   f69a/f69c/f69e/f6a0 = Knock retard secondary axes                    -->
+	<!--                                                                         -->
+	<!-- NOTE: ROM axis breakpoints for efXX tables are not stored as separate   -->
+	<!-- ROM arrays. The efXX value is a live RAM index variable address.        -->
+	<!-- Axis address attributes below use nearest confirmed ROM axis as         -->
+	<!-- visual placeholder only. Element counts are exact from ROM scan.        -->
+	<!-- ======================================================================= -->
+
+
+	<!-- ===== ENGINE LOAD CORRECTION TABLES (axis = 0xeff4, RAM=computed Load) ===== -->
+	<!-- 18 tables at 0x11702-0x118e2, between MAF Scaling and Air Temp Comp.        -->
+	<!-- Data shapes: step, ramp, flat-then-ramp. Likely per-condition ISCV demand   -->
+	<!-- or MAF-derived load correction vs computed load index.                       -->
+	<!-- Two tables (117f2, 1182e) contain perfectly linear data - likely axis arrays -->
+	<!-- stored in the same region rather than lookup tables.                         -->
+
+	<table name="Load Correction A1 [eff4]" category="Load Correction" address="11702" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A2 [eff4]" category="Load Correction" address="1172a" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A3 [eff4]" category="Load Correction" address="1173e" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A4 [eff4]" category="Load Correction" address="11766" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<!-- flat at 31 then linear ramp 101-157 = step-function shape -->
+	<table name="Load Correction A5 step-ramp [eff4]" category="Load Correction" address="1177a" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<!-- linear 80..95 - probable axis array, not a lookup map -->
+	<table name="Load Correction A6 linear-axis? [eff4]" category="Load Correction" address="1178e" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A7 [eff4]" category="Load Correction" address="117a2" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A8 [eff4]" category="Load Correction" address="117b6" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A9 [eff4]" category="Load Correction" address="117ca" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A10 flat-ramp [eff4]" category="Load Correction" address="117de" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<!-- linear 82..142 step+4 - probable axis array -->
+	<table name="Load Correction A11 linear-axis? [eff4]" category="Load Correction" address="117f2" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<!-- linear 67..112 step+3 - probable axis array -->
+	<table name="Load Correction A12 linear-axis? [eff4]" category="Load Correction" address="1182e" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A13 flat-descend [eff4]" category="Load Correction" address="11842" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A14 MAF-area [eff4]" category="Load Correction" address="1186a" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A15 MAF-area [eff4]" category="Load Correction" address="11892" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A16 MAF-area [eff4]" category="Load Correction" address="118a6" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A17 MAF-area [eff4]" category="Load Correction" address="118ba" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="Load Correction A18 MAF-area [eff4]" category="Load Correction" address="118e2" type="2D" level="5" scaling="uint8">
+		<table name="Engine Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+
+	<!-- ===== OPEN-LOOP FUEL TARGET vs RPM (axis = 0xefea, RAM=RPM) ===== -->
+	<!-- 11 tables at 0x11bfc-0x11cd8, between High Oct Fuel Map 1 and     -->
+	<!-- open-loop throttle tables. Ascending RPM-shaped data.              -->
+	<!-- Likely per-condition (gear/AC/temp) open-loop AFR target vs RPM.  -->
+	<!-- Two descending tables (11c4c, 11c74) may be decel or temp tables. -->
+
+	<table name="Open Loop Fuel Target vs RPM A [efea]" category="Fuel" address="11bfc" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM B [efea]" category="Fuel" address="11c10" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM C [efea]" category="Fuel" address="11c24" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM D [efea]" category="Fuel" address="11c38" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<!-- descending 32..12 - decel or coolant temp correction -->
+	<table name="Open Loop Fuel Correction Descend A [efea]" category="Fuel" address="11c4c" type="2D" level="5" scaling="uint8">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Correction Descend B [efea]" category="Fuel" address="11c74" type="2D" level="5" scaling="uint8">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM E [efea]" category="Fuel" address="11c9c" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM F [efea]" category="Fuel" address="11cb0" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM G [efea]" category="Fuel" address="11cc4" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Fuel Target vs RPM H [efea]" category="Fuel" address="11cd8" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<!-- same efea axis, sits in ISCV initial step area -->
+	<table name="Open Loop Fuel Target vs RPM I - ISCV area [efea]" category="Fuel" address="128be" type="2D" level="5" scaling="AFR">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+
+	<!-- ===== ENGINE SPEED CORRECTION TABLES (axis = 0xeff8, RAM=Engine Speed) ===== -->
+	<!-- Same RAM axis region as Decel Fuel Cut Ignition Retard.                      -->
+	<!-- Group A: data 30,25,23,16,10,5,0... = decel retard shape, 3 identical copies -->
+	<!-- Group B: data 112,112,91,69,48..32 = high-load descend, 4 copies            -->
+	<!-- Group C: data 51,48,44,40,38..32 = gentle descend, 2 copies                 -->
+	<!-- Group D: V-shape (symmetric dip at mid-RPM), near timing trim tables         -->
+
+	<table name="Engine Speed Correction - Decel Retard Shape A [eff8]" category="Timing" address="1135e" type="2D" level="5" scaling="Timing">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Engine Speed Correction - Decel Retard Shape B [eff8]" category="Timing" address="12768" type="2D" level="5" scaling="Timing">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Engine Speed Correction - Decel Retard Shape C [eff8]" category="Timing" address="1295a" type="2D" level="5" scaling="Timing">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+	<table name="Engine Speed Correction - Flat 20-elem [eff8]" category="Timing" address="1139a" type="2D" level="5" scaling="uint8">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="20" scaling="RPM"/>
+	</table>
+	<table name="Engine Speed Correction - Hi-Load Descend A [eff8]" category="Timing" address="113d6" type="2D" level="5" scaling="uint8">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="20" scaling="RPM"/>
+	</table>
+	<table name="Engine Speed Correction - Hi-Load Descend B [eff8]" category="Timing" address="127a4" type="2D" level="5" scaling="uint8">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="20" scaling="RPM"/>
+	</table>
+	<table name="Engine Speed Correction - Hi-Load Descend C [eff8]" category="Timing" address="127e0" type="2D" level="5" scaling="uint8">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="20" scaling="RPM"/>
+	</table>
+
+	<table name="Engine Speed Correction - Gentle Descend A [eff8]" category="Timing" address="1281c" type="2D" level="5" scaling="uint8">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="Engine Speed Correction - Gentle Descend B [eff8]" category="Timing" address="12858" type="2D" level="5" scaling="uint8">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+	<!-- V-shape: high at low RPM, dips at mid, rises again - timing trim shape -->
+	<table name="Engine Speed Timing Trim - V-shape [eff8]" category="Timing" address="1272c" type="2D" level="5" scaling="Timing">
+		<table name="Engine Speed" address="2d11c" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+
+	<!-- ===== ISCV DEMAND vs IDLE RPM (axis = 0xf000, RAM idle speed variable) ===== -->
+	<!-- 8-element table. Axis data at ROM 0x11340: uint16 values 192..248           -->
+	<!-- = idle RPM range 750-969 RPM. Data 160..94 descending.                      -->
+	<!-- = ISCV step demand decreases as idle RPM rises (closed-loop idle feedback)  -->
+
+	<table name="ISCV Demand vs Idle RPM Feedback" category="ISCV Control" address="11352" type="2D" level="3" scaling="ISCVSteps">
+		<table name="Idle RPM" address="2d334" type="X Axis" elements="8" scaling="RPM"/>
+	</table>
+
+
+	<!-- ===== ISCV / LOAD SENSOR TABLES (axis = 0xefe0, RAM=ISCV demand or load) ===== -->
+	<!-- Used in ISCV stepper context (FUN_0001774a calls table at 0x112a0).            -->
+	<!-- 112a2: ascending 0..115 (22 elem); 1198a: descending 109..86 (20 elem)        -->
+	<!-- 11cec: descending 190..23 immediately before Boost Limit table                -->
+
+	<table name="ISCV Load Sensor Correction A [efe0]" category="ISCV Control" address="112a2" type="2D" level="5" scaling="uint8">
+		<table name="ISCV Demand" address="2d308" type="X Axis" elements="22" scaling="Load"/>
+	</table>
+	<table name="ISCV Load Sensor Correction B [efe0]" category="ISCV Control" address="1198a" type="2D" level="5" scaling="uint8">
+		<table name="ISCV Demand" address="2d308" type="X Axis" elements="20" scaling="Load"/>
+	</table>
+	<!-- descending 190..23, immediately before Boost Limit - may be boost load correction -->
+	<table name="Load Correction Boost Area [efe0]" category="Turbo" address="11cec" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+
+	<!-- ===== LAMBDA / O2 FUEL TRIM TABLES (axis = 0xefee, 0xeffe) ===== -->
+	<!-- efee tables: 42-element, data slowly decreasing toward 0x80=stoich -->
+	<!-- = lambda correction vs O2 sensor voltage or fuel trim index         -->
+	<!-- effe tables: 18-element, ascending then descending - O2 linearity  -->
+
+	<table name="Lambda Fuel Trim vs O2 A [efee]" category="Fuel" address="11412" type="2D" level="5" scaling="AFR">
+		<table name="O2 Sensor" address="2d308" type="X Axis" elements="42" scaling="Load"/>
+	</table>
+	<table name="Lambda Fuel Trim vs O2 B [efee]" category="Fuel" address="1143e" type="2D" level="5" scaling="AFR">
+		<table name="O2 Sensor" address="2d308" type="X Axis" elements="42" scaling="Load"/>
+	</table>
+	<table name="Lambda Fuel Trim vs O2 C [efee]" category="Fuel" address="1146a" type="2D" level="5" scaling="AFR">
+		<table name="O2 Sensor" address="2d308" type="X Axis" elements="42" scaling="Load"/>
+	</table>
+
+	<!-- O2 sensor voltage correction - ascending then descending -->
+	<table name="O2 Voltage Correction A [effe]" category="Fuel" address="11496" type="2D" level="5" scaling="uint8">
+		<table name="O2 Voltage" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+	<table name="O2 Voltage Correction B [effe]" category="Fuel" address="114aa" type="2D" level="5" scaling="uint8">
+		<table name="O2 Voltage" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+	<!-- closed-loop fuel correction, 18 elements, eff2 axis -->
+	<table name="Closed Loop Fuel Correction [eff2]" category="Fuel" address="1164e" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+
+	<!-- ===== COOLANT TEMP ENRICHMENT TABLES (axis = 0xeffa) ===== -->
+	<!-- 3 tables with IDENTICAL data: 39,39,39,39,39,39,39,39,40,45,50,55,60,64,64,64,64,64 -->
+	<!-- = flat at low speed, ramp to 64 at high speed. Could be post-start or              -->
+	<!-- warm-up fuel enrichment vs time-after-start or coolant temp.                        -->
+	<!-- Locations: 11ff2 (near Warmup Retard), 126e0 (near timing trims), 129a8 (near ISCV) -->
+
+	<table name="Temp Enrichment Flat-Ramp A [effa]" category="Fuel" address="11ff2" type="2D" level="5" scaling="uint8">
+		<table name="Coolant Temp" address="2d418" type="X Axis" elements="18" scaling="Temp"/>
+	</table>
+	<table name="Temp Enrichment Flat-Ramp B [effa]" category="Fuel" address="126e0" type="2D" level="5" scaling="uint8">
+		<table name="Coolant Temp" address="2d418" type="X Axis" elements="18" scaling="Temp"/>
+	</table>
+	<table name="Temp Enrichment Flat-Ramp C [effa]" category="Fuel" address="129a8" type="2D" level="5" scaling="uint8">
+		<table name="Coolant Temp" address="2d418" type="X Axis" elements="18" scaling="Temp"/>
+	</table>
+
+
+	<!-- ===== WASTEGATE / BOOST DUTY TABLES (axis = 0xeffc, RAM=Coolant Temp) ===== -->
+	<!-- 2 tables near anti-lag table (11f26). WGDuty-shaped data.                  -->
+	<!-- 11f46: 29..210 ascending (max duty 82%); 11f6a: 22..167 ascending (65%)    -->
+	<!-- Likely boost spool duty vs coolant temp or time-after-start condition       -->
+
+	<table name="Boost Spool WGDuty vs Temp A [effc]" category="Turbo" address="11f46" type="2D" level="5" scaling="WGDuty">
+		<table name="Coolant Temp" address="2d418" type="X Axis" elements="18" scaling="Temp"/>
+	</table>
+	<table name="Boost Spool WGDuty vs Temp B [effc]" category="Turbo" address="11f6a" type="2D" level="5" scaling="WGDuty">
+		<table name="Coolant Temp" address="2d418" type="X Axis" elements="18" scaling="Temp"/>
+	</table>
+
+
+	<!-- ===== MISCELLANEOUS SINGLE 2D TABLES ===== -->
+
+	<!-- eff6: ascending 48..86, 18 elem, sits between ignition maps - load or timing related -->
+	<table name="Ignition Area Correction [eff6]" category="Timing" address="1203a" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+	<!-- eff0: descending 255..193, 18 elem, immediately before Low Oct Ign Map 2 -->
+	<table name="Pre-Ignition Map Correction [eff0]" category="Timing" address="12062" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+	<!-- f5f0: S-curve sigmoid 1..255 full range, 18 elem, near ignition maps       -->
+	<!-- Classic transfer function shape: knock sensor, O2 linearisation, or        -->
+	<!-- normalisation curve. All 256 output values covered = full-range transfer.  -->
+	<table name="S-Curve Transfer Function [f5f0]" category="Unknown" address="1216a" type="2D" level="5" scaling="uint8">
+		<table name="Input" address="2d308" type="X Axis" elements="18" scaling="Load"/>
+	</table>
+
+	<!-- f652: hump shape 51..61..47, 18 elem, sits near Low Octane Ignition Map 2 -->
+	<table name="Ignition Hump Correction [f652]" category="Timing" address="121a6" type="2D" level="5" scaling="uint8">
+		<table name="RPM" address="2d2b0" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+	<!-- f6a8: flat 40 then drops to 27, 18 elem, near knock filter tables         -->
+	<!-- f6a8 is in knock control RAM region - likely knock threshold or gain       -->
+	<table name="Knock Control Threshold [f6a8]" category="Knock Control" address="12484" type="2D" level="5" scaling="uint8">
+		<table name="RPM" address="2d24e" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+	<!-- f3a6: 6 elements, 84,84,91,120,136,255, near Warmup Retard map            -->
+	<table name="Warmup Retard Threshold [f3a6]" category="Timing" address="124ae" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="6" scaling="Load"/>
+	</table>
+
+	<!-- efe4: flat at 70 for 13 elements, two identical copies near Warmup Retard -->
+	<!-- timing threshold or gain constant stored as lookup - both copies identical  -->
+	<table name="Warmup Timing Threshold A [efe4]" category="Timing" address="12506" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="13" scaling="Load"/>
+	</table>
+	<table name="Warmup Timing Threshold B [efe4]" category="Timing" address="12518" type="2D" level="5" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="13" scaling="Load"/>
+	</table>
+
+	<!-- eff0: V-shape 24..12..27, 18 elem, near Idle Error Correction tables      -->
+	<!-- symmetric dip at mid-RPM = idle stability timing correction vs RPM         -->
+	<table name="Idle Stability Timing Correction V-shape [eff0]" category="Idle" address="129fa" type="2D" level="5" scaling="Timing">
+		<table name="Engine Speed" address="2d086" type="X Axis" elements="18" scaling="RPM"/>
+	</table>
+
+
+	<!-- ===== UNKNOWN 3D TABLES ===== -->
+
+	<!-- f3a8/f3aa axis pair: early calibration area 0x108ca-0x10a5c           -->
+	<!-- 2025 [Ghidra] RECLASSIFIED from "Unknown"/fuel-injector guess to Transmission/TCU.   -->
+	<!-- Confirmed via disassembly of tcu_torque_target_ramp_calc (was FUN_000292cc):         -->
+	<!-- f3a8/f3aa are computed there via a piecewise scale-and-clamp on an input value,       -->
+	<!-- then used as ramp targets for f3ac/f3ae. f3ac and f3ae are independently confirmed    -->
+	<!-- TCU registers: both written by tcu_slip_control_init and read by                     -->
+	<!-- tcu_rx_main_scheduler (both already-confirmed real TCU functions elsewhere in the      -->
+	<!-- firmware). Axis identity (Load/RPM) is UNCHANGED/still a guess: only the subsystem    -->
+	<!-- (Transmission, not fuel/injector) is newly confirmed. Treat axis scaling as tentative. -->
+	<table name="TCU Torque Ramp Target A [f3a8/f3aa]" category="Transmission" address="108ca" type="3D" level="4" scaling="uint8">
+		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="TCU Torque Ramp Target B [f3a8/f3aa]" category="Transmission" address="10a24" type="3D" level="4" scaling="uint8">
+		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="TCU Torque Ramp Target C [f3a8/f3aa]" category="Transmission" address="10a40" type="3D" level="4" scaling="uint8">
+		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="TCU Torque Ramp Target D [f3a8/f3aa]" category="Transmission" address="10a5c" type="3D" level="4" scaling="uint8">
+		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+
+	<!-- efe2/efe4: all-zeros, 15-column - disabled or stub feature -->
+	<table name="Disabled Feature Stub [efe2/efe4]" category="Unknown" address="11a16" type="3D" level="5" scaling="uint8">
+		<table name="Axis X (efe2)" address="2d308" type="X Axis" elements="15" scaling="Load"/>
+		<table name="Axis Y (efe4)" address="2d2b0" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+
+	<!-- efe8/efe6: linear ramp 32..136 step 8, 14 elements - likely axis array data -->
+	<table name="Linear Ramp Table [efe8/efe6]" category="Unknown" address="11b1c" type="3D" level="5" scaling="uint8">
+		<table name="Axis X (efe8)" address="2d308" type="X Axis" elements="14" scaling="Load"/>
+		<table name="Axis Y (efe6)" address="2d2b0" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+
+	<!-- f3a4/f3a6: near High Octane Ignition Map 2, timing-range data             -->
+	<!-- 120c4: range 70-110 (Timing scaling: x-61 = +9 to +49 deg) = timing map  -->
+	<!-- 120e0: nearly flat 8-13 = small timing trim/correction factor             -->
+	<!-- 120fc/12118: IDENTICAL triangular matrix 39-72 = knock retard ceiling map  -->
+	<table name="Timing Map Variant [f3a4/f3a6]" category="Timing" address="120c4" type="3D" level="5" scaling="Timing">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="Timing Correction Trim [f3a4/f3a6]" category="Timing" address="120e0" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Ceiling Map A [f3a4/f3a6]" category="Knock Control" address="120fc" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Ceiling Map B [f3a4/f3a6]" category="Knock Control" address="12118" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+
+	<!-- Knock retard cluster 0x12340-0x12442: sparse matrices (zeros except corners) -->
+	<!-- Classic per-cylinder or per-condition knock retard correction maps.          -->
+	<!-- Multiple axis pairs: f3a4/f69a, f3ac/f69c, f3b0/f69e, f3a8/f6a0            -->
+	<table name="Knock Retard Per-Cyl A1 [f3a4/f69a]" category="Knock Control" address="12340" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl A2 [f3a4/f69a]" category="Knock Control" address="12358" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl B1 tiny [f3ac/f69c]" category="Knock Control" address="1237e" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl C1 tiny [f3b0/f69e]" category="Knock Control" address="123bc" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl C2 [f3b0/f69e]" category="Knock Control" address="123d4" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl D1 [f3a8/f6a0]" category="Knock Control" address="123fa" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<!-- max value 56 deg = high retard ceiling -->
+	<table name="Knock Retard Per-Cyl D2 max56 [f3a8/f6a0]" category="Knock Control" address="12412" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl D3 [f3a8/f6a0]" category="Knock Control" address="1242a" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+	<table name="Knock Retard Per-Cyl D4 [f3a8/f6a0]" category="Knock Control" address="12442" type="3D" level="5" scaling="uint8">
+		<table name="Load" address="2d382" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d24e" type="Y Axis" elements="4" scaling="RPM"/>
+	</table>
+
+	<!-- Lambda correction cluster 0x125de-0x1266a                                    -->
+	<!-- CONFIRMED from decompiler: f3ac/f3ae = cylinder bank 1 open-loop lambda      -->
+	<!-- correction (FUN_0002a971 and FUN_0002b0b0). f3b0/f3b2 = cylinder bank 2      -->
+	<!-- (FUN_0002a678). Both use flag f1ca bit0x20=WOT, f226=lambda mode.            -->
+	<!-- Data values orbit 0x7F=128=stoich AFR. 0x96=150=lean, 0x7F=127=stoich.      -->
+	<!-- Each axis pair has 3 tables: low-range trim, mid-range, near-stoich target.  -->
+
+	<!-- Bank 1 (cylinders 2,3) lambda correction: f3ac/f3ae -->
+	<table name="Open Loop Lambda Correction Bk1 Low [f3ac/f3ae]" category="Fuel" address="125de" type="3D" level="3" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Lambda Correction Bk1 Mid [f3ac/f3ae]" category="Fuel" address="12616" type="3D" level="3" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<!-- values 127-155 span stoichiometric region: 0x7F=stoich, 0x96=lean -->
+	<table name="Open Loop Lambda Target Bk1 [f3ac/f3ae]" category="Fuel" address="1264e" type="3D" level="3" scaling="AFR">
+		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+
+	<!-- Bank 2 (cylinders 1,4) lambda correction: f3b0/f3b2 -->
+	<table name="Open Loop Lambda Trim Bk2 [f3b0/f3b2]" category="Fuel" address="125fa" type="3D" level="3" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<table name="Open Loop Lambda Correction Bk2 Mid [f3b0/f3b2]" category="Fuel" address="12632" type="3D" level="3" scaling="uint8">
+		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+	<!-- values 96-133 span stoichiometric region -->
+	<table name="Open Loop Lambda Target Bk2 [f3b0/f3b2]" category="Fuel" address="1266a" type="3D" level="3" scaling="AFR">
+		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
+		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
+	</table>
+
 
 </rom>
