@@ -122,11 +122,244 @@ datasheets\h8539f\      -- Hitachi hardware/programming manuals
 
 ## Known limitations and future work
 
-### H8/539F
+### H8/539F — verified bugs (live ROM + IDA `ana.cpp` audit, June 2026)
 
-- The 16-bit displacement form of `bra` (byte `0x30`) has an opcode collision with `rtd`
-  in the current SLEIGH encoding model. The 8-bit form (used by all tested ROMs) is correct.
-  Unlikely to affect real ECU ROMs.
+The following issues were verified by reading raw bytes from the live RVR 1998 ROM open
+in Ghidra (770 functions, `H8:BE:32:H8539F`, image base `0x10000`) and cross-checking
+every bad-instruction address against the IDA SDK `src/module/h8500/ana.cpp` opcode
+tables (`A2`, `A2tail`, `A3`–`A6`). All 30+ errors in the Ghidra error log trace back
+to eight root causes, described below in fix-priority order.
+
+---
+
+#### BUG 1 — `.sla` binary is stale (recompile first, before anything else)
+
+The MAP4 immediate-to-register constructors (`mov:g.b #imm8,Rn` and `mov:g.w #imm16,Rn`,
+added as `opcode47=14` gated on `instr8` token) are present in `h8539f.slaspec` at lines
+619–623 but the compiled `h8539f.sla` has not been regenerated since they were added.
+Evidence: three `?? EEh` errors at `0x149f9`, `0x14b01`, `0x14df6` — raw bytes confirm
+these are valid `0xEE 0x06 ...` MAP4 sequences that the existing constructors should decode.
+
+**Fix:** recompile `h8539f.slaspec` → `h8539f.sla` using `sleigh.bat` before making any
+other changes. Run `make` from `h8\data\languages\` or:
+```powershell
+.\sleigh.bat "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.slaspec" `
+             "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.sla"
+```
+Then restart Ghidra and re-run auto-analysis. Several errors will disappear at this step.
+
+---
+
+#### BUG 2 — `sleep` is bound to the wrong opcode (`0x2C` instead of `0x1A`)
+
+**Verified:** raw bytes at `0x12170`–`0x12177` are `1A 1A 19 1A 1B 1C 1E 1E`. Every
+`1A` is reported as `?? 1Ah`. Per `ana.cpp` line 24: `A2[0x1A] = H8500_sleep`. The byte
+`0x2C` that the current slaspec uses (`opcode_special=0x2C` at line 2001) is actually
+`A2[0x2C] = H8500_bra` (part of the `bhi`/`bls`/... branch group).
+
+**Fix (slaspec line 2001):**
+```sleigh
+# BEFORE (wrong):
+:sleep   is opcode_special=0x2C { }
+
+# AFTER (correct):
+:sleep   is opcode_special=0x1A { }
+```
+
+Errors eliminated: `?? 1Ah` cluster (`0x12170`, `0x12171`, `0x12173`+).
+
+---
+
+#### BUG 3 — `rtd` s8/s16 bound to wrong opcodes (`0x30`/`0x34` instead of `0x04`/`0x0C`)
+
+**Verified:** `ana.cpp` switch cases (lines 347–366):
+- `case 0x04` — `rtd #xx:8` (same-page return + 8-bit stack pop)
+- `case 0x0C` — `rtd #xx:16` (same-page return + 16-bit stack pop)
+
+The current slaspec (lines 2006/2017) uses `opcode_special=0x30` and `opcode_special=0x34`.
+`0x30` is the 16-bit-displacement `bra:16` opcode; `0x34` is `bcc:16`. This leaves `0x04`
+and `0x0C` with no constructors (→ `?? 04h`, `?? 0Ch` anywhere those bytes appear as
+instruction starts) and creates false conflicts on branch instructions.
+
+Note: the README previously stated `rtd s8 = 0x14` and `rtd s16 = 0x1C` — that was
+**incorrect**. `0x14` and `0x1C` are MAP6 second-byte values for `prtd` (far return +
+deallocate), dispatched via the `0x11` prefix byte. `0x04`/`0x0C` are the true direct
+first-byte opcodes for same-page `rtd`.
+
+**Fix (slaspec lines 2006 and 2017):**
+```sleigh
+# BEFORE (wrong):
+:rtd  s8   is opcode_special=0x30; s8  { ... }
+:rtd  s16  is opcode_special=0x34; s16 { ... }
+
+# AFTER (correct):
+:rtd  s8   is opcode_special=0x04; s8  { ... }
+:rtd  s16  is opcode_special=0x0C; s16 { ... }
+```
+
+Errors eliminated: `?? 1Ch` at `0x12175`, `?? 0Ch` at `0x24d24`, and the `prtd #0x1a:8`
+cluster at `0x12170` (cascade from `sleep` + `rtd` both being wrong).
+
+---
+
+#### BUG 4 — MAP4 first-byte range incomplete (`0xE0-0xEF` only; needs `0xB0-0xFF`)
+
+**Verified:** `ana.cpp` `A2tail` table:
+```
+0xB0 → MAP4,  0xC0 → MAP4,  0xD0 → MAP4,  0xE0 → MAP4,  0xF0 → MAP4
+```
+MAP4 first bytes are **`0xB0`–`0xFF`** (five 16-byte rows). The current slaspec MAP4
+constructors (lines 619–623) only gate on `opcode47=14` (bits 4–7 = `0xE`), covering
+`0xE0-0xEF`. First bytes `0xB0-0xDF` and `0xF0-0xFF` (`opcode47` = 11, 12, 13, 15) have
+no MAP4 constructors and fall through to `addrMode`-token EA constructors that happen to
+pattern-match the same byte differently:
+
+| First byte range | `opcode47` | Mistakenly matched as |
+|---|---|---|
+| `0xB0-0xBF` | 11 | `eaw_predec` (`mode=11, sz=1`) |
+| `0xC0-0xCF` | 12 | `eaw_postinc` (`mode=12, sz=1`) |
+| `0xD0-0xDF` | 13 | `eaw_indirect` (`mode=13, sz=1`) |
+| `0xF0-0xFF` | 15 | `eaw_disp16` (`mode=15, sz=1`) |
+
+Raw bytes at `0x24b7d`: `BF 98 0C 07 00 48 0C FE FF 58...` — `0xBF` is MAP4 first byte,
+`0x98` is second byte `A4[0x18] = H8500_shal` (word), but Ghidra decodes `0xBF` as
+`eaw_predec` and cascades into `?? 07h`/`?? FFh` on following bytes.
+
+**Fix:** extend all MAP4 constructors to cover all five `opcode47` values (11–15).
+SLEIGH does not support `|` in pattern constraints; duplicate each constructor or use a
+subtable:
+```sleigh
+# Repeat for opcode47 = 11, 12, 13, 14, 15 (current file has only 14):
+:mov:"g.b" "#"^imm8^":8",m4Rn  is opcode47=11; m4op=0 & m4sz=0 & m4Rn; imm8 { ... }
+:mov:"g.b" "#"^imm8^":8",m4Rn  is opcode47=12; m4op=0 & m4sz=0 & m4Rn; imm8 { ... }
+:mov:"g.b" "#"^imm8^":8",m4Rn  is opcode47=13; m4op=0 & m4sz=0 & m4Rn; imm8 { ... }
+# opcode47=14 already present
+:mov:"g.b" "#"^imm8^":8",m4Rn  is opcode47=15; m4op=0 & m4sz=0 & m4Rn; imm8 { ... }
+# ... same for the m4sz=1 (sign-extended imm8) and m4op=1 (imm16) variants
+```
+
+Also add MAP4 **single-operand** constructors for `A4[0x10-0x1F]` second bytes:
+`clr`, `neg`, `not`, `tst`, `tas`, `shal`, `shar`, `shll`, `shlr`, `rotl`, `rotr`,
+`rotxl`, `rotxr` (word forms, `m4op=1, m4sz=0..1` range).
+
+Also add MAP4 **bit-operation** forms from `A4tail`: `bset`/`bclr`/`bnot`/`btst` with
+immediate bit number (`m4op=8-15` second-byte range). These produce the `?? FFh` errors.
+
+Errors eliminated: `?? BFh` at `0x28874`, `?? ABh` at `0x24c8a`, `?? FFh` cluster
+(`0x24b85`, `0x24cba`, `0x24cda`, `0x24cfa`, `0x24d1a`), `?? 07h` cluster.
+
+---
+
+#### BUG 5 — MAP3 first-byte range (`0xA0-0xAF`) causes EA token collisions
+
+**Verified:** `A2tail[0xA0] = MAP3`. MAP3 first bytes are `0xA0-0xAF` (`opcode47=10`).
+These collide with `eab_direct`/`eaw_direct` constructors because `addrMode` byte `0xAn`
+has `mode=(4,7)=10=direct`, matching the EA direct forms. MAP3 single-operand instructions
+(`swap`, `exts`, `extu`, `clr`, `neg`, `not`, `tst`, `tas`, `shal`… byte forms from
+`A3[0x10-0x1F]`) all currently use bare `opcode_special=0xNn`, treating them as standalone
+first bytes rather than MAP3 second bytes.
+
+**Fix:** add `opcode47=10` as a first-byte gate for all MAP3 single-operand constructors,
+mirroring the MAP4 pattern. Add a MAP3 second-byte subtable parallel to `map4b`.
+
+Errors eliminated: `?? ABh` cascade, `tst.b @offset` conflict at `0x2c651`,
+`?? 15h` conflict at `0x2c7eb`.
+
+---
+
+#### BUG 6 — MAP5 dispatch (`0x0C`/`0x0D` first bytes) is entirely absent
+
+**Verified:** `A2[0x0C] = MAP5`. MAP5 covers `add:g`, `sub`, `or`, `and`, `xor`,
+`cmp:g`, `mov:g`, `ldc`, `orc`, `andc`, `xorc`, `addx`, `mulxu`, `subx`, `divxu` on
+**immediate EA** (`eab_imm8`/`eaw_imm16`, `A5tail`). No MAP5 constructors exist anywhere
+in `h8539f.slaspec`. Any instruction encoded as MAP5 decodes as `?? 0Ch` or `?? 0Dh`.
+
+**Fix:** add a MAP5 second-byte token (same shape as `map4b`) and constructors for all
+`A5tail` entries, gated on `opcode_special=0x0C` (byte) or `opcode_special=0x0D` (word).
+
+Errors eliminated: `?? 0Ch` at `0x24d24`.
+
+---
+
+#### BUG 7 — `stc`/`ldc` constructors accept invalid `CR8` index (undefined register hole)
+
+**Verified:** raw bytes at `0x14e31`: `A6 8A FC E2...` `0xA6` = MAP3 first byte,
+`0x8A` = MAP3 tail → `stc` form, `Rn = (0x8A & 7) = 2`. `CR8` index 2 maps to `_`
+(a hole: `attach variables [ CR8 ] [ _ CCR _ BR EP DP _ TP ]`). IDA guards this:
+`if (Op2.reg == RES1 || Op2.reg == CP) return 0` — indices 0 and 2 are invalid.
+The current slaspec has no such guard.
+
+**Fix:** add `CR8!=0 & CR8!=2 & CR8!=6` to all `stc`/`ldc`/`orc`/`andc`/`xorc`
+constructors using the `CR8` attach table. (Valid indices: 1=CCR, 3=BR, 4=EP, 5=DP, 7=TP.)
+
+Errors eliminated: `Failed to resolve varnode <CR8>, index=2` at `0x14e31`.
+
+---
+
+#### BUG 8 — `CP` is not a SLEIGH context variable (correctness issue, not bad-instruction)
+
+The hardware CP register (`define register offset=0x10 size=1`) is set via
+`setRegisterValue("CP", 1/2, ...)` in the setup script, which works at decompile time.
+But SLEIGH pattern matching cannot gate constructors on a register value — only on context
+variable fields. Instructions that fold CP into a 24-bit target address therefore cannot
+resolve targets at disassembly time.
+
+**Fix:** add `CP_ctx` to the context definition:
+```sleigh
+define context contextreg
+    targetBase = (0,2)    # already present
+    targetReg  = (3,5)    # already present
+    CP_ctx     = (6,7);   # NEW: 2 bits, page 0-3
+```
+In `h8539_ecu_master_setup.py`, mirror each `setRegisterValue("CP", N, ...)` call with
+a matching `setContextVar("CP_ctx", N, ...)` over the same address range.
+
+---
+
+### Fix order for a new session
+
+Work through these in order. Recompile and re-run analysis after each step.
+
+| Step | What to change | File | Errors cleared |
+|------|----------------|------|----------------|
+| 1 | Recompile `h8539f.sla` (no slaspec edit needed) | `Makefile` / `sleigh.bat` | `?? EEh` ×3 |
+| 2 | `sleep` opcode `0x2C` → `0x1A` (line 2001) | `h8539f.slaspec` | `?? 1Ah` cluster |
+| 3 | `rtd s8` opcode `0x30` → `0x04` (line 2006) | `h8539f.slaspec` | `?? 0Ch`, `?? 1Ch` |
+| 4 | `rtd s16` opcode `0x34` → `0x0C` (line 2017) | `h8539f.slaspec` | `prtd` cascade |
+| 5 | Extend MAP4 constructors to `opcode47` 11/12/13/15 | `h8539f.slaspec` lines 619–623+ | `?? BFh`, `?? FFh`, `?? ABh` |
+| 6 | Add MAP4 single-operand + bit-op second-byte forms | `h8539f.slaspec` (new section) | `?? FFh` cluster, `?? 07h` |
+| 7 | Add MAP3 `opcode47=10` first-byte gate | `h8539f.slaspec` | `tst.b` conflict, `?? 15h` |
+| 8 | Add MAP5 dispatch (`0x0C`/`0x0D`) | `h8539f.slaspec` (new section) | `?? 0Ch` |
+| 9 | `CR8` validity guard (`CR8!=0 & CR8!=2 & CR8!=6`) | `h8539f.slaspec` stc/ldc constructors | varnode error |
+| 10 | Add `CP_ctx` context variable + setup script wiring | `h8539f.slaspec` + `h8539_ecu_master_setup.py` | decompiler correctness |
+
+After steps 1–4, recompile and check: the `0x1217x` cluster, the three `?? EEh`, and
+`0x24d24 ?? 0Ch` should all be gone. Steps 5–6 clear the `0x24bxx`/`0x28874` cluster.
+Steps 7–9 clear the remaining one-off errors. Step 10 is a correctness improvement.
+
+---
+
+### H8/539F — remaining known limitations (not errors, deferred work)
+
+- **MAP3/MAP4 single-operand `opcode_special` collision (partially addressed by BUGs 4/5 above).**
+  The full set of MAP3/MAP4 single-operand instructions (`neg`, `exts`, `extu`, `clr`, `not`,
+  `tst`, `tas`, `swap`, `shal`, `shar`, `shll`, `shlr`, `rotl`, `rotr`, `rotxl`, `rotxr`) all
+  currently use bare `opcode_special=0xNn` which places them in the flat first-byte space. Their
+  correct second-byte values (`0x10`–`0x1F` in `A3`/`A4`) overlap with MAP6 first-byte
+  instructions. Fixing BUGs 4 and 5 (MAP4/MAP3 opcode47 gating) will resolve the collision for
+  the affected constructors as a side-effect. The remaining eight potential collisions noted in
+  the June 2026 static audit (bytes `0x11`–`0x1E`) should be re-evaluated after BUGs 4–5 are
+  fixed, using `sleigh`'s ambiguous-pattern warnings at compile time rather than ROM byte search.
+
+- The H8/539F interrupt vector table (`0x10000`-`0x10140`, confirmed by direct ROM read on the
+  RVR 1998 ROM) is not marked as data by the setup script. Auto-analysis occasionally walks into
+  it as code (e.g. `Unable to resolve constructor at 0x10019`). Should be explicitly defined as
+  a `pointer32`/`addr` array in `h8539_ecu_master_setup.py` before auto-analysis runs.
+
+- The ROM header scraper in `h8539_ecu_master_setup.py` only scans `0x0 .. MUT_OFFSET` (page 1).
+  On the RVR 1998 transmission ROM, embedded calibration/lookup tables also appear inline in
+  page 2 code (`0x20000+`) and are not reached by the current scan range, contributing to
+  disassembly failures there. Scraper passes need a second range covering page 2.
 
 - `prtd` (far return with immediate stack pop) is now decoded correctly (both s8 and s16
   forms), but stack purge accounting is not modelled. Functions using `prtd #n` to clean
