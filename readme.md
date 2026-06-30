@@ -132,73 +132,60 @@ to eight root causes, described below in fix-priority order.
 
 ---
 
-#### BUG 1 — `.sla` binary is stale (recompile first, before anything else)
+#### NOTE 1 — Compiled `.sla` must be kept in sync (not a bug; a build step)
 
-The MAP4 immediate-to-register constructors (`mov:g.b #imm8,Rn` and `mov:g.w #imm16,Rn`,
-added as `opcode47=14` gated on `instr8` token) are present in `h8539f.slaspec` at lines
-619–623 but the compiled `h8539f.sla` has not been regenerated since they were added.
-Evidence: three `?? EEh` errors at `0x149f9`, `0x14b01`, `0x14df6` — raw bytes confirm
-these are valid `0xEE 0x06 ...` MAP4 sequences that the existing constructors should decode.
+This is not a bug in the SLEIGH spec — it is a required build step. Ghidra reads the
+compiled `.sla` binary, not the `.slaspec` source. After any edit to `h8539f.slaspec`,
+recompile before deploying.
 
-**Fix:** recompile `h8539f.slaspec` → `h8539f.sla` using `sleigh.bat` before making any
-other changes. Run `make` from `h8\data\languages\` or:
+Ghidra will also recompile automatically on startup if the `.sla` file is absent, so
+deleting it and restarting Ghidra is an alternative. Either way, make sure the compiled
+`.sla` is copied from the project into the Ghidra install folder. This can be done with
+the **Run-Command** tool in Pulsar.
 ```powershell
-.\sleigh.bat "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.slaspec" `
-             "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.sla"
+.\sleigh.bat "C:\Users\j.brophy.CORKILLSYSTEMS\Downloads\ghidra_12.0.4_PUBLIC\Ghidra\Processors\h8\data\languages\h8539f.slaspec" `
+             "C:\Users\j.brophy.CORKILLSYSTEMS\Downloads\ghidra_12.0.4_PUBLIC\Ghidra\Processors\h8\data\languages\h8539f.sla"
 ```
 Then restart Ghidra and re-run auto-analysis. Several errors will disappear at this step.
 
 ---
 
-#### BUG 2 — `sleep` is bound to the wrong opcode (`0x2C` instead of `0x1A`)
+#### ~~BUG 2 — `sleep` is bound to the wrong opcode (`0x2C` instead of `0x1A`)~~ **FIXED**
 
-**Verified:** raw bytes at `0x12170`–`0x12177` are `1A 1A 19 1A 1B 1C 1E 1E`. Every
+~~**Verified:** raw bytes at `0x12170`–`0x12177` are `1A 1A 19 1A 1B 1C 1E 1E`. Every
 `1A` is reported as `?? 1Ah`. Per `ana.cpp` line 24: `A2[0x1A] = H8500_sleep`. The byte
 `0x2C` that the current slaspec uses (`opcode_special=0x2C` at line 2001) is actually
-`A2[0x2C] = H8500_bra` (part of the `bhi`/`bls`/... branch group).
+`A2[0x2C] = H8500_bra` (part of the `bhi`/`bls`/... branch group).~~
 
-**Fix (slaspec line 2001):**
-```sleigh
-# BEFORE (wrong):
-:sleep   is opcode_special=0x2C { }
+~~**Fix (slaspec line 2001):**~~
+~~`:sleep   is opcode_special=0x2C { }`~~  → ~~`:sleep   is opcode_special=0x1A { }`~~
 
-# AFTER (correct):
-:sleep   is opcode_special=0x1A { }
-```
-
-Errors eliminated: `?? 1Ah` cluster (`0x12170`, `0x12171`, `0x12173`+).
+~~Errors eliminated: `?? 1Ah` cluster (`0x12170`, `0x12171`, `0x12173`+).~~
 
 ---
 
-#### BUG 3 — `rtd` s8/s16 bound to wrong opcodes (`0x30`/`0x34` instead of `0x04`/`0x0C`)
+#### ~~BUG 3 — `rtd` s8/s16 bound to wrong opcodes (`0x30`/`0x34` instead of `0x04`/`0x0C`)~~ **FIXED**
 
-**Verified:** `ana.cpp` switch cases (lines 347–366):
-- `case 0x04` — `rtd #xx:8` (same-page return + 8-bit stack pop)
-- `case 0x0C` — `rtd #xx:16` (same-page return + 16-bit stack pop)
+~~**Verified:** `ana.cpp` switch cases (lines 347–366):~~
+~~- `case 0x04` — `rtd #xx:8` (same-page return + 8-bit stack pop)~~
+~~- `case 0x0C` — `rtd #xx:16` (same-page return + 16-bit stack pop)~~
 
-The current slaspec (lines 2006/2017) uses `opcode_special=0x30` and `opcode_special=0x34`.
+~~The current slaspec (lines 2006/2017) uses `opcode_special=0x30` and `opcode_special=0x34`.
 `0x30` is the 16-bit-displacement `bra:16` opcode; `0x34` is `bcc:16`. This leaves `0x04`
 and `0x0C` with no constructors (→ `?? 04h`, `?? 0Ch` anywhere those bytes appear as
-instruction starts) and creates false conflicts on branch instructions.
+instruction starts) and creates false conflicts on branch instructions.~~
 
-Note: the README previously stated `rtd s8 = 0x14` and `rtd s16 = 0x1C` — that was
+~~Note: the README previously stated `rtd s8 = 0x14` and `rtd s16 = 0x1C` — that was
 **incorrect**. `0x14` and `0x1C` are MAP6 second-byte values for `prtd` (far return +
 deallocate), dispatched via the `0x11` prefix byte. `0x04`/`0x0C` are the true direct
-first-byte opcodes for same-page `rtd`.
+first-byte opcodes for same-page `rtd`.~~
 
-**Fix (slaspec lines 2006 and 2017):**
-```sleigh
-# BEFORE (wrong):
-:rtd  s8   is opcode_special=0x30; s8  { ... }
-:rtd  s16  is opcode_special=0x34; s16 { ... }
+~~Errors eliminated: `?? 1Ch` at `0x12175`, `?? 0Ch` at `0x24d24`, and the `prtd #0x1a:8`
+cluster at `0x12170` (cascade from `sleep` + `rtd` both being wrong).~~
 
-# AFTER (correct):
-:rtd  s8   is opcode_special=0x04; s8  { ... }
-:rtd  s16  is opcode_special=0x0C; s16 { ... }
-```
-
-Errors eliminated: `?? 1Ch` at `0x12175`, `?? 0Ch` at `0x24d24`, and the `prtd #0x1a:8`
-cluster at `0x12170` (cascade from `sleep` + `rtd` both being wrong).
+> **Note on `bra:16` / `rtd s8` collision at `0x30`:** this is a pre-existing ISA-level
+> ambiguity — the 16-bit-displacement `bra` encoding and `rtd`'s 8-bit-displacement
+> encoding share the same first opcode byte. Left as a known limitation.
 
 ---
 
@@ -320,22 +307,100 @@ a matching `setContextVar("CP_ctx", N, ...)` over the same address range.
 
 Work through these in order. Recompile and re-run analysis after each step.
 
-| Step | What to change | File | Errors cleared |
-|------|----------------|------|----------------|
-| 1 | Recompile `h8539f.sla` (no slaspec edit needed) | `Makefile` / `sleigh.bat` | `?? EEh` ×3 |
-| 2 | `sleep` opcode `0x2C` → `0x1A` (line 2001) | `h8539f.slaspec` | `?? 1Ah` cluster |
-| 3 | `rtd s8` opcode `0x30` → `0x04` (line 2006) | `h8539f.slaspec` | `?? 0Ch`, `?? 1Ch` |
-| 4 | `rtd s16` opcode `0x34` → `0x0C` (line 2017) | `h8539f.slaspec` | `prtd` cascade |
-| 5 | Extend MAP4 constructors to `opcode47` 11/12/13/15 | `h8539f.slaspec` lines 619–623+ | `?? BFh`, `?? FFh`, `?? ABh` |
-| 6 | Add MAP4 single-operand + bit-op second-byte forms | `h8539f.slaspec` (new section) | `?? FFh` cluster, `?? 07h` |
-| 7 | Add MAP3 `opcode47=10` first-byte gate | `h8539f.slaspec` | `tst.b` conflict, `?? 15h` |
-| 8 | Add MAP5 dispatch (`0x0C`/`0x0D`) | `h8539f.slaspec` (new section) | `?? 0Ch` |
-| 9 | `CR8` validity guard (`CR8!=0 & CR8!=2 & CR8!=6`) | `h8539f.slaspec` stc/ldc constructors | varnode error |
-| 10 | Add `CP_ctx` context variable + setup script wiring | `h8539f.slaspec` + `h8539_ecu_master_setup.py` | decompiler correctness |
+#### Easy fixes (steps 1–4 and 9) — do these first
+
+Steps 1–4 are mechanical: one recompile and three single-number edits. Step 9 is a
+one-line guard added to a handful of constructors. Together they clear roughly half the
+error log with minimal risk.
+
+| Step | What to change | File | Errors cleared | Status |
+|------|----------------|------|----------------|--------|
+| 1 | Recompile `h8539f.sla` after any slaspec edit (build step, not a bug) | `sleigh.bat` / Pulsar Run-Command | `?? EEh` ×3 | Build step |
+| ~~2~~ | ~~`sleep` opcode `0x2C` → `0x1A`~~ | ~~`h8539f.slaspec`~~ | ~~`?? 1Ah` cluster~~ | **Fixed** |
+| ~~3~~ | ~~`rtd s8` opcode `0x30` → `0x04`~~ | ~~`h8539f.slaspec`~~ | ~~`?? 0Ch`, `?? 1Ch`~~ | **Fixed** |
+| ~~4~~ | ~~`rtd s16` opcode `0x34` → `0x0C`~~ | ~~`h8539f.slaspec`~~ | ~~`prtd` cascade~~ | **Fixed** |
+| 9 | `CR8` validity guard (`CR8!=0 & CR8!=2 & CR8!=6`) | `h8539f.slaspec` stc/ldc constructors | varnode error | Pending |
 
 After steps 1–4, recompile and check: the `0x1217x` cluster, the three `?? EEh`, and
-`0x24d24 ?? 0Ch` should all be gone. Steps 5–6 clear the `0x24bxx`/`0x28874` cluster.
-Steps 7–9 clear the remaining one-off errors. Step 10 is a correctness improvement.
+`0x24d24 ?? 0Ch` should all be gone.
+
+#### Structural fixes (steps 5–8) — MAP dispatch using subtables
+
+Steps 5–8 require adding new constructor blocks. Before writing any of them, add two
+first-byte gate subtables to the slaspec (after the `map4b` token/attach block, currently
+around line 101). These act like macros for the pattern side — one subtable entry covers
+all valid first bytes for a MAP group so constructors don't need to be duplicated per
+`opcode47` value.
+
+**Add these subtable definitions first (once, near line 101):**
+
+```sleigh
+# ---------------------------------------------------------------------------
+# MAP4/MAP3 first-byte gate subtables.
+# Match any valid first byte for the MAP group; no display text, no PCode.
+# Use as the leading token in MAP4/MAP3 constructors instead of a bare
+# opcode47=N, so each constructor covers the full first-byte range in one go.
+# ---------------------------------------------------------------------------
+
+map4_page: is opcode47=11 { }   # 0xB0-0xBF
+map4_page: is opcode47=12 { }   # 0xC0-0xCF
+map4_page: is opcode47=13 { }   # 0xD0-0xDF
+map4_page: is opcode47=14 { }   # 0xE0-0xEF  (covers existing constructors)
+map4_page: is opcode47=15 { }   # 0xF0-0xFF
+
+map3_page: is opcode47=10 { }   # 0xA0-0xAF
+
+# MAP5 first bytes (0x0C byte-ops, 0x0D word-ops) are below 0x60 so they sit
+# in A2[] not A2tail[] — use opcode_special=0x0C / 0x0D directly, no subtable.
+```
+
+**Important SLEIGH subtable rule:** a subtable used as a leading token in a constructor
+must use the **same token type** as the field it gates on. `map4_page` and `map3_page`
+gate on `opcode47` which is a field of the `instr8` token — so the leading semicolon in
+the constructor is followed by the `map4b` token (second byte), exactly as the existing
+`opcode47=14; m4op=...` constructors already do. No structural change is needed; just
+replace `opcode47=14` with `map4_page` in the three existing MAP4 lines.
+
+**Note on SLEIGH macros vs subtables:** SLEIGH `macro` keyword is for PCode semantics
+only (the `{ }` body). It cannot be used to parameterise patterns or display strings.
+Subtables handle pattern-side reuse; macros handle PCode-side reuse. The existing
+`stdflags()`, `addflags()` etc. are already the correct macro pattern — use the same
+style for any new flag logic needed by MAP4/MAP5 operations.
+
+| Step | What to change | File | Errors cleared | Status |
+|------|----------------|------|----------------|--------|
+| 5 | Replace `opcode47=14` with `map4_page` in lines 619–623; add MAP4 single-operand forms (`clr`/`neg`/`not`/`tst`/`tas`/`shal`/`shar`/`shll`/`shlr`/`rotl`/`rotr`/`rotxl`/`rotxr` word forms, `m4op=1` second-byte range) and bit-op forms (`bset`/`bclr`/`bnot`/`btst`, `m4op=8–15`) | `h8539f.slaspec` | `?? BFh`, `?? FFh`, `?? ABh`, `?? 07h` cluster | Pending |
+| 6 | Add `map3_page` gate to MAP3 single-operand constructors (same operations, byte forms, `opcode47=10` first byte) | `h8539f.slaspec` | `tst.b` conflict, `?? 15h`, `?? ABh` cascade | Pending |
+| 7 | Add MAP5 dispatch: new section gated on `opcode_special=0x0C` (byte) / `0x0D` (word), covering `add:g`/`sub`/`or`/`and`/`xor`/`cmp:g`/`mov:g`/`ldc`/`orc`/`andc`/`xorc`/`addx`/`mulxu`/`subx`/`divxu` immediate-EA forms from `A5tail` | `h8539f.slaspec` (new section) | `?? 0Ch` remaining | Pending |
+| 8 | Add `CP_ctx` context variable + mirror `setRegisterValue("CP",…)` calls with `setContextVar("CP_ctx",…)` | `h8539f.slaspec` + `h8539_ecu_master_setup.py` | decompiler page-address correctness | Pending |
+
+Steps 5–6 clear the `0x24bxx`/`0x28874` cluster. Step 7 clears remaining `?? 0Ch`.
+Step 8 is a correctness improvement with no bad-instruction errors of its own.
+
+#### Per-operation constructor shape (reference for steps 5–6)
+
+Each MAP4/MAP3 single-operand instruction needs one constructor per EA type
+(`eab_direct`, `eab_disp8`, `eab_indirect`, etc. — the same EA variants the existing
+`neg.b`, `not.b` constructors already use). The `map4_page`/`map3_page` gate replaces
+the old `opcode47=N` duplication, so each constructor is:
+
+```sleigh
+# MAP4 word form (map4_page covers all of 0xB0-0xFF as first byte):
+:neg.w  eaw_direct   is map4_page; m4full=0x14; eaw_direct
+    { result:2 = -(eaw_direct); eaw_direct = result; $(NF) = result[15,1]; $(ZF) = (result==0); $(VF) = 0; $(CF) = (result != 0); }
+:neg.w  eaw_disp8    is map4_page; m4full=0x14; eaw_disp8
+    { result:2 = -(eaw_disp8);  eaw_disp8  = result; $(NF) = result[15,1]; $(ZF) = (result==0); $(VF) = 0; $(CF) = (result != 0); }
+# ... one line per EA type, same body
+
+# MAP3 byte form (map3_page covers 0xA0-0xAF as first byte):
+:neg.b  eab_direct   is map3_page; m4full=0x14; eab_direct
+    { result:1 = -(eab_direct[0,8]); eab_direct[0,8] = result; stdflags(result); }
+```
+
+`m4full=(0,7)` matches the entire second byte value exactly, so `m4full=0x14` selects
+`neg` regardless of the `m4op`/`m4sz`/`m4Rn` sub-fields. This avoids needing a separate
+`map3_op` or `map4_op` subtable for the display name — the mnemonic is written directly
+in the constructor, keeping each line self-contained and easy to verify against `ana.cpp`.
 
 ---
 

@@ -893,22 +893,36 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :stc.w        "SR",eaw_postinc          is eaw_postinc;          opcode=19 & CR16=0              { CollectFlags(); eaw_postinc = SR; }
 :stc.w        "SR",eaw_abs8_br          is eaw_abs8_br;          opcode=19 & CR16=0              { CollectFlags(); eaw_abs8_br = SR; }
 :stc.w        "SR",eaw_abs16            is eaw_abs16;            opcode=19 & CR16=0              { CollectFlags(); eaw_abs16 = SR; }
-:stc.b        CR8,eab_direct            is eab_direct;           opcode=19 & CR8                 { eab_direct[0,8] = CR8; }
-:stc.b        CR8,eab_indirect          is eab_indirect;         opcode=19 & CR8                 { eab_indirect = CR8; }
-:stc.b        CR8,eab_disp8             is eab_disp8;            opcode=19 & CR8                 { eab_disp8 = CR8; }
-:stc.b        CR8,eab_disp16            is eab_disp16;           opcode=19 & CR8                 { eab_disp16 = CR8; }
-:stc.b        CR8,eab_predec            is eab_predec;           opcode=19 & CR8                 { eab_predec = CR8; }
-:stc.b        CR8,eab_postinc           is eab_postinc;          opcode=19 & CR8                 { eab_postinc = CR8; }
-:stc.b        CR8,eab_abs8_br           is eab_abs8_br;          opcode=19 & CR8                 { eab_abs8_br = CR8; }
-:stc.b        CR8,eab_abs16             is eab_abs16;            opcode=19 & CR8                 { eab_abs16 = CR8; }
-:stc.w        CR16,eaw_direct           is eaw_direct;           opcode=19 & CR16                { eaw_direct = CR16; }
-:stc.w        CR16,eaw_indirect         is eaw_indirect;         opcode=19 & CR16                { eaw_indirect = CR16; }
-:stc.w        CR16,eaw_disp8            is eaw_disp8;            opcode=19 & CR16                { eaw_disp8 = CR16; }
-:stc.w        CR16,eaw_disp16           is eaw_disp16;           opcode=19 & CR16                { eaw_disp16 = CR16; }
-:stc.w        CR16,eaw_predec           is eaw_predec;           opcode=19 & CR16                { eaw_predec = CR16; }
-:stc.w        CR16,eaw_postinc          is eaw_postinc;          opcode=19 & CR16                { eaw_postinc = CR16; }
-:stc.w        CR16,eaw_abs8_br             is eaw_abs8_br;             opcode=19 & CR16                { eaw_abs8_br = CR16; }
-:stc.w        CR16,eaw_abs16     is eaw_abs16;     opcode=19 & CR16 [targetBase=0;]{ eaw_abs16 = CR16; }
+# stc.b BR/EP/DP — named like the existing CCR and TP constructors above
+:stc.b        "BR",eab_direct            is eab_direct;           opcode=19 & CR8=3               { eab_direct[0,8] = BR; }
+:stc.b        "BR",eab_indirect          is eab_indirect;         opcode=19 & CR8=3               { eab_indirect = BR; }
+:stc.b        "BR",eab_disp8             is eab_disp8;            opcode=19 & CR8=3               { eab_disp8 = BR; }
+:stc.b        "BR",eab_disp16            is eab_disp16;           opcode=19 & CR8=3               { eab_disp16 = BR; }
+:stc.b        "BR",eab_predec            is eab_predec;           opcode=19 & CR8=3               { eab_predec = BR; }
+:stc.b        "BR",eab_postinc           is eab_postinc;          opcode=19 & CR8=3               { eab_postinc = BR; }
+:stc.b        "BR",eab_abs8_br           is eab_abs8_br;          opcode=19 & CR8=3               { eab_abs8_br = BR; }
+:stc.b        "BR",eab_abs16             is eab_abs16;            opcode=19 & CR8=3               { eab_abs16 = BR; }
+:stc.b        "EP",eab_direct            is eab_direct;           opcode=19 & CR8=4               { eab_direct[0,8] = EP; }
+:stc.b        "EP",eab_indirect          is eab_indirect;         opcode=19 & CR8=4               { eab_indirect = EP; }
+:stc.b        "EP",eab_disp8             is eab_disp8;            opcode=19 & CR8=4               { eab_disp8 = EP; }
+:stc.b        "EP",eab_disp16            is eab_disp16;           opcode=19 & CR8=4               { eab_disp16 = EP; }
+:stc.b        "EP",eab_predec            is eab_predec;           opcode=19 & CR8=4               { eab_predec = EP; }
+:stc.b        "EP",eab_postinc           is eab_postinc;          opcode=19 & CR8=4               { eab_postinc = EP; }
+:stc.b        "EP",eab_abs8_br           is eab_abs8_br;          opcode=19 & CR8=4               { eab_abs8_br = EP; }
+:stc.b        "EP",eab_abs16             is eab_abs16;            opcode=19 & CR8=4               { eab_abs16 = EP; }
+:stc.b        "DP",eab_direct            is eab_direct;           opcode=19 & CR8=5               { eab_direct[0,8] = DP; }
+:stc.b        "DP",eab_indirect          is eab_indirect;         opcode=19 & CR8=5               { eab_indirect = DP; }
+:stc.b        "DP",eab_disp8             is eab_disp8;            opcode=19 & CR8=5               { eab_disp8 = DP; }
+:stc.b        "DP",eab_disp16            is eab_disp16;           opcode=19 & CR8=5               { eab_disp16 = DP; }
+:stc.b        "DP",eab_predec            is eab_predec;           opcode=19 & CR8=5               { eab_predec = DP; }
+:stc.b        "DP",eab_postinc           is eab_postinc;          opcode=19 & CR8=5               { eab_postinc = DP; }
+:stc.b        "DP",eab_abs8_br           is eab_abs8_br;          opcode=19 & CR8=5               { eab_abs8_br = DP; }
+:stc.b        "DP",eab_abs16             is eab_abs16;            opcode=19 & CR8=5               { eab_abs16 = DP; }
+# CR16 attach table: [ SR _ _ _ _ _ _ _ ] — only index 0 (SR) is valid.
+# Generic stc.w CR16 fallback constructors removed (BUG 7 fix): they used a
+# bare CR16 attach operand with no index guard, producing varnode errors on
+# hole indices 1-7. SR is already fully covered by the explicit stc.w "SR"
+# constructors above (lines 888-895), so these fallbacks are redundant.
 
 # STM   <regs>,@-SP        Store multiple registers
 #       no flags
@@ -1070,8 +1084,12 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :andc.b       eab_imm8,"CCR"             is eab_imm8;  opcode=11 & CR8 =1 { CCR = CCR & eab_imm8;  SpreadFlags(); }
 :andc.w       eaw_imm16,"SR"             is eaw_imm16; opcode=11 & CR16=0 {  SR = SR  & eaw_imm16; SpreadFlags(); }
 :andc.b       eab_imm8,"TP"              is eab_imm8;  opcode=11 & CR8 =7 { $(ZF) = eab_imm8  == 0; $(NF) = eab_imm8  s< 0; $(VF) = 0; TP   = TP   & eab_imm8;  FPH = TP; }
-:andc.b       eab_imm8,CR8               is eab_imm8;  opcode=11 & CR8    { $(ZF) = eab_imm8  == 0; $(NF) = eab_imm8  s< 0; $(VF) = 0; CR8  = CR8  & eab_imm8;  }
-:andc.w       eaw_imm16,CR16             is eaw_imm16; opcode=11 & CR16   { $(ZF) = eaw_imm16 == 0; $(NF) = eaw_imm16 s< 0; $(VF) = 0; CR16 = CR16 & eaw_imm16; }
+:andc.b       eab_imm8,"BR"              is eab_imm8;  opcode=11 & CR8=3 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; BR = BR & eab_imm8; }
+:andc.b       eab_imm8,"EP"              is eab_imm8;  opcode=11 & CR8=4 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; EP = EP & eab_imm8; }
+:andc.b       eab_imm8,"DP"              is eab_imm8;  opcode=11 & CR8=5 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; DP = DP & eab_imm8; }
+# Generic andc.w/orc.w/xorc.w CR16 fallback constructors removed (BUG 7 fix):
+# same attach operand/constraint clash as stc.w CR16. SR already covered by
+# the explicit "SR" constructors above.
 
 # ORC   #xx,CR             OR control register
 #       If CR refers to SR or CCR, the flags are set to the input value of this instruction. Otherwise:
@@ -1081,8 +1099,10 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :orc.b        eab_imm8,"CCR"             is eab_imm8;  opcode=9  & CR8 =1 { CCR  = CCR  | eab_imm8;  SpreadFlags();  }
 :orc.w        eaw_imm16,"SR"             is eaw_imm16; opcode=9  & CR16=0 { SR   = SR   | eaw_imm16; SpreadFlags(); }
 :orc.b        eab_imm8,"TP"              is eab_imm8;  opcode=9  & CR8 =7 { $(ZF) = eab_imm8  == 0; $(NF) = eab_imm8  s< 0; $(VF) = 0; TP   = TP   | eab_imm8;  FPH = TP; }
-:orc.b        eab_imm8,CR8               is eab_imm8;  opcode=9  & CR8    { $(ZF) = eab_imm8  == 0; $(NF) = eab_imm8  s< 0; $(VF) = 0; CR8  = CR8  | eab_imm8;  }
-:orc.w        eaw_imm16,CR16             is eaw_imm16; opcode=9  & CR16   { $(ZF) = eaw_imm16 == 0; $(NF) = eaw_imm16 s< 0; $(VF) = 0; CR16 = CR16 | eaw_imm16; }
+:orc.b        eab_imm8,"BR"              is eab_imm8;  opcode=9  & CR8=3 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; BR = BR | eab_imm8; }
+:orc.b        eab_imm8,"EP"              is eab_imm8;  opcode=9  & CR8=4 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; EP = EP | eab_imm8; }
+:orc.b        eab_imm8,"DP"              is eab_imm8;  opcode=9  & CR8=5 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; DP = DP | eab_imm8; }
+
 
 # ANDC  #xx,CR             XOR control register
 #       If CR refers to SR or CCR, the flags are set to the input value of this instruction. Otherwise:
@@ -1092,8 +1112,10 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :xorc.b       eab_imm8,"CCR"             is eab_imm8;  opcode=13 & CR8 =1 { CCR  = CCR  ^ eab_imm8;  SpreadFlags();  }
 :xorc.w       eaw_imm16,"SR"             is eaw_imm16; opcode=13 & CR16=0 { SR   = SR   ^ eaw_imm16; SpreadFlags(); }
 :xorc.b       eab_imm8,"TP"              is eab_imm8;  opcode=13 & CR8 =7 { $(ZF) = eab_imm8  == 0; $(NF) = eab_imm8  s< 0; $(VF) = 0; TP   = TP   ^ eab_imm8;  FPH = TP; }
-:xorc.b       eab_imm8,CR8               is eab_imm8;  opcode=13 & CR8    { $(ZF) = eab_imm8  == 0; $(NF) = eab_imm8  s< 0; $(VF) = 0; CR8  = CR8  ^ eab_imm8;  }
-:xorc.w       eaw_imm16,CR16             is eaw_imm16; opcode=13 & CR16   { $(ZF) = eaw_imm16 == 0; $(NF) = eaw_imm16 s< 0; $(VF) = 0; CR16 = CR16 ^ eaw_imm16; }
+:xorc.b       eab_imm8,"BR"              is eab_imm8;  opcode=13 & CR8=3 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; BR = BR ^ eab_imm8; }
+:xorc.b       eab_imm8,"EP"              is eab_imm8;  opcode=13 & CR8=4 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; EP = EP ^ eab_imm8; }
+:xorc.b       eab_imm8,"DP"              is eab_imm8;  opcode=13 & CR8=5 { $(ZF) = eab_imm8 == 0; $(NF) = eab_imm8 s< 0; $(VF) = 0; DP = DP ^ eab_imm8; }
+
 
 # LDC   <EAs>,CR           Load to control register
 #       If CR refers to SR or CCR, the flags are set to the input value of this instruction.
@@ -1125,24 +1147,38 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 :ldc.w        eaw_abs8_br,"SR"             is eaw_abs8_br;         opcode=17 & CR16=0                { SR = eaw_abs8_br; SpreadFlags(); }
 :ldc.w        eaw_abs16,"SR"            is eaw_abs16;        opcode=17 & CR16=0                { SR = eaw_abs16; SpreadFlags(); }
 :ldc.w        eaw_imm16,"SR"            is eaw_imm16;        opcode=17 & CR16=0                { SR = eaw_imm16; SpreadFlags(); }
-:ldc.b        eab_direct,CR8            is eab_direct;       opcode=17 & CR8                 { CR8  = eab_direct[0,8]; }
-:ldc.b        eab_indirect,CR8          is eab_indirect;     opcode=17 & CR8                 { CR8  = eab_indirect; }
-:ldc.b        eab_disp8,CR8             is eab_disp8;        opcode=17 & CR8                 { CR8  = eab_disp8; }
-:ldc.b        eab_disp16,CR8            is eab_disp16;       opcode=17 & CR8                 { CR8  = eab_disp16; }
-:ldc.b        eab_predec,CR8            is eab_predec;       opcode=17 & CR8                 { CR8  = eab_predec; }
-:ldc.b        eab_postinc,CR8           is eab_postinc;      opcode=17 & CR8                 { CR8  = eab_postinc; }
-:ldc.b        eab_abs8_br,CR8              is eab_abs8_br;         opcode=17 & CR8                 { CR8  = eab_abs8_br; }
-:ldc.b        eab_abs16,CR8             is eab_abs16;        opcode=17 & CR8                 { CR8  = eab_abs16; }
-:ldc.b        eab_imm8,CR8              is eab_imm8;         opcode=17 & CR8                 { CR8  = eab_imm8; }
-:ldc.w        eaw_direct,CR16           is eaw_direct;       opcode=17 & CR16                { CR16 = eaw_direct; }
-:ldc.w        eaw_indirect,CR16         is eaw_indirect;     opcode=17 & CR16                { CR16 = eaw_indirect; }
-:ldc.w        eaw_disp8,CR16            is eaw_disp8;        opcode=17 & CR16                { CR16 = eaw_disp8; }
-:ldc.w        eaw_disp16,CR16           is eaw_disp16;       opcode=17 & CR16                { CR16 = eaw_disp16; }
-:ldc.w        eaw_predec,CR16           is eaw_predec;       opcode=17 & CR16                { CR16 = eaw_predec; }
-:ldc.w        eaw_postinc,CR16          is eaw_postinc;      opcode=17 & CR16                { CR16 = eaw_postinc; }
-:ldc.w        eaw_abs8_br,CR16             is eaw_abs8_br;         opcode=17 & CR16                { CR16 = eaw_abs8_br; }
-:ldc.w        eaw_abs16,CR16            is eaw_abs16;        opcode=17 & CR16                { CR16 = eaw_abs16; }
-:ldc.w        eaw_imm16,CR16            is eaw_imm16;        opcode=17 & CR16                { CR16 = eaw_imm16; }
+# ldc.b EA,BR/EP/DP
+:ldc.b        eab_direct,"BR"           is eab_direct;       opcode=17 & CR8=3               { BR = eab_direct[0,8]; }
+:ldc.b        eab_indirect,"BR"         is eab_indirect;     opcode=17 & CR8=3               { BR = eab_indirect; }
+:ldc.b        eab_disp8,"BR"            is eab_disp8;        opcode=17 & CR8=3               { BR = eab_disp8; }
+:ldc.b        eab_disp16,"BR"           is eab_disp16;       opcode=17 & CR8=3               { BR = eab_disp16; }
+:ldc.b        eab_predec,"BR"           is eab_predec;       opcode=17 & CR8=3               { BR = eab_predec; }
+:ldc.b        eab_postinc,"BR"          is eab_postinc;      opcode=17 & CR8=3               { BR = eab_postinc; }
+:ldc.b        eab_abs8_br,"BR"          is eab_abs8_br;      opcode=17 & CR8=3               { BR = eab_abs8_br; }
+:ldc.b        eab_abs16,"BR"            is eab_abs16;        opcode=17 & CR8=3               { BR = eab_abs16; }
+:ldc.b        eab_imm8,"BR"             is eab_imm8;         opcode=17 & CR8=3               { BR = eab_imm8; }
+:ldc.b        eab_direct,"EP"           is eab_direct;       opcode=17 & CR8=4               { EP = eab_direct[0,8]; }
+:ldc.b        eab_indirect,"EP"         is eab_indirect;     opcode=17 & CR8=4               { EP = eab_indirect; }
+:ldc.b        eab_disp8,"EP"            is eab_disp8;        opcode=17 & CR8=4               { EP = eab_disp8; }
+:ldc.b        eab_disp16,"EP"           is eab_disp16;       opcode=17 & CR8=4               { EP = eab_disp16; }
+:ldc.b        eab_predec,"EP"           is eab_predec;       opcode=17 & CR8=4               { EP = eab_predec; }
+:ldc.b        eab_postinc,"EP"          is eab_postinc;      opcode=17 & CR8=4               { EP = eab_postinc; }
+:ldc.b        eab_abs8_br,"EP"          is eab_abs8_br;      opcode=17 & CR8=4               { EP = eab_abs8_br; }
+:ldc.b        eab_abs16,"EP"            is eab_abs16;        opcode=17 & CR8=4               { EP = eab_abs16; }
+:ldc.b        eab_imm8,"EP"             is eab_imm8;         opcode=17 & CR8=4               { EP = eab_imm8; }
+:ldc.b        eab_direct,"DP"           is eab_direct;       opcode=17 & CR8=5               { DP = eab_direct[0,8]; }
+:ldc.b        eab_indirect,"DP"         is eab_indirect;     opcode=17 & CR8=5               { DP = eab_indirect; }
+:ldc.b        eab_disp8,"DP"            is eab_disp8;        opcode=17 & CR8=5               { DP = eab_disp8; }
+:ldc.b        eab_disp16,"DP"           is eab_disp16;       opcode=17 & CR8=5               { DP = eab_disp16; }
+:ldc.b        eab_predec,"DP"           is eab_predec;       opcode=17 & CR8=5               { DP = eab_predec; }
+:ldc.b        eab_postinc,"DP"          is eab_postinc;      opcode=17 & CR8=5               { DP = eab_postinc; }
+:ldc.b        eab_abs8_br,"DP"          is eab_abs8_br;      opcode=17 & CR8=5               { DP = eab_abs8_br; }
+:ldc.b        eab_abs16,"DP"            is eab_abs16;        opcode=17 & CR8=5               { DP = eab_abs16; }
+:ldc.b        eab_imm8,"DP"             is eab_imm8;         opcode=17 & CR8=5               { DP = eab_imm8; }
+# BUG 7 fix: bare CR16 ldc.w fallback constructors removed.
+# CR16 attach table is [ SR _ _ _ _ _ _ _ ] — only index 0 (SR) is valid.
+# All ldc.w EA,"SR" forms are already covered by the CR16=0 block above (lines 1141-1149).
+# The bare CR16 forms produced varnode errors whenever CR16 index != 0 was decoded.
 
 # CLR   <EAd>              Clear
 #       N: 0
@@ -1997,13 +2033,13 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export *[cons
 }
 
 # SLEEP                  Transition to power-down mode
-#                        Opcode: 0x2C
-:sleep                  is opcode_special=0x2C { }
+#                        Opcode: 0x1A  (was wrongly 0x2C; 0x2C is bra)
+:sleep                  is opcode_special=0x1A { }
 
 # RTD   #xx:8            Return and deallocate (same page, 8-bit immediate)
 #                        @SP+ -> PC;  SP + sext(#xx) -> SP
-#                        Opcode: 0x30 data
-:rtd    s8              is opcode_special=0x30; s8
+#                        Opcode: 0x04 data  (was wrongly 0x30; 0x30 is bra:16)
+:rtd    s8              is opcode_special=0x04; s8
 {
 	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
@@ -2013,8 +2049,8 @@ trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export *[cons
 }
 
 # RTD   #xx:16           Return and deallocate (same page, 16-bit immediate)
-#                        Opcode: 0x34 data(H) data(L)
-:rtd    s16             is opcode_special=0x34; s16
+#                        Opcode: 0x0C data(H) data(L)  (was wrongly 0x34; 0x34 is bcc:16)
+:rtd    s16             is opcode_special=0x0C; s16
 {
 	SP24 = (zext(TP) << 16) | zext(SP);
 	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);

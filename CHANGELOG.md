@@ -6,6 +6,63 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ## [Unreleased]
 
+### Fixed — `h8539f.slaspec`: CR8/CR16 invalid-index varnode error (BUG 7)
+
+Removed 9 bare `ldc.w EA,CR16` fallback constructors (all forms: `eaw_direct`,
+`eaw_indirect`, `eaw_disp8`, `eaw_disp16`, `eaw_predec`, `eaw_postinc`,
+`eaw_abs8_br`, `eaw_abs16`, `eaw_imm16`) that used an unguarded `CR16` attach
+operand with no index constraint.
+
+The `CR16` attach table is `[ SR _ _ _ _ _ _ _ ]` — only index 0 (`SR`) is
+valid. All other indices map to `_` (a hole), producing a
+`Failed to resolve varnode <CR8>, index=2` error at runtime whenever a byte
+sequence decoded a non-zero CR16 index. IDA's `ana.cpp` guards against this
+explicitly; the slaspec had no equivalent guard.
+
+All `ldc.w EA,"SR"` forms were already fully covered by the explicit
+`opcode=17 & CR16=0` constructors above. The fallbacks were redundant and
+harmful. Removed rather than patched with `CR16=0` to avoid duplicate
+constructor conflicts.
+
+The `stc.w CR16` and `andc/orc/xorc CR16` bare fallbacks had already been
+removed in a prior session. This change completes the BUG 7 fix across all
+affected instruction groups (`stc`, `ldc`, `andc`, `orc`, `xorc`).
+
+Verified: `Failed to resolve varnode` error at `0x14e31` no longer appears
+after recompile and Ghidra restart.
+
+---
+
+### Fixed — `h8539f.slaspec`: `sleep` and `rtd` opcode corrections (BUGs 2 & 3)
+
+#### `sleep` bound to wrong opcode (`0x2C` → `0x1A`)
+
+`sleep` was assigned `opcode_special=0x2C`, which is the `bhi`/`bls`/... branch group
+in the `A2` table. The correct opcode per `ana.cpp` line 24 is `A2[0x1A] = H8500_sleep`.
+Fixed to `opcode_special=0x1A`. Eliminates `?? 1Ah` errors at `0x12170`, `0x12171`,
+`0x12173`, and other locations.
+
+#### `rtd` s8/s16 bound to wrong opcodes (`0x30`/`0x34` → `0x04`/`0x0C`)
+
+`rtd s8` was using `opcode_special=0x30` (`bra:16`) and `rtd s16` was using
+`opcode_special=0x34` (`bcc:16`), leaving the real `rtd` opcodes `0x04` and `0x0C`
+unrecognised and causing false constructor conflicts on branch instructions. Corrected
+per `ana.cpp` switch cases (lines 347–366):
+
+- `rtd s8`  → `opcode_special=0x04`  (was `0x30`)
+- `rtd s16` → `opcode_special=0x0C`  (was `0x34`)
+
+Inline comments added at the fix sites documenting the old (wrong) values and why they
+were wrong. Eliminates `?? 0Ch` at `0x24d24`, `?? 1Ch` at `0x12175`, and the `prtd`
+cascade at `0x12170`.
+
+Note: the `bra:16` / `rtd s8` opcode collision at `0x30` is a pre-existing ISA-level
+ambiguity between the 16-bit-displacement `bra` encoding and `rtd`'s 8-bit-displacement
+encoding. This cannot be resolved without understanding how IDA/real hardware disambiguates
+on a later byte. Left as a known limitation — see README BUG 3 note.
+
+---
+
 ### Fixed — `h8539f.slaspec`: Multiple bad-instruction decode failures
 
 A comprehensive rework of the SLEIGH instruction set to resolve several categories of
