@@ -6,6 +6,31 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ## [Unreleased]
 
+### Fixed — `h8539f.slaspec`: MAP4 load/store forms missing (BUG 4b)
+
+Added 34 missing MAP4 second-byte constructors for the `mov:g` load
+(`EA -> Rn`, second byte `0x80-0x8F`) and store (`Rn -> EA`, second byte
+`0x90-0x9F`) forms, in both byte and word sizes, across all EA addressing
+sub-modes (`direct`, `indirect`, `disp8`, `disp16`, `predec`, `postinc`,
+`abs8_br`, `abs16`, plus `imm8`/`imm16` for the load form).
+
+These were documented in the existing header comment (`0x8X = mov:g load
+EA -> Rn`, `0x9X = mov:g store Rn -> EA`) but never implemented — only the
+three immediate-to-register forms (`m4op=0`, `m4op=1`) existed. Any MAP4
+first byte (`0xB0-0xFF`, now correctly gated by `map4_page` per BUG 4a)
+followed by a second byte in `0x80-0x9F` failed to resolve a constructor.
+
+Verified: `0x20663` now decodes as `mov:g.w #0xe15:16,R2`; `0x14df6` now
+decodes as `mov:g.b #0x4:8,FP`. `Unable to resolve constructor` errors at
+both addresses no longer appear after recompile and forced re-disassembly.
+
+Not yet fixed by this change: MAP4 second bytes `0x80-0x8F` are correctly
+handled, but first bytes in the `0x80-0x8F` range belong to **MAP3**
+(separate gate, BUG 5, not yet implemented) — e.g. `0x14bce` (`?? 88h`)
+remains broken and is MAP3, not MAP4.
+
+---
+
 ### Fixed — `h8539f.slaspec`: CR8/CR16 invalid-index varnode error (BUG 7)
 
 Removed 9 bare `ldc.w EA,CR16` fallback constructors (all forms: `eaw_direct`,

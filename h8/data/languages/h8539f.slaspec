@@ -100,6 +100,35 @@ define token map4b(8)
 ;
 attach variables [ m4Rn ] [ R0 R1 R2 R3 R4 R5 FP SP ];
 
+# ---------------------------------------------------------------------------
+# MAP4 first-byte gate subtable (BUG 4 fix).
+# A2tail[0xB0-0xFF] all dispatch to MAP4 — five 16-byte rows.
+# opcode47 values 11-15 cover the full range 0xB0-0xFF:
+#   11 = 0xB0-0xBF   12 = 0xC0-0xCF   13 = 0xD0-0xDF
+#   14 = 0xE0-0xEF   15 = 0xF0-0xFF
+# Previously only opcode47=14 was gated; bytes 0xB0-0xDF and 0xF0-0xFF fell
+# through to EA-token constructors and were misidentified.
+# Replace bare opcode47=14 with map4_page in all MAP4 constructors so the
+# full first-byte range is covered without duplicating each constructor.
+# ---------------------------------------------------------------------------
+map4_page: is opcode47=11 { }
+map4_page: is opcode47=12 { }
+map4_page: is opcode47=13 { }
+map4_page: is opcode47=14 { }
+map4_page: is opcode47=15 { }
+
+# ---------------------------------------------------------------------------
+# MAP3 first-byte gate subtable (BUG 5 fix).
+# A2tail[0xA0] = MAP3. MAP3 first bytes are 0xA0-0xAF (opcode47=10).
+# Mirrors map4_page exactly. Consumes byte 1 so that opcode_special (a
+# separate, independent token also defined to read byte 1 on its own) can
+# be reused to read byte 2 fresh inside MAP3 constructors, without SLEIGH
+# rejecting an illegal direct AND of two same-position tokens.
+# See README.md "BUG 5" section for the full derivation (cross-checked
+# against source/ghidra-h8-300/h8-insn-300h-arith.sinc's op/op_lo pattern).
+# ---------------------------------------------------------------------------
+map3_page: is opcode47=10 { }
+
 define token addrByte(8)    addr8  = (0, 7);
 define token addrWord(16)   addr16 = (0, 15);
 define token addrLong(24)   addr24 = (0, 23);
@@ -509,6 +538,76 @@ eaw_abs8_br:      "@"^addr8_br^":8"         is Rn = 5 & mode = 0 & sz = 1; addr8
 eab_abs16:        "@"^addr16_dp^":16"   is Rn = 5 & mode = 1 & sz = 0; addr16_dp { export *:1 addr16_dp; }
 #eab_abs16: "@"^addr16_dp^":16"   is Rn = 5 & mode = 1 & sz = 0; addr16_dp { export *:1 addr16_dp; }
 eaw_abs16:        "@"^addr16_dp^":16"   is Rn = 5 & mode = 1 & sz = 1; addr16_dp { export *:2 addr16_dp; }
+
+# ---------------------------------------------------------------------------
+# Byte-2-scoped EA subtables (BUG 5 fix v2).
+#
+# Problem: eab_direct/eaw_direct/etc. above are built on the `addrMode` token
+# (Rn/Rnb/sz/mode, all bits of byte 1). `map3_page`/`map4_page` gate on
+# `opcode47`, a field of the *separate* `instr8` token, also read from byte 1.
+# Chaining "is map3_page; eab_direct; opcode_special=0x16" compiles (no error)
+# but does not match at runtime: confirmed on real ROM bytes 0xA8 0x16, which
+# still resolved as `?? A8h`. Root cause (see README BUG 5 "BLOCKER FOUND"):
+# `eab_direct` was authored as a standalone first-byte matcher and is reused
+# elsewhere (e.g. plain `mov.b` MAP2 forms) at byte 1, so SLEIGH's decision
+# tree for the `addrMode` token does not shift to byte 2 just because a
+# `map3_page` subtable happens to precede it in one particular constructor.
+#
+# Fix: define a brand-new token `addrMode2`, identical bit layout to
+# `addrMode`, used ONLY by the `_2`-suffixed subtables below. Because these
+# subtables and this token are never referenced anywhere at byte 1, SLEIGH
+# has no conflicting byte-1 usage to reconcile against, and the token simply
+# reads from whatever byte is next once `map3_page`/`map4_page` (each built
+# on `instr8`, not `addrMode`/`addrMode2`) has already consumed byte 1.
+#
+# Usage in a MAP3/MAP4 single-operand constructor:
+#   :tst.b  eab_direct2  is map3_page; eab_direct2; opcode_special=0x16
+#       { stdflags(eab_direct2); }
+#
+# These are byte-for-byte identical to the eab_*/eaw_* forms above except for
+# the token/field names (Rn2/Rnb2/sz2/mode2 instead of Rn/Rnb/sz/mode, and
+# Rn_banked2 instead of Rn_banked). disp8/disp16/addr8/addr16/addr8_br/
+# addr16_dp are untouched -- those are already independent tokens with no
+# byte-1 collision, so they're reused as-is by the _2 forms below.
+# ---------------------------------------------------------------------------
+
+define token addrMode2(8)
+	Rn2   = (0, 2)
+	Rnb2  = (0, 2)
+	sz2   = (3, 3)
+	mode2 = (4, 7)
+;
+attach variables [ Rn2 ] [ R0 R1 R2 R3 R4 R5 FP SP ];
+
+Rn_banked2:      "R0"              is Rn2=0 { local addr:4 = (zext(DP) << 16) | zext(R0); export addr; }
+Rn_banked2:      "R1"              is Rn2=1 { local addr:4 = (zext(DP) << 16) | zext(R1); export addr; }
+Rn_banked2:      "R2"              is Rn2=2 { local addr:4 = (zext(DP) << 16) | zext(R2); export addr; }
+Rn_banked2:      "R3"              is Rn2=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
+Rn_banked2:      "R4"              is Rn2=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
+Rn_banked2:      "R5"              is Rn2=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
+Rn_banked2:      "FP"              is Rn2=6 { local addr:4 = (zext(TP) << 16) | zext(FP); export addr; }
+Rn_banked2:      "SP"              is Rn2=7 { local addr:4 = (zext(TP) << 16) | zext(SP); export addr; }
+
+eab_direct2:      Rn2                       is Rn2 & mode2 = 10 & sz2 = 0         { export Rn2; } # see eab_direct note above re: :1/[0,8] usage
+eaw_direct2:      Rn2                       is Rn2 & mode2 = 10 & sz2 = 1         { export Rn2; }
+eab_indirect2:    "@"^Rn_banked2            is Rn_banked2 & mode2 = 13 & sz2 = 0  { export *:1 Rn_banked2; }
+eaw_indirect2:    "@"^Rn_banked2            is Rn_banked2 & mode2 = 13 & sz2 = 1  { export *:2 Rn_banked2; }
+eab_disp8_2:      "@("^disp8^":8,"^Rn_banked2^")"   is Rn_banked2 & mode2 = 14 & sz2 = 0; disp8     { tmp = (Rn_banked2 + disp8);  export *:1 tmp; }
+eaw_disp8_2:      "@("^disp8^":8,"^Rn_banked2^")"   is Rn_banked2 & mode2 = 14 & sz2 = 1; disp8     { tmp = (Rn_banked2 + disp8);  export *:2 tmp; }
+eab_disp16_2:     "@("^disp16^":16,"^Rn_banked2^")" is Rn_banked2 & mode2 = 15 & sz2 = 0; disp16    { tmp = (Rn_banked2 + disp16); export *:1 tmp; }
+eaw_disp16_2:     "@("^disp16^":16,"^Rn_banked2^")" is Rn_banked2 & mode2 = 15 & sz2 = 1; disp16    { tmp = (Rn_banked2 + disp16); export *:2 tmp; }
+eab_predec2:      "@-SP"                    is Rn2=7 & mode2 = 11 & sz2 = 0       { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:1 SP24; }
+eaw_predec2:      "@-SP"                    is Rn2=7 & mode2 = 11 & sz2 = 1       { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:2 SP24; }
+eab_postinc2:     "@SP+"                    is Rn2=7 & mode2 = 12 & sz2 = 0       { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:1 tmp; }
+eaw_postinc2:     "@SP+"                    is Rn2=7 & mode2 = 12 & sz2 = 1       { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:2 tmp; }
+eab_predec2:      "@-"^Rn_banked2           is Rn_banked2 & mode2 = 11 & sz2 = 0  { Rn_banked2 = Rn_banked2 - 1; export *:1 Rn_banked2; }
+eaw_predec2:      "@-"^Rn_banked2           is Rn_banked2 & mode2 = 11 & sz2 = 1  { Rn_banked2 = Rn_banked2 - 2; export *:2 Rn_banked2; }
+eab_postinc2:     "@"^Rn_banked2^"+"        is Rn_banked2 & mode2 = 12 & sz2 = 0  { tmp = Rn_banked2; Rn_banked2 = Rn_banked2 + 1; export *:1 tmp; }
+eaw_postinc2:     "@"^Rn_banked2^"+"        is Rn_banked2 & mode2 = 12 & sz2 = 1  { tmp = Rn_banked2; Rn_banked2 = Rn_banked2 + 1; export *:2 tmp; }
+eab_abs8_br2:     "@"^addr8_br^":8"         is Rn2 = 5 & mode2 = 0 & sz2 = 0; addr8_br   { export *:1 addr8_br; }
+eaw_abs8_br2:     "@"^addr8_br^":8"         is Rn2 = 5 & mode2 = 0 & sz2 = 1; addr8_br   { export *:2 addr8_br; }
+eab_abs16_2:      "@"^addr16_dp^":16"       is Rn2 = 5 & mode2 = 1 & sz2 = 0; addr16_dp  { export *:1 addr16_dp; }
+eaw_abs16_2:      "@"^addr16_dp^":16"       is Rn2 = 5 & mode2 = 1 & sz2 = 1; addr16_dp  { export *:2 addr16_dp; }
 #eaw_abs16: "@"^addr16_dp^":16"   is Rn = 5 & mode = 1 & sz = 1; addr16_dp { export *:2 addr16_dp; }
 eab_imm8:         i8                        is Rn=4 & sz=0 & mode=0; i8           { export *[const]:1 i8; }
 eaw_imm16:        i16                       is Rn=4 & sz=1 & mode=0; i16          { export *[const]:2 i16; }
@@ -616,12 +715,59 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 # m4op=0, m4sz=0: mov:g.b #imm8, Rn  (byte 2 = 0x00-0x07, byte 3 = imm8)
 # Covers the failing EE 06 04 case: byte1=0xEE, byte2=0x06 (m4op=0,m4sz=0,m4Rn=6=R6),
 # byte3=0x04 → mov:g.b #0x4:8, R6
-:mov:"g.b"  "#"^imm8^":8",m4Rn   is opcode47=14; m4op=0 & m4sz=0 & m4Rn; imm8  { local v:1 = imm8:1; m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v == 0); $(VF) = 0; }
+:mov:"g.b"  "#"^imm8^":8",m4Rn   is map4_page; m4op=0 & m4sz=0 & m4Rn; imm8  { local v:1 = imm8:1; m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v == 0); $(VF) = 0; }
 # m4op=0, m4sz=1: mov:g.w #imm8 (sign-extended), Rn  (byte 2 = 0x08-0x0F)
-:mov:"g.w"  "#"^imm8^":8",m4Rn   is opcode47=14; m4op=0 & m4sz=1 & m4Rn; imm8  { local v:2 = sext(imm8:1); m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v == 0); $(VF) = 0; }
+:mov:"g.w"  "#"^imm8^":8",m4Rn   is map4_page; m4op=0 & m4sz=1 & m4Rn; imm8  { local v:2 = sext(imm8:1); m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v == 0); $(VF) = 0; }
 # m4op=1, m4sz=0: mov:g.w #imm16, Rn  (byte 2 = 0x10-0x17, bytes 3-4 = imm16)
-:mov:"g.w"  "#"^imm16^":16",m4Rn  is opcode47=14; m4op=1 & m4sz=0 & m4Rn; imm16 { local v:2 = imm16:2; m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v == 0); $(VF) = 0; }
+:mov:"g.w"  "#"^imm16^":16",m4Rn  is map4_page; m4op=1 & m4sz=0 & m4Rn; imm16 { local v:2 = imm16:2; m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v == 0); $(VF) = 0; }
 
+# BUG 4b: MAP4 load/store forms (second bytes 0x80-0x9F).
+# A4[0x8X] = mov:g load  EA -> Rn  (m4op=8, m4sz=0 byte / m4sz=1 word)
+# A4[0x9X] = mov:g store Rn -> EA  (m4op=9, m4sz=0 byte / m4sz=1 word)
+# These use the EA subtables directly as the source/dest operand.
+# m4Rn selects the register; the EA token follows as the second operand.
+
+# load byte: mov:g.b EA, Rn
+:mov:"g.b"  eab_direct,m4Rn    is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_direct   { local v:1 = eab_direct[0,8]; m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_indirect,m4Rn  is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_indirect { local v:1 = eab_indirect;    m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_disp8,m4Rn     is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_disp8    { local v:1 = eab_disp8;       m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_disp16,m4Rn    is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_disp16   { local v:1 = eab_disp16;      m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_predec,m4Rn    is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_predec   { local v:1 = eab_predec;      m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_postinc,m4Rn   is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_postinc  { local v:1 = eab_postinc;     m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_abs8_br,m4Rn   is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_abs8_br  { local v:1 = eab_abs8_br;     m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_abs16,m4Rn     is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_abs16    { local v:1 = eab_abs16;       m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.b"  eab_imm8,m4Rn      is map4_page; m4op=8 & m4sz=0 & m4Rn; eab_imm8     { local v:1 = eab_imm8;        m4Rn[0,8] = v; $(NF) = v[7,1]; $(ZF) = (v==0); $(VF) = 0; }
+
+# load word: mov:g.w EA, Rn
+:mov:"g.w"  eaw_direct,m4Rn    is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_direct   { local v:2 = eaw_direct;    m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_indirect,m4Rn  is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_indirect { local v:2 = eaw_indirect;  m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_disp8,m4Rn     is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_disp8    { local v:2 = eaw_disp8;     m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_disp16,m4Rn    is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_disp16   { local v:2 = eaw_disp16;    m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_predec,m4Rn    is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_predec   { local v:2 = eaw_predec;    m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_postinc,m4Rn   is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_postinc  { local v:2 = eaw_postinc;   m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_abs8_br,m4Rn   is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_abs8_br  { local v:2 = eaw_abs8_br;   m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_abs16,m4Rn     is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_abs16    { local v:2 = eaw_abs16;     m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+:mov:"g.w"  eaw_imm16,m4Rn     is map4_page; m4op=8 & m4sz=1 & m4Rn; eaw_imm16    { local v:2 = eaw_imm16;     m4Rn = v; $(NF) = v[15,1]; $(ZF) = (v==0); $(VF) = 0; }
+
+# store byte: mov:g.b Rn, EA
+:mov:"g.b"  m4Rn,eab_direct    is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_direct   { eab_direct[0,8] = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_indirect  is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_indirect { eab_indirect     = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_disp8     is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_disp8    { eab_disp8        = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_disp16    is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_disp16   { eab_disp16       = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_predec    is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_predec   { eab_predec       = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_postinc   is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_postinc  { eab_postinc      = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_abs8_br   is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_abs8_br  { eab_abs8_br      = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+:mov:"g.b"  m4Rn,eab_abs16     is map4_page; m4op=9 & m4sz=0 & m4Rn; eab_abs16    { eab_abs16        = m4Rn[0,8]; $(NF) = m4Rn[7,1]; $(ZF) = (m4Rn[0,8]==0); $(VF) = 0; }
+
+# store word: mov:g.w Rn, EA
+:mov:"g.w"  m4Rn,eaw_direct    is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_direct   { eaw_direct   = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_indirect  is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_indirect { eaw_indirect  = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_disp8     is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_disp8    { eaw_disp8     = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_disp16    is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_disp16   { eaw_disp16    = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_predec    is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_predec   { eaw_predec    = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_postinc   is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_postinc  { eaw_postinc   = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_abs8_br   is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_abs8_br  { eaw_abs8_br   = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
+:mov:"g.w"  m4Rn,eaw_abs16     is map4_page; m4op=9 & m4sz=1 & m4Rn; eaw_abs16    { eaw_abs16     = m4Rn; $(NF) = m4Rn[15,1]; $(ZF) = (m4Rn==0); $(VF) = 0; }
 
 # ADD:G <EAs>,Rd           Add, general format#       N: result s< 0
 #       Z: result == 0
@@ -1021,22 +1167,22 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 
 # BNOT  #xx,<EAd>          Bit test and set
 #       Z: EAd_orig[xx] == 0
-:bnot.b       eab_direct,op_imm4         is eab_direct;       opcode47=14 & op_imm4                 { tmp:1 = eab_direct[0,8] ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_direct[0,8] = tmp; }
-:bnot.b       eab_indirect,op_imm4       is eab_indirect;     opcode47=14 & op_imm4                 { tmp:1 = eab_indirect    ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_indirect = tmp; }
-:bnot.b       eab_disp8,op_imm4          is eab_disp8;        opcode47=14 & op_imm4                 { tmp:1 = eab_disp8       ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_disp8 = tmp; }
-:bnot.b       eab_disp16,op_imm4         is eab_disp16;       opcode47=14 & op_imm4                 { tmp:1 = eab_disp16      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_disp16 = tmp; }
-:bnot.b       eab_predec,op_imm4         is eab_predec;       opcode47=14 & op_imm4                 { tmp:1 = eab_predec      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_predec = tmp; }
-:bnot.b       eab_postinc,op_imm4        is eab_postinc;      opcode47=14 & op_imm4                 { tmp:1 = eab_postinc     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_postinc = tmp; }
-:bnot.b       eab_abs8_br,op_imm4        is eab_abs8_br;      opcode47=14 & op_imm4                 { tmp:1 = eab_abs8_br     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_abs8_br = tmp; }
-:bnot.b       eab_abs16,op_imm4   is eab_abs16; opcode47=14 & op_imm4 [targetBase=0;] { tmp:1 = eab_abs16; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_abs16 = tmp; }
-:bnot.w       eaw_direct,op_imm4         is eaw_direct;       opcode47=14 & op_imm4                 { tmp:2 = eaw_direct      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_direct = tmp; }
-:bnot.w       eaw_indirect,op_imm4       is eaw_indirect;     opcode47=14 & op_imm4                 { tmp:2 = eaw_indirect    ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_indirect = tmp; }
-:bnot.w       eaw_disp8,op_imm4          is eaw_disp8;        opcode47=14 & op_imm4                 { tmp:2 = eaw_disp8       ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_disp8 = tmp; }
-:bnot.w       eaw_disp16,op_imm4         is eaw_disp16;       opcode47=14 & op_imm4                 { tmp:2 = eaw_disp16      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_disp16 = tmp; }
-:bnot.w       eaw_predec,op_imm4         is eaw_predec;       opcode47=14 & op_imm4                 { tmp:2 = eaw_predec      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_predec = tmp; }
-:bnot.w       eaw_postinc,op_imm4        is eaw_postinc;      opcode47=14 & op_imm4                 { tmp:2 = eaw_postinc     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_postinc = tmp; }
-:bnot.w       eaw_abs8_br,op_imm4        is eaw_abs8_br;      opcode47=14 & op_imm4                 { tmp:2 = eaw_abs8_br     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_abs8_br = tmp; }
-:bnot.w       eaw_abs16,op_imm4   is eaw_abs16; opcode47=14 & op_imm4 [targetBase=0;] { tmp:2 = eaw_abs16; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_abs16 = tmp; }
+:bnot.b       eab_direct,op_imm4         is eab_direct;       map4_page & op_imm4                 { tmp:1 = eab_direct[0,8] ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_direct[0,8] = tmp; }
+:bnot.b       eab_indirect,op_imm4       is eab_indirect;     map4_page & op_imm4                 { tmp:1 = eab_indirect    ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_indirect = tmp; }
+:bnot.b       eab_disp8,op_imm4          is eab_disp8;        map4_page & op_imm4                 { tmp:1 = eab_disp8       ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_disp8 = tmp; }
+:bnot.b       eab_disp16,op_imm4         is eab_disp16;       map4_page & op_imm4                 { tmp:1 = eab_disp16      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_disp16 = tmp; }
+:bnot.b       eab_predec,op_imm4         is eab_predec;       map4_page & op_imm4                 { tmp:1 = eab_predec      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_predec = tmp; }
+:bnot.b       eab_postinc,op_imm4        is eab_postinc;      map4_page & op_imm4                 { tmp:1 = eab_postinc     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_postinc = tmp; }
+:bnot.b       eab_abs8_br,op_imm4        is eab_abs8_br;      map4_page & op_imm4                 { tmp:1 = eab_abs8_br     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_abs8_br = tmp; }
+:bnot.b       eab_abs16,op_imm4   is eab_abs16; map4_page & op_imm4 [targetBase=0;] { tmp:1 = eab_abs16; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eab_abs16 = tmp; }
+:bnot.w       eaw_direct,op_imm4         is eaw_direct;       map4_page & op_imm4                 { tmp:2 = eaw_direct      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_direct = tmp; }
+:bnot.w       eaw_indirect,op_imm4       is eaw_indirect;     map4_page & op_imm4                 { tmp:2 = eaw_indirect    ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_indirect = tmp; }
+:bnot.w       eaw_disp8,op_imm4          is eaw_disp8;        map4_page & op_imm4                 { tmp:2 = eaw_disp8       ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_disp8 = tmp; }
+:bnot.w       eaw_disp16,op_imm4         is eaw_disp16;       map4_page & op_imm4                 { tmp:2 = eaw_disp16      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_disp16 = tmp; }
+:bnot.w       eaw_predec,op_imm4         is eaw_predec;       map4_page & op_imm4                 { tmp:2 = eaw_predec      ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_predec = tmp; }
+:bnot.w       eaw_postinc,op_imm4        is eaw_postinc;      map4_page & op_imm4                 { tmp:2 = eaw_postinc     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_postinc = tmp; }
+:bnot.w       eaw_abs8_br,op_imm4        is eaw_abs8_br;      map4_page & op_imm4                 { tmp:2 = eaw_abs8_br     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_abs8_br = tmp; }
+:bnot.w       eaw_abs16,op_imm4   is eaw_abs16; map4_page & op_imm4 [targetBase=0;] { tmp:2 = eaw_abs16; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp ^ (1 << op_imm4); eaw_abs16 = tmp; }
 
 # BTST  Rs,<EAd>           Bit test and set
 #       Z: EAd[Rs] == 0
@@ -1229,22 +1375,40 @@ reloffs16: reloc is disp16       [ reloc=(inst_next & 0xFF0000) | ((inst_next+di
 #       Z: result == 0
 #       V: 0
 #       C: 0
+# BUG 5 fix (proof-of-concept): gated on map3_page (opcode47=10, byte 1) so these only
+# match within the 0xA0-0xAF MAP3 first-byte range, using the byte-2-scoped eab_*2/eaw_*2
+# subtables so mode2/sz2/Rn2 read byte 2 fresh instead of colliding with opcode_special
+# on byte 1. See the "Byte-2-scoped EA subtables (BUG 5 fix v2)" block above for why the
+# byte-1 eab_direct/eaw_direct forms can't be reused here.
+# BUG 5 fix v3 (corrected): the real-ROM layout for tst (confirmed at 0x13578:
+# F1 16 00 8B) is [EA byte: mode/sz/Rn][opcode_special byte][optional trailing
+# disp/addr payload] -- opcode_special sits BETWEEN the EA byte and its payload,
+# not after it. The v2 attempt (map3_page + eab_*2 subtables) was wrong on two
+# counts: (1) for the no-payload forms (direct/indirect/predec/postinc),
+# map3_page's opcode47=10 and eab_direct's mode=10 test the SAME bits of the
+# SAME byte 1, so chaining map3_page in front just shifts everything one byte
+# too far and can never match a 2-byte instruction; (2) for the forms with a
+# trailing payload (disp8/disp16/abs8_br/abs16), the existing eab_disp8/
+# eab_disp16/eab_abs8_br/eab_abs16 subtables fold the payload token in
+# immediately after the EA byte, leaving no room for opcode_special to land
+# in between -- so those forms are written out inline here instead of via a
+# subtable, with opcode_special explicitly sequenced before the payload token.
 :tst.b        eab_direct               is eab_direct;  opcode_special=0x16 { tmp:1 = eab_direct[0,8]; stdflags(tmp); }
-:tst.b        eab_indirect               is eab_indirect;  opcode_special=0x16 { stdflags(eab_indirect); }
-:tst.b        eab_disp8               is eab_disp8;  opcode_special=0x16 { stdflags(eab_disp8); }
-:tst.b        eab_disp16               is eab_disp16;  opcode_special=0x16 { stdflags(eab_disp16); }
+:tst.b        eab_indirect             is eab_indirect;  opcode_special=0x16 { stdflags(eab_indirect); }
+:tst.b        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x16; disp8  { tmp = (Rn_banked + disp8); local val:1 = *:1 tmp; stdflags(val); }
+:tst.b        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x16; disp16 { tmp = (Rn_banked + disp16); local val:1 = *:1 tmp; stdflags(val); }
 :tst.b        eab_predec               is eab_predec;  opcode_special=0x16 { stdflags(eab_predec); }
-:tst.b        eab_postinc               is eab_postinc;  opcode_special=0x16 { stdflags(eab_postinc); }
-:tst.b        eab_abs8_br               is eab_abs8_br;  opcode_special=0x16 { stdflags(eab_abs8_br); }
-:tst.b        eab_abs16               is eab_abs16;  opcode_special=0x16 [targetBase=0;]{ stdflags(eab_abs16); }
+:tst.b        eab_postinc              is eab_postinc;  opcode_special=0x16 { stdflags(eab_postinc); }
+:tst.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x16; addr8_br  { local val:1 = *:1 addr8_br; stdflags(val); }
+:tst.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x16; addr16_dp [targetBase=0;]{ local val:1 = *:1 addr16_dp; stdflags(val); }
 :tst.w        eaw_direct               is eaw_direct;  opcode_special=0x16 { stdflags(eaw_direct); }
-:tst.w        eaw_indirect               is eaw_indirect;  opcode_special=0x16 { stdflags(eaw_indirect); }
-:tst.w        eaw_disp8               is eaw_disp8;  opcode_special=0x16 { stdflags(eaw_disp8); }
-:tst.w        eaw_disp16               is eaw_disp16;  opcode_special=0x16 { stdflags(eaw_disp16); }
+:tst.w        eaw_indirect             is eaw_indirect;  opcode_special=0x16 { stdflags(eaw_indirect); }
+:tst.w        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x16; disp8  { tmp = (Rn_banked + disp8); local val:2 = *:2 tmp; stdflags(val); }
+:tst.w        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x16; disp16 { tmp = (Rn_banked + disp16); local val:2 = *:2 tmp; stdflags(val); }
 :tst.w        eaw_predec               is eaw_predec;  opcode_special=0x16 { stdflags(eaw_predec); }
-:tst.w        eaw_postinc               is eaw_postinc;  opcode_special=0x16 { stdflags(eaw_postinc); }
-:tst.w        eaw_abs8_br               is eaw_abs8_br;  opcode_special=0x16 { stdflags(eaw_abs8_br); }
-:tst.w        eaw_abs16               is eaw_abs16;  opcode_special=0x16 [targetBase=0;]{ stdflags(eaw_abs16); }
+:tst.w        eaw_postinc              is eaw_postinc;  opcode_special=0x16 { stdflags(eaw_postinc); }
+:tst.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x16; addr8_br  { local val:2 = *:2 addr8_br; stdflags(val); }
+:tst.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x16; addr16_dp [targetBase=0;]{ local val:2 = *:2 addr16_dp; stdflags(val); }
 
 # CMP:G <EAs>,Rd           Compare, general format
 #       N: result s< 0
