@@ -237,22 +237,98 @@ Errors eliminated: `?? BFh` at `0x28874`, `?? ABh` at `0x24c8a`, `?? FFh` cluste
 
 ---
 
-#### BUG 5 — MAP3 first-byte range (`0xA0-0xAF`) causes EA token collisions
+#### BUG 5 — MAP3 single-operand `opcode_special` incorect sequence **`tst.b`/`tst.w` FIXED (verified July 2026); `clr`/`neg`/`shal`/`shar`/`shll`/`shlr` still Pending**
 
-**Verified:** `A2tail[0xA0] = MAP3`. MAP3 first bytes are `0xA0-0xAF` (`opcode47=10`).
-These collide with `eab_direct`/`eaw_direct` constructors because `addrMode` byte `0xAn`
-has `mode=(4,7)=10=direct`, matching the EA direct forms. MAP3 single-operand instructions
-(`swap`, `exts`, `extu`, `clr`, `neg`, `not`, `tst`, `tas`, `shal`… byte forms from
-`A3[0x10-0x1F]`) all currently use bare `opcode_special=0xNn`, treating them as standalone
-first bytes rather than MAP3 second bytes.
+> **Correction (July 2026), superseding an earlier incorrect correction:** `tst.b`/`tst.w` ARE fixed in
+> the live `h8539f.slaspec`.working fix uses bare
+> `opcode_special` for the no-payload EA forms (direct/indirect/predec/postinc — already correct as-is
+> since `mode=10` already restricts byte 1 to the right range) and inline `Rn_banked`/`mode`-gated
+> constructors for the disp8/disp16/addr8_br/addr16_dp payload forms, so `opcode_special` can land between
+> the EA byte and the payload token. This is genuinely fixed — confirmed by reading the live constructors.
+>
+> **However:** `clr.b`, `neg.b`, `shal`, `shar`, `shll`, `shlr` have NOT received the same fix. Their
+> disp8/disp16/abs8_br/abs16 forms still use the plain shared `eab_disp8`/`eab_disp16`/etc. subtables with
+> `opcode_special` placed after them — the same structurally-wrong pattern `tst.b` originally had before
+> the inline-constructor fix was applied. E.g. `:clr.b eab_disp8 is eab_disp8; opcode_special=0x13 { ... }`
+> (line 1336) folds the payload in before `opcode_special` can be sequenced, same as the old broken `tst`.
+> These mnemonics still need the `tst.b`/`tst.w` treatment applied to their payload forms.
 
-**Fix:** add `opcode47=10` as a first-byte gate for all MAP3 single-operand constructors,
-mirroring the MAP4 pattern. Add a MAP3 second-byte subtable parallel to `map4b`.
+**Actual root cause, confirmed by reading raw ROM bytes directly via the Pulsar/Ghidra MCP
+tools (`F1 16 00 8B` at `0x13578`):** the real layout for these single-operand instructions
+is `[EA byte: mode/sz/Rn][opcode_special byte][optional trailing disp/addr payload]`.
+`opcode_special` sits **between** the EA byte and any trailing displacement/address bytes,
+not after them. For the no-payload EA forms (direct, indirect, predec, postinc) the
+original bare `is eab_direct; opcode_special=0x16 { ... }` form was *already structurally
+correct* — no MAP3 gating of any kind is needed, since `mode=10` already restricts byte 1
+to the same `0xA0-0xAF` range `opcode47=10`/`map3_page` would have. The actual bug was only
+in the EA forms that carry a trailing payload (disp8, disp16, abs8_br, abs16): the existing
+`eab_disp8`/`eab_disp16`/`eab_abs8_br`/`eab_abs16` subtables fold their disp/addr token
+immediately after the EA byte (correct for ordinary 2-operand instructions like `mov`/
+`cmp`, where that's the only operand byte), leaving no room for `opcode_special` to land in
+between. For these four forms, the EA logic has to be written inline in the instruction's
+own constructor (no shared subtable) so `opcode_special` can be sequenced between the EA
+byte and the payload token.
 
-Errors eliminated: `?? ABh` cascade, `tst.b @offset` conflict at `0x2c651`,
-`?? 15h` conflict at `0x2c7eb`.
+**FIX — confirmed applied and live in `h8539f.slaspec` for `tst.b`/`tst.w` (July 2026):**
+
+```sleigh
+# No-payload forms: original bare pattern was already correct, unchanged.
+:tst.b        eab_direct               is eab_direct;  opcode_special=0x16 { tmp:1 = eab_direct[0,8]; stdflags(tmp); }
+:tst.b        eab_indirect             is eab_indirect;  opcode_special=0x16 { stdflags(eab_indirect); }
+:tst.b        eab_predec               is eab_predec;  opcode_special=0x16 { stdflags(eab_predec); }
+:tst.b        eab_postinc              is eab_postinc;  opcode_special=0x16 { stdflags(eab_postinc); }
+
+# Payload forms: EA logic written inline so opcode_special lands between the
+# EA byte and the disp/addr token, instead of using the eab_disp8/eab_disp16/
+# eab_abs8_br/eab_abs16 subtables (which fold the payload in too early).
+:tst.b        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x16; disp8  { tmp = (Rn_banked + disp8); local val:1 = *:1 tmp; stdflags(val); }
+:tst.b        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x16; disp16 { tmp = (Rn_banked + disp16); local val:1 = *:1 tmp; stdflags(val); }
+:tst.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x16; addr8_br  { local val:1 = *:1 addr8_br; stdflags(val); }
+:tst.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x16; addr16_dp [targetBase=0;]{ local val:1 = *:1 addr16_dp; stdflags(val); }
+# ... mirror all 8 for tst.w with sz=1 and *:2 instead of *:1
+```
+
+Verified two ways (and the resulting fix is confirmed present in the current live `h8539f.slaspec`, re-checked July 2026):
+1. Direct script-driven re-disassembly via Ghidra's scripting API (`clearListing` +
+   `disassemble`) at every `tst`-related address from the error log — all now decode
+   correctly, e.g. `0x142a6: tst.b R0`, `0x13578: tst.b @(0x8b:16,R1)`.
+2. **Full clean-project regression test**: fresh re-import of the ROM (new project, no
+   stale analysis state) with full auto-analysis re-run from scratch. Confirmed: every
+   `tst`-related `?? A0h`/`?? 16h` entry from the original error log is gone, and no new
+   errors were introduced anywhere else in the ROM.
+
+The 18 byte-2-scoped `_2` subtables (`eab_direct2`, `addrMode2` token, `Rn_banked2`, etc.)
+added during the failed attempt #2 above are still present in the slaspec (~line 542-610)
+but are now **unused** (confirmed by the compiler's "Unreferenced table" warnings) since
+`tst` didn't end up needing them. They document a wrong theory and should probably be
+deleted in a follow-up commit unless a genuine byte-2-scoped EA need turns up later (e.g.
+if MAP4's `m4op`/`m4Rn` second-byte dispatch is ever found to need the same treatment —
+unconfirmed, BUG 4 is still listed Pending below).
+
+**Next steps — apply the same pattern to the rest of Group 1** (same EA forms, just swap
+`opcode_special` value and macro):
+
+| Mnemonic | `opcode_special` | Status |
+|---|---|---|
+| `tst.b`/`tst.w` | `0x16` | **Done, confirmed live in slaspec (July 2026)** |
+| `not.b`/`not.w` (also has `imm8`/`imm16` forms) | `0x15` | Pending — next target |
+| `clr.b`/`clr.w` | `0x13` | Pending |
+| `neg.b`/`neg.w` | `0x14` | Pending |
+| `shal`/`shar`/`shll`/`shlr` | `0x18`-`0x1b` | Pending — batch together |
+| `rotl`/`rotr`/`rotxl`/`rotxr` | `0x1c`-`0x1f` | Pending — batch together |
+| `exts.b`/`extu.b` | `0x11`/`0x12` | Pending — needs extra care, shares `opcode_special` value with `jmp`/`stm`, verify no new ambiguity once rewritten |
+
+For each: confirm the actual ROM byte layout for at least one real instance of the
+disp8/disp16/abs8_br/abs16 forms before assuming the pattern transfers 1:1 (it should, but
+`tst` is the only one empirically confirmed so far). Recompile, copy `.sla` to the Ghidra
+install dir, restart Ghidra (not just reload the program — the language binary is cached
+per-JVM-session), re-import a **fresh** copy of the ROM into a new project, run full
+auto-analysis, and diff the error log against the previous one before moving to the next
+mnemonic.
 
 ---
+
+
 
 #### BUG 6 — MAP5 dispatch (`0x0C`/`0x0D` first bytes) is entirely absent
 
@@ -268,7 +344,7 @@ Errors eliminated: `?? 0Ch` at `0x24d24`.
 
 ---
 
-#### BUG 7 — `stc`/`ldc` constructors accept invalid `CR8` index (undefined register hole)
+#### BUG 7 — `stc`/`ldc` constructors accept invalid `CR8` index (undefined register hole) **FIXED (alternate approach, confirmed July 2026)**
 
 **Verified:** raw bytes at `0x14e31`: `A6 8A FC E2...` `0xA6` = MAP3 first byte,
 `0x8A` = MAP3 tail → `stc` form, `Rn = (0x8A & 7) = 2`. `CR8` index 2 maps to `_`
@@ -276,8 +352,14 @@ Errors eliminated: `?? 0Ch` at `0x24d24`.
 `if (Op2.reg == RES1 || Op2.reg == CP) return 0` — indices 0 and 2 are invalid.
 The current slaspec has no such guard.
 
-**Fix:** add `CR8!=0 & CR8!=2 & CR8!=6` to all `stc`/`ldc`/`orc`/`andc`/`xorc`
+**Fix as originally proposed:** add `CR8!=0 & CR8!=2 & CR8!=6` to all `stc`/`ldc`/`orc`/`andc`/`xorc`
 constructors using the `CR8` attach table. (Valid indices: 1=CCR, 3=BR, 4=EP, 5=DP, 7=TP.)
+
+**Fix as actually applied (confirmed in live `h8539f.slaspec`, July 2026):** rather than a separate
+guard clause, each `stc`/`andc`/`orc`/etc. constructor hard-codes one explicit valid `CR8` value
+(`CR8=1`, `CR8=3`, `CR8=4`, `CR8=5`, `CR8=7`). Since there is no catch-all/wildcard constructor for
+`CR8`, the invalid indices (0, 2, 6) simply have no matching constructor at all — functionally
+equivalent to a guard. No further action needed here.
 
 Errors eliminated: `Failed to resolve varnode <CR8>, index=2` at `0x14e31`.
 
@@ -319,7 +401,7 @@ error log with minimal risk.
 | ~~2~~ | ~~`sleep` opcode `0x2C` → `0x1A`~~ | ~~`h8539f.slaspec`~~ | ~~`?? 1Ah` cluster~~ | **Fixed** |
 | ~~3~~ | ~~`rtd s8` opcode `0x30` → `0x04`~~ | ~~`h8539f.slaspec`~~ | ~~`?? 0Ch`, `?? 1Ch`~~ | **Fixed** |
 | ~~4~~ | ~~`rtd s16` opcode `0x34` → `0x0C`~~ | ~~`h8539f.slaspec`~~ | ~~`prtd` cascade~~ | **Fixed** |
-| 9 | `CR8` validity guard (`CR8!=0 & CR8!=2 & CR8!=6`) | `h8539f.slaspec` stc/ldc constructors | varnode error | Pending |
+| 9 | `CR8` validity — applied as explicit valid-value enumeration instead of a guard (see BUG 7 note) | `h8539f.slaspec` stc/ldc constructors | varnode error | **Fixed** |
 
 After steps 1–4, recompile and check: the `0x1217x` cluster, the three `?? EEh`, and
 `0x24d24 ?? 0Ch` should all be gone.
@@ -369,8 +451,8 @@ style for any new flag logic needed by MAP4/MAP5 operations.
 
 | Step | What to change | File | Errors cleared | Status |
 |------|----------------|------|----------------|--------|
-| 5 | Replace `opcode47=14` with `map4_page` in lines 619–623; add MAP4 single-operand forms (`clr`/`neg`/`not`/`tst`/`tas`/`shal`/`shar`/`shll`/`shlr`/`rotl`/`rotr`/`rotxl`/`rotxr` word forms, `m4op=1` second-byte range) and bit-op forms (`bset`/`bclr`/`bnot`/`btst`, `m4op=8–15`) | `h8539f.slaspec` | `?? BFh`, `?? FFh`, `?? ABh`, `?? 07h` cluster | Pending |
-| 6 | Add `map3_page` gate to MAP3 single-operand constructors (same operations, byte forms, `opcode47=10` first byte) | `h8539f.slaspec` | `tst.b` conflict, `?? 15h`, `?? ABh` cascade | Pending |
+| 5 | Replace `opcode47=14` with `map4_page` in lines 619–623; add MAP4 single-operand forms (`clr`/`neg`/`not`/`tst`/`tas`/`shal`/`shar`/`shll`/`shlr`/`rotl`/`rotr`/`rotxl`/`rotxr` word forms, `m4op=1` second-byte range) and bit-op forms (`bset`/`bclr`/`bnot`/`btst`, `m4op=8–15`) | `h8539f.slaspec` | `?? BFh`, `?? FFh`, `?? ABh`, `?? 07h` cluster | **Fixed** — `map4_page` confirmed in widespread use across MAP4 `mov:g`, `bnot`, `btst` constructors (July 2026) |
+| 6 | Apply `tst.b`/`tst.w`-style fix (inline `Rn_banked`/`mode`-gated constructors for payload forms — NOT `map3_page`, which is structurally wrong, see BUG 5 note) to `clr`/`neg`/`shal`/`shar`/`shll`/`shlr` disp8/disp16/abs8_br/abs16 forms | `h8539f.slaspec` | remaining MAP3 payload-form decode errors | `tst.b`/`tst.w` **Done**; `clr`/`neg`/`shal`/`shar`/`shll`/`shlr` Pending |
 | 7 | Add MAP5 dispatch: new section gated on `opcode_special=0x0C` (byte) / `0x0D` (word), covering `add:g`/`sub`/`or`/`and`/`xor`/`cmp:g`/`mov:g`/`ldc`/`orc`/`andc`/`xorc`/`addx`/`mulxu`/`subx`/`divxu` immediate-EA forms from `A5tail` | `h8539f.slaspec` (new section) | `?? 0Ch` remaining | Pending |
 | 8 | Add `CP_ctx` context variable + mirror `setRegisterValue("CP",…)` calls with `setContextVar("CP_ctx",…)` | `h8539f.slaspec` + `h8539_ecu_master_setup.py` | decompiler page-address correctness | Pending |
 
