@@ -20,6 +20,8 @@
 	<notes>2012/11/19 [Tactrix] Updated to standardized file naming.
 2024 [Analysis] Corrected and extended table definitions from ROM binary analysis.
 2025 [Ghidra] Reclassified 4x "Unknown Early 3D [f3a8/f3aa]" tables from Unknown/fuel-injector-guess to Transmission/TCU, based on confirmed disassembly tracing (see tcu_torque_target_ramp_calc, tcu_slip_control_init, tcu_rx_main_scheduler). Axis scaling for these 4 tables is still tentative -- only the subsystem identity changed.
+2026-07 [Ghidra, session 3] RECLASSIFIED AGAIN, superseding the 2025 entry above: all 10 tables in the f3a8/f3aa/f3ac/f3ae/f3b0/f3b2 cluster (the 4 "TCU Torque Ramp Target" tables + the 6 "Open Loop Lambda ..." tables) are confirmed to be a single SHARED "Knock-to-TCU Torque Coordination" register group, category changed to Knock Control. Confirmed via matching enable-condition disassembly in both tcu_rx_main_scheduler and knock_process_main (identical RAM 0xf1f2 bit7 gate). This was checked specifically to rule out address aliasing/misidentification - see logging.txt session 3 "0xF3AC/0xF3AE CONFLICT - CONFIRMED INTENTIONAL" for the full resolution. Table names updated in place; old "Lambda ..." names kept parenthetically for continuity with prior tuning notes. Treat the AFR/uint8 scaling on the ex-Lambda tables as SUSPECT pending further work - the dual TCU/knock interpretation of the same bytes is confirmed, but which (if either) numeric scaling is correct is not yet resolved.
+2026-07 [Ghidra, session 4] Octane Level (MUT 0x27, RAM 0xEEC8/EEC9) decay-vs-knock mechanism confirmed and documented in RVR_base.xml's shared notes section - this is the "knock retard" equivalent on this ECU (no discrete retard-degrees value exists). See RVR_base.xml notes and logging.txt session 4 for full detail.
 ROM ID: 21 00 00 11 at file offset 0x021A. XML address = file_offset + 0x10000.
 Key axes confirmed from ROM data:
   RPM axis @2d2b0: 500-7000 RPM (14 elem), @2d332: 0-11000 RPM (18 elem)
@@ -843,26 +845,33 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- f3a8/f3aa axis pair: early calibration area 0x108ca-0x10a5c           -->
 	<!-- 2025 [Ghidra] RECLASSIFIED from "Unknown"/fuel-injector guess to Transmission/TCU.   -->
-	<!-- Confirmed via disassembly of tcu_torque_target_ramp_calc (was FUN_000292cc):         -->
-	<!-- f3a8/f3aa are computed there via a piecewise scale-and-clamp on an input value,       -->
-	<!-- then used as ramp targets for f3ac/f3ae. f3ac and f3ae are independently confirmed    -->
-	<!-- TCU registers: both written by tcu_slip_control_init and read by                     -->
-	<!-- tcu_rx_main_scheduler (both already-confirmed real TCU functions elsewhere in the      -->
-	<!-- firmware). Axis identity (Load/RPM) is UNCHANGED/still a guess: only the subsystem    -->
-	<!-- (Transmission, not fuel/injector) is newly confirmed. Treat axis scaling as tentative. -->
-	<table name="TCU Torque Ramp Target A [f3a8/f3aa]" category="Transmission" address="108ca" type="3D" level="4" scaling="uint8">
+	<!-- 2026-07 [Ghidra, session 3] RECLASSIFIED AGAIN: category changed from Transmission   -->
+	<!-- to Knock Control. Confirmed via disassembly of tcu_torque_target_ramp_calc (was      -->
+	<!-- FUN_000292cc) AND knock_process_main: f3a8/f3aa/f3ac/f3ae/f3b0/f3b2 form a single    -->
+	<!-- shared "Knock-to-TCU Torque Coordination" register group, read/written by BOTH       -->
+	<!-- tcu_rx_main_scheduler (TCU slip-ratio low-pass filter) and knock_process_main        -->
+	<!-- (per-cylinder knock retard), gated by the IDENTICAL enable condition in both         -->
+	<!-- functions: RAM 0xf1f2 bit7 (gear_config_word_bit7_tcu_knock_coord). This was         -->
+	<!-- checked and confirmed to be genuine intentional coupling, not aliasing/RAM reuse -    -->
+	<!-- see logging.txt session 3 "0xF3AC/0xF3AE CONFLICT - CONFIRMED INTENTIONAL". Knock    -->
+	<!-- retard on a cylinder legitimately feeds into TCU torque-cut coordination via these   -->
+	<!-- registers, active whenever gear_config_table_f1f2 (ROM 0x272, indexed by current-gear -->
+	<!-- state f1fc) has bit7 set for the active gear. Axis identity (Load/RPM) is STILL a    -->
+	<!-- guess - only the subsystem/category is newly confirmed. Treat axis scaling as        -->
+	<!-- tentative pending decode of gear_config_table_f1f0/f1f4 (ROM 0x262/0x282). -->
+	<table name="Knock-TCU Torque Coordination A [f3a8/f3aa]" category="Knock Control" address="108ca" type="3D" level="4" scaling="uint8">
 		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
 		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
-	<table name="TCU Torque Ramp Target B [f3a8/f3aa]" category="Transmission" address="10a24" type="3D" level="4" scaling="uint8">
+	<table name="Knock-TCU Torque Coordination B [f3a8/f3aa]" category="Knock Control" address="10a24" type="3D" level="4" scaling="uint8">
 		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
 		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
-	<table name="TCU Torque Ramp Target C [f3a8/f3aa]" category="Transmission" address="10a40" type="3D" level="4" scaling="uint8">
+	<table name="Knock-TCU Torque Coordination C [f3a8/f3aa]" category="Knock Control" address="10a40" type="3D" level="4" scaling="uint8">
 		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
 		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
-	<table name="TCU Torque Ramp Target D [f3a8/f3aa]" category="Transmission" address="10a5c" type="3D" level="4" scaling="uint8">
+	<table name="Knock-TCU Torque Coordination D [f3a8/f3aa]" category="Knock Control" address="10a5c" type="3D" level="4" scaling="uint8">
 		<table name="Axis X (f3a8)" address="2d382" type="X Axis" elements="4" scaling="Load"/>
 		<table name="Axis Y (f3aa)" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
@@ -942,38 +951,50 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	</table>
 
 	<!-- Lambda correction cluster 0x125de-0x1266a                                    -->
-	<!-- CONFIRMED from decompiler: f3ac/f3ae = cylinder bank 1 open-loop lambda      -->
-	<!-- correction (FUN_0002a971 and FUN_0002b0b0). f3b0/f3b2 = cylinder bank 2      -->
-	<!-- (FUN_0002a678). Both use flag f1ca bit0x20=WOT, f226=lambda mode.            -->
-	<!-- Data values orbit 0x7F=128=stoich AFR. 0x96=150=lean, 0x7F=127=stoich.      -->
-	<!-- Each axis pair has 3 tables: low-range trim, mid-range, near-stoich target.  -->
+	<!-- CONFIRMED from decompiler: f3ac/f3ae = cylinder bank 1 (FUN_0002a971 and     -->
+	<!-- FUN_0002b0b0). f3b0/f3b2 = cylinder bank 2 (FUN_0002a678). Both use flag     -->
+	<!-- f1ca bit0x20=WOT, f226=lambda mode. Data values orbit 0x7F=128=stoich AFR.   -->
+	<!-- 0x96=150=lean, 0x7F=127=stoich. Each axis pair has 3 tables: low-range trim, -->
+	<!-- mid-range, near-stoich target.                                               -->
+	<!-- 2026-07 [Ghidra, session 3] RECLASSIFIED: category changed from Fuel to      -->
+	<!-- Knock Control. f3ac/f3ae (bank 1) and f3b0/f3b2 (bank 2) are the SAME shared -->
+	<!-- "Knock-to-TCU Torque Coordination" registers as f3a8/f3aa above, NOT a       -->
+	<!-- clean single-purpose open-loop lambda register as previously labeled. Also   -->
+	<!-- read/written by tcu_rx_main_scheduler (TCU slip-ratio filter) under the      -->
+	<!-- identical f1f2 bit7 gate used by knock_process_main's per-cylinder knock     -->
+	<!-- retard logic - confirmed genuine shared coupling, not aliasing. Table names  -->
+	<!-- below kept as "Lambda ..." for continuity with existing tuning notes/history -->
+	<!-- but should be read as "knock/TCU-coordination value, historically           -->
+	<!-- interpreted as lambda" - treat AFR/uint8 scaling on these as SUSPECT, not    -->
+	<!-- confirmed, pending resolution of the dual interpretation. See logging.txt    -->
+	<!-- session 3 "0xF3AC/0xF3AE CONFLICT - CONFIRMED INTENTIONAL" for full detail.  -->
 
-	<!-- Bank 1 (cylinders 2,3) lambda correction: f3ac/f3ae -->
-	<table name="Open Loop Lambda Correction Bk1 Low [f3ac/f3ae]" category="Fuel" address="125de" type="3D" level="3" scaling="uint8">
+	<!-- Bank 1 (cylinders 2,3): f3ac/f3ae -->
+	<table name="Knock-TCU Torque Coordination Bk1 Low (was Lambda Correction) [f3ac/f3ae]" category="Knock Control" address="125de" type="3D" level="3" scaling="uint8">
 		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
 		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
-	<table name="Open Loop Lambda Correction Bk1 Mid [f3ac/f3ae]" category="Fuel" address="12616" type="3D" level="3" scaling="uint8">
+	<table name="Knock-TCU Torque Coordination Bk1 Mid (was Lambda Correction) [f3ac/f3ae]" category="Knock Control" address="12616" type="3D" level="3" scaling="uint8">
 		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
 		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
 	<!-- values 127-155 span stoichiometric region: 0x7F=stoich, 0x96=lean -->
-	<table name="Open Loop Lambda Target Bk1 [f3ac/f3ae]" category="Fuel" address="1264e" type="3D" level="3" scaling="AFR">
+	<table name="Knock-TCU Torque Coordination Bk1 Target (was Lambda Target) [f3ac/f3ae]" category="Knock Control" address="1264e" type="3D" level="3" scaling="AFR">
 		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
 		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
 
-	<!-- Bank 2 (cylinders 1,4) lambda correction: f3b0/f3b2 -->
-	<table name="Open Loop Lambda Trim Bk2 [f3b0/f3b2]" category="Fuel" address="125fa" type="3D" level="3" scaling="uint8">
+	<!-- Bank 2 (cylinders 1,4): f3b0/f3b2 -->
+	<table name="Knock-TCU Torque Coordination Bk2 Low (was Lambda Trim) [f3b0/f3b2]" category="Knock Control" address="125fa" type="3D" level="3" scaling="uint8">
 		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
 		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
-	<table name="Open Loop Lambda Correction Bk2 Mid [f3b0/f3b2]" category="Fuel" address="12632" type="3D" level="3" scaling="uint8">
+	<table name="Knock-TCU Torque Coordination Bk2 Mid (was Lambda Correction) [f3b0/f3b2]" category="Knock Control" address="12632" type="3D" level="3" scaling="uint8">
 		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
 		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>
 	<!-- values 96-133 span stoichiometric region -->
-	<table name="Open Loop Lambda Target Bk2 [f3b0/f3b2]" category="Fuel" address="1266a" type="3D" level="3" scaling="AFR">
+	<table name="Knock-TCU Torque Coordination Bk2 Target (was Lambda Target) [f3b0/f3b2]" category="Knock Control" address="1266a" type="3D" level="3" scaling="AFR">
 		<table name="Load" address="2d308" type="X Axis" elements="4" scaling="Load"/>
 		<table name="RPM" address="2d2b0" type="Y Axis" elements="5" scaling="RPM"/>
 	</table>

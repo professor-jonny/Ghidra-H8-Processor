@@ -21,6 +21,30 @@
 	      NOTE on throttle_load_pct (RAM 0xf5de): this is computed as crank period delta
 	        (T2GR1H - crank_angle_current) in isr_sci3_eri, NOT a TPS voltage reading.
 	        It represents engine load derived from crank timing, not pedal position.
+	      2026-07 [Ghidra RE, session 4] CONFIRMED: this ECU has no discrete "knock
+	        retard degrees" value (same as Evo 4/5/6 - neither MUT profile exposes one).
+	        Knock instead degrades Octane Level (MUT 0x27, RAM 0xEEC8/EEC9, starts at
+	        0xFF=100%) via an intermediate hysteresis counter at RAM 0xEEC6, driven by
+	        the knock-sum register (0xF3A2/F3A3). Full confirmed chain:
+	          knock_process_main (0x2933b) -> writes knock sum F3A2/F3A3
+	          -> knock_event_counter_update_eec6 (0x251c4): hysteresis vs ROM
+	             thresholds 0xB3E/0xB40, drives EEC6 0-255 (up when clean, down
+	             under sustained knock)
+	          -> octane_level_compute_from_knock_counter (0x252d3): clamps/scales
+	             EEC6, writes result to EEC8 = Octane Level
+	        Octane Level is what blends between the High/Low-Octane Ignition Maps
+	        and Knock Control/Octane Control Above Load tables already defined below -
+	        the "retard" is implicit in that map blend, not a standalone logged
+	        scalar. A second, independent writer (octane_level_init_or_force_from_
+	        gear_table, 0x24e80) also sets EEC6/EEC8 from a per-gear ROM table at
+	        0x2882 indexed by the current-gear-state variable f1fc, or forces 100%
+	        under a separate condition flag (f0fe bit0) - gear-dependent
+	        init/override, independent of the knock decay path. Both writers are
+	        gated by RAM 0xf1f2 bit7 (same enable bit used for knock-to-TCU torque
+	        coordination, see TCU comms note above and logging.txt session 3/4).
+	        See logging.txt for full addresses, thresholds, and remaining open
+	        threads (undecoded flag bits f1fe.3/f200.0/f0fe.0, ROM table 0x2882 not
+	        yet cross-checked against the f1f0/f1f2/f1f4 per-gear config stride).
 	</notes>
 
 	<!-- ===== SCALING DEFINITIONS ===== -->

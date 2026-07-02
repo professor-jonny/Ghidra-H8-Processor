@@ -1,0 +1,679 @@
+MUT LOGGING PROFILE VERIFICATION LOG
+RVR X3 1997-2001 4G63T (MD352553 / EM2171)
+Updated 2026-07-02 (session 5) - RESOLVED: full byte-level confirmation of the
+knock cluster (knock_adc/var/base/change/dynamics, item 3 in "WHAT'S STILL
+OPEN"). Obtained via complete decompile of knock_process_main. 5 of 6 items
+CONFIRMED with correct addresses (F3A9/F963/F967/F969/F3B7), though F963/F967
+hold DERIVED values (a computed decision magnitude and a previous-cycle
+snapshot respectively), not raw sensor readings as their inherited names might
+imply. The 6th item, knock_flag (MUT ReqID 0x6F, RAM 0xEFC2/EFC3), is REFUTED:
+knock_process_main never writes 0xEFC2. Traced the two actual writers
+(FUN_000252f9 and tcu_rx_main_scheduler) - both are throttle/crank-transient
+delta detectors unrelated to knock, writing the same ROM constant (0xB24).
+This is a genuine mislabel inherited from the stock Evo profile, not just an
+unconfirmed-but-correct guess. Ghidra labels/plate comments added at
+knock_process_main, FUN_000252f9, and RAM 0xEFC2/EFC3 (see below for detail).
+Previous update: session 4 - RESOLVED: "knock retard" is not a discrete
+logged value on this ECU (same as Evo 4/5/6); confirmed it instead operates via
+Octane Level (MUT 0x27 / RAM EEC8-EEC9) decaying under sustained knock, through
+an intermediate hysteresis counter at RAM EEC6 driven by the knock-sum register
+(F3A2/F3A3). Full write chain traced and named in Ghidra: knock_process_main ->
+knock_event_counter_update_eec6 -> octane_level_compute_from_knock_counter ->
+eec8 (Octane Level), which is what the existing High/Low-Octane ignition map
+blend in RVR_base.xml consumes. Also found a separate gear-table-driven init/
+override path (octane_level_init_or_force_from_gear_table). Cross-validated
+Knock Sum/Knock Voltage against the stock Evo 4/5/6 profile.
+Previous update: session 3 - RESOLVED: f3ac/f3ae TCU-vs-knock conflict, confirmed
+intentional cross-subsystem coordination (see new section below). Knock processing
+function found (FUN_0002933b, now named knock_process_main); ADI ADC dead-end retracted.
+
+=========================================================================
+PURPOSE
+=========================================================================
+The EvoScan logging profile was adapted from a stock Evo 5/6 profile by
+updating RAM addresses to match this ROM, WITHOUT independently confirming
+that each RequestID's claimed meaning (RPM, TPS, Knock, etc.) is actually
+correct for this ECU/firmware. This log tracks what has been independently
+verified against the decompiled ROM, vs. what is still inherited assumption.
+
+=========================================================================
+CONFIRMED - MECHANISM (how the MUT table resolves an address)
+=========================================================================
+
+[VERIFIED] MUT table lookup mechanism, decompiled directly:
+  Function: adc_sensor_convert_single @ ROM 0x171c3
+  For a given RequestID (index):
+    1. Compute ROM pointer-table address = 0x2fad0 + (index * 2)
+    2. Read a 16-bit value from that ROM address -> this is a RAM address
+    3. Floor-clamp the RAM address to 0xEE80
+    4. Read and return the byte at that RAM address
+  This is ONE level of indirection: the MUT table stores pointers to RAM
+  cells, not the values themselves. This matches what the logging profile
+  assumed.
+
+[VERIFIED] Raw ROM bytes checked directly against two claimed addresses:
+  - RequestID 0x21 (claimed RAM 0xF17B): ROM bytes at 0x2fad0+0x42 = F1 7B. MATCH.
+  - RequestID 0x17 (claimed RAM 0xF13D): ROM bytes at 0x2fad0+0x2E = F1 3D. MATCH.
+  => The address ARITHMETIC used to build this logging profile is correct.
+     This does NOT confirm the RequestID's semantic meaning (see below).
+
+=========================================================================
+CONFIRMED - REAL SENSOR READ FUNCTION FOUND
+=========================================================================
+
+[VERIFIED] adc_read_sequence_main @ ROM 0x1556d is the actual round-robin
+analog sensor reader, called from sensor_adc_update @ 0x211fb, called from
+main_loop_engine_control_update @ 0x20efa (the real per-tick engine control
+dispatcher). It reads each ADC channel and stores results as 16-bit words;
+the meaningful 8-bit value sits in the LOW byte of each word (big-endian
+zero-extended byte store). This means many "off by one" looking addresses
+in the profile are CORRECT, not errors - MUT reads a single byte, and that
+byte is the low byte of these word stores.
+
+  ADC write            Low byte (real value)   Profile claim              Status
+  0xF116 / 0xF117      0xF117                   AirTemp   -> 0xF117        CONFIRMED MATCH
+  0xF15E / 0xF15F      0xF15F                   MAP/Boost -> 0xF15F        CONFIRMED MATCH
+  0xF11E / 0xF11F      0xF11F                   O2Sensor  -> 0xF11F        LIKELY MATCH (address lines up,
+                                                                             not yet independently traced
+                                                                             back to the O2 pin)
+  0xF108 / 0xF10A      0xF108 (8-bit variant)   (no profile item claims
+                                                  this address directly)    First channel read in the
+                                                                             sequence (highest priority) -
+                                                                             consistent with typical TPS
+                                                                             prioritization, but NOT proven.
+
+[CONFIRMED - UPGRADED 2026-07-02] TPS - RequestID 0x17, profile claims RAM 0xF13D.
+  Previously flagged SUSPECT (zero direct references to the odd byte address).
+  Root cause of the "zero references" finding: same pattern as AirTemp/MAP -
+  the ADC value is written as a 16-bit word at the EVEN address, low byte
+  holds the real value, and code consumers read the WORD (even address), not
+  the odd byte address MUT points at.
+  - Found the actual writer: adc_read_sequence_b @ ROM 0x15689 (companion to
+    adc_read_sequence_main). Channel read via trap_hang(7) writes to
+    0xF13C/0xF13D as a 16-bit word.
+  - Found ~20 consumers reading the WORD at 0xF13C: idle_closed_loop_ready_check,
+    isc_decel_fuel_cut_check, isc_stepper_enable_check, knock_condition_eval,
+    tcu_rx_main_scheduler, manifold_heat_enable_flag_update, and others.
+  - This consumer set (decel fuel cut, idle closed-loop readiness, ISC stepper
+    enable, TCU shift scheduling) is EXACTLY the set of subsystems that are
+    gated by throttle position (closed-throttle / WOT detection) in real
+    engine control firmware. Strong semantic match, not just address match.
+  - Also cross-confirmed in the same function: channel 5 -> 0xF13A/0xF13B,
+    low byte 0xF13B = Battery Voltage (MUT RequestID 0x14). Matches profile
+    exactly.
+  STATUS: TPS @ 0xF13D and Battery @ 0xF13B are now CONFIRMED, not suspect.
+  Ghidra labels updated: ram_tps_raw_word_hi_CONFIRMED (0xF13C),
+  ram_tps_adc_lo_CONFIRMED (0xF13D), ram_battery_raw_word_hi_confirmed (0xF13A),
+  ram_battery_adc_lo_confirmed (0xF13B).
+
+=========================================================================
+CONFIRMED - CRANK / RPM HARDWARE PATH (partially traced)
+=========================================================================
+
+[VERIFIED] isr_tpu3_tgi3a @ ROM 0x16c4f is a real, ROM-resident interrupt
+handler manipulating H8 TPU timer capture/compare registers (T5GR2H,
+T5CNTH, T5OER, T5SRL) and an internal period-tracking buffer at RAM
+0xF9A0-0xF9A8. This is genuine crank-angle timing capture logic - not a
+stub, not guesswork.
+
+[NOT YET FOUND - additional candidates ruled out 2026-07-02] The function
+that converts the raw period data in 0xF9A0-0xF9A8 into an RPM value and
+writes it to a globally-read RAM cell.
+  - 0xF17A (adjacent to the profile's claimed RPM cell 0xF17B) is READ by
+    ~90 different functions across fueling, ignition, idle, knock, O2,
+    EGR, purge, and TCU torque logic - strongly consistent with it being
+    a core global like RPM, since only a handful of variables get
+    referenced that broadly. Renamed in Ghidra to
+    ram_rpm_candidate_read_by_90fns_writer_unknown as a marker.
+  - Confirmed knock_condition_eval @ 0x174d4 uses this address directly as
+    an RPM-style threshold gate (compared against ROM constants at
+    0x10dc2), consistent with typical "knock detection enabled above/below
+    RPM X" logic. This ADDS to the RPM case but is still not a write-site.
+  - RULED OUT as the writer (checked and confirmed NOT it):
+      crank_stall_detect_update, rpm_load_zone_counter_update (zone/flag
+      counters only), FUN_00020f28 (cylinder/gear index selector),
+      periodic_task_dispatcher (only consumes RPM zone flags, runs after
+      RPM must already be set), isr_tpu3_tgi3b (dwell/injector PWM period
+      tracking, not RPM), channel_periodic_update_ringbuf_snapshot
+      (generic multi-channel history snapshot, unrelated).
+  - Checked all callers of div_u16_sat, div_u32_u16_sat, div_u32_u16_rounded
+    (the obvious "period -> RPM" division primitives) - none touch the
+    0xF9A0 crank buffer or 0xF17A/0xF17B.
+  - Checked xrefs to 0xF9A6/0xF9A8 (the actual period values inside the
+    crank ISR) from OUTSIDE isr_tpu3_tgi3a - none found. Nothing external
+    consumes the raw period buffer directly in the statically analyzed code.
+  - RPM is therefore CIRCUMSTANTIALLY SUPPORTED (address + usage pattern)
+    but the writer is still NOT located. Two possibilities not yet ruled
+    out: (a) it's written via a computed/indirect call Ghidra can't
+    statically resolve (several dispatch-table-style calls exist in this
+    firmware, e.g. via 0x3898[chan] tables seen in
+    channel_periodic_update_ringbuf_snapshot), or (b) it's inside one of
+    the many still-unnamed FUN_0002xxxx stubs (200+ unexamined) that
+    haven't been checked yet. Do not treat RPM as verified.
+
+=========================================================================
+RETRACTED - DEAD END, DO NOT REPEAT
+=========================================================================
+
+[RETRACTED] isr_ram_tpu_crank @ RAM 0xF9BA was initially suspected as the
+"real" crank ISR body, with a theory that it was copied in from ROM
+0x1F290 via boot_ram_block_copy at boot. This was WRONG on inspection:
+  - The bytes at 0xF9BA are entirely undefined ('??') in this ROM image -
+    no code is present there at all.
+  - boot_ram_block_copy is reached only through the bootloader/reflash
+    path (behind an FLMCR flash-control-register gate in reset_handler /
+    flash_boot_init), not during normal engine operation.
+  - 0x1F290 (the claimed copy source) is just an uninitialized RAM data
+    cell (FFFFh), not a code region.
+  Do not pursue this RAM-copy theory further without new evidence. The
+  real crank/RPM path runs through isr_tpu3_tgi3a (ROM-resident, see
+  above), not a RAM-resident blob.
+
+=========================================================================
+RETRACTED - ADI ADC IS A DEAD-END, NOT UNRESOLVED (2026-07-02)
+=========================================================================
+
+[RETRACTED] isr_adi_adc @ ROM 0x163cc was previously flagged "not yet
+resolved to a real handler." That was wrong - it IS resolved:
+  - isr_adi_adc clears a T1SRAL status bit, then calls stub_empty_0x2a8d1
+    via an indirect pjsr.
+  - stub_empty_0x2a8d1 decompiles to a single instruction: prts (return).
+    Confirmed via disassembly, not inference - this is a genuine one-line
+    no-op stub in ROM, not an unresolved/unanalyzed jump target.
+  - CONCLUSION: the ADI ADC interrupt is a dead vector in this firmware -
+    it does nothing. It is NOT the knock sampling path. Do not pursue
+    isr_adi_adc further.
+
+=========================================================================
+[CONFIRMED] KNOCK - real processing function found: FUN_0002933b
+=========================================================================
+
+[CONFIRMED] FUN_0002933b @ ROM 0x2933b is the real knock-processing
+engine (large function, ~600 lines decompiled). Found via xrefs to the
+0xF15C/0xF3A2 even-word addresses (same low-byte-holds-value pattern
+already established for TPS/AirTemp/MAP/Battery).
+  - Calls adc_read_channel_6, result lands at RAM 0xF15C (word). Low byte
+    0xF15D = profile's Knock Voltage (RequestID 0x30, "0.0195*x" V scale).
+    STATUS: CONFIRMED.
+  - Computes a saturating knock-sum accumulator, written to RAM 0xF3A2
+    (word). Low byte 0xF3A3 = profile's Knock Sum (RequestID 0x26).
+    STATUS: CONFIRMED.
+  - Also writes a tight cluster at 0xF962/0xF964/0xF966/0xF968, sitting
+    immediately adjacent to (not exactly on) knock_var (0xF963),
+    knock_base (0xF967), knock_change (0xF969). Same even/odd word
+    pattern as everything else in this ROM, so these are very likely the
+    same variables, but exact byte alignment has NOT been individually
+    confirmed for each one yet. STATUS: LIKELY, not fully confirmed -
+    verify each of knock_var/knock_base/knock_change/knock_dynamics/
+    knock_flag individually before marking confirmed.
+  - Also directly reads/uses RAM 0xF17A (copied into 0xF3DE under a
+    slip-rate gate). This is a second independent function (beyond the
+    ~90 read-sites already noted) treating 0xF17A as a live global -
+    adds further circumstantial support to the RPM-candidate theory, but
+    still does not identify the WRITER of 0xF17A/F17B. RPM remains
+    unconfirmed.
+  - NOTE/OPEN QUESTION: this function also reads what RVR_base.xml labels
+    as TCU-only constants (0xB08/0xB0A "TCU Slip Duty Gain", 0xB0C/0xB0E
+    "TCU Max Slip Adj Ceiling", 0xB2A-0xB2E "TCU Lockup Slip Thresholds").
+    Either these are generic saturating-ramp-rate constants shared across
+    subsystems (knock retard ramp and TCU slip control both need a
+    ramp-rate limiter, so reuse is plausible), or the TCU labels in
+    RVR_base.xml are themselves not fully accurate. Not resolved either
+    way - flagging as an inconsistency to revisit, not correcting either
+    document yet.
+ACTION: individually verify knock_adc (0xF3A9), knock_var (0xF963),
+knock_base (0xF967), knock_change (0xF969), knock_dynamics (0xF3B7),
+knock_flag (0xEFC3) against knock_process_main's exact byte writes before
+marking each CONFIRMED.
+
+=========================================================================
+[CRITICAL - UNRESOLVED CONFLICT] 0xF3AC/0xF3AE: TWO subsystems, same RAM
+=========================================================================
+
+[CONFIRMED - GENUINE CONFLICT, NOT A STALE LABEL] Checked xrefs to 0xF3AC
+directly (not just knock_process_main's usage):
+
+  From 00024f17 in tcu_slip_control_init [WRITE]  (init only)
+  From 00029afe/00029b21/00029b7d/00029b8a/00029bd9/00029be6 in
+       knock_process_main [READ/WRITE, heavy, ongoing]
+  From 0002b5bd in tcu_rx_main_scheduler [READ]
+  (tcu_rx_main_scheduler ALSO writes 0xF3AC/0xF3AE directly at 0xb5cf/
+   0xb5ec-ish, using tcu_slip_ratio_raw * something / div_s32_s16_rounded
+   - genuine TCU slip-ratio LOW-PASS FILTER math, ghidra global names
+   already present: tcu_slip_ratio_raw, tcu_slip_ratio_filtered)
+
+  knock_process_main's use of the SAME addresses is unambiguously
+  different math: gain selected from 0xB08/0xB0A (per f3a4 bit7), input
+  is an ADC-channel-6-derived per-cylinder value, output clamped 0-255
+  via clamp_u16 and written back to 0xF3AC/0xF3AE inside an "if bit1 of
+  0xf0ec (cylinder bank select) ..." branch structure - classic
+  per-cylinder knock retard, not a slip ratio filter.
+
+  CONCLUSION: 0xF3AC and 0xF3AE are read AND written by both
+  tcu_rx_main_scheduler (TCU slip-ratio filter) and knock_process_main
+  (per-cylinder knock retard) with mutually incompatible interpretations
+  of the same bytes. This is either:
+    (a) genuine RAM economy / cell reuse across subsystems that don't
+        run concurrently in a way that matters (possible on this
+        memory-constrained H8), or
+    (b) one of the two functions is using a MISIDENTIFIED address that
+        merely happens to be adjacent/aliased to the real one (e.g. off
+        by a small constant not yet spotted), or
+    (c) genuine shared coupling - e.g. knock retard on a cylinder
+        legitimately feeds into TCU torque-cut coordination, and 0xF3AC/
+        0xF3AE really is a shared communication cell by design.
+  NOT RESOLVED. This directly affects confidence in RVR_base.xml's
+  2025 reclassification of "TCU Torque Ramp Target A-D [f3a8/f3aa]" and
+  the fuel-map document's "Open Loop Lambda Correction Bk1 [f3ac/f3ae]"
+  labels - at minimum, f3ac/f3ae are NOT a clean single-purpose TCU
+  register as currently documented; treat all f3a8/f3aa/f3ac/f3ae/f3b0/
+  f3b2 table definitions in both project XMLs as suspect until this is
+  resolved.
+ACTION: check call-site ordering/frequency of tcu_rx_main_scheduler
+(called from isr_sci2_eri) vs knock_process_main (caller still unknown -
+likely indirect/computed dispatch) to determine whether they could ever
+run in a genuinely conflicting order, which would help distinguish
+(a)/(b)/(c) above.
+
+[CHECKED 2026-07-02] knock_process_main has ZERO direct xrefs of any kind
+(not just as a function call - no data references either). It is called
+purely through an indirect/computed jump the static analysis can't
+resolve, same situation already seen elsewhere in this firmware (noted
+re: the 0x3898[chan]-style dispatch tables). Cannot yet determine calling
+frequency/ordering relative to isr_sci2_eri -> tcu_rx_main_scheduler by
+static xref alone. Would need either: manual dispatch-table reconstruction,
+or live debugging via the Ghidra debugger integration (breakpoint both
+functions, observe call order/frequency on a running/emulated target).
+
+=========================================================================
+[RESOLVED 2026-07-02, SESSION 3] 0xF3AC/0xF3AE CONFLICT - CONFIRMED INTENTIONAL
+=========================================================================
+
+[RESOLVED] The f3ac/f3ae "conflict" between tcu_rx_main_scheduler (TCU slip-ratio
+filter) and knock_process_main (per-cylinder knock retard) is NOT a bug, NOT a
+misidentified address, and NOT incidental RAM reuse. It is CONFIRMED INTENTIONAL
+cross-subsystem coordination. Resolution method: traced the enable conditions
+guarding each subsystem's access to f3ac/f3ae.
+
+  - knock_process_main's entire per-cylinder knock-retard block (which reads/
+    writes f3ac/f3ae/f3aa via bank-selected calls to sat_mul_u16 @0x1405c and
+    div_u16_rounded @0x1412b, gain from 0xB08/0xB0A, cylinder select via
+    0xF0EC bit1) is gated by:
+        if ((f1f2 & 0x80) == 0) return;
+
+  - tcu_rx_main_scheduler's independent TCU slip-ratio low-pass filter (also
+    writing f3ac/f3ae/f3aa via mul_u16_hi -> div_s32_s16_rounded) is gated by
+    the IDENTICAL condition:
+        if ((f1f2 & 0x80) != 0) { ...filter... }
+
+  Both subsystems run under the SAME enable bit, not mutually exclusive states.
+  This rules out possibility (a) from the original conflict note (safe reuse
+  across non-concurrent states) and possibility (b) (misidentified/aliased
+  address - the bit-level gating match is too precise to be coincidental).
+  This CONFIRMS possibility (c): genuine shared coupling by design - knock
+  retard on a cylinder legitimately feeds into TCU torque-cut coordination via
+  this shared register, active whenever the current gear's config table
+  enables it (see below).
+
+  NEW FUNCTION IDENTIFIED: gear_state_config_loader_f1fc (renamed from
+  FUN_00020f28). Derives a state index f1fc (0-7) from f15a (bucketed) or via
+  ROM lookup table @0x222 indexed by f1fa. f1fc is the SAME gear/state
+  selector already seen elsewhere in the firmware (the 4-byte-per-gear struct
+  @ROM 0x232 used in sci1_meta_cmd_dispatch_c0_ff's 0xEC-0xEF branch, and the
+  4-entry TCU Gear Ratio Periods table @ROM 0x3284) - consistent with f1fc
+  being a genuine current-gear index (0-3, with 4-7 likely unused/reserved).
+
+  f1fc is used to load THREE parallel per-gear config words from ROM:
+    f1f0 <- ROM 0x262 + f1fc*2   (gear_config_table_f1f0, not yet decoded)
+    f1f2 <- ROM 0x272 + f1fc*2   (gear_config_table_f1f2_TCU_KNOCK_COORD_ENABLE
+                                   - bit7 is the shared knock/TCU coordination
+                                   enable flag)
+    f1f4 <- ROM 0x282 + f1fc*2   (gear_config_table_f1f4, not yet decoded)
+
+  PRACTICAL INTERPRETATION: the ECU appears to enable knock-informed torque-cut
+  coordination with the TCU only in certain gears (likely lockup/higher gears,
+  pending confirmation of which gear indices have bit7 set in ROM table
+  0x272). This is physically sensible: knock detected on a cylinder both
+  retards timing AND requests a torque reduction via the TCU, protecting the
+  drivetrain, but only where the transmission logic calls for it.
+
+  GHIDRA LABELS ADDED THIS SESSION:
+    gear_state_config_loader_f1fc (function, was FUN_00020f28)
+    gear_state_lookup_table_f1fa (ROM 0x20222)
+    gear_config_table_f1f0 (ROM 0x20262)
+    gear_config_table_f1f2_TCU_KNOCK_COORD_ENABLE (ROM 0x20272)
+    gear_config_table_f1f4 (ROM 0x20282)
+    current_gear_state_index (RAM 0xf1fc)
+    gear_config_word_bit7_tcu_knock_coord (RAM 0xf1f2)
+    knock_tcu_coord_reg_lo_CONFIRMED_SHARED (RAM 0xf3ac)
+    knock_tcu_coord_reg_hi_CONFIRMED_SHARED (RAM 0xf3ae)
+    sci1_meta_cmd_dispatch_c0_ff (function, was FUN_00028869) - SCI1 K-line
+      meta/session command dispatch for request bytes 0xC0-0xFF (session
+      control, security, actuator/reset). NOT the per-sensor MUT data
+      dispatch. Confirmed separate from the flat MUT Table @ROM 0x2fad0
+      (which serves request bytes 0x00-0x8B/low range directly as RAM
+      address pointers, formula: addr = 0x2fad0 + request_id*2, verified
+      via adc_sensor_convert_single @0x171c3's independent CONCAT12(page,
+      index*2)-0x530 formula, which resolves to the identical base address).
+
+  ACTION FOR PROJECT XMLs: relabel f3a8/f3aa/f3ac/f3ae/f3b0/f3b2 table
+  definitions in both RVR_base.xml and the MT-specific XML as a combined
+  "Knock-to-TCU Torque Coordination" register (category: Knock Control or a
+  new Torque Coordination category), NOT split across Fuel/Transmission as
+  currently labeled. Category and axis scaling for f3a8/f3aa still tentative
+  pending further decode of gear_config_table_f1f0/f1f4 and ROM table 0x272's
+  full per-gear bit contents. NOT YET DONE - pending user confirmation.
+
+=========================================================================
+[SESSION 4, 2026-07-02] KNOCK RETARD DOES NOT EXIST AS A DISCRETE VALUE -
+INVESTIGATING OCTANE LEVEL (MUT 0x27 / RAM 0xEEC9) AS THE REAL MECHANISM
+=========================================================================
+
+CONTEXT: Neither this ROM's MUT profile nor the stock Evo 4/5/6 profile
+(Mitsubishi MUTII EFI.xml) has any RequestID for a discrete "knock retard
+degrees" value. Working theory: on these ECUs knock isn't logged as a
+subtracted degree value at all - it degrades "Octane Level" (starts at
+100%, MUT RequestID 0x27, RAM word 0xEEC8/EEC9, low byte 0xEEC9 is what
+MUT actually returns), and Octane Level is what blends between the
+High-Octane and Low-Octane ignition maps already in RVR_base.xml
+(High/Low Octane Ignition Map 1 & 2, Knock Control Above Load, Octane
+Control Above Load). If true, "retard" is implicit in the map blend, not
+a standalone logged scalar - explaining why no such MUT item exists.
+
+[CROSS-VALIDATED] Knock Sum (RequestID 0x26 -> RAM 0xF3A3) and Knock
+Voltage (RequestID 0x30 -> RAM 0xF15D) use IDENTICAL RequestIDs and Eval
+formulas in the stock Evo 4/5/6 profile (Mitsubishi MUTII EFI.xml) as in
+this RVR profile. Combined with the existing decompiled-write-site
+evidence (knock_process_main writes both addresses directly), these two
+items now have TWO independent confirming lines of evidence (address
+arithmetic + write-site AND cross-model naming convention match). Upgrade
+from CONFIRMED to CONFIRMED/CROSS-VALIDATED.
+
+[VERIFIED] xrefs to RAM 0xF3A2 (even word, low byte 0xF3A3 = Knock Sum)
+confirm the established even-word/odd-byte pattern still holds, and
+surface TWO previously unseen writers not yet examined:
+  FUN_00024fc9 [WRITE @ 0x25006]
+  FUN_0002502d [WRITE @ 0x2504c]
+  FUN_0002910e [READ @ 0x29165, WRITE @ 0x2916f, READ @ 0x29177]
+  knock_process_main [WRITE x3, READ+WRITE x3]
+  tcu_rx_main_scheduler [READ, READ_WRITE]
+(FUN_0002910e is a new name to track - not yet examined this session.)
+
+[VERIFIED - FUNCTION FOUND AND NAMED] octane_level_gate_and_reset_dispatch
+(was FUN_00024fc9, ROM 0x24fc9). This is the ONLY static writer of RAM
+0xEEC8/0xEEC9 (Octane Level) in the entire ROM (confirmed via xrefs-to on
+0xeec8; xrefs-to on the odd byte 0xeec9 return nothing - same even/odd
+addressing pattern as every other item in this ROM, so use 0xeec8 for
+xrefs). It is gated on the exact same flag already confirmed to control
+knock<->TCU coordination:
+    if ((f1f2 & 0x80) == 0) { reset branch }  else { call chain }
+  RESET BRANCH (bit7 clear): confirmed by decompilation -
+    tcu_torque_slip_adj = 0; f200 &= 0xfffe; eec6 = 0; eec8 = 0
+    This is a reset-to-zero, NOT a decay/decrement computation.
+  ENABLED BRANCH (bit7 set): calls a chain of ~9 subfunctions
+    (0x2502d, 0x2507a, 0x250fb, 0x2513a, 0x2519e, 0x251c4, 0x25277,
+    0x252d3, 0x252f9). Structural pattern (repeated call-then-literal
+    sequence) is consistent with one call per cylinder/condition, same
+    shape as the already-confirmed per-cylinder knock retard logic in
+    knock_process_main.
+
+[CHECKED 2026-07-02] First two functions in that chain, decompiled and
+renamed:
+  per_cyl_knock_flag_update_cyl_a (was FUN_0002502d, ROM 0x2502d):
+    calls FUN_00025057 (unexamined); sets/clears bit6 of RAM word 0xF3A4
+    depending on result; also zeroes tcu_torque_slip_adj on the "clear"
+    path. Does NOT touch eec8/eec9.
+  per_cyl_knock_flag_update_cyl_b (was FUN_0002507a, ROM 0x2507a):
+    calls FUN_000250ac (unexamined); sets/clears bit7 of RAM word 0xF3A4;
+    clears upper bits of RAM 0xEF88 on the "clear" path. Does NOT touch
+    eec8/eec9.
+  Both operate on 0xF3A4, the SAME per-cylinder knock-flags register
+  already implicated in knock_process_main's per-cylinder retard logic
+  (see session 3's "Knock Retard Per-Cyl" table cluster notes). This
+  reinforces that this call chain is per-cylinder knock-condition
+  bookkeeping, but neither function found so far actually writes Octane
+  Level.
+
+[RESOLVED 2026-07-02, SAME SESSION] Full chain traced and CONFIRMED. The
+EvoScan profile's claim ("Octane Level starts at 100% and decreases with
+persistent knock sum") is CORRECT IN SUBSTANCE, via an intermediate
+accumulator rather than a direct knock->octane write:
+
+  1. knock_process_main (0x2933b) computes knock sum, writes RAM 0xF3A2
+     (word) / 0xF3A3 (low byte = MUT Knock Sum, RequestID 0x26).
+  2. knock_event_counter_update_eec6 (was FUN_000251c4, ROM 0x251c4),
+     called from octane_level_gate_and_reset_dispatch's enabled-branch
+     chain: reads 0xF3A2, compares against ROM-configured hysteresis
+     thresholds (0xB3E low, 0xB40 high) gated by a cooldown timer at
+     0xEFC0. Knock sum BELOW low threshold -> eec6++ (clamped 0-255).
+     Knock sum AT/ABOVE high threshold -> eec6-- (floor 0). i.e. eec6
+     rises when NOT knocking and falls when knocking - it tracks
+     "octane margin", counting up toward 255 during clean running and
+     down toward 0 under sustained knock.
+     IMPORTANT: this write uses COMPUTED pointer arithmetic
+     ((ushort*)(bank<<0x10 | 0xeec6)), which is why it was INVISIBLE to
+     the original static xref-to-0xeec6 search - only found via a
+     bank-prefixed query ("1eec6" instead of plain "eec6"). Same blind
+     spot class as knock_process_main's own callers and the RPM-writer
+     search - worth remembering as a general technique for future
+     "no writer found" dead ends in this ROM.
+  3. octane_level_compute_from_knock_counter (was FUN_000252d3, ROM
+     0x252d3), later in the same chain: reads eec6, force-zeroes it if
+     f1fe bit3 OR f200 bit0 is set (meaning not yet decoded), passes the
+     result through a shared clamp/scale helper (o2_downstream_clamp_by_
+     type - also used elsewhere for O2 values, exact transform not
+     re-derived), and writes the result to 0xEEC8/EEC9 = Octane Level.
+     THIS IS THE CONFIRMED WRITER that was missing before. Also uses
+     computed addressing for the eec8 write.
+  4. octane_level_init_or_force_from_gear_table (was FUN_00024e80, ROM
+     0x24e80) is a SEPARATE writer of eec6+eec8 together (sets both to
+     the same value in one pass) - NOT part of the dispatcher's own
+     call chain, called from elsewhere (caller not yet identified).
+     Driven by the f1fc gear-state index (confirmed session 3) via a
+     4th per-gear ROM table at 0x2882 (index 1) when f1f2 bit8 is clear,
+     or forces Octane Level to 0xff (100%) when f0fe bit0 is set. This
+     means Octane Level also has a gear-dependent init/override path
+     independent of the knock hysteresis counter - worth investigating
+     further if gear-specific octane/timing behavior matters.
+
+OTHER FUNCTIONS IN THE 9-FUNCTION CHAIN, for completeness:
+  0x2502d per_cyl_knock_flag_update_cyl_a  - F3A4 bit6, per-cylinder,
+      does not touch eec6/eec8
+  0x2507a per_cyl_knock_flag_update_cyl_b  - F3A4 bit7, per-cylinder,
+      does not touch eec6/eec8
+  0x250fb (not renamed)  - F3A4 bit10, per-cylinder, same shape as above
+  0x2513a (not renamed)  - F3A4 bit9/bit11, RPM hysteresis using the
+      still-unresolved ram_rpm_candidate_read_by_90fns_writer_unknown
+      (0xF17A) against 4 ROM thresholds (0xB50-0xB5C)
+  0x2519e (not renamed)  - F3A4 bit8, RPM hysteresis, same RPM candidate
+      address, 2 ROM thresholds (0xB30/0xB34)
+  0x25277 knock_counter_condition_override_eec6 - forces eec6 to 0xff or
+      0 depending on f1f2 bit8 / f0fe bit0, reloads an anti-chatter timer
+      at 0xEFBE from ROM 0xB5E on state transition
+  0x252f9 (not renamed, NOT part of octane/knock logic) - unrelated:
+      reads 0xF17E, compares to ROM threshold 0xB22, writes 0xEFC2. Looks
+      like a separate timer/flag feature, do not group with octane chain.
+
+GHIDRA STATE: octane_level_gate_and_reset_dispatch, per_cyl_knock_flag_
+update_cyl_a, per_cyl_knock_flag_update_cyl_b, knock_event_counter_
+update_eec6, octane_level_compute_from_knock_counter, octane_level_init_
+or_force_from_gear_table, and knock_counter_condition_override_eec6 all
+renamed and plate-commented with full detail (see comments in Ghidra).
+Disassembly comment also added at the reset-branch eec8 write (ROM
+0x25017).
+
+REMAINING OPEN THREADS FROM THIS INVESTIGATION:
+  - o2_downstream_clamp_by_type's exact transform (does it scale eec6
+    linearly to a %, or something else?) not re-derived this session -
+    it was apparently already named in a prior session, worth revisiting
+    its own plate comment/notes if present.
+  - f1fe bit3 and f200 bit0 (the force-zero conditions in
+    octane_level_compute_from_knock_counter) not decoded.
+  - f0fe bit0 (appears in both knock_counter_condition_override_eec6 and
+    octane_level_init_or_force_from_gear_table as a "force to
+    max/100%" trigger) not decoded - likely a WOT or full-load flag
+    given the "force octane to max" behavior, but unconfirmed.
+  - Caller of octane_level_init_or_force_from_gear_table not yet found -
+    it's not part of octane_level_gate_and_reset_dispatch's own chain.
+  - ROM table at 0x2882 (per-gear octane init values, indexed by f1fc)
+    not yet labeled in RVR_base.xml or cross-checked for stride
+    consistency against the existing f1f0/f1f2/f1f4 gear-config tables
+    (ROM 0x262/0x272/0x282).
+
+=========================================================================
+[RESOLVED 2026-07-02, SESSION 5] KNOCK CLUSTER - FULL BYTE-LEVEL CONFIRMATION
+=========================================================================
+
+[CONFIRMED] Obtained a complete decompile of knock_process_main (0x2933b) via
+live Ghidra connection and traced every write in the function. Exact writes,
+in order of appearance:
+
+  RAM 0xF3A8 (word) / low byte 0xF3A9 = MUT knock_adc (ReqID 0x6A, "Evo7/8").
+    Value: adc_read_channel_6 result (0xF15C) run through mul_fixedpoint_8
+    across 3 piecewise ranges (x<0x5D, 0x5D<=x<0x65, x>=0x65), clamped to
+    0xFF. This is genuinely the direct per-cylinder ADC-derived knock
+    intensity value. STATUS: CONFIRMED, semantically accurate.
+
+  RAM 0xF962 (word) / low byte 0xF963 = MUT knock_var (ReqID 0x6C).
+    Value: the FINAL per-cylinder knock decision/trigger magnitude (variable
+    "uVar6" in the decompile) after the full threshold/hysteresis branch
+    chain (0/0x10/0x20/0x100-style state selection, then persistence-counter
+    and anti-chatter logic against ROM thresholds 0xb4e/0xb62/0x8e).
+    STATUS: CONFIRMED address, but this is a DERIVED decision value, not raw
+    ADC variance - "var" is a misleading but not incorrect name.
+
+  RAM 0xF966 (word) / low byte 0xF967 = MUT knock_base (ReqID 0x6B).
+    Value: a snapshot of 0xF3AA (the clamped per-cylinder knock-retard
+    output) taken BEFORE this cycle's own 0xF3AA update later in the
+    function - i.e. it holds the PREVIOUS cycle's retard output, not an
+    independent "base" reading. STATUS: CONFIRMED address/write-site,
+    semantics is "previous-cycle retard snapshot".
+
+  RAM 0xF968 (word) / low byte 0xF969 = MUT knock_change (ReqID 0x6D).
+    Value: delta between the current and previous 0xF3A8 knock-ADC reading
+    (uVar8 = current - previous, saturated at 0), or forced to 0 when
+    F3A4 bit10 is clear or F3A6 bit0 is set. STATUS: CONFIRMED, and the name
+    "knock_change" is an accurate semantic match (it IS a delta/rate value).
+
+  RAM 0xF3B6 (word) / low byte 0xF3B7 = MUT knock_dynamics (ReqID 0x6E).
+    Value: a persistence/duration counter - increments each cycle knock
+    stays below the low threshold (clamped by ROM 0xb8e/0xf8e), resets to 0
+    when the high threshold is exceeded (also sets RAM 0xF200 bit0, a
+    lockup-style flag also consumed by tcu_rx_main_scheduler). STATUS:
+    CONFIRMED, "dynamics" is a reasonable name for a state-duration tracker.
+
+[REFUTED] MUT knock_flag (ReqID 0x6F, RAM 0xEFC2/EFC3) is NOT written by
+knock_process_main - it isn't referenced anywhere in the function at all
+(confirmed by full decompile, not just an xref miss). Traced the actual
+writers via get_xrefs_to on 0xEFC2:
+  - FUN_000252f9 (0x252f9): writes 0xEFC2 from ROM constant 0xB24 when
+    (RAM 0xF17E - 0x80) >= ROM threshold 0xB22. 0xF17E is unrelated to knock
+    sum/ADC - this was already flagged as a separate timer/flag feature in
+    session 4.
+  - tcu_rx_main_scheduler (0x2b5bd, near ROM offset 0xb6ea): writes the SAME
+    ROM constant 0xB24 to 0xEFC2 when a filtered delta of 0xF13C (current)
+    vs a shifted history register at 0xF142 exceeds ROM threshold 0xB20.
+  Both writers are throttle/crank-transient delta detectors, not knock
+  detectors. tcu_rx_main_scheduler also READS 0xEFC2 back (near ROM 0xb08b)
+  to select between ROM thresholds 0xB1C and 0xB1E - consistent with 0xEFC2
+  being a shared "large throttle/crank movement" mode-select flag used by
+  the TCU scheduler and an unrelated timer feature, not a knock condition.
+  CONCLUSION: the stock EvoScan profile's "knock_flag" label for MUT 0x6F is
+  a genuine mislabel on this ECU, not just unconfirmed. Recommend removing it
+  from the "Knock Control" grouping in the logging profile or renaming/
+  flagging it clearly as suspect.
+
+GHIDRA STATE (session 5): labels added at 0xF3A8/F3A9 (knock_adc_*_CONFIRMED),
+0xF962/F963 (knock_var_*_CONFIRMED), 0xF966/F967 (knock_base_*_CONFIRMED_
+prevcycle_snapshot), 0xF968/F969 (knock_change_*_CONFIRMED), 0xF3B6/F3B7
+(knock_dynamics_*_CONFIRMED), and 0xEFC2/EFC3 (throttle_delta_mode_flag_*_
+NOT_KNOCK / _mislabeled_knock_flag). Plate comments added at knock_process_main
+(0x2933b, full write-site table) and FUN_000252f9 (0x252f9, EFC2 write-site
+detail, cross-reference to tcu_rx_main_scheduler's independent write).
+
+ACTION FOR PROJECT XML: in Mitsubishi_MUTII_EFI_RVR_X3_logging_profile.xml,
+update the RequestID 0x6A/0x6B/0x6C/0x6D/0x6E notes to reference this
+confirmation (addresses correct, F963/F967 are derived/snapshot values not
+raw readings). For RequestID 0x6F (knock_flag, RAM 0xEFC3), change status
+from "RAM CONFIRMED" (address-only) to explicitly flag the item as
+MISLABELED - the address arithmetic is correct but the semantic meaning
+("knock flag") is wrong; it's a throttle/crank-transient mode-select flag
+shared with TCU logic.
+
+=========================================================================
+WHAT'S STILL OPEN
+=========================================================================
+1. Find the actual writer of 0xF17A/0xF17B to confirm/deny RPM. Many
+   candidates ruled out (see RPM section above) - remaining leads are
+   the computed/indirect dispatch tables (e.g. 0x3898[chan]-style) or the
+   ~200 still-unnamed FUN_0002xxxx functions.
+2. TPS is now CONFIRMED (0xF13D, see above) - CLOSED.
+3. [CLOSED 2026-07-02, session 5] Knock - real processing function FOUND:
+   FUN_0002933b @ 0x2933b. Knock Sum (F3A3) and Knock Voltage (F15D)
+   CONFIRMED (session 4). Full byte-level trace of the knock_adc/base/var/
+   change/dynamics cluster (F3A9/F967/F963/F969/F3B7) now done - all 5
+   CONFIRMED correct addresses, though knock_var (F963) and knock_base
+   (F967) hold derived/snapshot values rather than raw readings. knock_flag
+   (EFC3) is REFUTED - not written by knock_process_main at all; the real
+   writers (FUN_000252f9, tcu_rx_main_scheduler) are throttle/crank-delta
+   detectors unrelated to knock. See full session 5 section above.
+4. [CLOSED 2026-07-02 session 3] f3ac/f3ae TCU-vs-knock conflict - RESOLVED as
+   intentional shared coordination register, see resolution section above.
+   New open sub-item: gear_config_table_f1f0 (ROM 0x262) and
+   gear_config_table_f1f4 (ROM 0x282) - the other two per-gear config words
+   loaded alongside f1f2 - are not yet decoded. Also still open: which
+   specific gear index/indices have f1f2 bit7 set in ROM table 0x272 (would
+   confirm which gears actually get knock-to-TCU coordination).
+5. Every other RequestID in the profile still carries the same caveat as
+   the original note below: the address may be arithmetically correct
+   while the semantic label (inherited from the stock Evo 5/6 profile) is
+   unconfirmed for this ECU. Confirmed so far: AirTemp (F117), MAP/Boost
+   (F15F), TPS (F13D), Battery (F13B), Knock Sum (F3A3, now also
+   cross-validated against the Evo 4/5/6 profile), Knock Voltage (F15D,
+   likewise cross-validated), knock_adc (F3A9), knock_var (F963, derived
+   value), knock_base (F967, prev-cycle snapshot), knock_change (F969),
+   knock_dynamics (F3B7) - all session 5. REFUTED: knock_flag (EFC3) is a
+   mislabel, not knock-related (session 5). Likely-but-not-fully-traced:
+   O2 Sensor (F11F). Everything else in the profile is still unverified.
+6. [RESOLVED, session 4] Octane Level (MUT 0x27, RAM EEC8/EEC9) - full
+   decay chain traced and confirmed: knock_process_main -> knock sum
+   (F3A2/F3A3) -> knock_event_counter_update_eec6 (hysteresis counter at
+   EEC6) -> octane_level_compute_from_knock_counter (writes EEC8). Also
+   found a separate gear-indexed init/override path
+   (octane_level_init_or_force_from_gear_table, ROM 0x24e80) whose caller
+   is not yet identified. See full section above for all addresses,
+   thresholds, and remaining sub-threads (undecoded flag bits f1fe.3,
+   f200.0, f0fe.0; unlabeled ROM table @0x2882).
+
+=========================================================================
+ORIGINAL NOTES (pre-2026-07 session, kept for context)
+=========================================================================
+What's actually confirmed:
+[OK] The MUT table structure and address-resolution formula (0x2fad0 + id*2)
+     - cross-verified two independent ways
+[OK] That command byte 0x21 resolves to RAM address 0xf17b on this specific ROM
+
+What's not verified:
+[NO] That 0xf17b is actually written by RPM-computation code - we never
+     traced what writes to these addresses, only what the table points to
+[NO] That RequestID 0x21 even means "RPM" on this ECU at all - that
+     assumption came entirely from the stock Evo 5/6 profile's naming
+     convention. We inherited the label, not the meaning.
+
+STATUS AS OF THIS UPDATE: item [NO] #1 is now PARTIALLY addressed for the
+RPM candidate address (0xF17A read by ~90 functions, consistent with a
+core global, writer still not located) and for TPS (0xF13D looks
+increasingly unlikely to be correct given zero references found).
+
+Two things ARE worth flagging, though, because they're the same kind of claim we've been testing:
+
+The RAM axis-pointer note in RVR_base.xml:
+
+Axis RAM pointers: F0C0=RPM, F0C2=Load/MAP, F0C4=CoolantTempA(ADC)...
+
+This is a different claimed RPM location (0xF0C0) than the MUT-profile's 0xF17B/0xF17A we've been chasing. When I checked 0xF0C0 earlier, it had exactly one reference, and it was an odd computed-call reference — nothing like the ~90-function read pattern that made 0xF17A a credible RPM candidate. That's a real inconsistency between two documents both claiming to know where "RPM" lives in RAM. I haven't resolved which (if either) is right — worth treating that note with the same skepticism we've applied elsewhere.
+The throttle_load_pct note:
+
+RAM 0xf5de... computed as crank period delta... in isr_sci3_eri, NOT a TPS voltage reading.
+
+We confirmed today that the real crank-period-capture ISR is isr_tpu3_tgi3a (0x16c4f), working off 0xF9A0–0xF9A8 — not isr_sci3_eri (which we know from the TCU work is the SCI3/TCU comms handler). That doesn't necessarily make the note wrong — isr_sci3_eri could still consume the period data secondhand — but it means the claim hasn't actually been traced, just asserted, and we now have the exact tool chain to check it.

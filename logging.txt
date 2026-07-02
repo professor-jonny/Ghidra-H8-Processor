@@ -1,0 +1,26 @@
+MUT LOGGING PROFILE VERIFICATION LOG
+RVR X3 1997-2001 4G63T (MD352553 / EM2171)
+Updated 2026-07-02 (session 4) - RESOLVED: "knock retard" is not a discrete
+logged value on this ECU (same as Evo 4/5/6); confirmed it instead operates via
+Octane Level (MUT 0x27 / RAM EEC8-EEC9) decaying under sustained knock, through
+an intermediate hysteresis counter at RAM EEC6 driven by the knock-sum register
+(F3A2/F3A3). Full write chain traced and named in Ghidra: knock_process_main ->
+knock_event_counter_update_eec6 -> octane_level_compute_from_knock_counter ->
+eec8 (Octane Level), which is what the existing High/Low-Octane ignition map
+blend in RVR_base.xml consumes. Also found a separate gear-table-driven init/
+override path (octane_level_init_or_force_from_gear_table). Cross-validated
+Knock Sum/Knock Voltage against the stock Evo 4/5/6 profile.
+Previous update: session 3 - RESOLVED: f3ac/f3ae TCU-vs-knock conflict, confirmed
+intentional cross-subsystem coordination (see new section below). Knock processing
+function found (FUN_0002933b, now named knock_process_main); ADI ADC dead-end retracted.
+
+=========================================================================
+PURPOSE
+=========================================================================
+The EvoScan logging profile was adapted from a stock Evo 5/6 profile by
+updating RAM addresses to match this ROM, WITHOUT independently confirming
+that each RequestID's claimed meaning (RPM, TPS, Knock, etc.) is actually
+correct for this ECU/firmware. This log tracks what has been independently
+verified against the decompiled ROM, vs. what is still inherited assumption.
+
+(See project file logging.txt for the full verification log content.)
