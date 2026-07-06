@@ -1,0 +1,250 @@
+# h8539f-mem.sinc
+#
+# Data-movement instruction family (mov/ldc/stc/ldm/stm/xch/movfpe/movtpe),
+# split out of h8539f.slaspec per the July 2026 refactor plan (see README.md
+# "Refactor plan" section and h8539f-instruction-table.md for ground truth).
+#
+# Depends on definitions still in the top-level h8539f.slaspec at the time of
+# writing: instr8 token (opcode/opcode47/mode/sz/Rn fields), special token
+# (opcode_special), addrByte/addrWord/addrLong tokens, r6b_disp8/r6w_disp8
+# subtables (lines 2218+ in the pre-split file), Rd/Rs/Rn register attach,
+# regListByte token (reglist/reglist0-7 fields) and its r*_push/r*_pop
+# subtables. When h8539f.slaspec is split for real, these must move to the
+# new slim top-level file and this file's @include must come AFTER all of
+# them are defined -- confirmed by compile testing (see the ldm/stm note
+# below) that SLEIGH requires symbols declared before use; an @include
+# placed too early fails with "No matching global symbol".
+
+# --- VERIFIED, ported as-is from the pre-split h8539f.slaspec -------------
+# Checked against h8539f-instruction-table.md's A2tail rows before porting;
+# all five matched the ground truth exactly (byte-for-byte, see the table's
+# "Port status: literal (non-MAP) mov forms" section) -- no rewrite needed,
+# only relocation.
+
+# MOV:L @aa:8,Rd   (A2tail 0x60-0x6F)
+:mov:"l.b" "@"^addr8_br^":8",Rd   is opcode=12 & Rd; addr8_br   { Rd[0,8] = *:1 addr8_br; $(NF) = Rd[7,1];  $(ZF) = Rd[0,8] == 0; $(VF) = 0; }
+:mov:"l.w" "@"^addr8_br^":8",Rd   is opcode=13 & Rd; addr8_br   { Rd      = *:2 addr8_br; $(NF) = Rd[15,1]; $(ZF) = Rd      == 0; $(VF) = 0; }
+
+# MOV:S Rs,@aa:8   (A2tail 0x70-0x7F)
+:mov:"s.b" Rs,"@"^addr8_br^":8"   is opcode=14 & Rs; addr8_br   { *:1 addr8_br = Rs[0,8]; $(NF) = Rs[7,1];  $(ZF) = Rs[0,8] == 0; $(VF) = 0; }
+:mov:"s.w" Rs,"@"^addr8_br^":8"   is opcode=15 & Rs; addr8_br   { *:2 addr8_br = Rs;      $(NF) = Rs[15,1]; $(ZF) = Rs      == 0; $(VF) = 0; }
+
+# MOV:E #xx:8,Rn   (A2 0x50-0x57)
+:mov:"e" i8,Rn                    is mode=5 & sz=0 & Rn; i8 { Rn[0,8] = i8; $(NF) = i8 s< 0; $(ZF) = i8 == 0; $(VF) = 0; }
+
+# MOV:I #xx:16,Rn  (A2 0x58-0x5F)
+:mov:"i" i16,Rn                   is mode=5 & sz=1 & Rn; i16 { Rn = i16; $(NF) = i16 s< 0; $(ZF) = i16 == 0; $(VF) = 0; }
+
+# MOV:F @(d:8,R6),Rd / Rs,@(d:8,R6)   (A2tail 0x80-0x8F / 0x90-0x9F)
+:mov:"f.b" r6b_disp8,Rd            is opcode=16 & Rd; r6b_disp8  { Rd[0,8] = r6b_disp8;    $(NF) = Rd[7,1];  $(ZF) = Rd[0,8] == 0; $(VF) = 0; }
+:mov:"f.w" r6w_disp8,Rd            is opcode=17 & Rd; r6w_disp8  { Rd      = r6w_disp8;    $(NF) = Rd[15,1]; $(ZF) = Rd      == 0; $(VF) = 0; }
+:mov:"f.b" Rs,r6b_disp8            is opcode=18 & Rs; r6b_disp8  { r6b_disp8 = Rs[0,8];    $(NF) = Rs[7,1];  $(ZF) = Rs[0,8] == 0; $(VF) = 0; }
+:mov:"f.w" Rs,r6w_disp8            is opcode=19 & Rs; r6w_disp8  { r6w_disp8 = Rs;         $(NF) = Rs[15,1]; $(ZF) = Rs      == 0; $(VF) = 0; }
+
+# LDM.W @SP+,<regs>   (A2[0x02])   /   STM.W <regs>,@-SP   (A2[0x12])
+# Ported from the pre-split h8539f.slaspec (lines 1193/1197), verified
+# against ana.cpp lines 287-301: opcode_special is a full-byte literal field,
+# so opcode_special=2/0x12 match A2[0x02]/A2[0x12] exactly. Reglist bit-chain
+# subtables (r*_push/r*_pop, defined in the shared top-level file, not
+# duplicated here) reproduce the per-bit push/pop order from ana.cpp's
+# phrase() calls. `reglist!=0` guard added (not present in the pre-split
+# version) to reject the all-zero reglist byte ana.cpp treats as invalid
+# (`if (!insn.Op2.reg) return 0`) -- closes the gap noted above.
+#
+# COMPILE-TESTED (July 2026): built cleanly via sleigh.bat in an isolated
+# scratch copy of h8539f.slaspec with these two constructors relocated in
+# and the old duplicates commented out -- exit code 0, no ERROR lines, only
+# pre-existing warnings unrelated to this change. Two real mistakes were
+# caught and fixed during that test, both instructive for the rest of the
+# port: (1) `@include` must come after the `.sinc`'s dependencies are
+# defined -- SLEIGH requires symbols declared before use, so this file can't
+# be included before r6b_disp8/r6w_disp8 (or the reglist push/pop subtables)
+# exist; (2) a field belonging to the *second* token in a multi-token
+# pattern (like `reglist`, read after the opcode byte) must be constrained
+# in the *second* clause after the `;`, not bundled into the first token's
+# clause alongside `opcode_special` -- doing that produced a "Mismatched
+# tokens when combining patterns" error. Not yet tested against a live ROM.
+:stm          (r0_push^r1_push^r2_push^r3_push^r4_push^r5_push^fp_push^sp_push),"@-SP"          is opcode_special=0x12; reglist!=0 & r0_push & r1_push & r2_push & r3_push & r4_push & r5_push & fp_push & sp_push { }
+:ldm.w        "@SP+",(sp_pop^fp_pop^r5_pop^r4_pop^r3_pop^r2_pop^r1_pop^r0_pop)          is opcode_special=2; reglist!=0 & sp_pop & fp_pop & r5_pop & r4_pop & r3_pop & r2_pop & r1_pop & r0_pop { }
+
+# --- DONE, but not yet physically relocated here (July 2026) ---------------
+# mov_g/ldc/stc/xch/movfpe/movtpe are all written, verified against ground
+# truth, and compile-tested clean -- but they currently live in the main
+# h8539f.slaspec, not this file. Per the README's "Sequencing decision"
+# (July 2026): these categories turned out to be physically interleaved with
+# the add/sub/adds/subs/addx/subx/cmp_g arithmetic family that h8539f-arith.
+# sinc also needs to pull from the same block, so the move is deferred to a
+# single top-level cutover once every category's content is ready, rather
+# than cutting that block twice. See README.md's EA-dispatch finding/
+# resolution section for the full derivation. Summary of what's done and
+# where it lives in h8539f.slaspec right now:
+#
+#   mov_g  -- MAP3/MAP4 tail group 0x80-87 fully covered by the pre-existing
+#             opcode=16/18 & Rd/Rs constructors (eab_*/eaw_* gated directly
+#             on byte 1, mode 10-15) -- no new code needed there, the old
+#             map4_page-gated duplicate block was deleted instead (121 lines
+#             removed). **CORRECTION (July 2026): this does NOT extend to
+#             MAP5.** MAP5 never goes through eab_*/eaw_* -- it's the
+#             literal 0x04/0x0C escape-then-immediate-then-dispatch-byte
+#             shape, so a real MAP5 mov_g (dispatch 0x80-87) could not
+#             decode correctly until the dedicated MAP5 section below was
+#             added. The earlier "already covered... MAP3/MAP4/MAP5" claim
+#             here was wrong for the MAP5 part -- left this note so the
+#             mistake isn't repeated.
+#   ldc    -- MAP3/MAP4 tail group 0x88-8F, load into CR8 (SR/CCR/BR/EP/DP/
+#             TP), covered by the pre-existing opcode=17 & CR8 constructors
+#             (ldc.b/stc.b block, includes the RES1/CP rejection from
+#             ana.cpp lines 588-597). **Same MAP5 correction as mov_g
+#             above** -- MAP5's ldc (dispatch 0x88-8F) needed its own
+#             escape-gated constructors, now added below.
+#   stc    -- MAP3/MAP4 tail group 0x98-9F, store from CR8. Same as ldc,
+#             via opcode=19 & CR8.
+#   xch    -- MAP3 tail group 0x90-97 only (MAP4 has mov_g there instead,
+#             confirmed via ana.cpp A3tail/A4tail lines 66/92). Written
+#             fresh (h8539f.slaspec, near line 1108): xch.b added (didn't
+#             exist before), xch.w's pre-existing swap bug fixed (it wrote
+#             `eaw_direct = Rd` after `Rd` had already been clobbered, so
+#             the swap never happened -- now uses the saved tmp on both
+#             sides).
+#   movfpe -- MAP6 tail group 0x80-87 only. Written fresh (h8539f.slaspec,
+#             right after xch): only reachable via the nested MAP3-then-
+#             MAP6/MAP4-then-MAP6 escape (byte 1 = eab_*/eaw_* EA exactly
+#             as above, byte 2 = fixed literal 0x00, byte 3 = new m6b token
+#             for the mnemonic group + plain GPR register).
+#   movtpe -- MAP6 tail group 0x90-97 only. Same mechanism as movfpe, with
+#             the operand-order swap per ana.cpp's H8500_movtpe case
+#             (falls through from H8500_stc's swap, lines 598-607).
+#   ldm    -- A2[0x02], reglist byte + @sp+ -- literal, not MAP-derived.
+#             Done above (lines 44-68), including the all-zero-reglist fix.
+#   stm    -- A2[0x12], mirrors ldm. Done above (lines 44-68).
+
+# ============================================================================
+# --- MOV:G (ported July 2026 -- was silently dropped during the functional
+#     split; this is the fix for the "Unable to resolve constructor" failures
+#     at ROM 0x20027/0x20a86, see README.md and bug.txt). Ported verbatim from
+#     h8539f.slaspec.pre_cutover_backup_20260706_061122 lines 669-754. The
+#     "# DEAD (removed July 2026)" eab_imm8/eaw_imm16-gated duplicate lines
+#     that used to sit between these blocks are intentionally NOT ported --
+#     they were correctly deleted as unreachable dead code (MAP5 escape
+#     collision) in an earlier fix and must stay deleted.
+# ============================================================================
+
+# MOV:G <EAs>,Rd           Move data from source to destination, general format
+#       N: Rd s< 0
+#       Z: Rd == 0
+#       V: 0
+:mov:"g.b"    eab_direct,Rd             is eab_direct;          opcode=16 & Rd                     { Rd[0,8] = eab_direct[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_indirect,Rd           is eab_indirect;        opcode=16 & Rd                     { Rd[0,8] = eab_indirect[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_disp8,Rd              is eab_disp8;           opcode=16 & Rd                     { Rd[0,8] = eab_disp8[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_disp16,Rd             is eab_disp16;          opcode=16 & Rd                     { Rd[0,8] = eab_disp16[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_predec,Rd             is eab_predec;          opcode=16 & Rd                     { Rd[0,8] = eab_predec[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_postinc,Rd            is eab_postinc;         opcode=16 & Rd                     { Rd[0,8] = eab_postinc[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_abs8_br,Rd            is eab_abs8_br;         opcode=16 & Rd                     { Rd[0,8] = eab_abs8_br[0,8]; stdflags(Rd[0,8]); }
+:mov:"g.b"    eab_abs16,Rd              is eab_abs16;           opcode=16 & Rd                     { Rd[0,8] = eab_abs16; stdflags(Rd[0,8]); }
+:mov:"g.w"    eaw_direct,Rd             is eaw_direct;          opcode=16 & Rd                     { Rd      = eaw_direct; stdflags(Rd); }
+:mov:"g.w"    eaw_indirect,Rd           is eaw_indirect;        opcode=16 & Rd                     { Rd      = eaw_indirect; stdflags(Rd); }
+:mov:"g.w"    eaw_disp8,Rd              is eaw_disp8;           opcode=16 & Rd                     { Rd      = eaw_disp8; stdflags(Rd); }
+:mov:"g.w"    eaw_disp16,Rd             is eaw_disp16;          opcode=16 & Rd                     { Rd      = eaw_disp16; stdflags(Rd); }
+:mov:"g.w"    eaw_predec,Rd             is eaw_predec;          opcode=16 & Rd                     { Rd      = eaw_predec; stdflags(Rd); }
+:mov:"g.w"    eaw_postinc,Rd            is eaw_postinc;         opcode=16 & Rd                     { Rd      = eaw_postinc; stdflags(Rd); }
+:mov:"g.w"    eaw_abs8_br,Rd            is eaw_abs8_br;         opcode=16 & Rd                     { Rd      = eaw_abs8_br; stdflags(Rd); }
+:mov:"g.w"    eaw_abs16,Rd              is eaw_abs16;           opcode=16 & Rd                     { Rd      = eaw_abs16; stdflags(Rd); }
+
+# MOV:G Rs,<EAd>           Move data from source to destination, general format
+#       N: Rs s< 0
+#       Z: Rs == 0
+#       V: 0
+:mov:"g.b"    Rs,eab_indirect           is eab_indirect;        opcode=18 & Rs                     { eab_indirect[0,8] = Rs[0,8]; stdflags(Rs[0,8]); }
+:mov:"g.b"    Rs,eab_disp8              is eab_disp8;           opcode=18 & Rs                     { eab_disp8[0,8] = Rs[0,8];    stdflags(Rs[0,8]); }
+:mov:"g.b"    Rs,eab_disp16             is eab_disp16;          opcode=18 & Rs                     { eab_disp16[0,8] = Rs[0,8];   stdflags(Rs[0,8]); }
+:mov:"g.b"    Rs,eab_predec             is eab_predec;          opcode=18 & Rs                     { eab_predec[0,8] = Rs[0,8];   stdflags(Rs[0,8]); }
+:mov:"g.b"    Rs,eab_postinc            is eab_postinc;         opcode=18 & Rs                     { eab_postinc[0,8] = Rs[0,8];  stdflags(Rs[0,8]); }
+:mov:"g.b"    Rs,eab_abs8_br            is eab_abs8_br;         opcode=18 & Rs                     { eab_abs8_br[0,8] = Rs[0,8];     stdflags(Rs[0,8]); }
+:mov:"g.b"    Rs,eab_abs16       is eab_abs16;    opcode=18 & Rs [targetBase = Rs;]  { eab_abs16 = Rs[0,8];  stdflags(Rs[0,8]); }
+:mov:"g.w"    Rs,eaw_indirect           is eaw_indirect;        opcode=18 & Rs                     { eaw_indirect = Rs;           stdflags(Rs); }
+:mov:"g.w"    Rs,eaw_disp8              is eaw_disp8;           opcode=18 & Rs                     { eaw_disp8 = Rs;              stdflags(Rs); }
+:mov:"g.w"    Rs,eaw_disp16             is eaw_disp16;          opcode=18 & Rs                     { eaw_disp16 = Rs;             stdflags(Rs); }
+:mov:"g.w"    Rs,eaw_predec             is eaw_predec;          opcode=18 & Rs                     { eaw_predec = Rs;             stdflags(Rs); }
+:mov:"g.w"    Rs,eaw_postinc            is eaw_postinc;         opcode=18 & Rs                     { eaw_postinc = Rs;            stdflags(Rs); }
+:mov:"g.w"    Rs,eaw_abs8_br               is eaw_abs8_br;            opcode=18 & Rs                     { eaw_abs8_br = Rs;               stdflags(Rs); }
+:mov:"g.w"    Rs,eaw_abs16       is eaw_abs16;    opcode=18 & Rs [targetBase = Rs;]  { eaw_abs16 = Rs     ;  stdflags(Rs); }
+
+# MOV:G #xx,<EAd>          Move data from source to destination, general format
+#       N: xx s< 0
+#       Z: xx == 0
+#       V: 0
+# If the immediate data length is 8 bits but word size is specified in the <EA> field,
+# the sign bit of the immediate data is extended and 16 bits of data are transferred.
+:mov:"g.b"    i8,eab_indirect           is eab_indirect    ; opcode_special=6; i8                  { eab_indirect = i8;            stdflags(i8);  }
+:mov:"g.b"    i8,eab_disp8              is eab_disp8       ; opcode_special=6; i8                  { eab_disp8    = i8;            stdflags(i8);  }
+:mov:"g.b"    i8,eab_disp16             is eab_disp16      ; opcode_special=6; i8                  { eab_disp16   = i8;            stdflags(i8);  }
+:mov:"g.b"    i8,eab_predec             is eab_predec      ; opcode_special=6; i8                  { eab_predec   = i8;            stdflags(i8);  }
+:mov:"g.b"    i8,eab_postinc            is eab_postinc     ; opcode_special=6; i8                  { eab_postinc  = i8;            stdflags(i8);  }
+:mov:"g.b"    i8,eab_abs8_br            is eab_abs8_br     ; opcode_special=6; i8                  { eab_abs8_br  = i8;            stdflags(i8);  }
+:mov:"g.b"    i8,eab_abs16              is eab_abs16;        opcode_special=6; i8                  { eab_abs16 = i8;        stdflags(i8);  }
+:mov:"g.w"    i8,eaw_indirect           is eaw_indirect    ; opcode_special=6; i8                  { eaw_indirect = sext(i8);      stdflags(i8);  }
+:mov:"g.w"    i8,eaw_disp8              is eaw_disp8       ; opcode_special=6; i8                  { eaw_disp8    = sext(i8);      stdflags(i8);  }
+:mov:"g.w"    i8,eaw_disp16             is eaw_disp16      ; opcode_special=6; i8                  { eaw_disp16   = sext(i8);      stdflags(i8);  }
+:mov:"g.w"    i8,eaw_predec             is eaw_predec      ; opcode_special=6; i8                  { eaw_predec   = sext(i8);      stdflags(i8);  }
+:mov:"g.w"    i8,eaw_postinc            is eaw_postinc     ; opcode_special=6; i8                  { eaw_postinc  = sext(i8);      stdflags(i8);  }
+:mov:"g.w"    i8,eaw_abs8_br            is eaw_abs8_br     ; opcode_special=6; i8                  { eaw_abs8_br  = sext(i8);      stdflags(i8);  }
+:mov:"g.w"    i8,eaw_abs16              is eaw_abs16;        opcode_special=6; i8                  { eaw_abs16 = sext(i8);  stdflags(i8);  }
+:mov:"g.w"    i16,eaw_indirect          is eaw_indirect    ; opcode_special=7; i16                 { eaw_indirect = i16;           stdflags(i16); }
+:mov:"g.w"    i16,eaw_disp8             is eaw_disp8       ; opcode_special=7; i16                 { eaw_disp8    = i16;           stdflags(i16); }
+:mov:"g.w"    i16,eaw_disp16            is eaw_disp16      ; opcode_special=7; i16                 { eaw_disp16   = i16;           stdflags(i16); }
+:mov:"g.w"    i16,eaw_predec            is eaw_predec      ; opcode_special=7; i16                 { eaw_predec   = i16;           stdflags(i16); }
+:mov:"g.w"    i16,eaw_postinc           is eaw_postinc     ; opcode_special=7; i16                 { eaw_postinc  = i16;           stdflags(i16); }
+:mov:"g.w"    i16,eaw_abs8_br           is eaw_abs8_br     ; opcode_special=7; i16                 { eaw_abs8_br  = i16;           stdflags(i16); }
+:mov:"g.w"    i16,eaw_abs16             is eaw_abs16;        opcode_special=7; i16                 { eaw_abs16 = i16;       stdflags(i16); }
+# according to IDA Pro, storing a 16-bit immediate in an 8-bit register is valid assembly,
+# but I do not know how it executes (if indeed it does).
+# For the sake of brevity, let's just assume it stores the low byte
+:mov:"g.w"    i16,eab_indirect          is eab_indirect    ; opcode_special=7; i16                 { eab_indirect[0,8] = i16[0,8];       stdflags(i16[0,8]); }
+:mov:"g.w"    i16,eab_disp8             is eab_disp8       ; opcode_special=7; i16                 { eab_disp8   [0,8] = i16[0,8];       stdflags(i16[0,8]); }
+:mov:"g.w"    i16,eab_disp16            is eab_disp16      ; opcode_special=7; i16                 { eab_disp16  [0,8] = i16[0,8];       stdflags(i16[0,8]); }
+:mov:"g.w"    i16,eab_predec            is eab_predec      ; opcode_special=7; i16                 { eab_predec  [0,8] = i16[0,8];       stdflags(i16[0,8]); }
+:mov:"g.w"    i16,eab_postinc           is eab_postinc     ; opcode_special=7; i16                 { eab_postinc [0,8] = i16[0,8];       stdflags(i16[0,8]); }
+:mov:"g.w"    i16,eab_abs8_br           is eab_abs8_br     ; opcode_special=7; i16                 { eab_abs8_br [0,8] = i16[0,8];       stdflags(i16[0,8]); }
+:mov:"g.w"    i16,eab_abs16             is eab_abs16;        opcode_special=7; i16                 { eab_abs16   [0,8] = i16[0,8];       stdflags(i16[0,8]); }
+
+# ============================================================================
+# --- MAP5 (July 2026, new) ---------------------------------------------------
+# ============================================================================
+# MAP5 is a top-level literal-byte escape, NOT part of the eab_*/eaw_*/
+# mode=10-15 addressing family MAP3/MAP4 use -- same shape as the MAP5
+# sections added to h8539f-arith.sinc and h8539f-logic.sinc this session
+# (see those files and README.md for the full derivation). ana.cpp's
+# A2[4]=A2[12]=MAP5 (top-level byte 0x04 = byte form, sets aux_byte; 0x0C =
+# word form, sets aux_word), each followed immediately by an immediate
+# payload (imm8/imm16, fetched BEFORE the MAP5 dispatch byte), then a MAP5
+# dispatch byte read from A5/A5tail.
+#
+# Per h8539f-instruction-table.md's MAP tail grid, MAP5's dispatch byte
+# shares exactly two slots with mem.sinc's scope: `mov_g` at 0x80-87 and
+# `ldc` at 0x88-8F (opcode=16/17, same fields the MAP3/4 constructors above
+# already use for their own byte-2 dispatch). MAP5 has no mov_g *store*
+# form and no xch/stc/movfpe/movtpe at 0x90-9F -- that range is `null` for
+# MAP5 (confirmed against the ground-truth table), so only the load-
+# direction mov_g and ldc are written here.
+#
+# Operand shape: MAP3/4's mov_g/ldc pair an EA-sourced value (from byte 1,
+# via eab_*/eaw_*) with a Rd/CR8/CR16 destination (from the dispatch byte).
+# MAP5 pairs the already-fetched immediate (from right after the escape
+# byte) with the same Rd/CR8/CR16 destination (from the MAP5 dispatch
+# byte) -- identical semantics, immediate operand substituted for the
+# EA-subtable's immediate submode, same pattern as arith.sinc's and
+# logic.sinc's MAP5 forms.
+#
+# NOT YET scratch-compiled with sleigh.bat -- do that first thing next
+# session before trusting this section further (same standing rule as
+# arith.sinc's and logic.sinc's own MAP5 additions in the same commit).
+
+:mov:"g.b"    imm8,Rd                    is opcode_special=0x04; imm8;  opcode=16 & Rd      { Rd[0,8] = imm8; stdflags(Rd[0,8]); }
+:mov:"g.w"    imm16,Rd                   is opcode_special=0x0C; imm16; opcode=16 & Rd      { Rd      = imm16; stdflags(Rd); }
+
+:ldc.b        imm8,"CCR"                is opcode_special=0x04; imm8;  opcode=17 & CR8 =1  { CCR = imm8;  SpreadFlags(); }
+:ldc.w        imm16,"SR"                is opcode_special=0x0C; imm16; opcode=17 & CR16=0  { SR  = imm16; SpreadFlags(); }
+:ldc.b        imm8,"TP"                 is opcode_special=0x04; imm8;  opcode=17 & CR8 =7  { TP  = imm8;  SpreadFlags(); FPH = TP; }
+:ldc.b        imm8,"BR"                 is opcode_special=0x04; imm8;  opcode=17 & CR8=3   { BR  = imm8; }
+:ldc.b        imm8,"EP"                 is opcode_special=0x04; imm8;  opcode=17 & CR8=4   { EP  = imm8; }
+:ldc.b        imm8,"DP"                 is opcode_special=0x04; imm8;  opcode=17 & CR8=5   { DP  = imm8; }

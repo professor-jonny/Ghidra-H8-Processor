@@ -58,14 +58,14 @@ define context contextreg
 
 @define DIV0VECTOR "0x10"
 
-# NOTE: the @include list lives at the end of this file (see "Functional-area
-# instruction includes" near the bottom), after every shared token/field/
-# subtable/macro it depends on has been defined. An earlier, accidental copy
-# of these @include lines used to sit right here -- before eab_direct/eaw_direct,
-# the opcode/opcode_special/opcode47 fields, and other shared infrastructure
-# were defined -- which caused SLEIGH to fail with "No matching global symbol
-# 'eab_direct'" / "unknown family or operand 'opcode'" when compiling
-# h8539f-arith.sinc (SLEIGH lesson 1: @include order matters). Removed July 2026.
+# dont know if i add the includes here ?
+
+@include "h8539f-arith.sinc"
+@include "h8539f-bit.sinc"
+@include "h8539f-branch.sinc"
+@include "h8539f-logic.sinc"
+@include "h8539f-mem.sinc"
+
 
 # The SR has 8 flags.
 # Taking a cue from x86, define pseudo-registers for each flag
