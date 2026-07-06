@@ -10,6 +10,24 @@
 	      2024 [Analysis] Extended with additional verified tables from ROM analysis.
 	      2025 [Ghidra H8/539F RE] Added TCU/Transmission category from decompilation of
 	        tcu_shift_torque_mgmt @ 0x28fff and isr_sci3_eri @ 0x168e3.
+	      2026-07 [Ghidra RE, session 10] STRUCTURAL FIX: tcu_shift_torque_mgmt was
+	        discovered to have been mis-split by Ghidra's auto-analyzer into 4 separate
+	        functions (a 2-byte inline data literal at ROM 0x29339-0x2933a, mistaken
+	        for code, broke the boundary). It is genuinely ONE function spanning ROM
+	        0x28fff-0x29c31, now renamed tcu_shift_torque_and_knock_mgmt, and it does
+	        BOTH TCU shift torque coordination AND per-cylinder knock processing (the
+	        latter previously mislabeled as an independent "knock_process_main" with
+	        no findable caller). Fixing the boundary immediately surfaced the real
+	        caller: isr_sci3_eri (COMPUTED_CALL @ ROM 0x169b1), matching this file's
+	        pre-existing note above almost exactly. This also revises the session-3
+	        "two independently-gated subsystems intentionally coordinating via shared
+	        f3ac/f3ae" framing to "one function doing both jobs sequentially" - the
+	        underlying RAM-register findings (f1f2 bit7 gate, EEC6/EEC8 octane chain,
+	        etc.) remain valid, only the two-functions framing changes. Also confirmed
+	        this session: the "TCU Shift Torque Cmd Lo/Hi - Per Gear" tables (below)
+	        hold raw SCI3 protocol command bytes sent to the TCU, never used in any
+	        arithmetic - their existing uint16 "units" scaling is correct as-is; small
+	        values (1-2) are expected, not a data error. See logging.txt session 10.
 	      Address mapping: XML address = file_offset + 0x10000
 	      Axis RAM pointers: F0C0=RPM, F0C2=Load/MAP, F0C4=CoolantTempA(ADC),
 	        F0C6=AirTemp(ADC), F0C8=CoolantTempB(ADC), F0CA=TimeAfterStart,
@@ -680,6 +698,16 @@
 
 	<!-- Shift torque command byte, low per gear (tcu_cmd_byte selection) -->
 	<!-- shift_torque_lo_table @ ROM 0x328e -->
+	<!-- [SESSION 10, 2026-07-03 CONFIRMED] Traced via full decompile of the merged
+	     tcu_shift_torque_and_knock_mgmt function (was mis-split across 4 Ghidra
+	     functions - see logging.txt session 10 for the structural fix). This value
+	     is read into RAM 0xf39e, then (a) ANDed as a bitmask against an SCI3
+	     ready-check result at ROM 0x293b6, and (b) passed directly as a parameter
+	     to an SCI3 transmission helper at ROM 0x293c7. It is a raw protocol command
+	     byte sent to the TCU over the SCI3 serial link - never used in any
+	     arithmetic/scaling operation. The existing uint16 "units" scaling (not a
+	     torque/Nm scaling) is CORRECT as-is; small values like 1-2 are expected and
+	     not a data error. -->
 	<table name="TCU Shift Torque Cmd Lo - Per Gear" category="Transmission" address="1328e" type="2D" level="2" scaling="uint16">
 		<table name="Gear" type="Static X Axis" elements="4">
 			<data>1st</data>
@@ -691,6 +719,9 @@
 
 	<!-- Shift torque command byte, high per gear -->
 	<!-- shift_torque_hi_table @ ROM 0x3296 -->
+	<!-- [SESSION 10, 2026-07-03 CONFIRMED] Same trace as Cmd Lo above - read into
+	     RAM 0xf3a0 alongside the Lo table, part of the same per-gear SCI3 command
+	     byte pair sent to the TCU. uint16 "units" scaling confirmed correct. -->
 	<table name="TCU Shift Torque Cmd Hi - Per Gear" category="Transmission" address="13296" type="2D" level="2" scaling="uint16">
 		<table name="Gear" type="Static X Axis" elements="4">
 			<data>1st</data>
