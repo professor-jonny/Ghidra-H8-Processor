@@ -274,7 +274,6 @@
 #       C: 0
 :clr.b        eab_direct                is eab_direct;         opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eab_direct[0,8] = 0; }
 :clr.b        eab_indirect              is eab_indirect;       opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eab_indirect = 0; }
-:clr.b        eab_disp8                 is eab_disp8;          opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eab_disp8 = 0; }
 # BUG 5 fix (clr.b, applied per tst.b/tst.w pattern): disp8/disp16/abs8_br/abs16 use inline
 # Rn_banked/mode-gated constructors so opcode_special can sequence before the payload token.
 :clr.b        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x13; disp8  { tmp = (Rn_banked + disp8); $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:1 tmp = 0; }
@@ -300,7 +299,6 @@
 #       C: "set to '1' if a borrow occurs; otherwise cleared to '0.'" I don't know how this can happen though. I'mma just use sborrow, maybe that'll compute correctly?
 :neg.b        eab_direct               is eab_direct;              opcode_special=0x14                { tmp = eab_direct[0,8];   $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80  ;  eab_direct[0,8] = tmp; }
 :neg.b        eab_indirect               is eab_indirect;          opcode_special=0x14                { tmp = eab_indirect;      $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80  ;  eab_indirect = tmp; }
-:neg.b        eab_disp8               is eab_disp8;                opcode_special=0x14                { tmp = eab_disp8;         $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80  ;  eab_disp8 = tmp; }
 # BUG 5 fix (neg.b, per tst.b pattern): disp8/disp16/abs8_br/abs16 use inline Rn_banked/mode-gated
 # constructors so opcode_special can sequence before the payload token.
 :neg.b        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x14; disp8  { ea = (Rn_banked + disp8); tmp = *:1 ea; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80; *:1 ea = tmp; }
@@ -561,16 +559,20 @@
 #       C = MSB(orig)
 :rotl.b       eab_direct          is eab_direct;       opcode_special=0x1c                { orig:1 = eab_direct[0,8];  res = orig << 1 | orig[7,1];        eab_direct[0,8] = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :rotl.b       eab_indirect        is eab_indirect;     opcode_special=0x1c                { orig:1 = eab_indirect;     res = orig << 1 | orig[7,1];        eab_indirect    = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
-:rotl.b       eab_disp8           is eab_disp8;        opcode_special=0x1c                { orig:1 = eab_disp8;        res = orig << 1 | orig[7,1];        eab_disp8       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
-:rotl.b       eab_disp16          is eab_disp16;       opcode_special=0x1c                { orig:1 = eab_disp16;       res = orig << 1 | orig[7,1];        eab_disp16      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
+# BUG 5 fix (rotl.b, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotl.b       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x1c; disp8  { ea = (Rn_banked + disp8); orig:1 = *:1 ea; res = orig << 1 | orig[7,1]; *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
+:rotl.b       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x1c; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = orig << 1 | orig[7,1]; *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :rotl.b       eab_predec          is eab_predec;       opcode_special=0x1c                { orig:1 = eab_predec;       res = orig << 1 | orig[7,1];        eab_predec      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :rotl.b       eab_postinc         is eab_postinc;      opcode_special=0x1c                { orig:1 = eab_postinc;      res = orig << 1 | orig[7,1];        eab_postinc     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :rotl.b       eab_abs8_br         is eab_abs8_br;      opcode_special=0x1c                { orig:1 = eab_abs8_br;      res = orig << 1 | orig[7,1];        eab_abs8_br     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :rotl.b       eab_abs16    is eab_abs16; opcode_special=0x1c [targetBase=0;]{ orig:1 = eab_abs16; res = orig << 1 | orig[7,1];        eab_abs16= res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :rotl.w       eaw_direct          is eaw_direct;       opcode_special=0x1c                { orig:2 = eaw_direct;       res = orig << 1 | zext(orig[15,1]); eaw_direct      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :rotl.w       eaw_indirect        is eaw_indirect;     opcode_special=0x1c                { orig:2 = eaw_indirect;     res = orig << 1 | zext(orig[15,1]); eaw_indirect    = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
-:rotl.w       eaw_disp8           is eaw_disp8;        opcode_special=0x1c                { orig:2 = eaw_disp8;        res = orig << 1 | zext(orig[15,1]); eaw_disp8       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
-:rotl.w       eaw_disp16          is eaw_disp16;       opcode_special=0x1c                { orig:2 = eaw_disp16;       res = orig << 1 | zext(orig[15,1]); eaw_disp16      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
+# BUG 5 fix (rotl.w, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotl.w       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x1c; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res = orig << 1 | zext(orig[15,1]); *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
+:rotl.w       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x1c; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res = orig << 1 | zext(orig[15,1]); *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :rotl.w       eaw_predec          is eaw_predec;       opcode_special=0x1c                { orig:2 = eaw_predec;       res = orig << 1 | zext(orig[15,1]); eaw_predec      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :rotl.w       eaw_postinc         is eaw_postinc;      opcode_special=0x1c                { orig:2 = eaw_postinc;      res = orig << 1 | zext(orig[15,1]); eaw_postinc     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :rotl.w       eaw_abs8_br         is eaw_abs8_br;      opcode_special=0x1c                { orig:2 = eaw_abs8_br;      res = orig << 1 | zext(orig[15,1]); eaw_abs8_br     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
@@ -584,16 +586,20 @@
 #       C = orig[0]
 :rotr.b       eab_direct          is eab_direct;       opcode_special=0x1d                { orig:1 = eab_direct[0,8];  res = (orig >> 1) | ((orig & 1) << 7); eab_direct[0,8] = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.b       eab_indirect        is eab_indirect;     opcode_special=0x1d                { orig:1 = eab_indirect;     res = (orig >> 1) | ((orig & 1) << 7); eab_indirect    = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:rotr.b       eab_disp8           is eab_disp8;        opcode_special=0x1d                { orig:1 = eab_disp8;        res = (orig >> 1) | ((orig & 1) << 7); eab_disp8       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:rotr.b       eab_disp16          is eab_disp16;       opcode_special=0x1d                { orig:1 = eab_disp16;       res = (orig >> 1) | ((orig & 1) << 7); eab_disp16      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+# BUG 5 fix (rotr.b, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotr.b       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x1d; disp8  { ea = (Rn_banked + disp8); orig:1 = *:1 ea; res = (orig >> 1) | ((orig & 1) << 7); *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:rotr.b       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x1d; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = (orig >> 1) | ((orig & 1) << 7); *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.b       eab_predec          is eab_predec;       opcode_special=0x1d                { orig:1 = eab_predec;       res = (orig >> 1) | ((orig & 1) << 7); eab_predec      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.b       eab_postinc         is eab_postinc;      opcode_special=0x1d                { orig:1 = eab_postinc;      res = (orig >> 1) | ((orig & 1) << 7); eab_postinc     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.b       eab_abs8_br         is eab_abs8_br;      opcode_special=0x1d                { orig:1 = eab_abs8_br;      res = (orig >> 1) | ((orig & 1) << 7); eab_abs8_br     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.b       eab_abs16    is eab_abs16; opcode_special=0x1d [targetBase=0;]{ orig:1 = eab_abs16; res = (orig >> 1) | ((orig & 1) << 7); eab_abs16= res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.w       eaw_direct          is eaw_direct;       opcode_special=0x1d                { orig:2 = eaw_direct;       res = (orig >> 1) | ((orig & 1) << 15);eaw_direct      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.w       eaw_indirect        is eaw_indirect;     opcode_special=0x1d                { orig:2 = eaw_indirect;     res = (orig >> 1) | ((orig & 1) << 15);eaw_indirect    = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:rotr.w       eaw_disp8           is eaw_disp8;        opcode_special=0x1d                { orig:2 = eaw_disp8;        res = (orig >> 1) | ((orig & 1) << 15);eaw_disp8       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:rotr.w       eaw_disp16          is eaw_disp16;       opcode_special=0x1d                { orig:2 = eaw_disp16;       res = (orig >> 1) | ((orig & 1) << 15);eaw_disp16      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+# BUG 5 fix (rotr.w, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotr.w       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x1d; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res = (orig >> 1) | ((orig & 1) << 15); *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:rotr.w       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x1d; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res = (orig >> 1) | ((orig & 1) << 15); *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.w       eaw_predec          is eaw_predec;       opcode_special=0x1d                { orig:2 = eaw_predec;       res = (orig >> 1) | ((orig & 1) << 15);eaw_predec      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.w       eaw_postinc         is eaw_postinc;      opcode_special=0x1d                { orig:2 = eaw_postinc;      res = (orig >> 1) | ((orig & 1) << 15);eaw_postinc     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotr.w       eaw_abs8_br         is eaw_abs8_br;      opcode_special=0x1d                { orig:2 = eaw_abs8_br;      res = (orig >> 1) | ((orig & 1) << 15);eaw_abs8_br     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
@@ -607,16 +613,20 @@
 #       C = MSB(orig)
 :rotxl.b      eab_direct          is eab_direct;       opcode_special=0x1e                { orig:1 = eab_direct[0,8];  res:1 = orig << 1 | $(CF);       eab_direct[0,8]  = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.b      eab_indirect        is eab_indirect;     opcode_special=0x1e                { orig:1 = eab_indirect;     res:1 = orig << 1 | $(CF);       eab_indirect     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
-:rotxl.b      eab_disp8           is eab_disp8;        opcode_special=0x1e                { orig:1 = eab_disp8;        res:1 = orig << 1 | $(CF);       eab_disp8        = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
-:rotxl.b      eab_disp16          is eab_disp16;       opcode_special=0x1e                { orig:1 = eab_disp16;       res:1 = orig << 1 | $(CF);       eab_disp16       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
+# BUG 5 fix (rotxl.b, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotxl.b      "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x1e; disp8  { ea = (Rn_banked + disp8); orig:1 = *:1 ea; res:1 = orig << 1 | $(CF); *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
+:rotxl.b      "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x1e; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res:1 = orig << 1 | $(CF); *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.b      eab_predec          is eab_predec;       opcode_special=0x1e                { orig:1 = eab_predec;       res:1 = orig << 1 | $(CF);       eab_predec       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.b      eab_postinc         is eab_postinc;      opcode_special=0x1e                { orig:1 = eab_postinc;      res:1 = orig << 1 | $(CF);       eab_postinc      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.b      eab_abs8_br         is eab_abs8_br;      opcode_special=0x1e                { orig:1 = eab_abs8_br;      res:1 = orig << 1 | $(CF);       eab_abs8_br      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.b      eab_abs16    is eab_abs16; opcode_special=0x1e [targetBase=0;]{ orig:1 = eab_abs16; res:1 = orig << 1 | $(CF);       eab_abs16 = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.w      eaw_direct          is eaw_direct;       opcode_special=0x1e                { orig:2 = eaw_direct;       res:2 = orig << 1 | zext($(CF)); eaw_direct       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.w      eaw_indirect        is eaw_indirect;     opcode_special=0x1e                { orig:2 = eaw_indirect;     res:2 = orig << 1 | zext($(CF)); eaw_indirect     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
-:rotxl.w      eaw_disp8           is eaw_disp8;        opcode_special=0x1e                { orig:2 = eaw_disp8;        res:2 = orig << 1 | zext($(CF)); eaw_disp8        = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
-:rotxl.w      eaw_disp16          is eaw_disp16;       opcode_special=0x1e                { orig:2 = eaw_disp16;       res:2 = orig << 1 | zext($(CF)); eaw_disp16       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
+# BUG 5 fix (rotxl.w, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotxl.w      "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x1e; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res:2 = orig << 1 | zext($(CF)); *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
+:rotxl.w      "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x1e; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res:2 = orig << 1 | zext($(CF)); *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.w      eaw_predec          is eaw_predec;       opcode_special=0x1e                { orig:2 = eaw_predec;       res:2 = orig << 1 | zext($(CF)); eaw_predec       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.w      eaw_postinc         is eaw_postinc;      opcode_special=0x1e                { orig:2 = eaw_postinc;      res:2 = orig << 1 | zext($(CF)); eaw_postinc      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
 :rotxl.w      eaw_abs8_br         is eaw_abs8_br;      opcode_special=0x1e                { orig:2 = eaw_abs8_br;      res:2 = orig << 1 | zext($(CF)); eaw_abs8_br      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig s< 0; }
@@ -630,8 +640,10 @@
 #       C = orig[0]
 :rotxr.b      eab_direct          is eab_direct;       opcode_special=0x1f                { orig:1 = eab_direct[0,8];  res = (orig >> 1) | ($(CF) << 7);        eab_direct[0,8]  = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotxr.b      eab_indirect        is eab_indirect;     opcode_special=0x1f                { orig:1 = eab_indirect;     res = (orig >> 1) | ($(CF) << 7);        eab_indirect     = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:rotxr.b      eab_disp8           is eab_disp8;        opcode_special=0x1f                { orig:1 = eab_disp8;        res = (orig >> 1) | ($(CF) << 7);        eab_disp8        = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:rotxr.b      eab_disp16          is eab_disp16;       opcode_special=0x1f                { orig:1 = eab_disp16;       res = (orig >> 1) | ($(CF) << 7);        eab_disp16       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+# BUG 5 fix (rotxr.b, per tst.b pattern): disp8/disp16 use inline Rn_banked/mode-gated
+# constructors so opcode_special can sequence before the payload token.
+:rotxr.b      "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; opcode_special=0x1f; disp8  { ea = (Rn_banked + disp8); orig:1 = *:1 ea; res = (orig >> 1) | ($(CF) << 7); *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:rotxr.b      "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x1f; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = (orig >> 1) | ($(CF) << 7); *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotxr.b      eab_predec          is eab_predec;       opcode_special=0x1f                { orig:1 = eab_predec;       res = (orig >> 1) | ($(CF) << 7);        eab_predec       = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotxr.b      eab_postinc         is eab_postinc;      opcode_special=0x1f                { orig:1 = eab_postinc;      res = (orig >> 1) | ($(CF) << 7);        eab_postinc      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :rotxr.b      eab_abs8_br         is eab_abs8_br;      opcode_special=0x1f                { orig:1 = eab_abs8_br;      res = (orig >> 1) | ($(CF) << 7);        eab_abs8_br      = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
