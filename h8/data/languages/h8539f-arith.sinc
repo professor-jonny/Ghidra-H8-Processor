@@ -358,6 +358,40 @@
 :tst.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x16  { local val:2 = *:2 addr8_br; stdflags(val); }
 :tst.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x16 [targetBase=0;]{ local val:2 = *:2 addr16_dp; stdflags(val); }
 
+# ---- NOT <EAd> -- One's complement ----
+#       N: result s< 0
+#       Z: result == 0
+#       V: 0
+#       C: unaffected
+# BUG (found July 2026, live-ROM verification session): not.b/not.w were entirely absent
+# from the post-refactor h8539f.slaspec -- confirmed by grep, no ":not." constructor existed
+# anywhere in h8539f*.sinc, even though README already flagged not as BUG 5's "next target"
+# (opcode_special=0x15). ana.cpp: A3[0x15] = A4[0x15] = H8500_not. Verified against live ROM
+# bytes: 0x27eef "a9 15" (not.w R1), 0x14511 "a0 15" (not.b R0), 0x2c122 "a8 15" (not.w R0),
+# 0x2ceb9/0x2cec7 "ab 15" (not.w R3) -- all previously "Bad Instruction" in bug.txt.
+# Recovered from oldsleigh/h8539f.slaspec.pre_cutover_backup_20260706_061122 (lines 1839-1874),
+# which had a working not.b/not.w block before the BUG 5 refactor cutover. Re-applied here with
+# the payload token sequenced BEFORE opcode_special (disp8;/disp16;/addr8_br;/addr16_dp;
+# opcode_special=0x15), matching the corrected tst.b/tst.w ordering above -- the backup still
+# had the OLD opcode_special-before-payload order for these four forms, the same structurally
+# -wrong pattern tst had before its own fix, so it was not copied verbatim.
+:not.b        eab_direct               is eab_direct;       opcode_special=0x15 { result:1 = ~eab_direct[0,8]; eab_direct[0,8] = result; stdflags(result); }
+:not.b        eab_indirect             is eab_indirect;     opcode_special=0x15 { result:1 = ~eab_indirect;    eab_indirect    = result; stdflags(result); }
+:not.b        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 0; disp8; opcode_special=0x15  { ea = (Rn_banked + disp8); tmp = *:1 ea; result:1 = ~tmp; *:1 ea = result; stdflags(result); }
+:not.b        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; disp16; opcode_special=0x15 { ea = (Rn_banked + disp16); tmp = *:1 ea; result:1 = ~tmp; *:1 ea = result; stdflags(result); }
+:not.b        eab_predec               is eab_predec;       opcode_special=0x15 { result:1 = ~eab_predec;      eab_predec      = result; stdflags(result); }
+:not.b        eab_postinc              is eab_postinc;      opcode_special=0x15 { result:1 = ~eab_postinc;     eab_postinc     = result; stdflags(result); }
+:not.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x15  { tmp = *:1 addr8_br; result:1 = ~tmp; *:1 addr8_br = result; stdflags(result); }
+:not.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x15 [targetBase=0;] { tmp = *:1 addr16_dp; result:1 = ~tmp; *:1 addr16_dp = result; stdflags(result); }
+:not.w        eaw_direct               is eaw_direct;       opcode_special=0x15 { result:2 = ~eaw_direct;      eaw_direct      = result; stdflags(result); }
+:not.w        eaw_indirect             is eaw_indirect;     opcode_special=0x15 { result:2 = ~eaw_indirect;    eaw_indirect    = result; stdflags(result); }
+:not.w        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; disp8; opcode_special=0x15  { ea = (Rn_banked + disp8); tmp = *:2 ea; result:2 = ~tmp; *:2 ea = result; stdflags(result); }
+:not.w        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; disp16; opcode_special=0x15 { ea = (Rn_banked + disp16); tmp = *:2 ea; result:2 = ~tmp; *:2 ea = result; stdflags(result); }
+:not.w        eaw_predec               is eaw_predec;       opcode_special=0x15 { result:2 = ~eaw_predec;      eaw_predec      = result; stdflags(result); }
+:not.w        eaw_postinc              is eaw_postinc;      opcode_special=0x15 { result:2 = ~eaw_postinc;     eaw_postinc     = result; stdflags(result); }
+:not.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x15  { tmp = *:2 addr8_br; result:2 = ~tmp; *:2 addr8_br = result; stdflags(result); }
+:not.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x15 [targetBase=0;] { tmp = *:2 addr16_dp; result:2 = ~tmp; *:2 addr16_dp = result; stdflags(result); }
+
 # ---- source lines 1482-1566 ----
 # CMP:G <EAs>,Rd           Compare, general format
 #       N: result s< 0
