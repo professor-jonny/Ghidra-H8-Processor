@@ -281,16 +281,16 @@
 :clr.b        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x13; disp16 { tmp = (Rn_banked + disp16); $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:1 tmp = 0; }
 :clr.b        eab_predec                is eab_predec;         opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eab_predec = 0; }
 :clr.b        eab_postinc               is eab_postinc;        opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eab_postinc = 0; }
-:clr.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x13; addr8_br  { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:1 addr8_br = 0; }
-:clr.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x13; addr16_dp [targetBase=0;] { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:1 addr16_dp = 0; }
+:clr.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x13  { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:1 addr8_br = 0; }
+:clr.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x13 [targetBase=0;] { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:1 addr16_dp = 0; }
 :clr.w        eaw_direct                is eaw_direct;         opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eaw_direct = 0; }
 :clr.w        eaw_indirect              is eaw_indirect;       opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eaw_indirect = 0; }
 :clr.w        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x13; disp8  { tmp = (Rn_banked + disp8); $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:2 tmp = 0; }
 :clr.w        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x13; disp16 { tmp = (Rn_banked + disp16); $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:2 tmp = 0; }
 :clr.w        eaw_predec                is eaw_predec;         opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eaw_predec = 0; }
 :clr.w        eaw_postinc               is eaw_postinc;        opcode_special=0x13                   { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; eaw_postinc = 0; }
-:clr.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x13; addr8_br  { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:2 addr8_br = 0; }
-:clr.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x13; addr16_dp [targetBase=0;] { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:2 addr16_dp = 0; }
+:clr.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x13  { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:2 addr8_br = 0; }
+:clr.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x13 [targetBase=0;] { $(NF) = 0; $(ZF) = 1; $(VF) = 0; $(CF) = 0; *:2 addr16_dp = 0; }
 
 # ---- source lines 1417-1440 ----
 # NEG   <EAd>              Negate
@@ -307,16 +307,16 @@
 :neg.b        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x14; disp16 { ea = (Rn_banked + disp16); tmp = *:1 ea; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80; *:1 ea = tmp; }
 :neg.b        eab_predec               is eab_predec;              opcode_special=0x14                { tmp = eab_predec;        $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80  ;  eab_predec = tmp; }
 :neg.b        eab_postinc               is eab_postinc;            opcode_special=0x14                { tmp = eab_postinc;       $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80  ;  eab_postinc = tmp; }
-:neg.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x14; addr8_br  { tmp = *:1 addr8_br; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80; *:1 addr8_br = tmp; }
-:neg.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x14; addr16_dp [targetBase=0;] { tmp = *:1 addr16_dp; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80; *:1 addr16_dp = tmp; }
+:neg.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x14  { tmp = *:1 addr8_br; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80; *:1 addr8_br = tmp; }
+:neg.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x14 [targetBase=0;] { tmp = *:1 addr16_dp; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x80; *:1 addr16_dp = tmp; }
 :neg.w        eaw_direct               is eaw_direct;              opcode_special=0x14                { tmp = eaw_direct;        $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000;  eaw_direct = tmp; }
 :neg.w        eaw_indirect               is eaw_indirect;          opcode_special=0x14                { tmp = eaw_indirect;      $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000;  eaw_indirect = tmp; }
 :neg.w        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x14; disp8  { ea = (Rn_banked + disp8); tmp = *:2 ea; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000; *:2 ea = tmp; }
 :neg.w        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x14; disp16 { ea = (Rn_banked + disp16); tmp = *:2 ea; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000; *:2 ea = tmp; }
 :neg.w        eaw_predec               is eaw_predec;              opcode_special=0x14                { tmp = eaw_predec;        $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000;  eaw_predec = tmp; }
 :neg.w        eaw_postinc               is eaw_postinc;            opcode_special=0x14                { tmp = eaw_postinc;       $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000;  eaw_postinc = tmp; }
-:neg.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x14; addr8_br  { tmp = *:2 addr8_br; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000; *:2 addr8_br = tmp; }
-:neg.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x14; addr16_dp [targetBase=0;] { tmp = *:2 addr16_dp; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000; *:2 addr16_dp = tmp; }
+:neg.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x14  { tmp = *:2 addr8_br; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000; *:2 addr8_br = tmp; }
+:neg.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x14 [targetBase=0;] { tmp = *:2 addr16_dp; $(NF) = tmp s< 0; $(CF) = sborrow(0, -tmp); tmp = -tmp; $(ZF) = tmp == 0; $(VF) = tmp == 0x8000; *:2 addr16_dp = tmp; }
 
 # ---- source lines 1441-1480 ----
 
@@ -349,16 +349,16 @@
 :tst.b        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x16; disp16 { tmp = (Rn_banked + disp16); local val:1 = *:1 tmp; stdflags(val); }
 :tst.b        eab_predec               is eab_predec;  opcode_special=0x16 { stdflags(eab_predec); }
 :tst.b        eab_postinc              is eab_postinc;  opcode_special=0x16 { stdflags(eab_postinc); }
-:tst.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x16; addr8_br  { local val:1 = *:1 addr8_br; stdflags(val); }
-:tst.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x16; addr16_dp [targetBase=0;]{ local val:1 = *:1 addr16_dp; stdflags(val); }
+:tst.b        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x16  { local val:1 = *:1 addr8_br; stdflags(val); }
+:tst.b        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x16 [targetBase=0;]{ local val:1 = *:1 addr16_dp; stdflags(val); }
 :tst.w        eaw_direct               is eaw_direct;  opcode_special=0x16 { stdflags(eaw_direct); }
 :tst.w        eaw_indirect             is eaw_indirect;  opcode_special=0x16 { stdflags(eaw_indirect); }
 :tst.w        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x16; disp8  { tmp = (Rn_banked + disp8); local val:2 = *:2 tmp; stdflags(val); }
 :tst.w        "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x16; disp16 { tmp = (Rn_banked + disp16); local val:2 = *:2 tmp; stdflags(val); }
 :tst.w        eaw_predec               is eaw_predec;  opcode_special=0x16 { stdflags(eaw_predec); }
 :tst.w        eaw_postinc              is eaw_postinc;  opcode_special=0x16 { stdflags(eaw_postinc); }
-:tst.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x16; addr8_br  { local val:2 = *:2 addr8_br; stdflags(val); }
-:tst.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x16; addr16_dp [targetBase=0;]{ local val:2 = *:2 addr16_dp; stdflags(val); }
+:tst.w        "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x16  { local val:2 = *:2 addr8_br; stdflags(val); }
+:tst.w        "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x16 [targetBase=0;]{ local val:2 = *:2 addr16_dp; stdflags(val); }
 
 # ---- source lines 1482-1566 ----
 # CMP:G <EAs>,Rd           Compare, general format
@@ -473,16 +473,16 @@
 :shal.b       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x18; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = orig<<1; *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
 :shal.b       eab_predec                  is eab_predec; opcode_special=0x18 { orig:1 = eab_predec; res = orig<<1; eab_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
 :shal.b       eab_postinc                  is eab_postinc; opcode_special=0x18 { orig:1 = eab_postinc; res = orig<<1; eab_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
-:shal.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x18; addr8_br  { orig:1 = *:1 addr8_br; res = orig<<1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
-:shal.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x18; addr16_dp [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig<<1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
+:shal.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x18  { orig:1 = *:1 addr8_br; res = orig<<1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
+:shal.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x18 [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig<<1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[7,1] != orig[7,1]; $(CF) = orig[7,1]; }
 :shal.w       eaw_direct                  is eaw_direct; opcode_special=0x18 { orig:2 = eaw_direct; res = orig<<1; eaw_direct = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
 :shal.w       eaw_indirect                  is eaw_indirect; opcode_special=0x18 { orig:2 = eaw_indirect; res = orig<<1; eaw_indirect = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
 :shal.w       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x18; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res = orig<<1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
 :shal.w       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x18; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res = orig<<1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
 :shal.w       eaw_predec                  is eaw_predec; opcode_special=0x18 { orig:2 = eaw_predec; res = orig<<1; eaw_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
 :shal.w       eaw_postinc                  is eaw_postinc; opcode_special=0x18 { orig:2 = eaw_postinc; res = orig<<1; eaw_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
-:shal.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x18; addr8_br  { orig:2 = *:2 addr8_br; res = orig<<1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
-:shal.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x18; addr16_dp [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig<<1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
+:shal.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x18  { orig:2 = *:2 addr8_br; res = orig<<1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
+:shal.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x18 [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig<<1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = res[15,1] != orig[15,1]; $(CF) = orig[15,1]; }
 
 # ---- source lines 1604-1624 ----
 # SHLL  <EAd>              Shift logical left
@@ -496,16 +496,16 @@
 :shll.b       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x1a; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = orig<<1; *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :shll.b       eab_predec                  is eab_predec; opcode_special=0x1a { orig:1 = eab_predec; res = orig<<1; eab_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :shll.b       eab_postinc                  is eab_postinc; opcode_special=0x1a { orig:1 = eab_postinc; res = orig<<1; eab_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
-:shll.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x1a; addr8_br  { orig:1 = *:1 addr8_br; res = orig<<1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
-:shll.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x1a; addr16_dp [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig<<1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
+:shll.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x1a  { orig:1 = *:1 addr8_br; res = orig<<1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
+:shll.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x1a [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig<<1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[7,1]; }
 :shll.w       eaw_direct                  is eaw_direct; opcode_special=0x1a { orig:2 = eaw_direct; res = orig<<1; eaw_direct = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :shll.w       eaw_indirect                  is eaw_indirect; opcode_special=0x1a { orig:2 = eaw_indirect; res = orig<<1; eaw_indirect = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :shll.w       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x1a; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res = orig<<1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :shll.w       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x1a; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res = orig<<1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :shll.w       eaw_predec                  is eaw_predec; opcode_special=0x1a { orig:2 = eaw_predec; res = orig<<1; eaw_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 :shll.w       eaw_postinc                  is eaw_postinc; opcode_special=0x1a { orig:2 = eaw_postinc; res = orig<<1; eaw_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
-:shll.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x1a; addr8_br  { orig:2 = *:2 addr8_br; res = orig<<1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
-:shll.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x1a; addr16_dp [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig<<1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
+:shll.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x1a  { orig:2 = *:2 addr8_br; res = orig<<1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
+:shll.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x1a [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig<<1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[15,1]; }
 
 # ---- source lines 1626-1646 ----
 # SHAR  <EAd>              Shift arithmetic right
@@ -519,16 +519,16 @@
 :shar.b       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x19; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = orig s>> 1; *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.b       eab_predec                    is eab_predec; opcode_special=0x19 { orig:1 = eab_predec; res = orig s>> 1; eab_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.b       eab_postinc                   is eab_postinc; opcode_special=0x19 { orig:1 = eab_postinc; res = orig s>> 1; eab_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shar.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x19; addr8_br  { orig:1 = *:1 addr8_br; res = orig s>> 1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shar.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x19; addr16_dp [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig s>> 1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shar.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x19  { orig:1 = *:1 addr8_br; res = orig s>> 1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shar.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x19 [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig s>> 1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.w       eaw_direct                    is eaw_direct; opcode_special=0x19 { orig:2 = eaw_direct; res = orig s>> 1; eaw_direct = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.w       eaw_indirect                  is eaw_indirect; opcode_special=0x19 { orig:2 = eaw_indirect; res = orig s>> 1; eaw_indirect = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.w       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x19; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res = orig s>> 1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.w       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x19; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res = orig s>> 1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.w       eaw_predec                    is eaw_predec; opcode_special=0x19 { orig:2 = eaw_predec; res = orig s>> 1; eaw_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shar.w       eaw_postinc                   is eaw_postinc; opcode_special=0x19 { orig:2 = eaw_postinc; res = orig s>> 1; eaw_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shar.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x19; addr8_br  { orig:2 = *:2 addr8_br; res = orig s>> 1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shar.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x19; addr16_dp [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig s>> 1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shar.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x19  { orig:2 = *:2 addr8_br; res = orig s>> 1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shar.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x19 [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig s>> 1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 
 # ---- source lines 1648-1668 ----
 # SHLR  <EAd>              Shift logical right
@@ -542,16 +542,16 @@
 :shlr.b       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; opcode_special=0x1b; disp16 { ea = (Rn_banked + disp16); orig:1 = *:1 ea; res = orig >> 1; *:1 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.b       eab_predec                  is eab_predec; opcode_special=0x1b { orig:1 = eab_predec; res = orig >> 1; eab_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.b       eab_postinc                  is eab_postinc; opcode_special=0x1b { orig:1 = eab_postinc; res = orig >> 1; eab_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shlr.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; opcode_special=0x1b; addr8_br  { orig:1 = *:1 addr8_br; res = orig >> 1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shlr.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; opcode_special=0x1b; addr16_dp [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig >> 1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shlr.b       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 0; addr8_br; opcode_special=0x1b  { orig:1 = *:1 addr8_br; res = orig >> 1; *:1 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shlr.b       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 0; addr16_dp; opcode_special=0x1b [targetBase=0;] { orig:1 = *:1 addr16_dp; res = orig >> 1; *:1 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.w       eaw_direct                  is eaw_direct; opcode_special=0x1b { orig:2 = eaw_direct; res = orig >> 1; eaw_direct = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.w       eaw_indirect                  is eaw_indirect; opcode_special=0x1b { orig:2 = eaw_indirect; res = orig >> 1; eaw_indirect = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.w       "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; opcode_special=0x1b; disp8  { ea = (Rn_banked + disp8); orig:2 = *:2 ea; res = orig >> 1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.w       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; opcode_special=0x1b; disp16 { ea = (Rn_banked + disp16); orig:2 = *:2 ea; res = orig >> 1; *:2 ea = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.w       eaw_predec                  is eaw_predec; opcode_special=0x1b { orig:2 = eaw_predec; res = orig >> 1; eaw_predec = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 :shlr.w       eaw_postinc                  is eaw_postinc; opcode_special=0x1b { orig:2 = eaw_postinc; res = orig >> 1; eaw_postinc = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shlr.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; opcode_special=0x1b; addr8_br  { orig:2 = *:2 addr8_br; res = orig >> 1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
-:shlr.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; opcode_special=0x1b; addr16_dp [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig >> 1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shlr.w       "@"^addr8_br^":8"        is Rn = 5 & mode = 0 & sz = 1; addr8_br; opcode_special=0x1b  { orig:2 = *:2 addr8_br; res = orig >> 1; *:2 addr8_br = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
+:shlr.w       "@"^addr16_dp^":16"      is Rn = 5 & mode = 1 & sz = 1; addr16_dp; opcode_special=0x1b [targetBase=0;] { orig:2 = *:2 addr16_dp; res = orig >> 1; *:2 addr16_dp = res; $(NF) = res s< 0; $(ZF) = res == 0; $(VF) = 0; $(CF) = orig[0,1]; }
 
 # ---- source lines 1670-1690 ----
 # ROTL  <EAd>              Rotate left
@@ -704,7 +704,7 @@
 #                        this file's original comment -- 0x39 is >=0x20, so
 #                        on real H8/500 hardware byte2=0x39 decodes as mulxu
 #                        via tail-dispatch, never reaching tas at all.
-:tas    eab_direct      is opcode_special=0x17; eab_direct
+:tas    eab_direct      is eab_direct;      opcode_special=0x17
 {
 	tmp:1 = eab_direct[0,8];
 	stdflags(tmp);
@@ -712,7 +712,7 @@
 	$(CF) = 0;
 	eab_direct[0,8] = eab_direct[0,8] | 0x80;
 }
-:tas    eab_indirect    is opcode_special=0x17; eab_indirect
+:tas    eab_indirect    is eab_indirect;    opcode_special=0x17
 {
 	tmp:1 = eab_indirect;
 	stdflags(tmp);
@@ -720,7 +720,7 @@
 	$(CF) = 0;
 	eab_indirect = eab_indirect | 0x80;
 }
-:tas    eab_disp8       is opcode_special=0x17; eab_disp8
+:tas    eab_disp8       is eab_disp8;       opcode_special=0x17
 {
 	tmp:1 = eab_disp8;
 	stdflags(tmp);
@@ -728,7 +728,7 @@
 	$(CF) = 0;
 	eab_disp8 = eab_disp8 | 0x80;
 }
-:tas    eab_disp16      is opcode_special=0x17; eab_disp16
+:tas    eab_disp16      is eab_disp16;      opcode_special=0x17
 {
 	tmp:1 = eab_disp16;
 	stdflags(tmp);
@@ -736,7 +736,7 @@
 	$(CF) = 0;
 	eab_disp16 = eab_disp16 | 0x80;
 }
-:tas    eab_predec      is opcode_special=0x17; eab_predec
+:tas    eab_predec      is eab_predec;      opcode_special=0x17
 {
 	tmp:1 = eab_predec;
 	stdflags(tmp);
@@ -744,7 +744,7 @@
 	$(CF) = 0;
 	eab_predec = eab_predec | 0x80;
 }
-:tas    eab_postinc     is opcode_special=0x17; eab_postinc
+:tas    eab_postinc     is eab_postinc;     opcode_special=0x17
 {
 	tmp:1 = eab_postinc;
 	stdflags(tmp);
@@ -752,7 +752,7 @@
 	$(CF) = 0;
 	eab_postinc = eab_postinc | 0x80;
 }
-:tas    eab_abs8_br     is opcode_special=0x17; eab_abs8_br
+:tas    eab_abs8_br     is eab_abs8_br;     opcode_special=0x17
 {
 	tmp:1 = eab_abs8_br;
 	stdflags(tmp);
@@ -760,7 +760,7 @@
 	$(CF) = 0;
 	eab_abs8_br = eab_abs8_br | 0x80;
 }
-:tas    eab_abs16       is opcode_special=0x17; eab_abs16 [targetBase=0;]
+:tas    eab_abs16       is eab_abs16;       opcode_special=0x17 [targetBase=0;]
 {
 	tmp:1 = eab_abs16;
 	stdflags(tmp);
