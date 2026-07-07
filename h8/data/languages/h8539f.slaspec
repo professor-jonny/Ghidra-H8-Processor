@@ -131,34 +131,41 @@ define token m6b(8)
 attach variables [ m6Rn ] [ R0 R1 R2 R3 R4 R5 FP SP ];
 
 # ---------------------------------------------------------------------------
-# MAP4 first-byte gate subtable (BUG 4 fix).
-# A2tail[0xB0-0xFF] all dispatch to MAP4 — five 16-byte rows.
-# opcode47 values 11-15 cover the full range 0xB0-0xFF:
-#   11 = 0xB0-0xBF   12 = 0xC0-0xCF   13 = 0xD0-0xDF
-#   14 = 0xE0-0xEF   15 = 0xF0-0xFF
-# Previously only opcode47=14 was gated; bytes 0xB0-0xDF and 0xF0-0xFF fell
-# through to EA-token constructors and were misidentified.
-# Replace bare opcode47=14 with map4_page in all MAP4 constructors so the
-# full first-byte range is covered without duplicating each constructor.
+# MAP5 dispatch byte (BUG 6 fix).
+# MAP5 is reached via first byte 0x04 (8-bit immediate escape, opcode_special=4)
+# or 0x0C (16-bit immediate escape, opcode_special=0xC) -- see ana.cpp A2[4]/A2[12]
+# and the "rtd" correction note in README.md for why these two bytes are MAP5's
+# and NOT rtd's. Real layout: [opcode_special byte][imm8 or imm16 payload]
+# [this dispatch byte]. Per ana.cpp's tables[] resolution loop: codes < 0x20 in
+# this byte hit A5[] (all H8500_null -- no valid instruction starts under 0x20
+# here), codes >= 0x20 hit A5tail[(code>>3)-4], with the low 3 bits as Rn and
+# the top 5 bits (this token's m5field, raw bits 3-7, NOT offset by -4) as the
+# operation selector. Valid m5field values confirmed against A5tail:
+#   4=add_g   5=adds   6=sub    7=subs   8=or     9=orc   10=and   11=andc
+#   12=xor    13=xorc  14=cmp_g 16=mov_g 17=ldc   20=addx 21=mulxu 22=subx 23=divxu
+# (15, 18, 19, 24-31 are H8500_null -- no valid instruction, matches ana.cpp).
+# m5CR aliases the same 3 bits as m5Rn but attaches to the control-register hole
+# list, for the ldc/andc/orc/xorc forms (mirrors map4b's m4Rn/m4CR pattern).
 # ---------------------------------------------------------------------------
-map4_page: is opcode47=11 { }
-map4_page: is opcode47=12 { }
-map4_page: is opcode47=13 { }
-map4_page: is opcode47=14 { }
-map4_page: is opcode47=15 { }
+define token map5b(8)
+	m5Rn    = (0, 2)
+	m5CR    = (0, 2)
+	m5field = (3, 7)
+;
+attach variables [ m5Rn ] [ R0 R1 R2 R3 R4 R5 FP SP ];
+attach variables [ m5CR ] [ _ CCR _ BR EP DP _ TP ];
 
-# ---------------------------------------------------------------------------
-# MAP3 first-byte gate subtable (BUG 5 fix).
-# A2tail[0xA0] = MAP3. MAP3 first bytes are 0xA0-0xAF (opcode47=10).
-# Mirrors map4_page exactly. Consumes byte 1 so that opcode_special (a
-# separate, independent token also defined to read byte 1 on its own) can
-# be reused to read byte 2 fresh inside MAP3 constructors, without SLEIGH
-# rejecting an illegal direct AND of two same-position tokens.
-# See README.md "BUG 5" section for the full derivation (cross-checked
-# against source/ghidra-h8-300/h8-insn-300h-arith.sinc's op/op_lo pattern).
-# ---------------------------------------------------------------------------
-map3_page: is opcode47=10 { }
 
+attach variables [ Rd Rs Rn ]    [ R0  R1  R2  R3  R4  R5  FP  SP  ];
+#attach variables [ Rdb Rsb Rnb ] [ R0L R1L R2L R3L R4L R5L FPL SPL ];
+#attach names [ targetReg ] [ R0  R1  R2  R3  R4  R5  FP  SP  ];
+
+attach variables [ CR8 ]         [ _   CCR _   BR  EP  DP  _   TP  ];
+attach variables [ CR16 ]        [ SR  _   _   _   _   _   _   _   ];
+#attach variables [ targetBase ]   [ DP DP DP DP EP EP TP TP ];
+
+attach names [sz] [ "b" "w" ];
+#attach names [Rdb Rnb] [ "R0" "R1" "R2" "R3" "R4" "R5" "FP" "SP" ];
 
 define token addrByte(8)    addr8  = (0, 7);
 define token addrWord(16)   addr16 = (0, 15);
@@ -179,18 +186,6 @@ define token regListByte(8)
 	reglist6 = (6,6)
 	reglist7 = (7,7)
 	;
-
-
-attach variables [ Rd Rs Rn ]    [ R0  R1  R2  R3  R4  R5  FP  SP  ];
-#attach variables [ Rdb Rsb Rnb ] [ R0L R1L R2L R3L R4L R5L FPL SPL ];
-#attach names [ targetReg ] [ R0  R1  R2  R3  R4  R5  FP  SP  ];
-
-attach variables [ CR8 ]         [ _   CCR _   BR  EP  DP  _   TP  ];
-attach variables [ CR16 ]        [ SR  _   _   _   _   _   _   _   ];
-#attach variables [ targetBase ]   [ DP DP DP DP EP EP TP TP ];
-
-attach names [sz] [ "b" "w" ];
-#attach names [Rdb Rnb] [ "R0" "R1" "R2" "R3" "R4" "R5" "FP" "SP" ];
 
 attach names [reglist] [
                          ""      "R0"        "R1"       "R0-R1"       "R2"    "R0,R2"    "R1-R2"     "R0-R2"     # 0-7
@@ -578,14 +573,59 @@ eab_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz
 eaw_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; disp8     { tmp = (Rn_banked + disp8);  export *:2 tmp; }
 eab_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; disp16    { tmp = (Rn_banked + disp16); export *:1 tmp; }
 eaw_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; disp16    { tmp = (Rn_banked + disp16); export *:2 tmp; }
-eab_predec:       "@-SP"                    is Rn=7 & mode = 11 & sz = 0                        { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:1 SP24; }
-eaw_predec:       "@-SP"                    is Rn=7 & mode = 11 & sz = 1                        { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:2 SP24; }
-eab_postinc:      "@SP+"                    is Rn=7 & mode = 12 & sz = 0                        { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:1 tmp; }
-eaw_postinc:      "@SP+"                    is Rn=7 & mode = 12 & sz = 1                        { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:2 tmp; }
-eab_predec:       "@-"^Rn_banked            is Rn_banked & mode = 11 & sz = 0                   { Rn_banked = Rn_banked - 1; export *:1 Rn_banked; }
-eaw_predec:       "@-"^Rn_banked            is Rn_banked & mode = 11 & sz = 1                   { Rn_banked = Rn_banked - 2; export *:2 Rn_banked; }
-eab_postinc:      "@"^Rn_banked^"+"         is Rn_banked & mode = 12 & sz = 0                   { tmp = Rn_banked; Rn_banked = Rn_banked + 1; export *:1 tmp; }
-eaw_postinc:      "@"^Rn_banked^"+"         is Rn_banked & mode = 12 & sz = 1                   { tmp = Rn_banked; Rn_banked = Rn_banked + 1; export *:2 tmp; }
+# ---------------------------------------------------------------------------
+# predec/postinc (mode=11/12), all 8 registers (BUG: collision+mutation fix).
+# ana.cpp's phrase() does `code & 7` uniformly -- there is no separate SP path
+# at the hardware level, R7 is just decremented/incremented like any other
+# register (it prints as "SP" purely cosmetically). The previous code had a
+# dedicated "Rn=7 & mode=.. => @-SP/@SP+" constructor PLUS a generic
+# "Rn_banked & mode=.." constructor whose own Rn=7 alternative ALSO produced
+# "SP" -- an exact duplicate bit-pattern collision (mode/sz/Rn=7 matched both),
+# which is why any predec/postinc instruction targeting R7 failed to resolve.
+# The generic version was additionally buggy: it assigned to `Rn_banked`,
+# which is a computed bank ADDRESS (e.g. DP<<16|R0), not the underlying
+# register -- "Rn_banked = Rn_banked - 2" never actually decremented the real
+# register. Fixed by writing one constructor per register that mutates the
+# real register directly, then banks the (already-updated, for predec; or
+# pre-update, for postinc) value for export. SP keeps using the SP24
+# pseudo-register on export, as before, to preserve Ghidra's stack-depth
+# tracking (see file header NOTE); other registers use a local bank/reg pair.
+# ---------------------------------------------------------------------------
+eab_predec:       "@-R0"    is Rn=0 & mode = 11 & sz = 0 { R0 = R0 - 1; local addr:4 = (zext(DP) << 16) | zext(R0); export *:1 addr; }
+eab_predec:       "@-R1"    is Rn=1 & mode = 11 & sz = 0 { R1 = R1 - 1; local addr:4 = (zext(DP) << 16) | zext(R1); export *:1 addr; }
+eab_predec:       "@-R2"    is Rn=2 & mode = 11 & sz = 0 { R2 = R2 - 1; local addr:4 = (zext(DP) << 16) | zext(R2); export *:1 addr; }
+eab_predec:       "@-R3"    is Rn=3 & mode = 11 & sz = 0 { R3 = R3 - 1; local addr:4 = (zext(DP) << 16) | zext(R3); export *:1 addr; }
+eab_predec:       "@-R4"    is Rn=4 & mode = 11 & sz = 0 { R4 = R4 - 1; local addr:4 = (zext(EP) << 16) | zext(R4); export *:1 addr; }
+eab_predec:       "@-R5"    is Rn=5 & mode = 11 & sz = 0 { R5 = R5 - 1; local addr:4 = (zext(EP) << 16) | zext(R5); export *:1 addr; }
+eab_predec:       "@-FP"    is Rn=6 & mode = 11 & sz = 0 { FP = FP - 1; local addr:4 = (zext(TP) << 16) | zext(FP); export *:1 addr; }
+eab_predec:       "@-SP"    is Rn=7 & mode = 11 & sz = 0 { SP = SP - 1; SP24 = (zext(TP) << 16) | zext(SP); export *:1 SP24; }
+
+eaw_predec:       "@-R0"    is Rn=0 & mode = 11 & sz = 1 { R0 = R0 - 2; local addr:4 = (zext(DP) << 16) | zext(R0); export *:2 addr; }
+eaw_predec:       "@-R1"    is Rn=1 & mode = 11 & sz = 1 { R1 = R1 - 2; local addr:4 = (zext(DP) << 16) | zext(R1); export *:2 addr; }
+eaw_predec:       "@-R2"    is Rn=2 & mode = 11 & sz = 1 { R2 = R2 - 2; local addr:4 = (zext(DP) << 16) | zext(R2); export *:2 addr; }
+eaw_predec:       "@-R3"    is Rn=3 & mode = 11 & sz = 1 { R3 = R3 - 2; local addr:4 = (zext(DP) << 16) | zext(R3); export *:2 addr; }
+eaw_predec:       "@-R4"    is Rn=4 & mode = 11 & sz = 1 { R4 = R4 - 2; local addr:4 = (zext(EP) << 16) | zext(R4); export *:2 addr; }
+eaw_predec:       "@-R5"    is Rn=5 & mode = 11 & sz = 1 { R5 = R5 - 2; local addr:4 = (zext(EP) << 16) | zext(R5); export *:2 addr; }
+eaw_predec:       "@-FP"    is Rn=6 & mode = 11 & sz = 1 { FP = FP - 2; local addr:4 = (zext(TP) << 16) | zext(FP); export *:2 addr; }
+eaw_predec:       "@-SP"    is Rn=7 & mode = 11 & sz = 1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:2 SP24; }
+
+eab_postinc:      "@R0+"    is Rn=0 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R0); R0 = R0 + 1; export *:1 addr; }
+eab_postinc:      "@R1+"    is Rn=1 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R1); R1 = R1 + 1; export *:1 addr; }
+eab_postinc:      "@R2+"    is Rn=2 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R2); R2 = R2 + 1; export *:1 addr; }
+eab_postinc:      "@R3+"    is Rn=3 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R3); R3 = R3 + 1; export *:1 addr; }
+eab_postinc:      "@R4+"    is Rn=4 & mode = 12 & sz = 0 { local addr:4 = (zext(EP) << 16) | zext(R4); R4 = R4 + 1; export *:1 addr; }
+eab_postinc:      "@R5+"    is Rn=5 & mode = 12 & sz = 0 { local addr:4 = (zext(EP) << 16) | zext(R5); R5 = R5 + 1; export *:1 addr; }
+eab_postinc:      "@FP+"    is Rn=6 & mode = 12 & sz = 0 { local addr:4 = (zext(TP) << 16) | zext(FP); FP = FP + 1; export *:1 addr; }
+eab_postinc:      "@SP+"    is Rn=7 & mode = 12 & sz = 0 { SP24 = (zext(TP) << 16) | zext(SP); SP = SP + 1; export *:1 SP24; }
+
+eaw_postinc:      "@R0+"    is Rn=0 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R0); R0 = R0 + 2; export *:2 addr; }
+eaw_postinc:      "@R1+"    is Rn=1 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R1); R1 = R1 + 2; export *:2 addr; }
+eaw_postinc:      "@R2+"    is Rn=2 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R2); R2 = R2 + 2; export *:2 addr; }
+eaw_postinc:      "@R3+"    is Rn=3 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R3); R3 = R3 + 2; export *:2 addr; }
+eaw_postinc:      "@R4+"    is Rn=4 & mode = 12 & sz = 1 { local addr:4 = (zext(EP) << 16) | zext(R4); R4 = R4 + 2; export *:2 addr; }
+eaw_postinc:      "@R5+"    is Rn=5 & mode = 12 & sz = 1 { local addr:4 = (zext(EP) << 16) | zext(R5); R5 = R5 + 2; export *:2 addr; }
+eaw_postinc:      "@FP+"    is Rn=6 & mode = 12 & sz = 1 { local addr:4 = (zext(TP) << 16) | zext(FP); FP = FP + 2; export *:2 addr; }
+eaw_postinc:      "@SP+"    is Rn=7 & mode = 12 & sz = 1 { SP24 = (zext(TP) << 16) | zext(SP); SP = SP + 2; export *:2 SP24; }
 #eab_abs8:         "@"^addr8^":8"            is Rn = 5 & mode = 0 & sz = 0; addr8  { export *:1 addr8; }
 #eaw_abs8:         "@"^addr8^":8"            is Rn = 5 & mode = 0 & sz = 1; addr8  { export *:2 addr8; }
 eab_abs8_br:      "@"^addr8_br^":8"         is Rn = 5 & mode = 0 & sz = 0; addr8_br      { export *:1 addr8_br; }
