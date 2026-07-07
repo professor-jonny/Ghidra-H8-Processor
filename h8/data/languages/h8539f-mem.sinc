@@ -118,6 +118,18 @@
 #             Done above (lines 44-68), including the all-zero-reglist fix.
 #   stm    -- A2[0x12], mirrors ldm. Done above (lines 44-68).
 
+# XCH   Rs,Rd              Exchange registers  (MAP3 tail 0x90-97 only; MAP4's
+# 0x90-97 is mov_g instead, so gating on eab_direct/eaw_direct -- mode=10 --
+# never collides with the mov:g.b/w store block, which starts at mode=11).
+# RESTORED (July 2026): these two constructors existed and were compile-tested
+# in oldsleigh/h8539f.slaspec.pre_cutover_backup_20260706_061122 (lines
+# 1125-1126) but were dropped during the file-split cutover -- only the
+# comments above survived, not the code. This is what caused the "?? A9h" /
+# "?? AAh" bad-instruction errors at 0x1445a / 0x14487 in bug.txt (xch R1,R2 /
+# xch R2,R4 / xch R3,R5 in a 3-way min/max swap routine).
+:xch.b        eab_direct,Rd             is eab_direct; opcode=18 & Rd { local tmp:1 = Rd[0,8]; Rd[0,8] = eab_direct[0,8]; eab_direct[0,8] = tmp; }
+:xch.w        eaw_direct,Rd             is eaw_direct; opcode=18 & Rd { local tmp = Rd; Rd = eaw_direct; eaw_direct = tmp; }
+
 # ============================================================================
 # --- MOV:G (ported July 2026 -- was silently dropped during the functional
 #     split; this is the fix for the "Unable to resolve constructor" failures
