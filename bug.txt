@@ -1,0 +1,100 @@
+Error	Bad Instruction	Unable to resolve constructor at 0001445a (flow from 00014458)	0001445a		?? A9h
+Error	Bad Instruction	Unable to resolve constructor at 00014487 (flow from 00014481)	00014487	LAB_00014487	?? AAh
+
+                             **************************************************************
+                             *                          FUNCTION                          *
+                             **************************************************************
+                             undefined FUN_0001444c()
+                               assume CP = 0x1
+                               assume DP = 0x1
+                               assume TP = 0x0
+             undefined         <UNASSIGNED>   <RETURN>
+                             FUN_0001444c                                    XREF[20]:    FUN_0001821d:000182dc(c), 
+                                                                                          FUN_00018fe0:000190a0(c), 
+                                                                                          FUN_00018fe0:000190be(c), 
+                                                                                          FUN_00019110:00019181(c), 
+                                                                                          FUN_0002127f:000212e2(c), 
+                                                                                          FUN_0002153b:000215b9(c), 
+                                                                                          FUN_000237a0:000237d4(c), 
+                                                                                          FUN_0002415b:000241a9(c), 
+                                                                                          FUN_00024207:000242a8(c), 
+                                                                                          FUN_00024dee:00024e3b(c), 
+                                                                                          FUN_00024dee:00024e4e(c), 
+                                                                                          FUN_000251c4:0002522f(c), 
+                                                                                          FUN_0002562b:0002570a(c), 
+                                                                                          FUN_000273b8:000273f8(c), 
+                                                                                          FUN_00027a81:00027afb(c), 
+                                                                                          FUN_00027b9d:00027bb5(c), 
+                                                                                          FUN_00028fff:000296cd(c), 
+                                                                                          FUN_00028fff:00029bbb(c), 
+                                                                                          FUN_00028fff:00029c17(c), 
+                                                                                          FUN_00029fba:0002a522(c), [more]
+        0001444c 17 00           link       FP,#0x0:8
+        0001444e bf 92           mov:g.w    R2,@-SP
+        00014450 88 06           mov:f.w    @(0x6:8,FP),R0
+        00014452 89 08           mov:f.w    @(0x8:8,FP),R1
+        00014454 8a 0a           mov:f.w    @(0xa:8,FP),R2
+        00014456 a9 72           cmp:g.w    R1,R2
+        00014458 22 02           bhi        #LAB_0001445c:8
+        0001445a a9              ??         A9h
+        0001445b 92              ??         92h
+                             LAB_0001445c                                    XREF[1]:     00014458(j)  
+        0001445c aa 70           cmp:g.w    R2,R0
+        0001445e 22 06           bhi        #LAB_00014466:8
+        00014460 a9 70           cmp:g.w    R1,R0
+        00014462 25 06           blo        #LAB_0001446a:8
+
+
+
+
+
+
+        00014479 8c 0e           mov:f.w    @(0xe:8,FP),R4
+        0001447b 8d 10           mov:f.w    @(0x10:8,FP),R5
+        0001447d aa 74           cmp:g.w    R2,R4
+        0001447f 22 0a           bhi        #LAB_0001448b:8
+        00014481 25 04           blo        #LAB_00014487:8
+        00014483 ab 75           cmp:g.w    R3,R5
+        00014485 22 04           bhi        #LAB_0001448b:8
+                             LAB_00014487                                    XREF[1]:     FUN_00014471:00014481(j)  
+        00014487 aa              ??         AAh
+        00014488 94              ??         94h
+        00014489 ab              ??         ABh
+        0001448a 95              ??         95h
+                             LAB_0001448b                                    XREF[2]:     0001447f(j), 00014485(j)  
+        0001448b 88 06           mov:f.w    @(0x6:8,FP),R0
+        0001448d 89 08           mov:f.w    @(0x8:8,FP),R1
+        0001448f ac 70           cmp:g.w    R4,R0
+
+
+
+
+ MAP3 (byte-size) family — the 0xA0-0xAF range.
+
+it seems some thing is missing ?
+
+        00024cb4 0c 07 00 48     orc.w      0x700,SR
+        00024cb8 0c fe ff 58     andc.w     DAT_0000feff,SR                                  = ??
+        00024cbc 04 00 8d        ldc.b      0x0,DP
+        00024cbf 1d f3 1c 43     or.w       @DAT_0000f31c:16,R3                              = ??
+        00024cc3 1d f3 1c 93     mov:g.w    R3,@DAT_0000f31c:16                              = ??
+        00024cc7 1d f3 1c d6     bclr.w     0x6,@DAT_0000f31c:16                             = ??
+        00024ccb cf 88           ldc.w      @SP+ ,SR
+        00024ccd 04 00 8d        ldc.b      0x0,DP
+        00024cd0 20 64           bra        #LAB_00024d36:8
+        00024cd2 bf              ??         BFh
+        00024cd3 98              ??         98h
+        00024cd4 0c              ??         0Ch
+        00024cd5 07              ??         07h
+        00024cd6 00              ??         00h
+        00024cd7 48              ??         48h    H
+        00024cd8 0c              ??         0Ch
+        00024cd9 fe              ??         FEh
+        00024cda ff              ??         FFh
+        00024cdb 58              ??         58h    X
+        00024cdc 04              ??         04h
+        00024cdd 00              ??         00h
+
+
+this looks like it is not following on and not decoding the full function ?
+
