@@ -4,4 +4,9 @@
       <patternfile>patterns.xml</patternfile>
     </compiler>
   </language>
+  <language id="H8:BE:32:H8539F">
+    <compiler id="default">
+      <patternfile>h8539pattern.xml</patternfile>
+    </compiler>
+  </language>
 </patternconstraints>
