@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <processor_spec>
+  <data_space space="ram" />
   <default_memory_blocks>
-    <memory_block name="ram" start_address="ram:0x0000" length="0xf000" mode="rwv" initialized="true"/>
+    <!-- H8/538 hardware manual: 2KB on-chip RAM at 0xF680-0xFE7F -->
+    <memory_block name="ram" start_address="ram:0xF680" length="0x800" mode="rwv" initialized="false"/>
   </default_memory_blocks>
   <programcounter register="PC"/>
   <default_symbols>
@@ -71,5 +73,287 @@
     <symbol name="sci2rx_vector" address="ram:0x009a" type="code_ptr" entry="true"/>
     <symbol name="sci2tx_vector" address="ram:0x009c" type="code_ptr" entry="true"/>
     <symbol name="sci2tend_vector" address="ram:0x009e" type="code_ptr" entry="true"/>
+
+    <!--
+      H8/538F ON-CHIP PERIPHERAL REGISTER NAMES
+      Ported from h8539f.pspec -- the H8/538 shares the same peripheral map as the
+      H8/539F at the same I/O addresses (per NOTES.TXT), EXCLUDING the flash memory
+      control registers (FLMCR, FLM_EBR1/2, FLMER, FLMSR), which are 539F-specific
+      since the H8/538 uses EPROM/masked ROM, not flash.
+    -->
+
+    <!-- SCI3 (Serial Communication Interface 3) at 0xFEC0 -->
+    <symbol name="SCI3_SMR" address="ram:0xFEC0" entry="false"/>
+    <symbol name="SCI3_BRR" address="ram:0xFEC1" entry="false"/>
+    <symbol name="SCI3_SCR" address="ram:0xFEC2" entry="false"/>
+    <symbol name="SCI3_TDR" address="ram:0xFEC3" entry="false"/>
+    <symbol name="SCI3_SSR" address="ram:0xFEC4" entry="false"/>
+    <symbol name="SCI3_RDR" address="ram:0xFEC5" entry="false"/>
+
+    <!-- SCI1 (Serial Communication Interface 1) at 0xFEC8 -->
+    <symbol name="SCI1_SMR" address="ram:0xFEC8" entry="false"/>
+    <symbol name="SCI1_BRR" address="ram:0xFEC9" entry="false"/>
+    <symbol name="SCI1_SCR" address="ram:0xFECA" entry="false"/>
+    <symbol name="SCI1_TDR" address="ram:0xFECB" entry="false"/>
+    <symbol name="SCI1_SSR" address="ram:0xFECC" entry="false"/>
+    <symbol name="SCI1_RDR" address="ram:0xFECD" entry="false"/>
+
+    <!-- SCI2 (Serial Communication Interface 2) at 0xFED0 -->
+    <symbol name="SCI2_SMR" address="ram:0xFED0" entry="false"/>
+    <symbol name="SCI2_BRR" address="ram:0xFED1" entry="false"/>
+    <symbol name="SCI2_SCR" address="ram:0xFED2" entry="false"/>
+    <symbol name="SCI2_TDR" address="ram:0xFED3" entry="false"/>
+    <symbol name="SCI2_SSR" address="ram:0xFED4" entry="false"/>
+    <symbol name="SCI2_RDR" address="ram:0xFED5" entry="false"/>
+
+    <!-- Port I/O direction and data registers -->
+    <symbol name="P1DDR" address="ram:0xFE80" entry="false"/>
+    <symbol name="P2DDR" address="ram:0xFE81" entry="false"/>
+    <symbol name="P1DR"  address="ram:0xFE82" entry="false"/>
+    <symbol name="P2DR"  address="ram:0xFE83" entry="false"/>
+    <symbol name="P3DDR" address="ram:0xFE84" entry="false"/>
+    <symbol name="P4DDR" address="ram:0xFE85" entry="false"/>
+    <symbol name="P3DR"  address="ram:0xFE86" entry="false"/>
+    <symbol name="P4DR"  address="ram:0xFE87" entry="false"/>
+    <symbol name="P5DDR" address="ram:0xFE88" entry="false"/>
+    <symbol name="P6DDR" address="ram:0xFE89" entry="false"/>
+    <symbol name="P5DR"  address="ram:0xFE8A" entry="false"/>
+    <symbol name="P6DR"  address="ram:0xFE8B" entry="false"/>
+    <symbol name="P7DDR" address="ram:0xFE8C" entry="false"/>
+    <symbol name="P7DR"  address="ram:0xFE8E" entry="false"/>
+    <symbol name="P8DR"  address="ram:0xFE8F" entry="false"/>
+    <symbol name="PADDR" address="ram:0xFE91" entry="false"/>
+    <symbol name="P9DR"  address="ram:0xFE92" entry="false"/>
+    <symbol name="PADR"  address="ram:0xFE93" entry="false"/>
+    <symbol name="PBDDR" address="ram:0xFE94" entry="false"/>
+    <symbol name="PCDDR" address="ram:0xFE95" entry="false"/>
+    <symbol name="PBDR"  address="ram:0xFE96" entry="false"/>
+    <symbol name="PCDR"  address="ram:0xFE97" entry="false"/>
+    <symbol name="PBPCR" address="ram:0xFE98" entry="false"/>
+    <symbol name="PCPCR" address="ram:0xFE99" entry="false"/>
+    <symbol name="oCR"   address="ram:0xFE9A" entry="false"/>
+
+    <!-- A/D Converter result registers -->
+    <symbol name="ADDR0H" address="ram:0xFEA0" entry="false"/>
+    <symbol name="ADDR0L" address="ram:0xFEA1" entry="false"/>
+    <symbol name="ADDR1H" address="ram:0xFEA2" entry="false"/>
+    <symbol name="ADDR1L" address="ram:0xFEA3" entry="false"/>
+    <symbol name="ADDR2H" address="ram:0xFEA4" entry="false"/>
+    <symbol name="ADDR2L" address="ram:0xFEA5" entry="false"/>
+    <symbol name="ADDR3H" address="ram:0xFEA6" entry="false"/>
+    <symbol name="ADDR3L" address="ram:0xFEA7" entry="false"/>
+    <symbol name="ADDR4H" address="ram:0xFEA8" entry="false"/>
+    <symbol name="ADDR4L" address="ram:0xFEA9" entry="false"/>
+    <symbol name="ADDR5H" address="ram:0xFEAA" entry="false"/>
+    <symbol name="ADDR5L" address="ram:0xFEAB" entry="false"/>
+    <symbol name="ADDR6H" address="ram:0xFEAC" entry="false"/>
+    <symbol name="ADDR6L" address="ram:0xFEAD" entry="false"/>
+    <symbol name="ADDR7H" address="ram:0xFEAE" entry="false"/>
+    <symbol name="ADDR7L" address="ram:0xFEAF" entry="false"/>
+    <symbol name="ADDR8H" address="ram:0xFEB0" entry="false"/>
+    <symbol name="ADDR8L" address="ram:0xFEB1" entry="false"/>
+    <symbol name="ADDR9H" address="ram:0xFEB2" entry="false"/>
+    <symbol name="ADDR9L" address="ram:0xFEB3" entry="false"/>
+    <symbol name="ADDRAH" address="ram:0xFEB4" entry="false"/>
+    <symbol name="ADDRAL" address="ram:0xFEB5" entry="false"/>
+    <symbol name="ADDRBH" address="ram:0xFEB6" entry="false"/>
+    <symbol name="ADDRBL" address="ram:0xFEB7" entry="false"/>
+    <symbol name="ADCSR"  address="ram:0xFEB8" entry="false"/>
+    <symbol name="ADCR"   address="ram:0xFEB9" entry="false"/>
+
+    <!-- Miscellaneous control registers -->
+    <symbol name="PACR"   address="ram:0xFEDA" entry="false"/>
+    <symbol name="P67CR"  address="ram:0xFEDB" entry="false"/>
+    <symbol name="ADTRGR" address="ram:0xFEDC" entry="false"/>
+    <symbol name="IRQFR"  address="ram:0xFEDE" entry="false"/>
+    <symbol name="BCR"    address="ram:0xFEDF" entry="false"/>
+
+    <!-- PWM Registers -->
+    <symbol name="PWM1_TCR"  address="ram:0xFEF0" entry="false"/>
+    <symbol name="PWM1_DTR"  address="ram:0xFEF1" entry="false"/>
+    <symbol name="PWM1_TCNT" address="ram:0xFEF2" entry="false"/>
+    <symbol name="PWM2_TCR"  address="ram:0xFEF4" entry="false"/>
+    <symbol name="PWM2_DTR"  address="ram:0xFEF5" entry="false"/>
+    <symbol name="PWM2_TCNT" address="ram:0xFEF6" entry="false"/>
+    <symbol name="PWM3_TCR"  address="ram:0xFEF8" entry="false"/>
+    <symbol name="PWM3_DTR"  address="ram:0xFEF9" entry="false"/>
+    <symbol name="PWM3_TCNT" address="ram:0xFEFA" entry="false"/>
+
+    <!-- Interrupt Controller -->
+    <symbol name="INTC_IPRA" address="ram:0xFF00" entry="false"/>
+    <symbol name="INTC_IPRB" address="ram:0xFF01" entry="false"/>
+    <symbol name="INTC_IPRC" address="ram:0xFF02" entry="false"/>
+    <symbol name="INTC_IPRD" address="ram:0xFF03" entry="false"/>
+    <symbol name="INTC_IPRE" address="ram:0xFF04" entry="false"/>
+    <symbol name="INTC_IPRF" address="ram:0xFF05" entry="false"/>
+
+    <!-- DTC (Data Transfer Controller) -->
+    <symbol name="DTC_DTEA" address="ram:0xFF08" entry="false"/>
+    <symbol name="DTC_DTEB" address="ram:0xFF09" entry="false"/>
+    <symbol name="DTC_DTEC" address="ram:0xFF0A" entry="false"/>
+    <symbol name="DTC_DTED" address="ram:0xFF0B" entry="false"/>
+    <symbol name="DTC_DTEE" address="ram:0xFF0C" entry="false"/>
+    <symbol name="DTC_DTEF" address="ram:0xFF0D" entry="false"/>
+
+    <!-- Watchdog Timer -->
+    <symbol name="WDT_TCSR" address="ram:0xFF10" entry="false"/>
+    <symbol name="WDT_TCNT" address="ram:0xFF11" entry="false"/>
+
+    <!-- System / Bus Control -->
+    <symbol name="WSC_WCR"    address="ram:0xFF14" entry="false"/>
+    <symbol name="RAMCR"      address="ram:0xFF15" entry="false"/>
+    <symbol name="BSC_ARBT"   address="ram:0xFF16" entry="false"/>
+    <symbol name="BSC_AR3T"   address="ram:0xFF17" entry="false"/>
+    <symbol name="SYSC_MDCR"  address="ram:0xFF19" entry="false"/>
+    <symbol name="SYSC_SBYCR" address="ram:0xFF1A" entry="false"/>
+    <symbol name="SYSC_BRCR"  address="ram:0xFF1B" entry="false"/>
+    <symbol name="SYSC_NMICR" address="ram:0xFF1C" entry="false"/>
+    <symbol name="SYSC_IRQCR" address="ram:0xFF1D" entry="false"/>
+    <symbol name="SYSC_writeCR" address="ram:0xFF1E" entry="false"/>
+    <symbol name="SYSC_RSTCSR" address="ram:0xFF1F" entry="false"/>
+
+    <!-- Timer 1 (16-bit, Channel A) -->
+    <symbol name="T1CRH"  address="ram:0xFF20" entry="false"/>
+    <symbol name="T1CRL"  address="ram:0xFF21" entry="false"/>
+    <symbol name="T1SRAH" address="ram:0xFF22" entry="false"/>
+    <symbol name="T1SRAL" address="ram:0xFF23" entry="false"/>
+    <symbol name="T1OERA" address="ram:0xFF24" entry="false"/>
+    <symbol name="TMDRA"  address="ram:0xFF25" entry="false"/>
+    <symbol name="T1CNTH" address="ram:0xFF26" entry="false"/>
+    <symbol name="T1CNTL" address="ram:0xFF27" entry="false"/>
+    <symbol name="T1GR1H" address="ram:0xFF28" entry="false"/>
+    <symbol name="T1GR1L" address="ram:0xFF29" entry="false"/>
+    <symbol name="T1GR2H" address="ram:0xFF2A" entry="false"/>
+    <symbol name="T1GR2L" address="ram:0xFF2B" entry="false"/>
+    <symbol name="T1DR1H" address="ram:0xFF2C" entry="false"/>
+    <symbol name="T1DR1L" address="ram:0xFF2D" entry="false"/>
+    <symbol name="T1DR2H" address="ram:0xFF2E" entry="false"/>
+    <symbol name="T1DR2L" address="ram:0xFF2F" entry="false"/>
+
+    <!-- Timer 1 (Channel B) -->
+    <symbol name="TSTR"   address="ram:0xFF30" entry="false"/>
+    <symbol name="T1CRA"  address="ram:0xFF31" entry="false"/>
+    <symbol name="T1SRBH" address="ram:0xFF32" entry="false"/>
+    <symbol name="T1SRBL" address="ram:0xFF33" entry="false"/>
+    <symbol name="T1OERB" address="ram:0xFF34" entry="false"/>
+    <symbol name="TMDRB"  address="ram:0xFF35" entry="false"/>
+    <symbol name="T1GR3H" address="ram:0xFF38" entry="false"/>
+    <symbol name="T1GR3L" address="ram:0xFF39" entry="false"/>
+    <symbol name="T1GR4H" address="ram:0xFF3A" entry="false"/>
+    <symbol name="T1GR4L" address="ram:0xFF3B" entry="false"/>
+    <symbol name="T1DR3H" address="ram:0xFF3C" entry="false"/>
+    <symbol name="T1DR3L" address="ram:0xFF3D" entry="false"/>
+    <symbol name="T1DR4H" address="ram:0xFF3E" entry="false"/>
+    <symbol name="T1DR4L" address="ram:0xFF3F" entry="false"/>
+
+    <!-- Timer 2 -->
+    <symbol name="T2CRH"  address="ram:0xFF40" entry="false"/>
+    <symbol name="T2CRL"  address="ram:0xFF41" entry="false"/>
+    <symbol name="T2SRH"  address="ram:0xFF42" entry="false"/>
+    <symbol name="T2SRL"  address="ram:0xFF43" entry="false"/>
+    <symbol name="T2OER"  address="ram:0xFF44" entry="false"/>
+    <symbol name="T2CNTH" address="ram:0xFF46" entry="false"/>
+    <symbol name="T2CNTL" address="ram:0xFF47" entry="false"/>
+    <symbol name="T2GR1H" address="ram:0xFF48" entry="false"/>
+    <symbol name="T2GR1L" address="ram:0xFF49" entry="false"/>
+    <symbol name="T2GR2H" address="ram:0xFF4A" entry="false"/>
+    <symbol name="T2GR2L" address="ram:0xFF4B" entry="false"/>
+    <symbol name="T2DR1H" address="ram:0xFF4C" entry="false"/>
+    <symbol name="T2DR1L" address="ram:0xFF4D" entry="false"/>
+    <symbol name="T2DR2H" address="ram:0xFF4E" entry="false"/>
+    <symbol name="T2DR2L" address="ram:0xFF4F" entry="false"/>
+
+    <!-- Timer 3 -->
+    <symbol name="T3CRH"  address="ram:0xFF50" entry="false"/>
+    <symbol name="T3CRL"  address="ram:0xFF51" entry="false"/>
+    <symbol name="T3SRH"  address="ram:0xFF52" entry="false"/>
+    <symbol name="T3SRL"  address="ram:0xFF53" entry="false"/>
+    <symbol name="T3OER"  address="ram:0xFF54" entry="false"/>
+    <symbol name="T3CNTH" address="ram:0xFF56" entry="false"/>
+    <symbol name="T3CNTL" address="ram:0xFF57" entry="false"/>
+    <symbol name="T3GR1H" address="ram:0xFF58" entry="false"/>
+    <symbol name="T3GR1L" address="ram:0xFF59" entry="false"/>
+    <symbol name="T3GR2H" address="ram:0xFF5A" entry="false"/>
+    <symbol name="T3GR2L" address="ram:0xFF5B" entry="false"/>
+    <symbol name="T3DR1H" address="ram:0xFF5C" entry="false"/>
+    <symbol name="T3DR1L" address="ram:0xFF5D" entry="false"/>
+    <symbol name="T3DR2H" address="ram:0xFF5E" entry="false"/>
+    <symbol name="T3DR2L" address="ram:0xFF5F" entry="false"/>
+
+    <!-- Timer 4 -->
+    <symbol name="T4CRH"  address="ram:0xFF60" entry="false"/>
+    <symbol name="T4CRL"  address="ram:0xFF61" entry="false"/>
+    <symbol name="T4SRH"  address="ram:0xFF62" entry="false"/>
+    <symbol name="T4SRL"  address="ram:0xFF63" entry="false"/>
+    <symbol name="T4OER"  address="ram:0xFF64" entry="false"/>
+    <symbol name="T4CNTH" address="ram:0xFF66" entry="false"/>
+    <symbol name="T4CNTL" address="ram:0xFF67" entry="false"/>
+    <symbol name="T4GR1H" address="ram:0xFF68" entry="false"/>
+    <symbol name="T4GR1L" address="ram:0xFF69" entry="false"/>
+    <symbol name="T4GR2H" address="ram:0xFF6A" entry="false"/>
+    <symbol name="T4GR2L" address="ram:0xFF6B" entry="false"/>
+    <symbol name="T4DR1H" address="ram:0xFF6C" entry="false"/>
+    <symbol name="T4DR1L" address="ram:0xFF6D" entry="false"/>
+    <symbol name="T4DR2H" address="ram:0xFF6E" entry="false"/>
+    <symbol name="T4DR2L" address="ram:0xFF6F" entry="false"/>
+
+    <!-- Timer 5 -->
+    <symbol name="T5CRH"  address="ram:0xFF70" entry="false"/>
+    <symbol name="T5CRL"  address="ram:0xFF71" entry="false"/>
+    <symbol name="T5SRH"  address="ram:0xFF72" entry="false"/>
+    <symbol name="T5SRL"  address="ram:0xFF73" entry="false"/>
+    <symbol name="T5OER"  address="ram:0xFF74" entry="false"/>
+    <symbol name="T5CNTH" address="ram:0xFF76" entry="false"/>
+    <symbol name="T5CNTL" address="ram:0xFF77" entry="false"/>
+    <symbol name="T5GR1H" address="ram:0xFF78" entry="false"/>
+    <symbol name="T5GR1L" address="ram:0xFF79" entry="false"/>
+    <symbol name="T5GR2H" address="ram:0xFF7A" entry="false"/>
+    <symbol name="T5GR2L" address="ram:0xFF7B" entry="false"/>
+    <symbol name="T5DR1H" address="ram:0xFF7C" entry="false"/>
+    <symbol name="T5DR1L" address="ram:0xFF7D" entry="false"/>
+    <symbol name="T5DR2H" address="ram:0xFF7E" entry="false"/>
+    <symbol name="T5DR2L" address="ram:0xFF7F" entry="false"/>
+
+    <!-- Timer 6 -->
+    <symbol name="T6CRH"  address="ram:0xFF80" entry="false"/>
+    <symbol name="T6CRL"  address="ram:0xFF81" entry="false"/>
+    <symbol name="T6SRH"  address="ram:0xFF82" entry="false"/>
+    <symbol name="T6SRL"  address="ram:0xFF83" entry="false"/>
+    <symbol name="T6OER"  address="ram:0xFF84" entry="false"/>
+    <symbol name="T6CNTH" address="ram:0xFF86" entry="false"/>
+    <symbol name="T6CNTL" address="ram:0xFF87" entry="false"/>
+    <symbol name="T6GR1H" address="ram:0xFF88" entry="false"/>
+    <symbol name="T6GR1L" address="ram:0xFF89" entry="false"/>
+    <symbol name="T6GR2H" address="ram:0xFF8A" entry="false"/>
+    <symbol name="T6GR2L" address="ram:0xFF8B" entry="false"/>
+
+    <!-- Timer 7 -->
+    <symbol name="T7CRH"  address="ram:0xFF90" entry="false"/>
+    <symbol name="T7CRL"  address="ram:0xFF91" entry="false"/>
+    <symbol name="T7SRH"  address="ram:0xFF92" entry="false"/>
+    <symbol name="T7SRL"  address="ram:0xFF93" entry="false"/>
+    <symbol name="T7OER"  address="ram:0xFF94" entry="false"/>
+    <symbol name="T7CNTH" address="ram:0xFF96" entry="false"/>
+    <symbol name="T7CNTL" address="ram:0xFF97" entry="false"/>
+    <symbol name="T7GR1H" address="ram:0xFF98" entry="false"/>
+    <symbol name="T7GR1L" address="ram:0xFF99" entry="false"/>
+    <symbol name="T7GR2H" address="ram:0xFF9A" entry="false"/>
+    <symbol name="T7GR2L" address="ram:0xFF9B" entry="false"/>
+
+    <!-- Multifunction Timer (MLT) -->
+    <symbol name="MLTCR"  address="ram:0xFFA0" entry="false"/>
+    <symbol name="MLTBR"  address="ram:0xFFA1" entry="false"/>
+    <symbol name="MLTMAR" address="ram:0xFFA2" entry="false"/>
+    <symbol name="MLTAR"  address="ram:0xFFA3" entry="false"/>
+
+    <!-- Multiplier registers -->
+    <symbol name="MULT_CA"  address="ram:0xFFB0" entry="false"/>
+    <symbol name="MULT_CB"  address="ram:0xFFB2" entry="false"/>
+    <symbol name="MULT_CC"  address="ram:0xFFB4" entry="false"/>
+    <symbol name="MULT_XH"  address="ram:0xFFB6" entry="false"/>
+    <symbol name="MULT_H"   address="ram:0xFFB8" entry="false"/>
+    <symbol name="MULT_L"   address="ram:0xFFBA" entry="false"/>
+    <symbol name="MULT_MR"  address="ram:0xFFBC" entry="false"/>
+    <symbol name="MULT_MMR" address="ram:0xFFBE" entry="false"/>
   </default_symbols>
 </processor_spec>
