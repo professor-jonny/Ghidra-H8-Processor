@@ -84,6 +84,12 @@ MEM_ADDR_MAX = 0xFEFF
 # Header sizes by table type (bytes before data start)
 HEADER_SIZE = {"2D": 4, "3D": 7}
 
+# Tracks XML table-overlap regions already warned about, keyed by the
+# containing code unit's start address (as a string), so safe_plate only
+# reports each distinct overlap region ONCE - not once per table/entry
+# that lands inside it. See safe_plate() below.
+_warned_overlap_regions = set()
+
 # ──────────────────────────────────────────────────────────────────
 # Shared helpers
 # ──────────────────────────────────────────────────────────────────
@@ -175,10 +181,17 @@ def safe_plate(a, text):
         if cu is None:
             return
         if overlap:
-            print("  WARNING: XML table overlap at %s - falls inside code unit "
-                  "starting at %s (%d bytes). Comment still attached, but "
-                  "verify both table addresses against the XML/ROM - one is "
-                  "likely stale." % (a, cu.getMinAddress(), cu.getLength()))
+            region_key = str(cu.getMinAddress())
+            if region_key not in _warned_overlap_regions:
+                _warned_overlap_regions.add(region_key)
+                print("  WARNING: XML table overlap - region starting at %s "
+                      "(%d bytes) has entries from more than one XML table "
+                      "landing inside it (first seen via address %s). "
+                      "Comments still attached, but verify the table "
+                      "addresses against the XML/ROM - one is likely stale. "
+                      "(further entries in this same region are not "
+                      "re-reported individually)" %
+                      (cu.getMinAddress(), cu.getLength(), a))
             text = "[OVERLAP - VERIFY ADDRESS] " + text
         existing = cu.getComment(CodeUnit.PLATE_COMMENT)
         if existing and text in existing:
@@ -371,18 +384,19 @@ do_jmp_report = askYesNo("Step 4a - Register-indirect jump/call sites",
     "(Report only - does not modify the program)")
 if do_jmp_report:
     JMP_JSR_PATTERNS = [
-        (bytes([0x11, 0xD0 + r]), "jmp", r) for r in range(8)
+        (chr(0x11) + chr(0xD0 + r), "jmp", r) for r in range(8)
     ] + [
-        (bytes([0x11, 0xF0 + r]), "jsr", r) for r in range(8)
+        (chr(0x11) + chr(0xF0 + r), "jsr", r) for r in range(8)
     ]
     listing = currentProgram.getListing()
     hits = []
     for pat, mnem, reg in JMP_JSR_PATTERNS:
         start = currentProgram.getMinAddress()
         while True:
-            hit = flat_api.findBytes(start, pat, 1)
-            if hit is None:
+            hit_arr = flat_api.findBytes(start, pat, 1)
+            if hit_arr is None or len(hit_arr) == 0:
                 break
+            hit = hit_arr[0]
             hits.append((hit, mnem, reg))
             try:
                 start = hit.add(1)
