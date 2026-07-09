@@ -4,14 +4,14 @@
        e.g. 0x14000, 0x1401f, 0x14dd8. -->
   <pattern>
       <data>0x17xx</data>
-      <funcstart after="data" /> <!-- must be something defined right before this, or no memory -->
+      <funcstart after="defined" /> <!-- must be something defined right before this, or no memory -->
   </pattern>
 
   <!-- link FP,#imm:16  (opcode 0x1F, 2-byte immediate)
        Same prologue idiom as above but for larger stack frames. -->
   <pattern>
       <data>0x1fxxxx</data>
-      <funcstart after="data" />
+      <funcstart after="defined" />
   </pattern>
 
   <!-- stm (reglist),@-SP  (opcode 0x12, 1-byte register list)
@@ -19,7 +19,7 @@
        functions with no stack frame, e.g. 0x17160, 0x21003. -->
   <pattern>
       <data>0x12xx</data>
-      <funcstart after="data" />
+      <funcstart after="defined" />
   </pattern>
 
   <!-- prts  (far return, opcode bytes 0x11 0x19)
@@ -31,7 +31,7 @@
        the README's "Finding additional functions" section. -->
   <pattern>
       <data>0x1119</data>
-      <funcstart after="data" />
+      <funcstart after="defined" />
   </pattern>
 
   <!-- prtd  (far return with displacement, opcode bytes 0x11 0x14 or 0x11 0x1C)
@@ -42,10 +42,10 @@
        completeness. -->
   <pattern>
       <data>0x1114</data>
-      <funcstart after="data" />
+      <funcstart after="defined" />
   </pattern>
   <pattern>
       <data>0x111c</data>
-      <funcstart after="data" />
+      <funcstart after="defined" />
   </pattern>
 </patternlist>

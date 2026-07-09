@@ -38,12 +38,28 @@ get a function created even on a fresh auto-analysis, e.g. (from the RVR test RO
 pre-fix): `0x15A6C, 0x16128, 0x164F8, 0x1677C, 0x167C5, 0x16F53, 0x17136, 0x1A146,
 0x1A2D0, 0x208C6, 0x20910, 0x20992`.
 
-Confirmed root cause for *this specific list* was actually simpler and upstream of
-this limitation: `patternconstraints.xml` never wired `h8539pattern.xml` to the
-`H8:BE:32:H8539F` language ID at all (it only pointed `H8:BE:16:H8520Max` at the
-older `patterns.xml`). Fixed 2026 — see git history on `patternconstraints.xml`.
+Confirmed root cause: two bugs stacked on top of each other, both now fixed.
+1. `patternconstraints.xml` never wired `h8539pattern.xml` to the
+   `H8:BE:32:H8539F` language ID (it only pointed `H8:BE:16:H8520Max` at the older
+   `patterns.xml`).
+2. Both files lived in `h8/data/languages/`. Ghidra's pattern loader
+   (`ghidra.app.analyzers.Patterns`, used by `FunctionStartAnalyzer`) only scans a
+   hard-coded `data/patterns/` subdirectory of each module root
+   (`DATA_PATTERNS_SUBDIR = "data/patterns"`) — confirmed against every stock
+   processor module (x86, ARM, PowerPC all keep `patternconstraints.xml` under
+   `data/patterns/`, never `data/languages/`). Because of this, `Function Start
+   Search` never registered as an applicable analyzer for `H8:BE:32:H8539F` at
+   all — it wasn't just failing silently, it was completely absent from the
+   Analysis Options analyzer list, with no log entry (unlike e.g. `FidAnalyzer`,
+   which explicitly logs "No FID Libraries apply for language ..." when it
+   doesn't apply — the pattern analyzer logged nothing because it never even
+   attempted to load for this language).
 
-**If addresses like this still turn up after the wiring fix + module reinstall +
+All three pattern files (`patternconstraints.xml`, `h8539pattern.xml`,
+`patterns.xml`) now live in `h8/data/patterns/`, matching stock Ghidra module
+layout. Fixed 2026 — see git history.
+
+**If addresses like this still turn up after moving the files + module reinstall +
 re-analysis**, re-check with `create_function` (dry run) on the address first — if
 it succeeds cleanly with a sane body size, it's the orphaned-instruction gap
 described above, not a pattern-file problem, and the fix is a manual
