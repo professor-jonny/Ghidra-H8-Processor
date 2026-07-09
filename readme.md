@@ -263,24 +263,6 @@ itype/switch actually owns a given byte range before using this table alone to d
 - Some preserved registers (R3-R5, FP) may still appear as explicit push/pop in decompiler
   output for functions using them as general-purpose callee-saved registers.
 
-### H8/520 (upstream, unverified)
-
-- `ADC_ADI_vector` in `h8520.pspec` is assigned the same address as `SCI1_ERI_vector`
-  (`ram:0x00D0`) -- one is wrong. Needs checking against the H8/520 hardware manual.
-- `<default_memory_blocks>` in `h8520.pspec` is commented out -- no RAM block is created
-  automatically when loading an H8/520 ROM.
-
-### H8/538F (upstream, unverified)
-
-- `<data_space space="ram" />` is missing from `h8538f.pspec`.
-- The RAM block in `h8538f.pspec` is `initialized="true"` spanning `0x0000` for `0xF000`
-  bytes, covering code space rather than on-chip RAM only. Should be uninitialised and
-  sized to actual RAM only.
-- No peripheral register symbols exist in `h8538f.pspec`. The H8/538 shares the same
-  peripheral map as the H8/539F. The full register map from `h8539f.pspec` can be ported
-  across, excluding the flash control registers (`FLMCR`, `FLM_EBR1/2`, `FLMER`, `FLMSR`)
-  which are 539F-specific (the 538 is EPROM, not flash).
-
 ## References
 
 - Hitachi H8/538-539 Hardware Manual (OMC942723072) -- `datasheets\h8539f\H8 538-539.pdf`

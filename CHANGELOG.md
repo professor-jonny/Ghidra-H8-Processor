@@ -6,6 +6,41 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ## [Unreleased]
 
+### Fixed — `h8538f.pspec`: missing data space, wrong RAM block, no peripheral registers
+
+Three issues fixed, bringing the H8/538F pspec up to the same standard as H8/520 and
+H8/539F:
+
+- Added the missing `<data_space space="ram" />` declaration.
+- Corrected the on-chip RAM block: was `initialized="true"` at `0x0000` spanning
+  `0xF000` bytes (code space, not RAM). Per the H8/538-539 hardware manual, the H8/538
+  has 2KB of on-chip RAM at `0xF680-0xFE7F`. Fixed to `start_address="ram:0xF680"
+  length="0x800" mode="rwv" initialized="false"`.
+- Ported the full on-chip peripheral register map (SCI1/2/3, ports, A/D converter,
+  timers 1-7, interrupt controller, DTC, WDT, multiplier, PWM, system/bus control --
+  ~190 symbols) from `h8539f.pspec`, since the H8/538 shares the same peripheral set at
+  the same I/O addresses. Excluded the flash memory control registers (`FLMCR`,
+  `FLM_EBR1`, `FLM_EBR2`, `FLMER`, `FLMSR`), which are 539F-specific since the H8/538
+  uses EPROM/masked ROM rather than flash.
+
+---
+
+### Fixed — `h8520.pspec`: vector table collision and missing RAM block
+
+`ADC_ADI_vector` and `SCI1_ERI_vector` were both mapped to `ram:0x00D0`. Cross-checked
+against the H8/520 hardware manual (Table 5-2, "Interrupts, Vectors, and Priorities"):
+each on-chip module reserves 4 vector slots in the exception vector table regardless of
+how many interrupt sources it uses, and the A/D converter's ADI vector falls in the slot
+at `0x00F0` in maximum mode, not `0x00D0`. `SCI1_ERI_vector` at `0x00D0` was already
+correct. `ADC_ADI_vector` corrected to `ram:0x00F0`.
+
+Also uncommented and fixed `<default_memory_blocks>`, which was present but disabled and
+pointed at the wrong addresses/sizes. Now defines the correct 512-byte on-chip RAM block
+at `ram:0xFD80–0xFF7F` per the manual's memory map, so a fresh H8/520 ROM import gets its
+RAM block created automatically instead of requiring manual setup.
+
+---
+
 ### Fixed — `h8539f.slaspec`: MAP4 load/store forms missing (BUG 4b)
 
 Added 34 missing MAP4 second-byte constructors for the `mov:g` load

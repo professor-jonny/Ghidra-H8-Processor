@@ -147,15 +147,6 @@ ________________________________________________________________________________
 
 --- h8520.pspec ---
 
-BUG: ADC_ADI_vector is mapped to ram:0x00D0, which is the same address as
-SCI1_ERI_vector. One of these is wrong. Cross-check against the H8/520 hardware
-manual vector table to determine the correct address for ADC_ADI.
-
-BUG: <default_memory_blocks> is commented out entirely. No RAM block is created
-automatically when loading an H8/520 ROM. The block definitions inside the comment
-(ram at 0x20000, ROM mirror at 0x0000) need to be verified against the H8/520
-hardware manual and re-enabled once confirmed correct.
-
 NOTE: The <context_data> block sets CP, DP, TP, EP, BR, FPH all to zero as static
 global defaults. This is adequate for single-page ROMs but will misidentify
 cross-page far calls in any multi-page H8/520 application. The H8/539F setup script
