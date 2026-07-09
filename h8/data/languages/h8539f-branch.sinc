@@ -47,27 +47,41 @@
 # ============================================================================
 # JMP   <EA>               Jump
 #       no flags
-#       Per H8/500 Programming Manual 2.2.19: "Effective address -> PC". Same-page
-#       jump only (cannot cross a page boundary), so CP is left unchanged here.
+#       Per H8/500 Programming Manual 2.2.19: "Effective address -> PC". Register-
+#       indirect form (@Rn) is per-register banked via Rn_banked (R2/R3->DP,
+#       R4/R5->EP, FP/SP->TP) -- NOT same-page. BUG FIX (2026-07-09): this
+#       constructor previously discarded Rn_banked's already-correctly-banked
+#       24-bit address and re-folded the raw 16-bit register value with CP
+#       (the wrong bank register for R4/R5, and redundant/conflicting with
+#       Rn_banked's own export either way). Confirmed via the switch-dispatch
+#       instruction in FUN_00028b2f (RVR X3 ROM): `ldc.b 0x2,EP; ... jmp @R4`
+#       sets EP explicitly right before the jump, which only makes sense if
+#       @R4 actually reads EP -- not CP. Fixed to just `goto [Rn_banked];`,
+#       matching the pattern already used correctly by :pjmp/:pjsr's Rs24 forms.
 :jmp       "@"^Rn_banked                   is opcode_special=0x11; mode = 13 & sz = 0 & Rn_banked
 {
-	addr:4 = (zext(CP) << 16) | zext(Rn_banked:2);
-	goto [addr];
+	goto [Rn_banked];
 }
 :jmp       "@"^addr16_dp^":16"         is opcode_special=0x10; addr16_dp [targetBase=0;]
 {
 	addr:4 = zext(*:2 addr16_dp) | (zext(CP) << 16);
 	goto [addr];
 }
-:jmp       "@("^disp8^":8,"^Rs_banked^")"  is opcode_special=0x11; opcode=28 & Rs_banked; disp8
+#       BUG FIX (2026-07-09): same CP re-folding bug as :jmp/:jsr @Rn_banked above.
+#       Confirmed against the H8/538-539 hardware manual (section 3.4.4-3.4.6 and
+#       Table 3-8, "Effective Address Calculation"): DP banks R0-R3, EP banks R4/R5,
+#       TP banks R6(SP)/R7(FP) for @Rn, @(d:8,Rn), AND @(d:16,Rn) forms alike -- not
+#       just plain register-indirect. disp8_banked/disp16_banked already compute the
+#       correctly-banked 24-bit address; this constructor was discarding it and
+#       re-folding with CP instead. Fixed to use disp8_banked directly, matching the
+#       [targetBase=Rs;] gating already used correctly by the disp16 sibling below.
+:jmp       "@("^disp8_banked^":8,"^Rs^")"  is opcode_special=0x11; opcode=28 & Rs; disp8_banked [targetBase=Rs;]
 {
-	addr:4 = zext(*:2 (Rs_banked + disp8)) | (zext(CP) << 16);
-	goto [addr];
+	goto [disp8_banked];
 }
 :jmp       "@("^disp16_banked^":8,"^Rs^")" is opcode_special=0x11; opcode=30 & Rs; disp16_banked [targetBase=Rs;]
 {
-	addr:4 = zext(*:2 disp16_banked) | (zext(CP) << 16);
-	goto [addr];
+	goto [disp16_banked];
 }
 
 #absaddr24: "@"^addr24^":24" is addr24 { export *[const]:3 addr24; }
@@ -94,16 +108,18 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 }
 :pjmp      "@"^Rs24        is opcode_special=0x11; opcode=0x18 & Rs24 { goto [Rs24]; }
 
-# JSR   <EA>               Jump to subroutine
-#       no flags
+
+#       BUG FIX (2026-07-09): same CP/EP bank-register bug as :jmp above, plus
+#       an extra dereference (*:2 Rn_banked read memory AT the banked address
+#       instead of calling the address itself). Fixed to call [Rn_banked]
+#       directly, matching :jsr's addr16 form and :pjsr's Rs24 form.
 :jsr       "@"^Rn_banked is opcode_special=0x11; mode=13 & sz=1 & Rn_banked
 {
 	pcNext:4 = inst_next;
 	    SP = SP - 2;
 	    SP24 = (zext(TP) << 16) | zext(SP);
 	*:2 SP24 = pcNext[0,16];
-	  addr:4 = (zext(CP) << 16) | zext(*:2 Rn_banked);
-	    call   [addr];
+	    call   [Rn_banked];
 }
 :jsr       "@"^addr16^":16" is opcode_special=0x18; addr16
 {

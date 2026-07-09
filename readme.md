@@ -190,9 +190,6 @@ itype/switch actually owns a given byte range before using this table alone to d
 
 ### Other open items
 
-- **MAP4 single-operand/bit-op forms for the `0xB0-0xBF` sub-range** may still be
-  incomplete -- see the live-ROM triage above; needs the `ana.cpp` cross-check finished
-  before writing any new constructor.
 - **`CP` is not a SLEIGH context variable.** The hardware CP register is set via
   `setRegisterValue("CP", ...)` in the setup script, which works at decompile time, but
   SLEIGH pattern matching can't gate constructors on a register value -- only on context
@@ -200,6 +197,57 @@ itype/switch actually owns a given byte range before using this table alone to d
   targets at disassembly time. Fix: add a `CP_ctx` context variable (2 bits) alongside the
   existing `targetBase`/`targetReg` fields, and mirror every `setRegisterValue("CP", N, ...)`
   call in `h8539_ecu_master_setup_new.py` with a matching `setContextVar("CP_ctx", N, ...)`.
+  - **Confirmed instance (RVR X3 ROM):** `pjsr @<target>:24` far-call trampolines
+    (2-instruction functions of the form `pjsr @X:24; prts`) decompile with the call
+    target resolved back to the trampoline's *own* entry address instead of `X`, making
+    the decompiler show an infinite self-call (e.g. `FUN_00023397` "calling"
+    `FUN_00023397`, `FUN_0002bddb` "calling" itself). The raw disassembly is correct in
+    both cases -- `pjsr`'s *display* string is built straight from the 24-bit immediate
+    in the encoding, but the decompiler derives the call graph from `pjsr`'s p-code
+    export, which appears to mis-resolve/mis-attach the target. Since display and p-code
+    come from different parts of the constructor, one can be right while the other is
+    wrong, which is exactly what's happening here. Likely the same root cause as the
+    `CP_ctx` gap above, or at least in the same `pjsr` p-code template. Any other
+    `pjsr ...; prts` trampoline in a loaded ROM should be assumed to have the same
+    problem until `CP_ctx` (or the specific `pjsr` export bug) is fixed -- don't trust
+    the decompiler's call target for these; check the disassembly's literal operand
+    instead.
+  - **Second confirmed instance (RVR X3 ROM, 2026-07-09 session):** the switch dispatch
+    in `FUN_00028b2f` (`DAT_0001f526`-indexed, 8 cases) uses an indirect jump through a
+    table of 16-bit offsets at `0x28b52-0x28b61` (8 entries x 2 bytes). Ghidra's own
+    disassembly resolves several of these to `halt_baddata()` (cases 0, 2, 6), and
+    `get_function_jump_targets` returns scattered garbage xrefs across totally unrelated
+    ROM regions (`0x2800c`, `0x2f490`, `0x21df4`, etc.) instead of real targets -- almost
+    certainly the same missing-page/bank-byte problem as the `pjsr` bug above, just hit
+    from a register-indirect jump instead of `pjsr`. Manually reconstructing the table by
+    reading raw bytes and assuming an implied page byte of `0x02` (the switch's own page)
+    gives self-consistent, cleanly-decompiling targets, all landing inside the previously
+    -unlabelled gap at `0x28b52-0x28d1a`:
+    ```
+    case 0: 0x028b62   (confirmed -- clean 6-line handler, decompiles correctly)
+    case 1: 0x028b89   (confirmed -- clean 7-line handler, decompiles correctly)
+    case 2: 0x028ba8   (predicted from table, not yet created)
+    case 3: 0x028c5a   (predicted from table, not yet created)
+    case 4: 0x028c78   (predicted from table, not yet created)
+    case 5: 0x028c83   (predicted from table, not yet created)
+    case 6: 0x028cba   (predicted from table, not yet created)
+    case 7: 0x028cc8   (predicted from table, not yet created)
+    ```
+    Caveat: `create_function` on cases 0/1 produced wildly oversized `body_size` (372B,
+    333B) that both linearly overlap the *same* set of downstream addresses -- the
+    decompiler correctly prunes each down to a small "unreachable block"-trimmed real
+    body, but this means the auto-detected function *boundary* (not just the jump target)
+    is unreliable here too, likely because the instruction that should terminate each
+    handler isn't decoding as a return either. Don't bulk-apply `create_function` across
+    the remaining 6 entries without first manually finding each handler's true end (e.g.
+    disassemble narrow ranges between consecutive table entries) or the function DB will
+    end up with overlapping bodies.
+  - Also note: the prior XML export (`RVR_1998_x3 4g63t 21000011 md352553.hex.xml`) has
+    its own guesses for two of this switch's targets -- `caseD_1` at `0x2800c` and
+    `caseD_0` at `0x2f490` -- both wrong (same root cause, different mis-resolution). The
+    XML is generally reliable when its declared function size matches what fresh
+    disassembly independently produces, but should not be trusted blindly around any
+    indirect jump/call.
 - The ROM header scraper in `h8539_ecu_master_setup_new.py` only scans `0x0 .. MUT_OFFSET`
   (page 1). Embedded calibration/lookup tables that appear inline in page 2 code
   (`0x20000+`) aren't reached by the current scan range. Scraper needs a second range
