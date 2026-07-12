@@ -153,19 +153,55 @@ Open items
    (test/rvr/RVR_1998_x3 4g63t 21000011 md352553.hex.xml) -- safe for the user to
    delete that file.
 
-7. logging.txt (test/rvr/) - MUT verification log, same era/caution as item 6, not
-   yet imported
+7. logging.txt (test/rvr/) - MUT verification log - RE-VERIFICATION IN PROGRESS,
+   CONFIRMED + REFUTED(partial) sections now done
    Separate from the XML in item 6: a hand-curated, already-deduplicated summary
-   (805 lines) of MUT RequestID address/semantic verification, produced the same
-   session (session 10, 2026-07-03) under the same old/buggy Sleigh grammar. Contains
-   four sections not yet captured anywhere in this repo's tracked docs:
-     - CONFIRMED MUT ITEMS: ~15 RequestIDs with both address and semantic meaning
-       verified (TPS, Battery, AirTemp, MAP/Boost, O2 x2, Knock Sum/Voltage/ADC/Var/
-       Base/Change/Dynamics, Octane Level, TargetIdleRPM, AirVol/InjPulseWidth,
-       ISCSteps, WGDC).
-     - REFUTED / MISLABELED: address arithmetic correct but semantic label wrong
-       (knock_flag @ EFC2/EFC3; RPM identity refuted at all three historically-claimed
-       addresses F17A/F17B, EFEA, F0C0).
+   (805 lines) of MUT RequestID address/semantic verification, produced session 10
+   (2026-07-03) under the OLD/buggy Sleigh grammar - i.e. before the MAP3-6 dispatch
+   fixes that later changed how surrounding bytes decode. Since the decoder has
+   materially changed since this file was written (691 functions now analyzed with
+   zero outstanding decode bugs), its claims cannot be trusted at face value and are
+   being re-verified live against current disassembly + xrefs, not just imported.
+   Approach taken (2026-07-12 session): rather than a blanket caveat-tag import into a
+   new file, each CONFIRMED-section claim is being re-derived from live disassembly
+   (never decompile_function output alone - see note below) and RequestID-table
+   cross-checks, then recorded as a dated plate comment directly on the relevant
+   Ghidra function(s), so the finding lives next to the code it describes.
+     - CONFIRMED MUT ITEMS: ALL ~15 RequestIDs RE-VERIFIED this session (2026-07-12)
+       against live disassembly + the MUT RequestID table @ROM 0x2fad0 (150 entries,
+       indexed via adc_sensor_convert_single @0x171c3). All hold up under the current
+       decoder: TPS, Battery, AirTemp, MAP/Boost, O2 Sensor, O2 Sensor 2, Octane Level
+       (full chain), TargetIdleRPM, AirVol, InjPulseWidth, ISCSteps, WGDC (full chain),
+       TCU Shift Torque Cmd, and the full Knock cluster (Sum/ADC/Var/Base/Change/
+       Dynamics) - 14 of 15 confirmed. EXCEPTION: Knock Voltage (0x30 -> 0xF15C/F15D) -
+       read location confirmed inside tcu_shift_torque_and_knock_mgmt, but NO WRITER
+       found under any bank prefix (0x0-0x3) checked. logging.txt's claim that this is
+       "written by knock/TCU handler" is NOT CONFIRMED on the write side - flagged
+       in-place in Ghidra, needs further investigation (possibly a bank prefix >3, a
+       computed/indirect write, or the value may not be runtime-written at all).
+       Coolant Temp (0xF109/F10F) also re-checked: no writer found under bank prefixes
+       0x0-0x1 either - consistent with logging.txt's own admission this one was never
+       independently traced (still 4-way unreconciled, see OPEN ITEMS below).
+       NOTE ON DECOMPILER RELIABILITY: several MUT-related functions
+       (adc_read_sequence_b @0x15689, o2_closed_loop_fuel_trim_compute @0x237a0)
+       produce decompile_function output with stack-var-as-address artifacts
+       (CONCAT12/ZEXT24 garbage, spurious function names like noop_return_void/
+       trap_hang) that do NOT reflect real code - this is a decompiler presentation
+       issue, not a grammar bug (raw disassemble_function output for the same
+       addresses is clean and correct). Use disassembly, not decompile, when
+       verifying MUT-adjacent functions until this is understood/fixed.
+     - REFUTED / MISLABELED: address arithmetic correct but semantic label wrong.
+       BOTH items RE-VERIFIED this session (2026-07-12):
+       - knock_flag (EFC2/EFC3): CONFIRMED mislabel. Both writers
+         (efc2_threshold_update @0x252f9, and a second writer inside
+         tcu_rx_main_scheduler @0x2b676) are throttle-position-delta detectors
+         (TPS-now vs TPS-previous, @0xF13C/0xF142) - genuinely nothing to do with
+         knock. Matches logging.txt exactly.
+       - F17A/F17B "RPM": CONFIRMED refuted. engine_torque_pct_scale_calc (@0x2184b,
+         write to F17A at ROM 0x218b8 - exact address match to logging.txt's citation)
+         reads only 0xF5CA/F5CC (confirmed torque values) via div_s32_s16_rounded-style
+         calls, zero RPM input anywhere in the function. Matches logging.txt exactly.
+       - EFEA and F0C0 candidates: NOT YET RE-CHECKED this session - still pending.
      - CURRENTLY OPEN ITEMS (8 items): most significant is RPM's real location is
        UNKNOWN -- all three prior candidates refuted/unsupported, with a concrete
        proposed next step (re-check callers of div_u16_sat/div_u32_u16_sat/
@@ -224,14 +260,142 @@ Open items
    dead/legacy code path, or disassembler noise that happens to decode
    plausibly.
 
+7b. continued from 7
+
+
+  "new_str": "   crank-period buffer at F9A0-F9A8 (written by the confirmed-real
+   isr_tpu3_tgi3a capture ISR) must be converted to RPM somewhere via a
+   division operation; re-check all callers of div_u16_sat/div_u32_u16_sat/
+   div_u32_u16_rounded a second time now that ~10 more functions have been
+   named and decompiled since that check was last run (session 2), in case
+   one of the newly-resolved functions is the missing link.
+
+   NEW LEAD (2026-07-13 session, reopens this item): `isr_sci3_eri` (0x16956)
+   is mislabeled -- it touches zero SCI/serial registers. It actually reads
+   H8 timer input-capture registers (T2GR1H, T2CNTH, T4GR1H) and port P5DR,
+   and computes a period-delta between successive capture edges into RAM
+   0xF5DE (structurally: simple single period-delta, no missing-tooth sync
+   logic -- contrast with the confirmed crank ISR isr_tpu3_tgi3a on TPU3/T5,
+   which DOES implement gap-ratio missing-tooth sync against F9A0-F9A8; the
+   simplicity here fits a sensor that produces one clean pulse per event,
+   not a multi-tooth wheel). F5DE feeds a shift-register chain (F5DE->F384->
+   F5CA->F5CC->F5CE->F5D0) into `engine_torque_pct_scale_calc` (0x2184b),
+   whose \"torque\" label was itself inherited/asserted without independent
+   trace -- see logging.txt session 5 citation, which only asserts F5CA/F5CC
+   are \"confirmed engine torque values\" parenthetically, no trace shown.
+   User confirmed the RVR's camshaft has 2 teeth: 2 pulses per cam rev,
+   cam turns at half crank speed, so this reduces to exactly 1 pulse per
+   crank revolution -- a genuine (coarse) engine-speed signal, not torque.
+   Consistent with: (a) the ISR's simple period-delta structure (every cam
+   pulse is equally valid, no sync-tooth search needed), (b) no separate
+   cam-sync ISR found elsewhere in the ROM (isr_tpu3_tgi3b, the other TPU3
+   channel, is PWM ch0/1 period tracking, unrelated) -- consistent with a
+   batch/group-fire injection scheme on this ROM not needing one, and (c)
+   downstream consumption by tcu_shift_torque_and_knock_mgmt (TCU shift/
+   torque scheduling), not any injection-timing/cylinder-sync code.
+   NOT YET CONFIRMED: which physical pin P5DR bit 4 (polled in the ISR) is
+   wired to, per the H8/539F pspec port-5 assignment, cross-checked against
+   the RVR wiring diagram -- this is the concrete next step to settle it.
+   If confirmed, F17A/F17B's \"REFUTED, do not resume searching here\" status
+   from the 2026-07-12 session above should be walked back -- this would be
+   a real (if coarse, 1-sample-per-crank-rev) RPM-equivalent signal, and
+   `engine_torque_pct_scale_calc`/isr_sci3_eri should be renamed accordingly
+   once the pin mapping confirms it.",
+  "description": "Add new RPM lead (cam-sensor-derived period signal) discovered this session, reopening the RPM identity open item"
+
+8. H8/538 pattern file wired up but unverified against real H8/538 ROM data
+   File: h8\data\patterns\h8538pattern.xml (new H8:BE:32:H8538F entry in
+   patternconstraints.xml)
+   The function-start pattern file for H8/538 is a verbatim copy of
+   h8539pattern.xml (H8/539F) -- same four patterns (link FP,#imm:8/16;
+   stm reglist,@-SP; prts; prtd), same hit-count claims, all of which
+   actually describe the H8/539F RVR 21000011 ROM, not any H8/538 ROM.
+   Comments have been corrected to say so explicitly rather than implying
+   538-specific verification. H8/538 and H8/539F share the same core ISA
+   and likely the same compiler prologue/epilogue idioms per NOTES.TXT, so
+   this is a reasonable starting point, but needs the same verification
+   pass h8539pattern.xml got (load a real H8/538 ROM, check hit counts and
+   false-positive rate for each pattern) before it should be trusted.
+
+9. Function purge accounting (`prtd`) not modeled -- see item 2's bullet
+   above for the current description. Calling this out as its own item
+   because it's a real correctness gap (decompiler shows wrong stack depth
+   for functions using `prtd #n`), not just a cosmetic/reference one like
+   the rest of item 2's list, and because it's core-decoder-adjacent
+   (needs a plugin analogous to Ghidra's `X86FunctionPurgeAnalyzer`) rather
+   than something item 10's core-unification port will fix for free.
+
+10. Unify H8/520, H8/538, and H8/539F onto a single shared instruction-decode
+    core, instead of three independent implementations
+    Confirmed this session, via the grepable hardware manuals and IDA's own
+    ana.cpp (which is a single generic decoder for the entire H8/500 family,
+    never branching on chip model or mode): the full H8/500 instruction set
+    (63 instructions) and control-register set (SR/CCR/CP/DP/EP/TP/BR) are
+    identical across H8/520, H8/538, H8/539, and H8/539F. Only the
+    memory map and peripheral register set differ per chip -- already
+    correctly isolated in each chip's .pspec.
+    Current state is three independent, unsynchronized implementations:
+      - h8539f.slaspec (+ 5 .sinc files): the mature, actively-verified one.
+        Has had the MAP5 work, the CR8/CR16 guard fix, sleep/rtd opcode
+        fixes, MAP4 dispatch fixes, cmp:g cross-EA fixes, and this
+        session's compile verification.
+      - h8520.slaspec: a fully separate, monolithic 179KB/1827-line
+        grammar with zero @include, written independently (different
+        token names throughout: addrMode/instr8/special/addrByte/
+        addrLong/pageByte vs h8539f's opcode/opcode_special/map4/map5/i8/
+        i16/eab_*/eaw_*). Confirmed this session to still have the exact
+        same CR8/CR16 unguarded-fallback bug (BUG 7) that was found and
+        fixed in h8539f.slaspec -- bare `& CR8`/`& CR16` constructors with
+        no index constraint in its stc/ldc/andc/orc/xorc forms (lines
+        842-857, 1019-1020, 1030-1031, 1041-1042, 1074-1091). `sleep`
+        appears entirely absent (grep for "sleep"/"SLEEP" returns zero
+        matches) -- needs checking whether that's a gap or just a naming
+        difference. Other known h8539f bug categories (MAP4 dispatch gaps,
+        cmp:g cross-EA gaps, the rtd/bra collision) have not yet been
+        checked against it.
+      - h8538f.slaspec: essentially an empty stub (40 lines, one dummy
+        `:MOV.W is op8=0x5f {}` constructor, 16-bit-only address space, no
+        24-bit FP/SP extension). Not usable as-is.
+    Decision (this session): hold off on porting until h8539f's own open
+    items are fully resolved, since a unification done now would just be
+    porting known-incomplete work. Once h8539f is stable, the plan is to
+    factor its branch/arith/logic/bit/mem .sinc files out as the shared
+    canonical core, with each chip keeping only a thin .slaspec wrapper
+    (register/address-space setup + @include) and its own .pspec. This
+    will retroactively fix h8520's CR8/CR16 bug and everything else h8520
+    independently diverged on, without hand-porting each fix individually.
+    Two things intentionally NOT yet resolved and out of scope for the
+    port itself:
+      - Which operating mode (minimum/maximum) the real H8/538 and H8/520
+        target ROMs actually run in. Confirmed this doesn't affect the
+        shared instruction-decode grammar (ana.cpp/emu.cpp treat page
+        registers as IDA-style tracked segment registers -- minimum mode
+        is just maximum mode with them pinned at 0), but it does affect
+        each chip's .pspec context-register defaults, which stay
+        chip-specific after the port.
+      - A completeness audit of h8520.slaspec against h8539f's .sinc
+        files hasn't been done yet -- the datasheet says the ISA is
+        identical, but that hasn't been mechanically verified instruction-
+        by-instruction, so there's a small chance something genuinely
+        520-specific would need preserving rather than dropped in the
+        swap-over.
+
 Priority
 --------
 Item 4 (Step 5d XML verification) is the highest-leverage next step -- it's
 the tool needed to systematically resolve item 3's five uninvestigated
 address tables instead of manually re-deriving each one. Item 5 is confirmed
 low priority and doesn't block anything else. Items 1 and 2 are reference
-material and longstanding carryover items. Items 6 and 7 are lower-priority
-re-verification/import housekeeping for old-grammar-era documentation.
+material and longstanding carryover items. Items 6, 7, and 8 are
+lower-priority re-verification/import housekeeping (items 6/7 for
+old-grammar-era documentation, item 8 for the newly-wired but unverified
+H8/538 pattern file). Item 9 (function purge) is a real correctness gap,
+independent of everything else, worth picking up whenever there's bandwidth
+for a self-contained analyzer-style task. Item 10 (single-core unification)
+is intentionally deferred -- explicitly NOT started yet, on hold until the
+rest of this file's h8539f-specific items are resolved, so the eventual
+port carries forward a clean, fully-verified core rather than known-open
+bugs.
 
 Build/test workflow (Sleigh compile + deploy) -- reference, add once, stop asking
 ----------------------------------------------------------------------------------

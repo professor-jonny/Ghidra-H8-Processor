@@ -169,10 +169,3 @@ multiplier) at the same I/O addresses. The full register map from h8539f.pspec c
 ported to h8538f.pspec directly, with the exception of the flash memory control
 registers (FLMCR, FLM_EBR1, FLM_EBR2, FLMER, FLMSR) which are 539F-specific --
 the 538 uses EPROM, not flash.
-
---- patternconstraints.xml ---
-
-BUG: patterns.xml is only wired up to H8:BE:16:H8520Max. The H8:BE:32:H8539F
-language is not listed, so the function-start byte patterns have no effect when
-analysing 539F ROMs. Add an H8:BE:32:H8539F entry if the prologue pattern in
-patterns.xml matches real ECU ROM function starts (verify first).

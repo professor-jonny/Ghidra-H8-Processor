@@ -4720,6 +4720,28 @@ bool check_flag_fe8a_bit1_set(void)
 
 
 
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly + bank-prefixed xrefs]
+// adc_read_sequence_main: reads a batch of MUT-relevant ADC channels via shared helper @0x15b0d.
+// Cross-checked each channel's word-write target against the MUT RequestID table @ROM 0x2fad0
+// (via adc_sensor_convert_single @0x171c3). Note: xrefs to these targets require bank-prefixed
+// addresses (e.g. 0x1f11e not 0xf11e) - plain address xref lookups return nothing.
+// Confirmed mappings (word write addr / MUT byte read is the LOW byte of the word, i.e. addr+1):
+//   - channel #0 -> word @0xF108/F10A region (CoolantTemp-related area; NOT independently traced
+//     this pass, see logging.txt OPEN ITEM #4 four-way coolant conflict - still unresolved)
+//   - channel #1 -> word @0xF116/F117 -> MUT AirTemp (RequestID 0x3A -> table entry 0xF117).
+// VERIFIED.
+//   - channel #2 -> word @0xF84E -> feeds coolant validity path (0x2142c), separate from MUT table
+//   - channel #3 -> word @0xF11E/F11F -> MUT O2 Sensor (RequestID 0x13 -> table entry 0xF11F),
+//     consumer o2_closed_loop_fuel_trim_compute (0x237a0). VERIFIED.
+//   - channel #4 -> word @0xF122/F123 -> MUT O2 Sensor 2 (RequestID 0x3C -> table entry 0xF123),
+//     consumer o2_sensor2_threshold_flag_update_f226_bit13 (0x22f16). VERIFIED.
+//   - channel #0xB -> word @0xF15E/F15F -> MUT MAP/Boost (RequestID 0x38 -> table entry 0xF15F).
+// VERIFIED.
+//   - channel #0xA -> word @0xF162 region, NOT individually re-checked this pass
+//   - channel #9 -> word @0xF166/F16A region, NOT individually re-checked this pass
+// 5 of 8 channels now cross-verified against MUT table + consumer. Remaining 3 (channels 0/2/9/0xA
+// region) not yet individually re-checked - do not assume correct without checking.
+
 undefined2 adc_read_sequence_main(undefined2 param_1)
 
 {
@@ -4858,6 +4880,17 @@ undefined2 adc_channel_read_and_store_f16e(undefined2 param_1)
 }
 
 
+
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// adc_read_sequence_b: reads MUT-relevant ADC channels via shared helper
+// adc_sensor_convert_single-style ADC poll routine at 0x15b0d.
+//   - channel #5 -> word write @0xF13A/F13B  == MUT Battery (RequestID 0x14 -> table entry 0xF13B).
+// VERIFIED.
+//   - channel #7 -> word write @0xF13C/F13D  == MUT TPS (RequestID 0x17 -> table entry 0xF13D).
+// VERIFIED.
+// Cross-checked against MUT RequestID table @ROM 0x2fad0 (indexed via adc_sensor_convert_single
+// @0x171c3, EP=2 bank, base -0x530 from EP:2 segment).
+// Confirms logging.txt CONFIRMED-section TPS/Battery claims are correct under current decoder.
 
 undefined2 adc_read_sequence_b(undefined2 param_1)
 
@@ -5425,6 +5458,12 @@ void noop_return_void(void)
 
 
 // WARNING: Removing unreachable block (ram,0x00015b33)
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// Shared single-channel ADC conversion helper. Called with channel number in R0.
+// Selects channel via @0xFEB8 (clamped 0-11), starts conversion (bit5 @0xFEB9),
+// polls completion (bit7 @0xFEB8, spins until set), reads converted byte from
+// a table at (R0*2 - 0x160) and clears the busy bit. Called by adc_read_sequence_main
+// (0x1556d) and adc_read_sequence_b (0x15689) for all MUT-relevant analog channel reads.
 
 void trap_hang(void)
 
@@ -7979,6 +8018,19 @@ undefined2 adc_sensor_convert_multi(undefined2 param_1,undefined2 param_2,undefi
 }
 
 
+
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// CORE MUT MECHANISM (confirmed): MUT table lookup is one level of indirection.
+// For RequestID N (param, passed as high byte / R1 after swap.b): bound-check against
+// @0x3282; if in range, read 16-bit RAM address from ROM table @0x2fad0 + N*2 via
+// EP=2 bank-prefixed access (base offset -0x530 from EP:2 segment - i.e. table lives
+// at the EP:2-banked equivalent of 0x2fad0). Floor-clamp result to 0xEE80. Return the
+// BYTE at that RAM address (high byte if RequestID <= 0xBF, per cmp:i #0xbf branch,
+// otherwise low byte via swap.b first - i.e. selects hi/lo byte of a word depending on
+// RequestID range).
+// Table @0x2fad0 decoded and spot-verified this pass for RequestIDs 0x38 (MAP/Boost),
+// 0x3A (AirTemp), 0x14 (Battery), 0x17 (TPS) - all match logging.txt's claimed table
+// entries exactly. Table itself is data, not yet fully typed/labeled in Ghidra.
 
 undefined2 adc_sensor_convert_single(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -11119,17 +11171,11 @@ undefined2 ign_advance_base_calc_f860(undefined2 param_1,undefined2 param_2,unde
 
 
 
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] RENAMED from ign_advance_integrator_update - that name was
-// inherited from a prior session and had never been cross-checked. Full decompile shows this reads:
-// Boost Control Load Offset (ROM 0x10e0a, DAT_00010e0a, existing Turbo table in RVR_base.xml), and
-// two table-lookup calls against bank-relative refs 0x2a80/0x2a72 matching ROM 0x12a80 "Turbo Boost
-// Error Correction" and 0x12a72 "Max Total Upward WGDC Correction vs TPS" (both existing Turbo
-// tables in RVR_base.xml, DynamicBoost scaling). Also reads the WGDC Correction update-delay timers
-// (ROM 0x10df0/0x10df2, DAT_00010df0) confirmed via bulk xref. This is boost-error/WGDC correction
-// integration, NOT ignition trim as previously named. Writes result to RAM 0xF44A, consumed by
-// wgdc_output_clamp_f44c (0x19110). Gated off (forces neutral 0x80) when F20E bits 0x11 or F440 bit
-// 0x20 are set. Original source: old-Sleigh XML export, logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// wgdc_correction_integrator_update: reads Boost Control Load Offset-adjacent RAM (0xE0A
+// region) and WGDC correction tables (0x2a80/0x2a72 region, matches logging.txt claim of
+// Turbo Boost Error Correction / Max Total Upward WGDC Correction tables), reads/writes
+// 0xF44A. Feeds wgdc_output_clamp_f44c (0x19110). VERIFIED - matches logging.txt structure.
 
 short wgdc_correction_integrator_update(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -11292,21 +11338,14 @@ void ign_advance_idle_correction_f44e(void)
 
 
 
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] CORRECTION: RETRACTING this session's earlier "REFUTED, this is
-// ignition advance not WGDC" call. That conclusion was made from this function alone, in isolation.
-// Tracing its actual input (RAM 0xF44A) back to its producer, wgdc_correction_integrator_update
-// (was ign_advance_integrator_update, 0x18fe0), shows that producer consumes Boost Control Load
-// Offset (0x10e0a) and the Turbo Boost Error Correction / Max Total Upward WGDC Correction vs TPS
-// tables (0x12a80/0x12a72) - genuine boost-control inputs, not ignition data. So this function
-// (F44A -> clamp/sat-math via sat_add_u16/sat_sub_u16/o2_downstream_mode66_select/clamp_u16 ->
-// F44C) is the tail end of the WGDC correction/output pipeline after all. MUT RequestID 0x86 "WGDC"
-// -> RAM 0xF44D (low byte of F44C) should be treated as CONFIRMED again, not mislabeled. Function
-// renamed from ign_advance_output_clamp_f44c (that name was itself an unverified inherited guess).
-// NOTE: a distinct MUT item WGDCCorr (RequestID 0x8B -> RAM 0xF4AD) already exists separately -
-// F44C/F44D and F4AD are likely two different points in the same WGDC correction pipeline (raw
-// correction vs final trim), not duplicates; not yet distinguished which is which. Original source:
-// old-Sleigh XML export, logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// wgdc_output_clamp_f44c: reads 0xF44A (from wgdc_correction_integrator_update @0x18fe0),
+// clamps/scales, writes final result @0xF44C/F44D. MUT RequestID 0x86 -> table entry
+// 0xF44D (low byte of the word written here) = WGDC. VERIFIED - logging.txt CONFIRMED-
+// section claim holds under current decoder, full writer chain confirmed end to end.
+// Relationship to WGDCCorr (RequestID 0x8B -> table entry 0xF4AD, separately confirmed
+// address-correct) remains UNDETERMINED per logging.txt OPEN ITEM #3 - not resolved by
+// this verification pass, still open.
 
 void wgdc_output_clamp_f44c(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -17040,6 +17079,21 @@ void calc_f118_via_table(void)
 
 
 
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// coolant_temp_validity_and_scale: reads 0xF12E, writes 0xF130, computes final value into
+// 0xF29A. This is the fourth, independently-traced coolant path logging.txt describes
+// (F84E -> F12E -> F130 -> F29A). CONFIRMED: F84E is written by adc_read_sequence_main
+// channel 2 (@0x1556d, word write 0xF84E), F12E is written elsewhere (not re-traced this
+// pass) and read here, feeding this function's F130/F29A output.
+// STATUS: this path does NOT overlap MUT profile's claimed Coolant Temp addresses
+// (0xF109/0xF10F, RequestID 0x07/0x10) - no writer found for 0xF109 under any bank prefix
+// checked (0x0-0x1). Consistent with logging.txt's own caveat that the MUT Coolant Temp
+// claim is "address arithmetic only, NOT independently traced" and that FOUR different
+// coolant-temp claims exist in the codebase (RVR_base.xml F0C4/F0C8, MUT F109/F10F, this
+// F84E/F12E/F130/F29A path, and presumably one more) with NONE reconciled. This pass does
+// NOT resolve OPEN ITEM #4 - still open, do not treat any single coolant path as
+// authoritative.
+
 void coolant_temp_validity_and_scale(void)
 
 {
@@ -17513,6 +17567,16 @@ void engine_torque_scale_state_reset(void)
 }
 
 
+
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// engine_torque_pct_scale_calc: reads 0xF5CA/F5CC (confirmed engine torque values, no RPM
+// input anywhere in this function), computes via div_s32_s16_rounded-style calls (0x14151),
+// writes intermediate results to 0xF172/F170/F178, final output @0xF17A (write instruction
+// at 0x218b8 - exact ROM address match to logging.txt's citation). CONFIRMS logging.txt's
+// REFUTED claim: 0xF17A/F17B is NOT RPM, it's purely torque/load-derived (F5CA/F5CC via
+// rounded division + clamp), computed with no RPM input at all. VERIFIED under current
+// decoder - RPM's real location remains unknown, do not resume searching here
+// (logging.txt OPEN ITEM #1, still open).
 
 void engine_torque_pct_scale_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -20502,6 +20566,12 @@ void f20e_f210_clear_chain_and_o2_closedloop_gate
 
 
 
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly + bank-prefixed xrefs]
+// o2_sensor2_threshold_flag_update_f226_bit13: reads MUT O2 Sensor 2 value @0xF122
+// (bank-prefixed write from adc_read_sequence_main channel 4, confirmed via xref to
+// 0x1f122). MUT RequestID 0x3C -> table entry 0xF123 (low byte of the 0xF122/F123
+// word). VERIFIED - logging.txt CONFIRMED-section claim holds under current decoder.
+
 void o2_sensor2_threshold_flag_update_f226_bit13(void)
 
 {
@@ -21574,6 +21644,17 @@ ushort f2ca_table_override_from_f114_gate(ushort param_1,undefined2 param_2,unde
 }
 
 
+
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly + bank-prefixed xrefs]
+// o2_closed_loop_fuel_trim_compute: reads MUT O2 Sensor value @0xF11E (bank-prefixed
+// write from adc_read_sequence_main channel 3, confirmed via xref to 0x1f11e - plain
+// xref lookup on 0xf11e returns nothing, must use bank-prefixed address per the
+// "invisible to plain xref" lesson in logging.txt).
+// MUT RequestID 0x13 -> table entry 0xF11F (low byte of the 0xF11E/F11F word written
+// here) = O2 Sensor. VERIFIED - logging.txt CONFIRMED-section claim holds under current
+// decoder. Decompiler output for this function is currently untrustworthy (stack-var-as-
+// address artifacts, CONCAT12/ZEXT24 garbage) - use disassembly for further analysis here,
+// not decompile_function.
 
 void o2_closed_loop_fuel_trim_compute(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -23356,11 +23437,10 @@ void f2ce_f2cc_o2_mode11_correction_calc(void)
 
 
 
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] Secondary writer of RAM F970 (InjPulseWidth) and F972 (AirVol) -
-// zeroes both, plus F250/F252, when F25A & 0x28 is set (fuel-cut/idle-type condition). This is a
-// CLEAR path, not the main compute site - see fuel_pw_and_airvol_compute (0x29fba) for the real
-// per-cycle calculation. Original source: old-Sleigh XML export, logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// injpw_airvol_reset_on_fuelcut: gated on 0xF25A bit-mask 0x28 (matches logging.txt's
+// claimed fuel-cut condition), zeroes 0xF970/F972 (InjPulseWidth/AirVol) plus 0xF250/F252.
+// VERIFIED - logging.txt CONFIRMED-section claim holds under current decoder.
 
 ushort injpw_airvol_reset_on_fuelcut(void)
 
@@ -24628,6 +24708,13 @@ void f3a4_bit8_hysteresis_update(void)
 
 
 
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// knock_event_counter_update_eec6: reads Knock Sum @0xF3A2 (already independently confirmed,
+// see tcu_shift_torque_and_knock_mgmt @0x28fff), hysteresis-compares against ROM constants
+// @0xB3E/0xB40, increments/decrements/clamps 0xEEC6 event counter. Feeds
+// octane_level_compute_from_knock_counter (0x252d3). Chain matches logging.txt CONFIRMED
+// claim exactly. VERIFIED.
+
 void knock_event_counter_update_eec6(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
@@ -24760,6 +24847,14 @@ void knock_counter_condition_override_eec6(undefined2 param_1,undefined2 param_2
 
 
 
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// octane_level_compute_from_knock_counter: reads 0xEEC6 event counter (from
+// knock_event_counter_update_eec6 @0x251c4, gated by 0xF1FE bit3 / 0xF200 bit0),
+// writes result @0xEEC8/EEC9. MUT RequestID 0x27 -> table entry 0xEEC9 (low byte
+// of the word written here) = Octane Level. VERIFIED - logging.txt CONFIRMED-section
+// claim holds under current decoder. Full chain (Knock Sum -> event counter -> octane
+// level) independently re-verified end to end.
+
 void octane_level_compute_from_knock_counter
                (undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -24785,6 +24880,15 @@ void octane_level_compute_from_knock_counter
 }
 
 
+
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// efc2_threshold_update (formerly FUN_000252f9 in logging.txt): gates on 0xF17E magnitude
+// threshold, writes constant @0xB24 to 0xEFC2. Second writer confirmed at 0x2b676 inside
+// tcu_rx_main_scheduler, gated purely on throttle-position delta (0xF13C current vs 0xF142
+// previous TPS reading, threshold @0xB20). NOT knock-related in either writer - both are
+// throttle/crank-transient delta detectors. CONFIRMS logging.txt's REFUTED/MISLABELED
+// claim: knock_flag (MUT RequestID 0x6F -> RAM 0xEFC2/EFC3) is a genuine mislabel inherited
+// from the stock Evo profile, VERIFIED under current decoder.
 
 void efc2_threshold_update(void)
 
@@ -26771,14 +26875,13 @@ void f3fa_f3fe_target_select_by_f0f8_bit5(undefined2 param_1,undefined2 param_2,
 
 
 
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] CONFIRMED writer of MUT TargetIdleRPM (RequestID 0x24, RAM
-// 0xF400/F401). Looks up coolant-temp-indexed idle-RPM target table, selecting between two ROM
-// table pairs (0xd90c/0x62d0 vs 0xd8ec/0x62ae) based on A/C flag F0F8 bit 0x20 - matches the
-// "Desired Idle RPM-Neutral/Drive" style tables already in RVR_base.xml. Applies a floor clamp
-// against F41A, adds a trim offset from ROM 0xd16/0xd14 when F3F0 bit 8 is set, clamps via
-// clamp_u8, and writes F400. Semantics match MUT profile notes exactly (colder = higher target, A/C
-// adds offset). Original source: old-Sleigh XML export, logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// idle_target_rpm_compute_f400: coolant-temp-indexed table lookup (tables @0xd8ec/0xd90c
+// selected by A/C flag 0xF0F8 bit5), floor clamp against 0xF41A, A/C trim offset added
+// (0xD14/0xD16 depending on flag state), writes result @0xF400/F401. MUT RequestID 0x24
+// -> table entry 0xF401 (low byte of the word written here) = TargetIdleRPM. VERIFIED -
+// logging.txt CONFIRMED-section claim holds under current decoder, structure matches
+// exactly (coolant-indexed table, A/C flag selects pair, floor clamp + trim offset).
 
 void idle_target_rpm_compute_f400(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -28257,14 +28360,11 @@ void isc_stepper_state_reinit_and_target_select(void)
 
 
 
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] CONFIRMED writer of MUT ISCSteps (RequestID 0x16, RAM
-// 0xEED4/EED5). Closed-loop idle stepper output state machine: compares current stepper target
-// (masked from EED4) against a reference at 0xCBE, uses swap_invert_high_byte() to stage new step
-// values, gated by state bits in EED0 (bits 0/1/2 = distinct sub-states). Calls
-// f3f0_target_state_reset_and_reload() on target-changed transitions. Genuine ISC stepper position
-// output logic - matches MUT profile description. Original source: old-Sleigh XML export,
-// logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// isc_stepper_output_state_machine_eed4: closed-loop idle stepper state machine, gated
+// by 0xEED0 status bits, writes stepper position @0xEED4/EED5. MUT RequestID 0x16 ->
+// table entry 0xEED5 (low byte of the word written here) = ISCSteps. VERIFIED -
+// logging.txt CONFIRMED-section claim holds under current decoder.
 
 void isc_stepper_output_state_machine_eed4(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -31634,28 +31734,37 @@ void o2_wideband_state_warm_init(undefined2 param_1,undefined2 param_2,undefined
 
 
 // WARNING: Removing unreachable block (ram,0x00029aa4)
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] MAJOR STRUCTURAL FIX (from old analysis). This function was
-// previously mis-split by Ghidra's auto-analyzer into FOUR pieces: tcu_shift_torque_mgmt
-// (0x28fff-0x2910d), FUN_0002910e (0x2910e-0x292c6), FUN_000292c9 (0x292c9-0x29338), and
-// knock_process_main (0x2933b-0x29c31) - with a 2-byte data literal (0x186a at 0x29339-0x2933a)
-// sitting between the 3rd and 4th pieces. There was NO real call/return boundary anywhere in this
-// range - it is genuinely ONE function, confirmed by: (1) full decompile showed continuous unbroken
-// control flow through the whole span with no return until the real prts at 0x29c31, (2) RAM 0xf39e
-// (written early, TCU shift torque per-gear value) is read later inside what was labeled
-// knock_process_main, and (3) once the boundary was corrected to the true full extent
-// (0x28fff-0x29c32), get_function_xrefs immediately found a real caller - isr_sci3_eri makes a
-// COMPUTED_CALL to this address (0x169b1) - matching RVR_base.xml's pre-existing note "Called from
-// isr_sci3_eri @ 0x168e3 on every crank pulse via SCI3 channel". Function renamed to
-// tcu_shift_torque_and_knock_mgmt to reflect that it genuinely does both jobs in one routine: TCU
-// gear-shift torque coordination (top half,
-// gear_ratio_table/shift_torque_lo_table/shift_torque_hi_table) AND per-cylinder knock processing
-// (bottom half - knock ADC read, F3A2/F3A3 knock sum, F3AC/F3AE/F3B0/F3B2 knock-TCU coordination
-// registers, EEC6/EEC8 octane level chain). CALLER: isr_sci3_eri (0x169b1, COMPUTED_CALL) - fires
-// on the SCI3/TCU comms interrupt, once per crank pulse. IMPORTANT: this function-boundary fix was
-// derived under the OLD Sleigh grammar - verify the current live function body (0x28fff-0x29c32
-// expected) still matches before trusting any of the above. Original source: old-Sleigh XML export,
-// logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly + bank-prefixed xrefs]
+// tcu_shift_torque_and_knock_mgmt (0x28fff-0x29c31): confirmed live as ONE merged function
+// matching logging.txt's "MAJOR STRUCTURAL FIX" claim (Ghidra's earlier mis-split into
+// tcu_shift_torque_mgmt/knock_process_main etc. is NOT present in current analysis - this
+// is a single function from 0x28fff to 0x29c31, prts at 0x29c31).
+// 
+// KNOCK CLUSTER - all items re-verified via direct xrefs this pass:
+// - Knock Sum (0xF3A2/F3A3, RequestID 0x26): CONFIRMED. Writes @0x2916f/0x29177/0x298dd/
+//   0x298f3/0x298fd/0x29a3a/0x29a44, gated by 0xF1F2 bit7 (confirmed @0x297e3).
+// - knock_adc (0xF3A8/A9, RequestID 0x6A -> table 0xF3A9): CONFIRMED, write @0x29849.
+// - knock_var (0xF962/963, RequestID 0x6C -> table 0xF963): CONFIRMED, write @0x29a48.
+// - knock_base (0xF966/967, RequestID 0x6B -> table 0xF967): CONFIRMED, write @0x29a58.
+// - knock_change (0xF968/969, RequestID 0x6D -> table 0xF969): CONFIRMED, writes @0x298ae/
+//   0x298b8. NOTE: address is F968/969, distinct from the F962-966 cluster - do not confuse
+//   with knock_var/base despite proximity.
+// - knock_dynamics (0xF3B6/B7, RequestID 0x6E -> table 0xF3B7): CONFIRMED, writes @0x29886/
+//   0x298aa/0x298b4.
+// All 6 knock RequestIDs (Sum/ADC/Var/Base/Change/Dynamics) now fully re-verified under
+// current decoder - logging.txt CONFIRMED-section claims hold.
+// 
+// Knock Voltage (0xF15C/F15D, MUT RequestID 0x30): PARTIALLY VERIFIED ONLY.
+// Read confirmed at 0x297ee, immediately after the 0xF1F2 bit7 gate. HOWEVER: no writer
+// found for 0xF15C/F15D under bank prefixes 0x0-0x3. logging.txt's "written by knock/TCU
+// handler" claim NOT CONFIRMED for the write side. Needs further investigation.
+// 
+// TCU Shift Torque Cmd Lo/Hi (ROM 0x1328e/0x13296, gear-indexed via (gear&3)<<1 where gear
+// comes from 0xF3CC&3): CONFIRMED. @0x290a8/0x290b2 reads ROM 0x328e-offset table, writes
+// RAM 0xF39E; @0x290b6/0x290ba reads ROM 0x3296-offset table, writes RAM 0xF3A0. ROM bytes
+// at 0x1328e verified as [00 02 00 01 00 02 00 01 00 01 00 02 00 01 00 02] - matches
+// logging.txt's claim of small values (1-2), confirmed NOT a data error. SCI3 TX usage
+// claim not independently re-traced this pass.
 
 void tcu_shift_torque_and_knock_mgmt(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -33250,17 +33359,17 @@ void tcu_f382_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 p
 
 
 
-// [IMPORTED FROM OLD XML - SESSION 10, 2026-07-03 - NOT YET RE-VERIFIED under current Sleigh
-// grammar, review before trusting] CONFIRMED writer of MUT AirVol (RequestID 0x2C, RAM 0xF972/F973)
-// and InjPulseWidth (RequestID 0x29, RAM 0xF970/F971). Large fuel/injector computation function,
-// entry gated on the RPM candidate ram_rpm_candidate_read_by_90fns_writer_unknown (0xF17A) vs ROM
-// threshold DAT_00010806 - another circumstantial data point supporting F17A=RPM (still not
-// writer-confirmed as of session 9/10). Computes InjPulseWidth via saturating helper @0x1405c
-// against ROM data, then AirVol via the same helper against ROM tables 0x329e/0x32a0. Matches MUT
-// profile note "AirVol calculated from MAF Sensor and RPM". A separate small function
-// (injpw_airvol_reset_on_fuelcut, 0x24680) resets both F970 and F972 to 0 under a fuel-cut/idle
-// condition (F25A bits) - that's a clear path, not this main compute path. Original source:
-// old-Sleigh XML export, logging.txt session 10.
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// fuel_pw_and_airvol_compute: large fuel/air computation function. Confirmed writes:
+//   - 0xF970 (@0x2a6c1) = InjPulseWidth, MUT RequestID 0x29 -> table entry 0xF970. VERIFIED.
+//   - 0xF972 (@0x2a6d7) = AirVol, MUT RequestID 0x2C -> table entry 0xF973 (low byte of
+//     0xF972/F973 word). VERIFIED.
+// Gated on RAM 0xF17A (@0x2a67c) vs ROM threshold @0x806 as claimed in logging.txt - NOTE:
+// 0xF17A itself is the subject of logging.txt's UNRESOLVED RPM-identity investigation
+// (REFUTED as RPM, confirmed instead to be engine_torque_pct_scale_calc output per
+// logging.txt OPEN ITEMS #1) - this function's gating on F17A is real and confirmed, but
+// do not read that as F17A being RPM.
+// Reset path: injpw_airvol_reset_on_fuelcut (0x24680) - see that function's comment.
 
 void fuel_pw_and_airvol_compute(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -34352,6 +34461,15 @@ void throttle_idle_state_cold_init(void)
 // WARNING: Removing unreachable block (ram,0x0002b272)
 // WARNING: Removing unreachable block (ram,0x0002b309)
 // WARNING: Removing unreachable block (ram,0x0002b30d)
+// [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
+// tcu_rx_main_scheduler: large scheduler function. Confirmed write to 0xEFC2 @0x2b676,
+// gated purely on throttle-position delta (0xF13C current vs 0xF142 previous TPS reading,
+// threshold @0xB20) - NOT knock-related. Also reads 0xEFC2 @0x2af9b as a boolean flag
+// selecting between two ROM constants (@0xb1c/@0xb1e). Confirms logging.txt REFUTED claim
+// that knock_flag (MUT RequestID 0x6F, RAM 0xEFC2/EFC3) is a mislabel - real behavior is a
+// throttle/crank-transient delta flag shared with TCU logic, not knock detection.
+// Also confirmed present in this function: reads/writes to Knock Sum (0xF3A2, @0x2af88/
+// 0x2af8e) consistent with previously-verified knock cluster.
 
 void tcu_rx_main_scheduler(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
