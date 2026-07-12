@@ -492,6 +492,25 @@ addr16_dp:        addr16             is addr16 { local addr:4 = (zext(DP) << 16)
 # Other head-table mnemonics (neg/not/tas/shal/shar/shll/shlr/rotl/rotr/
 # rotxl/rotxr) are pending the same per-mnemonic byte verification.
 # ---------------------------------------------------------------------------
+#
+# RESOLUTION (confirmed via full-project sleigh.bat compile): this family is
+# ALREADY IMPLEMENTED. The bytes described above (Rn=5 & mode=0/1 & sz=0/1 in
+# the addrMode token, paired with addr8_br/addr16_dp and opcode_special=0x16
+# for tst / 0x13 for clr) are the exact same physical byte-1 pattern as
+# opcode_special=0x05/0x0D/0x15/0x1D in the `special` token -- addrMode and
+# special both read byte 1, just carved into different fields. See
+# h8539f-arith.sinc's tst.b/tst.w/clr.b/clr.w "@"^addr8_br^":8" /
+# "@"^addr16_dp^":16" constructors (~lines 271-347). Confirmed by the
+# compiler itself: adding opcode_special=0x05/0x0D/0x15/0x1D-gated duplicates
+# here produced "Constructors with identical patterns" errors against those
+# exact lines. No new code needed -- the README's original diagnosis pointed
+# at the wrong file/mechanism, not a real gap.
+# ---------------------------------------------------------------------------
+
+
+
+
+
 
 
 disp8_banked:     disp8              is disp8  & targetBase=0 { local addrLo:2 = (R0 + disp8); local addr:4 = (zext(DP) << 16) | zext(addrLo);  export addr; }
