@@ -52,11 +52,6 @@ Open items
      `0x0 .. MUT_OFFSET` (page 1). Embedded calibration/lookup tables that
      appear inline in page 2 code (`0x20000+`) aren't reached by the current
      scan range. Scraper needs a second range covering page 2.
-   - `prtd` (far return with immediate stack pop) decodes correctly, but
-     stack purge accounting isn't modelled -- functions using `prtd #n` to
-     clean caller-pushed arguments will show slightly wrong stack depth in
-     decompiler output. Would need a plugin equivalent to Ghidra's
-     `X86FunctionPurgeAnalyzer`.
    - The decompiler may report "unable to track spacebase fully for stack"
      on some functions despite `SP24` being declared unaffected in the
      cspec, which can cause local variables to be missed or misassigned.
@@ -201,7 +196,23 @@ Open items
          write to F17A at ROM 0x218b8 - exact address match to logging.txt's citation)
          reads only 0xF5CA/F5CC (confirmed torque values) via div_s32_s16_rounded-style
          calls, zero RPM input anywhere in the function. Matches logging.txt exactly.
-       - EFEA and F0C0 candidates: NOT YET RE-CHECKED this session - still pending.
+       - EFEA: RE-VERIFIED 2026-07-14. CONFIRMED refuted. Traced the F13C/F140/DE8
+         gating block in tcu_rx_main_scheduler (~0x2b0af-0x2b118): EFEA is either
+         cleared to 0 or set to a fixed ROM constant (@0xDE8), gated by comparisons
+         of F13C (current cycle) against F140 (previous cycle) and several
+         threshold constants (DDE/DE0/DE2/DE6). Only ever read as a boolean
+         (tst.w @0xEFEA, != 0) - never as a magnitude. Same throttle/load-transient
+         hold-flag family as the already-confirmed EFC2 mislabel, not RPM. Plate
+         comment added to tcu_rx_main_scheduler (0x2aa36) documenting this.
+       - F0C0: NOT independently re-verifiable this session. logging.txt gives no
+         address for the "one odd COMPUTED_CALL xref" it mentions - only the
+         address-less characterization "unsupported, no support either way". No
+         function/label in the live program references 0xF0C0; a raw byte-pattern
+         search returns 150+ hits, almost all landing inside dense calibration/
+         scaling-table regions (0x11xxx-0x13xxx, 0x2dxxx), not code - same
+         false-positive risk as the earlier MUT_83/MUT_E1 case. Without the
+         original xref address there's no trail to re-derive. Stays as logging.txt
+         left it: unsupported, inconclusive either way.
      - CURRENTLY OPEN ITEMS (8 items): most significant is RPM's real location is
        UNKNOWN -- all three prior candidates refuted/unsupported, with a concrete
        proposed next step (re-check callers of div_u16_sat/div_u32_u16_sat/
@@ -226,22 +237,77 @@ Open items
    which is a real piece of cross-checking work, not just assertion -- but was still
    performed under the old grammar and against XML/table data that may itself need
    re-verification per items 3/4 above.
-   ACTION NEEDED: this content is NOT yet imported into any tracked doc or Ghidra
-   plate comment. Before importing, each claim needs the same treatment as item 6's
-   plate comments -- re-verify against the CURRENT live disassembly/decompile, not
-   just checked for address plausibility, since these are semantic/behavioral
-   conclusions (not just names) and are more expensive to get wrong. Recommended
-   approach: extract the four sections into a new tracked file (e.g.
-   mut_verification_status.md) with the same "[NOT YET RE-VERIFIED under current
-   Sleigh grammar]" caveat used in item 6's plate comments, rather than scattering
-   into individual function comments -- this is cross-cutting MUT/RAM-address content,
-   not one-function-at-a-time content. The REFUTED and RETRACTED sections are lower-
-   risk to import as-is (negative results -- "don't waste time here again" -- are
-   still useful even if the exact old-grammar reasoning has minor inaccuracies), but
-   the CONFIRMED section's specific claims (e.g. "F17A is computed purely from F5CA/
-   F5CC via div_s32_s16_rounded + clamp") should be spot-checked against a fresh
-   decompile before being trusted or acted on. Source file test/rvr/logging.txt is
-   safe to delete once its content is captured, same as item 6's XML.
+   DONE (2026-07-13 session): non-RPM content extracted into mut_verification_status.md
+   (new tracked file, repo root). Covers CONFIRMED items, the REFUTED knock_flag
+   mislabel, the tcu_shift_torque_and_knock_mgmt structural fix, the tuning-XML
+   speculative-table cleanup, RETRACTED dead ends, and the non-RPM open items
+   (Load1B, WGDC vs WGDCCorr, coolant-temp four-way conflict, gear_config tables,
+   o2_downstream_clamp, AirFlowMUT2Byte, Bad Instruction backlog). RPM identity
+   itself was deliberately left out of that file and stays tracked here / via the
+   isr_sci3_eri lead above.
+
+   NEW FINDING (2026-07-13, follow-up session): MUT RequestID table @0x2fad0 is
+   larger than previously assumed and contains a block of placeholder/collapsed
+   entries. The bound constant at ROM 0x13282 (TCU_Gear_Ratio_Periods+2, read by
+   adc_sensor_convert_single @0x171c3) is 0x10F (271), meaning the table actually
+   has 272 entries (544 bytes), not the 150 checked in the original CONFIRMED pass
+   above. Reading the full 544 bytes shows ~55 of those 272 RequestIDs (~20%) do
+   not resolve to distinct RAM cells at all -- they collapse onto just two shared
+   addresses:
+     - 0xF0BB (existing Ghidra label MUT_83) -- target for RequestIDs 0x83,
+       0x94-0x98, 0xA0-0xA1, 0xB3-0xBE (20 IDs)
+     - 0xF0BA (existing Ghidra label MUT_E1) -- target for RequestIDs 0xE0-0xF8,
+       0xF9-0xFB, 0xFE, 0x10A-0x10F (35 IDs)
+   All 272 decoded addresses do fall inside the legal 0xEE80-0xFFFF on-chip
+   RAM/IO block per the pspec (including 12 entries at table indices 164-175 =
+   0xFE82-0xFE97, which are legitimate port data registers, not bugs) -- so this
+   is not an out-of-range-pointer bug, it's a duplication/placeholder-collapse
+   pattern. Most likely interpretation: MUT_83 and MUT_E1 are the one genuine
+   value in each block, and the other ~53 RequestIDs are unimplemented/reserved
+   slots defaulted to a filler address at table-build time -- querying MUT for
+   those IDs would silently return an unrelated cell's byte rather than real data.
+   UPDATE (2026-07-13, same-day follow-up): get_bulk_xrefs showed zero code
+   cross-references to either address, but that's a static-xref blind spot (this
+   ROM's indirect/bank-prefixed RAM access isn't reliably tracked -- see the
+   decompiler-reliability note above). Resolved by raw byte-pattern search
+   (`F0 BB` / `F0 BA`) across the whole image, filtered to hits landing inside an
+   actual function body (checked via get_function_by_address; several raw hits
+   were false positives sitting inside unrelated data tables, e.g. 0x133a0 and
+   the 0x2d1xx-0x2d7xx idle-RPM scaling-table cluster, and were excluded):
+     - 0xF0BB (MUT_83, 20 IDs): CONFIRMED dead. Every occurrence of the byte
+       pattern in the ROM is inside the MUT table itself (0x2fbd6-0x2fc4e) --
+       no function anywhere reads or writes it. Safe to treat as unimplemented;
+       do not log these 20 RequestIDs.
+     - 0xF0BA (MUT_E1, 35 IDs): CONFIRMED live, but as a *shared scratch cell*,
+       not a dedicated sensor register. It's touched by a dozen-plus unrelated
+       functions: wgdc_correction_integrator_update (0x18fe0),
+       canister_purge_duty_calc_f4ac (0x19560), calc_f110_f10e_via_table
+       (0x21314), knock_octane_dual_axis_table_blend_f2a8 (0x2339d),
+       f0ba_f2b2_threshold_blend_calc (0x238d8 -- already named after this
+       address in an earlier session), isc_f34e_f34a_correction_calc (0x25742),
+       isc_f374_correction_calc (0x25e8b), f4de_f4e2_octane_correction_calc
+       (0x265c9), idle_stepper_table_lookup_wrapper (0x268e2), and
+       isc_f408_correction_calc (0x272c6). One address, many unrelated callers,
+       is the signature of a shared temp/scratch cell reused across WGDC,
+       canister-purge, knock/octane, and ISC correction routines -- whatever
+       byte sits there depends on whichever routine last ran. Worse than dead
+       for logging purposes: it looks like a real reading but is transient
+       noise from an unrelated calculation. Do not log these 35 RequestIDs
+       either. Open item: whether any tooling/spec built on top of the MUT
+       table (e.g. the ecu_master scraper or an EcuFlash-side RequestID list)
+       currently treats these 55 collapsed IDs as valid/distinct and needs a
+       fix or an explicit "unimplemented/unreliable" flag.
+
+   NOTE on a Sleigh decode issue mentioned in logging.txt: that file recorded six
+   byte-identical "Unable to resolve constructor" sites (opcode `A0 16`, misread as
+   `tst.b R0`) as an open bug. Per the user (2026-07-13), that was a bug in the OLD
+   grammar only -- the Sleigh implementation has since been updated and all such
+   decode bugs are confirmed gone in the current live Ghidra project. Recorded in
+   mut_verification_status.md as a resolved historical note, not an open item; no
+   action needed unless a genuinely new "Unable to resolve constructor" bookmark
+   turns up in the live project, which should be treated as a fresh finding rather
+   than a recurrence of this one. Source file test/rvr/logging.txt is safe to delete
+   once its content is captured, same as item 6's XML.
 
    Final state (after two rounds of investigation and one retraction): the
    `switchD_00028b50::caseD_4` label that earlier sessions relied on to
@@ -300,7 +366,43 @@ Open items
    from the 2026-07-12 session above should be walked back -- this would be
    a real (if coarse, 1-sample-per-crank-rev) RPM-equivalent signal, and
    `engine_torque_pct_scale_calc`/isr_sci3_eri should be renamed accordingly
-   once the pin mapping confirms it.",
+   once the pin mapping confirms it.
+
+   SILICON-LEVEL PIN MAPPING CONFIRMED (2026-07-14 session): per the H8/539F
+   hardware manual (Appendix D.3, Table D-19 / Fig 10-27), P5DR bit 4 = P54,
+   which is multiplexed with T2IOC1 (16-bit IPU Timer 2, Input Capture/Output
+   Compare channel 1) -- a genuine hardware timer capture-capable pin, not an
+   arbitrary GPIO. The ISR polls it via plain software bit-test
+   (btst.b 0x4,@0xfe8a:16), not via the IPU capture hardware path. This
+   supports (does not refute) the cam-position-sensor theory. Note: the
+   function has since been renamed isr_ipu_ch2ch4_input_capture, correcting
+   the isr_sci3_eri mislabel referenced above -- so that rename is DONE.
+   Plate comment added at 0x168e3 documenting the pin-mapping confirmation.
+   REMAINING OPEN: this only confirms the SILICON pin identity (P54/T2IOC1).
+   The BOARD-level wiring -- whether P54/T2IOC1 on this specific ECU's
+   pinout is physically connected to the RVR's camshaft position sensor --
+   is a separate step. PARTIAL PROGRESS (2026-07-14, continued): the user's
+   "RVR GTA AIRTREK space gear 4cyc PCM.xls" harness pinout was read. It
+   confirms the RVR harness has TWO separate, distinct sensor pins relevant
+   here, both populated on the RVR column (not just 4G64-specific):
+     - Pin 45 (wire G-R): "E/C; Crank angle sensor"
+     - Pin 56 (wire L-Y): "E/C; Cam position (exhaust VVT 4g64)" -- despite
+       the "(4g64)" suffix in the label text, this pin IS populated with a
+       wire color for RVR (C69='L-Y'), so it is present on the RVR harness,
+       not 4G64-exclusive as the label might suggest at a glance.
+   This is ECU-CONNECTOR-pin numbering (1-66ish), NOT H8 chip pin numbering.
+   No connector-pin-to-H8-chip-pin schematic exists for this ECU (confirmed
+   by the user, 2026-07-14) -- CLOSING this item at the current confidence
+   level rather than leaving it open pending a document that won't surface.
+   FINAL STATE: P54/T2IOC1 (polled by isr_ipu_ch2ch4_input_capture) is the
+   best available RPM candidate. Structural evidence (simple single-edge
+   period-delta, no missing-tooth sync logic, unlike the confirmed crank ISR
+   isr_tpu3_tgi3a which does implement missing-tooth sync) favors this being
+   the cam-position signal (harness pin 56) rather than the crank-angle
+   signal (harness pin 45), consistent with the original 2026-07-13
+   reasoning. This is inference from ISR structure, not a proven pin-level
+   trace, and should be labeled as such wherever cited. Do not resume
+   searching for a schematic-based confirmation of this mapping.",
   "description": "Add new RPM lead (cam-sensor-derived period signal) discovered this session, reopening the RPM identity open item"
 
 8. H8/538 pattern file wired up but unverified against real H8/538 ROM data
@@ -317,15 +419,7 @@ Open items
    pass h8539pattern.xml got (load a real H8/538 ROM, check hit counts and
    false-positive rate for each pattern) before it should be trusted.
 
-9. Function purge accounting (`prtd`) not modeled -- see item 2's bullet
-   above for the current description. Calling this out as its own item
-   because it's a real correctness gap (decompiler shows wrong stack depth
-   for functions using `prtd #n`), not just a cosmetic/reference one like
-   the rest of item 2's list, and because it's core-decoder-adjacent
-   (needs a plugin analogous to Ghidra's `X86FunctionPurgeAnalyzer`) rather
-   than something item 10's core-unification port will fix for free.
-
-10. Unify H8/520, H8/538, and H8/539F onto a single shared instruction-decode
+9. Unify H8/520, H8/538, and H8/539F onto a single shared instruction-decode
     core, instead of three independent implementations
     Confirmed this session, via the grepable hardware manuals and IDA's own
     ana.cpp (which is a single generic decoder for the entire H8/500 family,
@@ -389,9 +483,7 @@ low priority and doesn't block anything else. Items 1 and 2 are reference
 material and longstanding carryover items. Items 6, 7, and 8 are
 lower-priority re-verification/import housekeeping (items 6/7 for
 old-grammar-era documentation, item 8 for the newly-wired but unverified
-H8/538 pattern file). Item 9 (function purge) is a real correctness gap,
-independent of everything else, worth picking up whenever there's bandwidth
-for a self-contained analyzer-style task. Item 10 (single-core unification)
+H8/538 pattern file). Item 9 (single-core unification)
 is intentionally deferred -- explicitly NOT started yet, on hold until the
 rest of this file's h8539f-specific items are resolved, so the eventual
 port carries forward a clean, fully-verified core rather than known-open
