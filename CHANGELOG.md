@@ -6,6 +6,38 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ## [Unreleased]
 
+### Added — `H8FunctionPurgeAnalyzer`: stack-purge-size analyzer for `prtd`/`rtd`
+
+Added a Ghidra `Analyzer` (`h8/data/src/main/java/h8539f/H8FunctionPurgeAnalyzer.java`,
+package `h8539f`) that reads the stack-adjustment immediate off `prtd`/`rtd` return
+instructions and sets the containing function's `stackPurgeSize` accordingly, modelled on
+Ghidra's own `X86FunctionPurgeAnalyzer`. Resolves the correctness gap noted in review.md
+(functions using `prtd #n`/`rtd #n` to clean caller-pushed arguments would otherwise show
+wrong stack depth in decompiler output). Runs as a `FUNCTION_ANALYZER`-type pass gated to
+after `FUNCTION_ANALYSIS`; logs a warning instead of silently overwriting if a function has
+multiple return sites with conflicting purge values.
+
+Compiled and packaged manually against the installed Ghidra 12.0.4 jars (no Gradle
+available in this environment) as `h8539f-analyzers.jar`, dropped into
+`Ghidra\Processors\h8\lib\`; `extension.properties` added to the module. Confirmed loaded
+via `ClassSearcher.getInstances(Analyzer.class)` (headless) and confirmed present/enabled
+in the Auto Analysis options dialog and analyzer timing report (`H8 Function Purge
+Analyzer   0.136 secs`) after a full Ghidra restart.
+
+**Not yet confirmed against a real in-ROM case.** Searched the disassembled listing of
+`RVR_1998_x3 4g63t 21000011 md352553.hex` directly (`getMnemonicString()` walk, not a raw
+byte-pattern search — an initial `11 14` byte search returned six hits that turned out to
+be either undefined bytes or a `mov` operand coincidence, not real opcodes) and found zero
+`prtd`/`rtd` instructions currently disassembled anywhere in this ROM; every return seen so
+far uses plain `rts`/`prts` with caller-side `adds SP,#n` cleanup instead. The six
+candidate `11 14` byte sequences all sit in the undiscovered low-memory region below the
+lowest defined function (`0x14000`), with zero xrefs — the same region already tracked as
+open in review.md items 3/4 (unverified jump tables / Step 5d classification design). Grammar
+and analyzer are compile-sound, derivation-confirmed, and verified functionally correct on
+their own terms, but whether this ROM's compiler ever actually emits `prtd`/`rtd` (and thus
+whether this analyzer changes anything in practice) remains unresolved pending that region
+being disassembled/classified.
+
 ### Verified — CR8 RES1/CP rejection guard for MAP5 andc/orc/xorc (h8539f-logic.sinc)
 
 The TP/BR/EP/DP immediate forms of `andc`/`orc`/`xorc` were flagged as not yet carrying
