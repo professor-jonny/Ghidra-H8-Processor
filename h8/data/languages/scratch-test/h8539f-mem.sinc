@@ -1,18 +1,25 @@
-# h8539f-mem.sinc -- data-movement instruction family.
+# h8539f-mem.sinc
 #
-# Data-movement instruction family (mov/ldc/stc/ldm/stm/xch/movfpe/movtpe).
+# Data-movement instruction family (mov/ldc/stc/ldm/stm/xch/movfpe/movtpe),
+# split out of h8539f.slaspec per the July 2026 refactor plan (see README.md
+# "Refactor plan" section and h8539f-instruction-table.md for ground truth).
 #
 # Depends on definitions still in the top-level h8539f.slaspec at the time of
 # writing: instr8 token (opcode/opcode47/mode/sz/Rn fields), special token
 # (opcode_special), addrByte/addrWord/addrLong tokens, r6b_disp8/r6w_disp8
-# subtables, Rd/Rs/Rn register attach, regListByte token (reglist/reglist0-7
-# fields) and its r*_push/r*_pop subtables. This file's @include must come
-# AFTER all of these are defined -- SLEIGH requires symbols declared before
-# use; an @include placed too early fails with "No matching global symbol".
+# subtables (lines 2218+ in the pre-split file), Rd/Rs/Rn register attach,
+# regListByte token (reglist/reglist0-7 fields) and its r*_push/r*_pop
+# subtables. When h8539f.slaspec is split for real, these must move to the
+# new slim top-level file and this file's @include must come AFTER all of
+# them are defined -- confirmed by compile testing (see the ldm/stm note
+# below) that SLEIGH requires symbols declared before use; an @include
+# placed too early fails with "No matching global symbol".
 
-# --- Literal (non-MAP) mov forms --------------------------------------------
-# Checked against h8539f-instruction-table.md's A2tail rows; all five match
-# the ground truth exactly (byte-for-byte).
+# --- VERIFIED, ported as-is from the pre-split h8539f.slaspec -------------
+# Checked against h8539f-instruction-table.md's A2tail rows before porting;
+# all five matched the ground truth exactly (byte-for-byte, see the table's
+# "Port status: literal (non-MAP) mov forms" section) -- no rewrite needed,
+# only relocation.
 
 # MOV:L @aa:8,Rd   (A2tail 0x60-0x6F)
 :mov:"l.b" "@"^addr8_br^":8",Rd   is opcode=12 & Rd; addr8_br   { Rd[0,8] = *:1 addr8_br; $(NF) = Rd[7,1];  $(ZF) = Rd[0,8] == 0; $(VF) = 0; }
@@ -44,29 +51,40 @@
 # version) to reject the all-zero reglist byte ana.cpp treats as invalid
 # (`if (!insn.Op2.reg) return 0`) -- closes the gap noted above.
 #
-# Two implementation notes: (1) `@include` must come after this file's
-# dependencies are defined -- SLEIGH requires symbols declared before use,
-# so this file can't be included before r6b_disp8/r6w_disp8 (or the reglist
-# push/pop subtables) exist; (2) a field belonging to the *second* token in
-# a multi-token pattern (like `reglist`, read after the opcode byte) must be
-# constrained in the *second* clause after the `;`, not bundled into the
-# first token's clause alongside `opcode_special` -- doing that produces a
-# "Mismatched tokens when combining patterns" error. Not yet tested against
-# a live ROM.
+# COMPILE-TESTED (July 2026): built cleanly via sleigh.bat in an isolated
+# scratch copy of h8539f.slaspec with these two constructors relocated in
+# and the old duplicates commented out -- exit code 0, no ERROR lines, only
+# pre-existing warnings unrelated to this change. Two real mistakes were
+# caught and fixed during that test, both instructive for the rest of the
+# port: (1) `@include` must come after the `.sinc`'s dependencies are
+# defined -- SLEIGH requires symbols declared before use, so this file can't
+# be included before r6b_disp8/r6w_disp8 (or the reglist push/pop subtables)
+# exist; (2) a field belonging to the *second* token in a multi-token
+# pattern (like `reglist`, read after the opcode byte) must be constrained
+# in the *second* clause after the `;`, not bundled into the first token's
+# clause alongside `opcode_special` -- doing that produced a "Mismatched
+# tokens when combining patterns" error. Not yet tested against a live ROM.
 :stm          (r0_push^r1_push^r2_push^r3_push^r4_push^r5_push^fp_push^sp_push),"@-SP"          is opcode_special=0x12; reglist!=0 & r0_push & r1_push & r2_push & r3_push & r4_push & r5_push & fp_push & sp_push { }
 :ldm.w        "@SP+",(sp_pop^fp_pop^r5_pop^r4_pop^r3_pop^r2_pop^r1_pop^r0_pop)          is opcode_special=2; reglist!=0 & sp_pop & fp_pop & r5_pop & r4_pop & r3_pop & r2_pop & r1_pop & r0_pop { }
 
-# --- mov_g/ldc/stc/xch/movfpe/movtpe: current location -----------------
-# These are written and verified against ground truth, but currently live
-# in the main h8539f.slaspec rather than this file, since they are
-# physically interleaved with the add/sub/adds/subs/addx/subx/cmp_g
-# arithmetic family that h8539f-arith.sinc also needs to pull from the same
-# block. Summary of what's done and where it lives in h8539f.slaspec:
+# --- DONE, but not yet physically relocated here (July 2026) ---------------
+# mov_g/ldc/stc/xch/movfpe/movtpe are all written, verified against ground
+# truth, and compile-tested clean -- but they currently live in the main
+# h8539f.slaspec, not this file. Per the README's "Sequencing decision"
+# (July 2026): these categories turned out to be physically interleaved with
+# the add/sub/adds/subs/addx/subx/cmp_g arithmetic family that h8539f-arith.
+# sinc also needs to pull from the same block, so the move is deferred to a
+# single top-level cutover once every category's content is ready, rather
+# than cutting that block twice. See README.md's EA-dispatch finding/
+# resolution section for the full derivation. Summary of what's done and
+# where it lives in h8539f.slaspec right now:
 #
 #   mov_g  -- MAP3/MAP4 tail group 0x80-87 fully covered by the pre-existing
 #             opcode=16/18 & Rd/Rs constructors (eab_*/eaw_* gated directly
-#             on byte 1, mode 10-15) -- no new code needed there. This does
-#             NOT extend to MAP5 -- MAP5 never goes through eab_*/eaw_* -- it's the
+#             on byte 1, mode 10-15) -- no new code needed there, the old
+#             map4_page-gated duplicate block was deleted instead (121 lines
+#             removed). **CORRECTION (July 2026): this does NOT extend to
+#             MAP5.** MAP5 never goes through eab_*/eaw_* -- it's the
 #             literal 0x04/0x0C escape-then-immediate-then-dispatch-byte
 #             shape, so a real MAP5 mov_g (dispatch 0x80-87) could not
 #             decode correctly until the dedicated MAP5 section below was
@@ -103,11 +121,24 @@
 # XCH   Rs,Rd              Exchange registers  (MAP3 tail 0x90-97 only; MAP4's
 # 0x90-97 is mov_g instead, so gating on eab_direct/eaw_direct -- mode=10 --
 # never collides with the mov:g.b/w store block, which starts at mode=11).
+# RESTORED (July 2026): these two constructors existed and were compile-tested
+# in oldsleigh/h8539f.slaspec.pre_cutover_backup_20260706_061122 (lines
+# 1125-1126) but were dropped during the file-split cutover -- only the
+# comments above survived, not the code. This is what caused the "?? A9h" /
+# "?? AAh" bad-instruction errors at 0x1445a / 0x14487 in bug.txt (xch R1,R2 /
+# xch R2,R4 / xch R3,R5 in a 3-way min/max swap routine).
 :xch.b        eab_direct,Rd             is eab_direct; opcode=18 & Rd { local tmp:1 = Rd[0,8]; Rd[0,8] = eab_direct[0,8]; eab_direct[0,8] = tmp; }
 :xch.w        eaw_direct,Rd             is eaw_direct; opcode=18 & Rd { local tmp = Rd; Rd = eaw_direct; eaw_direct = tmp; }
 
 # ============================================================================
-# --- MOV:G -------------------------------------------------------------
+# --- MOV:G (ported July 2026 -- was silently dropped during the functional
+#     split; this is the fix for the "Unable to resolve constructor" failures
+#     at ROM 0x20027/0x20a86, see README.md and bug.txt). Ported verbatim from
+#     h8539f.slaspec.pre_cutover_backup_20260706_061122 lines 669-754. The
+#     "# DEAD (removed July 2026)" eab_imm8/eaw_imm16-gated duplicate lines
+#     that used to sit between these blocks are intentionally NOT ported --
+#     they were correctly deleted as unreachable dead code (MAP5 escape
+#     collision) in an earlier fix and must stay deleted.
 # ============================================================================
 
 # MOV:G <EAs>,Rd           Move data from source to destination, general format
@@ -189,11 +220,12 @@
 :mov:"g.w"    i16,eab_abs16             is eab_abs16;        opcode_special=7; i16                 { eab_abs16   [0,8] = i16[0,8];       stdflags(i16[0,8]); }
 
 # ============================================================================
-# --- MAP5 -----------------------------------------------------------------
+# --- MAP5 (July 2026, new) ---------------------------------------------------
 # ============================================================================
 # MAP5 is a top-level literal-byte escape, NOT part of the eab_*/eaw_*/
 # mode=10-15 addressing family MAP3/MAP4 use -- same shape as the MAP5
-# sections in h8539f-arith.sinc and h8539f-logic.sinc. Per ana.cpp:
+# sections added to h8539f-arith.sinc and h8539f-logic.sinc this session
+# (see those files and README.md for the full derivation). ana.cpp's
 # A2[4]=A2[12]=MAP5 (top-level byte 0x04 = byte form, sets aux_byte; 0x0C =
 # word form, sets aux_word), each followed immediately by an immediate
 # payload (imm8/imm16, fetched BEFORE the MAP5 dispatch byte), then a MAP5
@@ -204,7 +236,8 @@
 # `ldc` at 0x88-8F (opcode=16/17, same fields the MAP3/4 constructors above
 # already use for their own byte-2 dispatch). MAP5 has no mov_g *store*
 # form and no xch/stc/movfpe/movtpe at 0x90-9F -- that range is `null` for
-# MAP5, so only the load-direction mov_g and ldc are written here.
+# MAP5 (confirmed against the ground-truth table), so only the load-
+# direction mov_g and ldc are written here.
 #
 # Operand shape: MAP3/4's mov_g/ldc pair an EA-sourced value (from byte 1,
 # via eab_*/eaw_*) with a Rd/CR8/CR16 destination (from the dispatch byte).
@@ -214,8 +247,9 @@
 # EA-subtable's immediate submode, same pattern as arith.sinc's and
 # logic.sinc's MAP5 forms.
 #
-# Not yet verified with the Sleigh compiler -- confirm against ana.cpp /
-# hardware manual and scratch-compile before trusting this section.
+# NOT YET scratch-compiled with sleigh.bat -- do that first thing next
+# session before trusting this section further (same standing rule as
+# arith.sinc's and logic.sinc's own MAP5 additions in the same commit).
 
 :mov:"g.b"    imm8,Rd                    is opcode_special=0x04; imm8;  opcode=16 & Rd      { Rd[0,8] = imm8; stdflags(Rd[0,8]); }
 :mov:"g.w"    imm16,Rd                   is opcode_special=0x0C; imm16; opcode=16 & Rd      { Rd      = imm16; stdflags(Rd); }

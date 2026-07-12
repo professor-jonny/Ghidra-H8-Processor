@@ -1,12 +1,11 @@
 # h8539f-bit.sinc -- bit manipulation instructions (bclr/bset/bnot), across all MAPs.
-# btst (register and immediate-bit forms) is NOT in this file -- it lives in
-# h8539f-arith.sinc per the project's category split.
+# btst (register and immediate-bit forms) is NOT in this file -- it already lives in
+# h8539f-arith.sinc per the project's existing category split (see README).
 #
+# Relocated verbatim from h8539f.slaspec (main file, lines 1173-1266) -- July 2026.
 # bnot's immediate-bit form is opcode47=14 & op_imm4, matching bset (opcode47=12)
 # and bclr (opcode47=13)'s pattern exactly, per ground truth (h8539f-instruction-table.md /
 # ana.cpp A3tail/A4tail: bset 0xC0-CF, bclr 0xD0-DF, bnot 0xE0-E7/0xE8-EF).
-# bnot's register-source form is opcode=13 (byte range 0x68-6F), confirmed against
-# ana.cpp's tables[index].tail[(code>>3)-4] dispatch -- see review.md item 2.
 
 # BCLR  Rs,<EAd>           Bit test and clear
 #       Z: EAd_orig[Rs] == 0
@@ -83,25 +82,6 @@
 :bset.w       eaw_postinc,op_imm4        is eaw_postinc;      opcode47=12 & op_imm4                 { tmp:2 = eaw_postinc     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp | (1 << op_imm4); eaw_postinc = tmp; }
 :bset.w       eaw_abs8_br,op_imm4        is eaw_abs8_br;      opcode47=12 & op_imm4                 { tmp:2 = eaw_abs8_br     ; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp | (1 << op_imm4); eaw_abs8_br = tmp; }
 :bset.w       eaw_abs16,op_imm4   is eaw_abs16; opcode47=12 & op_imm4 [targetBase=0;] { tmp:2 = eaw_abs16; $(ZF) = (tmp & (1 << op_imm4)) == 0; tmp = tmp | (1 << op_imm4); eaw_abs16 = tmp; }
-
-# BNOT  Rs,<EAd>           Bit test and NOT
-#       Z: EAd_orig[Rs] == 0
-:bnot.b       Rs,eab_direct         is eab_direct;       opcode=13 & Rs                { tmp:1 = eab_direct[0,8] ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_direct[0,8] = tmp; }
-:bnot.b       Rs,eab_indirect       is eab_indirect;     opcode=13 & Rs                { tmp:1 = eab_indirect    ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_indirect = tmp; }
-:bnot.b       Rs,eab_disp8          is eab_disp8;        opcode=13 & Rs                { tmp:1 = eab_disp8       ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_disp8 = tmp; }
-:bnot.b       Rs,eab_disp16         is eab_disp16;       opcode=13 & Rs                { tmp:1 = eab_disp16      ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_disp16 = tmp; }
-:bnot.b       Rs,eab_predec         is eab_predec;       opcode=13 & Rs                { tmp:1 = eab_predec      ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_predec = tmp; }
-:bnot.b       Rs,eab_postinc        is eab_postinc;      opcode=13 & Rs                { tmp:1 = eab_postinc     ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_postinc = tmp; }
-:bnot.b       Rs,eab_abs8_br        is eab_abs8_br;      opcode=13 & Rs                { tmp:1 = eab_abs8_br     ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_abs8_br = tmp; }
-:bnot.b       Rs,eab_abs16   is eab_abs16; opcode=13 & Rs [targetBase=0;]{ tmp:1 = eab_abs16; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eab_abs16 = tmp; }
-:bnot.w       Rs,eaw_direct         is eaw_direct;       opcode=13 & Rs                { tmp:2 = eaw_direct      ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_direct = tmp; }
-:bnot.w       Rs,eaw_indirect       is eaw_indirect;     opcode=13 & Rs                { tmp:2 = eaw_indirect    ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_indirect = tmp; }
-:bnot.w       Rs,eaw_disp8          is eaw_disp8;        opcode=13 & Rs                { tmp:2 = eaw_disp8       ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_disp8 = tmp; }
-:bnot.w       Rs,eaw_disp16         is eaw_disp16;       opcode=13 & Rs                { tmp:2 = eaw_disp16      ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_disp16 = tmp; }
-:bnot.w       Rs,eaw_predec         is eaw_predec;       opcode=13 & Rs                { tmp:2 = eaw_predec      ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_predec = tmp; }
-:bnot.w       Rs,eaw_postinc        is eaw_postinc;      opcode=13 & Rs                { tmp:2 = eaw_postinc     ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_postinc = tmp; }
-:bnot.w       Rs,eaw_abs8_br        is eaw_abs8_br;      opcode=13 & Rs                { tmp:2 = eaw_abs8_br     ; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_abs8_br = tmp; }
-:bnot.w       Rs,eaw_abs16   is eaw_abs16; opcode=13 & Rs [targetBase=0;]{ tmp:2 = eaw_abs16; $(ZF) = (tmp & (1 << Rs)) == 0; tmp = tmp ^ (1 << Rs); eaw_abs16 = tmp; }
 
 # BNOT  #xx,<EAd>          Bit test and set
 #       Z: EAd_orig[xx] == 0

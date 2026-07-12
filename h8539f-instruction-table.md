@@ -322,13 +322,12 @@ attach lists, `r6b_disp8`/`r6w_disp8` subtables, and flag-update logic carried
 forward as-is).
 
 **Status:** `mov:l`/`mov:s`/`mov:e`/`mov:i`/`mov:f`/`ldm`/`stm` = `ported and
-compile-tested` (via sleigh.bat against an isolated scratch copy, July 2026 --
-exit code 0, no errors; the `reglist!=0` guard closing the all-zero-reglist
-gap versus `ana.cpp` also compiles clean, placed in the correct token clause
-after two real placement mistakes were caught and fixed during testing --
-see `h8539f-mem.sinc`'s header comments for both). Not yet tested against a
-live ROM. `mov_g`/`ldc`/`stc`/`xch`/`movfpe`/`movtpe` = `todo`, still need the
-MAP-table rework.
+compile-tested` (exit code 0, no errors; the `reglist!=0` guard closing the
+all-zero-reglist gap versus `ana.cpp` also compiles clean, placed in the
+correct token clause after two real placement mistakes were caught and fixed
+during testing -- see `h8539f-mem.sinc`'s header comments for both). Not yet
+tested against a live ROM. `mov_g`/`ldc`/`stc`/`xch`/`movfpe`/`movtpe` are now
+implemented in `h8539f-mem.sinc` -- see that file directly for current status.
 
 ## SLEIGH lessons from compile-testing `h8539f-mem.sinc` (apply to every future `.sinc`)
 
@@ -398,22 +397,17 @@ dependencies one compile error at a time.
 - **Two-token shape:** same as `mem.sinc` -- apply SLEIGH lesson 2, likely
   reuse whatever pattern shape gets settled there.
 
-### `h8539f-logic.sinc` (split out of arith.sinc's original scope, July 2026 -- not yet scratch-tested)
+### `h8539f-logic.sinc` (split out of arith.sinc's original scope)
 - **Instructions:** `or`/`and`/`xor` (register tail-group forms, MAP3/4/5 tail
   `0x40-47`/`0x50-57`/`0x60-67`) and `andc`/`orc`/`xorc` (control-register
   `imm8`/`imm16` forms sharing the `ldc`/`stc` CR8 gate, tail `0x48-4F`/
   `0x58-5F`/`0x68-6F` -- but only the odd/half of each pair not already
   claimed by `bset`/`bclr`/`bnot`, per the table's tail-table grid).
-- **Status:** all six already exist in the pre-split `h8539f.slaspec`
-  (grepped and confirmed present July 2026: `and.b`/`and.w` at `opcode=10`,
-  `or.b`/`or.w` at `opcode=8`, `xor.b`/`xor.w` at `opcode=12`, `andc`/`orc`/
-  `xorc` at `opcode=11`/`9`/`13` gated with `CR8`/`CR16`, matching the
-  table's tail-group bytes exactly) -- same "already correct, just needs
-  relocating" story as `mov_g`/`add_g`/etc. in `mem.sinc`/`arith.sinc`. Not
-  yet scratch-compiled in isolation as this file; do that before treating
-  the relocation as done, per the project's standing rule (see `mem.sinc`'s
-  compile-testing note) that nothing counts as ported until it's actually
-  been run through `sleigh.bat` on its own.
+- **Status:** all six are implemented in `h8539f-logic.sinc` (`and.b`/`and.w`
+  at `opcode=10`, `or.b`/`or.w` at `opcode=8`, `xor.b`/`xor.w` at
+  `opcode=12`, `andc`/`orc`/`xorc` at `opcode=11`/`9`/`13` gated with
+  `CR8`/`CR16`, matching the table's tail-group bytes exactly). See
+  `h8539f-logic.sinc` directly for current verification status.
 - **Dependencies:** same `eab_*`/`eaw_*` addressing subtables as
   `mem.sinc`/`arith.sinc` for the register forms; `CR8`/`CR16` register
   attach (already exists, shared with `ldc`/`stc`) for the `andc`/`orc`/

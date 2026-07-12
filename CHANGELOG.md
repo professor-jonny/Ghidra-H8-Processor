@@ -6,6 +6,115 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ## [Unreleased]
 
+### Verified — CR8 RES1/CP rejection guard for MAP5 andc/orc/xorc (h8539f-logic.sinc)
+
+The TP/BR/EP/DP immediate forms of `andc`/`orc`/`xorc` were flagged as not yet carrying
+the RES1/CP rejection guard that `ldc`/`stc`/`andc`/`orc`/`xorc` are all supposed to share
+per `ana.cpp` lines 588-597 (`if (insn.Op2.reg == RES1 || insn.Op2.reg == CP) return 0;`).
+Investigation found the guard was already in place implicitly: the register enum order is
+`SR, CCR, RES1, BR, EP, DP, CP, TP`, and this file's `andc`/`orc`/`xorc` constructors only
+ever match `CR8=1` (CCR), `CR8=3` (BR), `CR8=4` (EP), `CR8=5` (DP), or `CR8=7` (TP) — there
+is no `CR8=2` (RES1) or `CR8=6` (CP) constructor anywhere, so those two encodings simply
+fail to decode, the Sleigh equivalent of ana.cpp's `return 0`. A project-wide grep for
+unconstrained `& CR8` usage (no explicit value) returned zero matches, ruling out a stray
+wildcard/catch-all that could accidentally accept RES1/CP. This is the same mechanism
+already used (and already credited as correct) by `ldc`/`stc`'s EA-sourced forms and is
+consistent with the CR8 attach table's own `_` placeholders at indices 0/2/6. Re-compiled
+full-project via `sleigh.bat` after updating the file's comment to reflect this: exit 0, no
+new warnings/errors. No functional code change was needed — this was a documentation gap,
+not a grammar gap.
+
+### Verified — MAP5 escape forms compile cleanly (h8539f-arith.sinc, h8539f-logic.sinc, h8539f-mem.sinc)
+
+The MAP5 (0x04/0x0C top-level literal-escape) forms added for `add:g`/`adds`/`sub`/`subs`/
+`cmp:g`/`addx`/`mulxu`/`subx`/`divxu` (arith), `or`/`and`/`xor`/`andc`/`orc`/`xorc` (logic),
+and `mov:g`/`ldc` (mem) had been written and cross-checked against `ana.cpp`'s A5/A5tail
+derivation but were flagged in each file as untested against the real Sleigh compiler.
+Ran a full-project compile via `sleigh.bat` against `h8539f.slaspec` (which `@include`s all
+five `.sinc` files): exit code 0, zero ERROR lines. All WARN lines present (24 NOP
+constructors, size-0 `reloffs8`/`reloffs16` tables, 40 extension/truncation-to-copy
+conversions, ~19 unreferenced tables) are the same pre-existing/expected warnings noted in
+prior compiles — none touch the MAP5 constructors. Confirms the MAP5 grammar is
+syntactically sound and free of dispatch collisions with the rest of the project.
+Note: this verifies compile-soundness only, not hardware-behavior correctness — semantic
+verification against `ana.cpp`/the hardware manual (and live-ROM testing where encodings
+exist) remains open, tracked alongside the CR8 RES1/CP guard item in review.md.
+
+### Fixed — `cmp:"g.w"` mislabeled as `cmp:"g.b"` (h8539f-arith.sinc)
+
+Two instances of the word-sized compare-immediate constructor (16-bit `i16` operand,
+`eaw_imm16` word EA, `opcode_special=0x05`/`0x0C`) were mnemonic-tagged `"g.b"` instead
+of `"g.w"` — a copy-paste artifact from the byte-sized block above each one. Disassembled
+with the wrong size suffix. Fixed both instances (line ~445 and a second, previously
+undocumented instance at line ~855). Compile-verified via full-project `sleigh.bat`
+(exit 0, no errors).
+
+### Added — `bnot.b`/`bnot.w Rs,<EAd>` register-source form (h8539f-bit.sinc)
+
+`bset`/`bclr` both had register-bit-position and immediate-bit forms; `bnot` was missing
+its register-source form entirely (`opcode=13`, tail-array index 9, byte range
+`0x68-0x6F`) — confirmed via `ana.cpp`'s dispatch math, the project's own
+instruction-table grid, and the H8/500 hardware manual (sec 2.2.8, documents both
+`BNOT #xx,<EAd>` and `BNOT Rs,<EAd>` formats). Added all 8 EA modes x 2 sizes (16
+constructors). Compile-verified (exit 0, no new warnings) and live-ROM re-analysis run
+against `RVR_1998_x3 4g63t 21000011 md352553.hex` produced no new Bad Instruction
+bookmarks. Note: this ROM contains zero live instances of the register-source encoding
+to test against (7 `bnot` instructions present, all pre-existing immediate-bit form) —
+grammar is compile-sound and derivation-confirmed, but not yet confirmed against a real
+in-ROM encoding.
+
+### Fixed — `switchD_00028b50::caseD_4` stale label causing orphaned function split
+
+`FUN_00028b2f` was reported as spanning `0x20640-0x2ffff` due to a stale/orphaned
+Ghidra-generated jump-table case label incorrectly attaching a distant 6-byte fragment
+(`0x20640`) to the switch's owning function. Investigation (session 4) proved the label
+was stale: none of the switch's real 8 table entries (read directly from the EP-relative
+table at `0x28b52`) land anywhere near `0x20640`, and `get_xrefs_to(0x20640)` returns
+zero references. Deleted and recreated `FUN_00028b2f` as a clean 35-byte body. The
+orphaned fragment at `0x20640` was given its own placeholder function
+(`sci1_boot_switch_case4_frag_20640`) pending identification of what (if anything)
+actually reaches it — not yet resolved, tracked as an open low-priority item.
+
+### Fixed — `flash_write_or_verify` truncated function body
+
+Function body was truncated to 4 bytes (`0x20844-0x20847`, prologue only); the
+`mov:g.w` tail at `0x20848` (the `0x1D` literal-prefix-escape encoding) disassembled
+cleanly on its own but wasn't included in the function. Deleted and recreated with
+`disassemble_first` — body now correctly spans the full 68 bytes (`0x20844-0x20887`),
+ending in a clean `rts`. Closed a 64-byte orphaned-instruction gap
+(`find_code_gaps` count dropped 83 → 82).
+
+### Resolved — three stale "Bad Instruction" / analysis-noise bookmarks
+
+- `0x2da69-0x2da6b` ("unable to resolve constructor" / conflicting data at `0x2da6c`):
+  resolved on its own once jump-table fixups settled; not separately root-caused.
+- `0x20353` ("address out of bounds"): traced to a post-flash checksum-verify loop
+  (`0x20345-0x2035f`) whose range bounds (R4/R5) and bank (EP) are loaded from RAM at
+  runtime from `sci1_boot_ihex_data_byte_store`, not compile-time constants — the
+  static analyzer's speculative resolution of the indirect target is expected to land
+  outside the mapped ROM range. Confirmed the H8/500 bank-register pairing (`R4-R5` via
+  EP) is correctly implemented in `Rn_banked`, not a grammar gap. Documented with an EOL
+  comment at `0x20353`; bookmark cleared (11 → 10 remaining).
+- `0x2f1b6` / `0x2e7af` ("maximum run of repeated byte instructions exceeded"): confirmed
+  benign ROM padding/unused flash space, same category as the `0x20353` resolution.
+
+### Retracted — `0x20843`/`0x20640` "confirmed live jump-table overlap" claim
+
+Prior sessions concluded `0x20843` was a genuine live entry point via
+`switchD_00028b50::caseD_4`. Re-traced properly in session 4: the switch's real 8 case
+targets (read directly from ROM) all land next to the switch itself; none near `0x20640`.
+Zero xrefs to `0x20640`. A binary-wide search for the address's low word inside any of
+the 7 known jump/address tables found no matches. Conclusion: the label was stale
+Ghidra metadata from an earlier incorrect analysis pass, not a real relationship. Left
+the function in place (bytes decode as real, deliberate-looking instructions, not
+padding) but downgraded from "confirmed live" to "currently unreached" pending further
+investigation into what, if anything, reaches `0x20640`.
+
+
+### fixed jump call function.
+
+ Both :pjmp and :pjsr's @aa:24 forms now compute a local addr:4 = zext(addr24:3) from the raw address token and use goto [addr] / call [addr] — matching every other jump/call constructor in the file
+
 ### Fixed — `h8538f.pspec`: missing data space, wrong RAM block, no peripheral registers
 
 Three issues fixed, bringing the H8/538F pspec up to the same standard as H8/520 and
