@@ -4,6 +4,19 @@ All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
 
+
+### Fixed — stale "scraper only scans page 1" comments in `h8539_ecu_master_setup_new.py`
+
+`MUT_OFFSET` (0x1FAD0) is a CPU offset from `ROM_BASE`, not an absolute address, so the
+scraper's `0x0..MUT_OFFSET` scan loops (`protect_data_regions_early()` in Step 5b and
+`run_rom_scraper()` in Step 8) actually run from absolute 0x10000 to ~0x2FACA — essentially
+the entire ROM, covering all of page 1 and nearly all of page 2, stopping only ~0x530 bytes
+short of the MUT table itself (absolute 0x2FAD0). There is no real page-2 scan gap; the
+"page 1 only" comments (~949-956, ~1177-1179, ~1533-1549) and the Step 8d print message were
+stale leftovers, corrected to describe the actual scan range. If page-2 tables still turn up
+unlabeled, the cause is a byte-signature mismatch, not an unreached region. review.md's item 2
+has been updated to drop this as a resolved item; the README's matching "page 1 only" wording
+still needs a separate check.
 ## [Unreleased]
 
 ### Added — `H8FunctionPurgeAnalyzer`: stack-purge-size analyzer for `prtd`/`rtd`
