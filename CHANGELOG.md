@@ -3,7 +3,11 @@
 All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
+### fixed the badspace error in c output
 
+The compiler did not track the stack variables properly so the c output was
+filled wits offsets and pointers in stead of proper variables.
+This is a big plus for C code output it looks much better.
 
 ### Fixed — stale "scraper only scans page 1" comments in `h8539_ecu_master_setup_new.py`
 
