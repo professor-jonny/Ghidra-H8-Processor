@@ -48,10 +48,6 @@ Open items
    range before using this table alone to diagnose.
 
 2. Other open items (carried over from the README, longstanding):
-   - The ROM header scraper in `h8539_ecu_master_setup_new.py` only scans
-     `0x0 .. MUT_OFFSET` (page 1). Embedded calibration/lookup tables that
-     appear inline in page 2 code (`0x20000+`) aren't reached by the current
-     scan range. Scraper needs a second range covering page 2.
    - The decompiler may report "unable to track spacebase fully for stack"
      on some functions despite `SP24` being declared unaffected in the
      cspec, which can cause local variables to be missed or misassigned.
@@ -59,19 +55,22 @@ Open items
      push/pop in decompiler output for functions using them as
      general-purpose callee-saved registers.
 
-3. New jump tables surfaced by auto-analysis, not yet correlated to the
-   functions/switches that dispatch through them:
-   Address Table bookmarks at 0x10140 (48 entries), 0x13898 (5), 0x2d8ec (40),
-   0x2d9ac (8), 0x2d9ec (16), 0x2da6c (16), 0x2db2c (48).
-   0x13898 and 0x2d8ec were investigated this session (see chat log/
-   companion review doc) -- 0x2d8ec correlates to a genuine, XML-confirmed
-   ISCV/idle-RPM dispatch structure (Desired_Idle_RPM_Neutral etc., cross-
-   checked against 21000011_1997-2001_RVR_X3_Mt__4g63t_.xml); 0x13898's
-   validity is still unresolved (no code xref, no clean repeating structure,
-   sits in a messy byte region alongside other coincidental-looking pointer
-   values -- treat with suspicion pending the Step 5d verification tool,
-   item 4 below). The remaining 5 tables (0x10140, 0x2d9ac, 0x2d9ec, 0x2da6c,
-   0x2db2c) have not yet been checked at all.
+3. Address Table bookmark at 0x13898 (5 entries) -- still unresolved
+   No code xref, no clean repeating structure, sits in a messy byte region
+   alongside other coincidental-looking pointer values -- treat with
+   suspicion pending the Step 5d verification tool (item 4 below).
+   The other 6 Address Table bookmarks originally listed here (0x10140,
+   0x2d8ec, 0x2d9ac, 0x2d9ec, 0x2da6c, 0x2db2c) are resolved: none were
+   jump/dispatch tables. 0x2d8ec is a genuine ISCV/idle-RPM dispatch
+   structure; 0x2d9ac/0x2d9ec/0x2da6c/0x2db2c are a real calibration-table
+   catalog (headers + findings documented via Ghidra bookmarks, category
+   "H8539F-Analysis", at each address); 0x10140 is confirmed not a jump
+   table but its exact purpose is unresolved/low-confidence. See those
+   in-place bookmarks for detail rather than duplicating it here.
+   Follow-up for item 4: Step 5d's verify_xml_table() design should be able
+   to use the same 0x03/0x02 header-signature check plus this table-of-
+   tables catalog pattern as an additional independent corroborating
+   signal, not just the XML-vs-scraper comparison originally scoped.
 
 4. XML table verification design -- Step 5d, not yet implemented
    Community EcuFlash XML table definitions cannot be trusted blindly, and
@@ -140,13 +139,18 @@ Open items
    this is visible directly in Ghidra, not just here. Two of the nine explicitly
    document their own open items (Load1B's real steady-state writer, at 0x27cb7 and
    0x28413) which remain unresolved regardless of re-verification status.
-   Action: spot-check at least the 0x28fff boundary (0x28fff-0x29c32 expected) and the
-   isr_sci3_eri computed-call xref it depends on against the current live listing before
-   treating any of these 9 as settled. Low priority relative to items 3/4 (address
-   tables, Step 5d) but should happen before further work builds on these functions'
-   documented behavior. All useful content has now been extracted from the source XML
-   (test/rvr/RVR_1998_x3 4g63t 21000011 md352553.hex.xml) -- safe for the user to
-   delete that file.
+   DONE (2026-07-14): the 0x28fff boundary and its caller xref have been re-verified
+   against the live listing. `tcu_shift_torque_and_knock_mgmt` still spans exactly
+   0x28fff-0x29c32, unchanged. Its one caller is a `pjsr @0x28fff:24` at 0x169b1,
+   inside the function formerly labeled `isr_sci3_eri`, now correctly renamed
+   `isr_ipu_ch2ch4_input_capture` (see item 7) -- xref type still COMPUTED_CALL,
+   matching the original finding exactly, just under the corrected name. As a bonus
+   check, 0x16956 (cited in item 7 for the F5DE period-delta write) does fall inside
+   this same ISR body, consistent with item 7's structural description. This spot-check
+   is now closed; the other 8 of the 9 imported comments remain unverified beyond
+   address/boundary sanity. All useful content has already been extracted from the
+   source XML (test/rvr/RVR_1998_x3 4g63t 21000011 md352553.hex.xml); per the user
+   (2026-07-14) that file no longer exists in the project -- nothing further to do here.
 
 7. logging.txt (test/rvr/) - MUT verification log - RE-VERIFICATION IN PROGRESS,
    CONFIRMED + REFUTED(partial) sections now done
@@ -204,15 +208,16 @@ Open items
          (tst.w @0xEFEA, != 0) - never as a magnitude. Same throttle/load-transient
          hold-flag family as the already-confirmed EFC2 mislabel, not RPM. Plate
          comment added to tcu_rx_main_scheduler (0x2aa36) documenting this.
-       - F0C0: NOT independently re-verifiable this session. logging.txt gives no
-         address for the "one odd COMPUTED_CALL xref" it mentions - only the
-         address-less characterization "unsupported, no support either way". No
-         function/label in the live program references 0xF0C0; a raw byte-pattern
-         search returns 150+ hits, almost all landing inside dense calibration/
-         scaling-table regions (0x11xxx-0x13xxx, 0x2dxxx), not code - same
-         false-positive risk as the earlier MUT_83/MUT_E1 case. Without the
-         original xref address there's no trail to re-derive. Stays as logging.txt
-         left it: unsupported, inconclusive either way.
+       - F0C0: RESOLVED 2026-07-14 via review.md item 3's table-of-tables
+         investigation. The 150+ raw byte-pattern hits landing in
+         calibration/scaling-table regions (0x11xxx-0x13xxx, 0x2dxxx) are
+         axis-pointer occurrences inside real 2D/3D calibration table
+         headers (0xF0C0 is the standard axis register for this table
+         family) -- not code, and not a MUT_83/MUT_E1-style collapse.
+         logging.txt's original "one odd COMPUTED_CALL xref" claim remains
+         unverified (no address given), but the broader "unsupported, no
+         support either way" framing is superseded: F0C0 does have a clear,
+         confirmed role, just not as a MUT RequestID-readable sensor value.
      - CURRENTLY OPEN ITEMS (8 items): most significant is RPM's real location is
        UNKNOWN -- all three prior candidates refuted/unsupported, with a concrete
        proposed next step (re-check callers of div_u16_sat/div_u32_u16_sat/
@@ -306,8 +311,9 @@ Open items
    mut_verification_status.md as a resolved historical note, not an open item; no
    action needed unless a genuinely new "Unable to resolve constructor" bookmark
    turns up in the live project, which should be treated as a fresh finding rather
-   than a recurrence of this one. Source file test/rvr/logging.txt is safe to delete
-   once its content is captured, same as item 6's XML.
+   than a recurrence of this one. DONE (2026-07-14): test/rvr/logging.txt has been
+   deleted by the user, its content having been fully captured above and in
+   mut_verification_status.md.
 
    Final state (after two rounds of investigation and one retraction): the
    `switchD_00028b50::caseD_4` label that earlier sessions relied on to
@@ -443,10 +449,12 @@ Open items
         no index constraint in its stc/ldc/andc/orc/xorc forms (lines
         842-857, 1019-1020, 1030-1031, 1041-1042, 1074-1091). `sleep`
         appears entirely absent (grep for "sleep"/"SLEEP" returns zero
-        matches) -- needs checking whether that's a gap or just a naming
-        difference. Other known h8539f bug categories (MAP4 dispatch gaps,
-        cmp:g cross-EA gaps, the rtd/bra collision) have not yet been
-        checked against it.
+        matches). Per the user (2026-07-14), not worth a standalone check --
+        this and any other h8520-specific divergence will be resolved
+        naturally once the single shared-core unification described below
+        replaces h8520's independent grammar. Other known h8539f bug
+        categories (MAP4 dispatch gaps, cmp:g cross-EA gaps, the rtd/bra
+        collision) have not yet been checked against it, same reasoning.
       - h8538f.slaspec: essentially an empty stub (40 lines, one dummy
         `:MOV.W is op8=0x5f {}` constructor, 16-bit-only address space, no
         24-bit FP/SP extension). Not usable as-is.
@@ -476,9 +484,11 @@ Open items
 
 Priority
 --------
-Item 4 (Step 5d XML verification) is the highest-leverage next step -- it's
-the tool needed to systematically resolve item 3's five uninvestigated
-address tables instead of manually re-deriving each one. Item 5 is confirmed
+Item 4 (Step 5d XML verification) is the highest-leverage next step -- item
+3's five previously-uninvestigated address tables are now resolved (none
+were jump tables; four turned out to be a real calibration-table catalog,
+one is unresolved low-confidence data), leaving only 0x13898 still open in
+item 3, still pending the same Step 5d tool. Item 5 is confirmed
 low priority and doesn't block anything else. Items 1 and 2 are reference
 material and longstanding carryover items. Items 6, 7, and 8 are
 lower-priority re-verification/import housekeeping (items 6/7 for

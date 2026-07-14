@@ -50,7 +50,9 @@ method doesn't see them.
 | 0C | EE99 | Fuel Trim Low (LTFT)                                | NAMED (untraced) |
 | 0D | EE9B | Fuel Trim Mid (LTFT)                                | NAMED (untraced) |
 | 0E | EE9D | Fuel Trim High (LTFT)                               | NAMED (untraced) |
-| 0F | F26E | Oxygen Feedback Trim (STFT)                         | NAMED (untraced) -- POINTER (2026-07-14 sweep): written inside tcu_shift_torque_and_knock_mgmt (0x28fff, ~0x96b0-0x96d1), a clamped accumulator fed by F264/F262 (<<2, add/sub via sat_add_u16/sat_sub_u16 depending on F21C bit6) then clamped against F27A/F276 via clamp_u16. Also touched by a SEPARATE function (0x20782, misleadingly named sci1_boot_ihex_data_byte_store) which reads/writes F26E directly at 0x207a0-0x207a4 as a simple 16-bit accumulator (`add:g.w R0,R1` then store back). Two distinct writers to the same address is unusual -- worth reconciling before trusting either as "the" Oxygen Feedback Trim writer. Does NOT look like classic STFT (short-term fuel trim) math (no O2-sensor-error-driven PI/PID pattern visible in either writer) -- treat the inherited label with suspicion. |
+| 0F | F26E | Oxygen Feedback Trim (STFT)                         | NAMED (untraced) -- POINTER (2026-07-14 sweep): written inside tcu_shift_torque_and_knock_mgmt (0x28fff, ~0x96b0-0x96d1), a clamped accumulator fed by F264/F262 (<<2, add/sub via sat_add_u16/sat_sub_u16 depending on F21C Also touched by a SEPARATE function (0x20782, renamed 2026-07-14 to
+f26e_cluster_accumulator_unrelated_to_ihex, formerly misleadingly named
+sci1_boot_ihex_data_byte_store), misleadingly named sci1_boot_ihex_data_byte_store) which reads/writes F26E directly at 0x207a0-0x207a4 as a simple 16-bit accumulator (`add:g.w R0,R1` then store back). Two distinct writers to the same address is unusual -- worth reconciling before trusting either as "the" Oxygen Feedback Trim writer. Does NOT look like classic STFT (short-term fuel trim) math (no O2-sensor-error-driven PI/PID pattern visible in either writer) -- treat the inherited label with suspicion. |
 | 10 | F10F | Coolant Temp Scaled                                 | CONFIRMED (addr only, no writer) |
 | 11 | F119 | MAF Air Temp Scaled                                 | NAMED (untraced) |
 | 12 | F111 | EGR Temperature                                     | NAMED (untraced) |
@@ -407,8 +409,8 @@ PRE-EMPTIVE SWEEP OF BLANK/NAMED-UNTRACED ADDRESSES (2026-07-14)
 ------------------------------------------------------------------------
 Ran ghidra:get_bulk_xrefs across ~110 addresses covering every BLANK and
 several NAMED(untraced) rows in the master table above, to surface any
-address that's actually touched by live code -- a pointer toward what it
-might be, not a full trace. Findings folded into the relevant rows above
+address that's actually touched by live code -- a by one function, renamed 2026-07-14 to f26e_cluster_accumulator_unrelated_to_ihex
+(formerly misleadingly named sci1_boot_ihex_data_byte_store)e relevant rows above
 (F26E, F971/F972, F5C0/F5C1/F5C3). Also found in passing: RAM addresses
 F270, F272, F274, F275, F276, F278, F27A, F27C, F27E, F281 are all touched
 by one function currently misleadingly named sci1_boot_ihex_data_byte_store
@@ -443,10 +445,85 @@ so some of the request id's could be actuator tests
 
 Look at what's already in the file: the Mode5 (Actuator Tests) block uses RequestID values like 01, 02, 03, 04, 05, 06, 17, 1A — and those exact same byte values already exist in the Mode2 (Data List Items) block as sensor reads (e.g. 01 is part of LoadMUT2Byte's pair in Mode2, but is "Fuel Pump Relay" in Mode5; 17 is Throttle Position in Mode2, but "Ignition Timing Fix" in Mode5).
 
-That's not a conflict — it's how the real MUT protocol works. EvoScan sends a Mode byte first (2 = data list read, 5 = actuator test, etc.), and the RequestID byte only means something within that mode. So the same byte 0x17 means "read throttle position" under Mode 2 and "force timing to 5° BTDC" under Mode 5 — two completely separate command families, almost certainly dispatched by different code paths in the ECU (Mode 2 → the adc_sensor_convert_single / MUT-table read path we've fully traced; Mode 5 → whatever handles the actual relay/solenoid/output commands, which nobody has looked at yet).
+That's not a conflict — it's how the real MUT protocol works. EvoScan sends a Mode byte first (2 = data list read, 5 = actuator test, etc.), and the RequestID byte only means something within that mode. So the same byte 0x17 means "read throttle position" under Mode 2 and "force timing to 5° BTDC" under Mode 5 — two completely separate command families, almost certainly dispatched by different code paths in the ECU (Mode 2 → the adc_sensor_convert_single / MUT-table read path we've fully traced; Mode 5 → whatever handles the actual relay/solenoid/output commands).
 
 A few implications:
 
-The ~87 new BLANK entries I just added are all Mode 2 requests (data reads), so they go through the confirmed read-only dispatch chain — logging them shouldn't trigger anything physical. That's a different risk category from Mode 5.
+The ~87 new BLANK entries added are all Mode 2 requests (data reads), so they go through the confirmed read-only dispatch chain — logging them shouldn't trigger anything physical. That's a different risk category from Mode 5.
 The existing Mode5 rows' Notes are probably wrong/misleading. They currently carry the same "[RAM CONFIRMED via adc_sensor_convert_single + MUT Table @ 0x2fad0]" annotation as the Mode2 rows — but that's the Mode 2 read table, and there's no evidence anyone actually traced Mode 5's dispatch function to confirm it uses the same table or the same addresses. That looks like it was pasted across uncritically.
-This means Mode 5's actual RequestID→action mapping is still an open question — nobody in review.md/mut_verification_status.md has traced what handles the Mode byte itself, or where Mode 5 commands get dispatched to actual output pins/relays.
+
+REAL COMMAND DISPATCHER FOUND (2026-07-14) -- separate from the MUT table entirely
+------------------------------------------------------------------------
+This resolves the open question directly above: the dispatcher IS separate,
+and part of it IS live actuator control, not just a Mode 5 theory.
+
+Traced upward from the SCI1 receive path (isr_sci1_eri -> ... ->
+sci1_protocol_state_machine @0x287af -> sci1_dispatch_and_latch_response
+@0x2882b -> sci1_meta_cmd_dispatch_c0_ff @0x28869). This last function is a
+genuine COMMAND-BYTE dispatcher, and it is COMPLETELY SEPARATE from
+adc_sensor_convert_single (0x171c3) and the 150-entry MUT table at ROM
+0x2fad0 that this whole file has been built around. Two different
+mechanisms, two different tables, confirmed by direct disassembly:
+
+- Command byte < 0xC0 (0xbf boundary check at 0x28870): reads a WORD from a
+  ROM pointer table at ROM 0x2530 -- `mov:g.w @(-0x530:16,R0),R1` with DP=2,
+  R0 = command_byte<<1 -- then dereferences that pointer and returns a byte.
+  This is a genuinely DIFFERENT table from 0x2fad0. Not yet mapped at all.
+  This may be the real Mode-2-equivalent data-read path, or something else
+  entirely -- UNKNOWN, not yet traced further per user instruction to stop
+  here.
+
+- Command byte 0xC0-0xFF: explicit CASE-BY-CASE handling, each case doing
+  direct bit manipulation on what look like hardware/actuator control
+  registers -- NOT reads from any lookup table. Concrete examples seen in
+  the disassembly:
+    0xC3 -> bset.w @0xf512:16, bit 6
+    0xC4 -> sets bits in @0xf516:16 (or.w 0x140)
+    0xD9 -> bset.w @0xf510:16, bit 0
+    0xFA -> bset.w @0xf516:16, bit 2 (conditionally, then bit 5 or error)
+    0xFB -> bset.w @0xf516:16, bit 6
+    0xFC -> bset.w @0xf516:16, bit 7
+    0xCA/0xCB/0xF3/0xF8/0xF9 and the 0xEC-0xEF, 0xFD-0xFF range: various
+    reads/writes of @0xf50e, @0xf594, @0xf596, @0xf1fc (gear index), and a
+    small 4-byte struct at ROM 0x232 indexed by (0xec-0xef minus 0xec).
+  F516, F512, F510 are set/cleared bit-by-bit per command byte in a pattern
+  that looks like direct control-flag manipulation (each command sets
+  exactly one bit, no arithmetic/scaling) -- structurally consistent with
+  actuator/relay/solenoid TRIGGER flags, not sensor data. NOT yet confirmed
+  which physical actuator (if any) each bit maps to -- that would need
+  tracing what reads F516/F512/F510 elsewhere and what hardware those
+  reads control (timer/PWM channel enable, port bit, etc.) -- NOT DONE,
+  stopping here per user instruction.
+
+WHAT THIS MEANS FOR THIS FILE'S SCOPE: everything in this file (the
+150-entry table at 0x2fad0, all CONFIRMED/OPEN/BLANK rows above) is
+downstream of adc_sensor_convert_single, which this dispatcher never calls
+for command bytes 0xC0-0xFF. In other words: the MUT table this whole file
+tracks is READ-ONLY telemetry, structurally isolated from the actuator-like
+command range found here. Reading/logging any RequestID in the table above
+does NOT appear to risk triggering the 0xC0-0xFF actuator-style commands --
+those are a different byte, dispatched by a different function, gated by a
+different comparison. This is a reassuring structural finding for the
+"is it safe to log all 150 entries" question, but it is NOT a substitute
+for actually confirming what EvoScan sends on the wire for this specific
+profile -- if the RVR MUT profile's Mode5/actuator-test block ever gets
+used, it almost certainly routes through THIS dispatcher (0x28869), not
+through adc_sensor_convert_single, and those rows' "[RAM CONFIRMED via
+adc_sensor_convert_single...]" annotations (wherever they exist in the
+tuning XML) are WRONG and should not be trusted -- flagged, not yet fixed.
+
+NOT YET DONE (stopping here per user instruction, 2026-07-14):
+- The <0xC0 ROM-0x2530 pointer table itself: unmapped, no entries decoded.
+- Which physical hardware F516/F512/F510 bits 0-7 each control: unknown.
+- Whether the RVR MUT profile's actual Mode5 RequestID values (01-06, 17,
+  1A, etc. per the note above) correspond 1:1 with this dispatcher's
+  0xC0-0xFF range, or with the <0xC0 pointer-table range, or with neither
+  (e.g. mode byte routing could happen even earlier, upstream of this
+  function) -- NOT confirmed. Do not assume a mapping between the "Mode 5"
+  RequestID bytes documented elsewhere and the C0-FF command bytes seen
+  here without further tracing.
+- Whether sci1_meta_cmd_dispatch_c0_ff is reachable from SCI3 (the TCU/MUT
+  logging port used elsewhere in this file) at all, or only from SCI1 --
+  the call chain traced above is entirely SCI1. If MUT logging in practice
+  goes over SCI3, this dispatcher may not even be reachable that way -- not
+  confirmed either way.
