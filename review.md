@@ -34,28 +34,7 @@ Verified correct
 Open items
 ----------
 
-1. Reference: ana.cpp addressing-mode table (byte top-nibble -> EA mode),
-   carried over from the README for future decode work:
-   0x60-0x6F: @aa:8, Rn            0xA0-0xAF: Rn, Rn (direct)
-   0x70-0x7F: Rn, @aa:8            0xB0-0xBF: @-Rn, Rn (predecrement)
-   0x80-0x8F: mov:f @(d:8,R6),Rn   0xC0-0xCF: @Rn+, Rn (postincrement)
-   0x90-0x9F: mov:f Rn,@(d:8,R6)   0xD0-0xDF: @Rn, Rn (indirect)
-                                   0xE0-0xEF: @(d:8,Rn), Rn (disp8)
-                                   0xF0-0xFF: @(d:16,Rn), Rn (disp16)
-   This matches the slaspec's own `mode` field values (10=direct, 11=predec,
-   12=postinc, 13=indirect, 14=disp8, 15=disp16) nibble-for-nibble --
-   reassuring, but confirm which itype/switch actually owns a given byte
-   range before using this table alone to diagnose.
-
-2. Other open items (carried over from the README, longstanding):
-   - The decompiler may report "unable to track spacebase fully for stack"
-     on some functions despite `SP24` being declared unaffected in the
-     cspec, which can cause local variables to be missed or misassigned.
-   - Some preserved registers (R3-R5, FP) may still appear as explicit
-     push/pop in decompiler output for functions using them as
-     general-purpose callee-saved registers.
-
-3. Address Table bookmark at 0x13898 (5 entries) -- still unresolved
+2. Address Table bookmark at 0x13898 (5 entries) -- still unresolved
    No code xref, no clean repeating structure, sits in a messy byte region
    alongside other coincidental-looking pointer values -- treat with
    suspicion pending the Step 5d verification tool (item 4 below).
@@ -72,7 +51,7 @@ Open items
    tables catalog pattern as an additional independent corroborating
    signal, not just the XML-vs-scraper comparison originally scoped.
 
-4. XML table verification design -- Step 5d, not yet implemented
+3. XML table verification design -- Step 5d, not yet implemented
    Community EcuFlash XML table definitions cannot be trusted blindly, and
    neither can the ROM byte-pattern scraper on its own -- both are
    independent, individually fallible signals (the scraper's "adjacent word
@@ -108,53 +87,12 @@ Open items
    implemented in the script -- `verify_xml_table()` function and Step 5d
    wiring are the next concrete step.
 
-5. 0x20640/0x20843 reachability -- low priority, does not block anything
-6. Imported plate comments from old (pre-Sleigh-fix) XML export - need re-verification
-   Source: RVR_1998_x3 4g63t 21000011 md352553.hex.xml (old Ghidra Program XML export,
-   produced under the old/buggy Sleigh grammar before this project's fixes). All 475
-   function names in that file were already confirmed present in the live program
-   (imported previously via import_old_function_names.py). Additionally, 9 hand-written
-   analytical plate comments (session 10, 2026-07-03) were address-verified against the
-   live program this session -- all 9 target addresses still resolve to functions with
-   matching names and sane (non-truncated) boundaries -- and have now been copied onto
-   the live functions:
-     0x18fe0  wgdc_correction_integrator_update
-     0x19110  wgdc_output_clamp_f44c
-     0x24680  injpw_airvol_reset_on_fuelcut
-     0x2629b  idle_target_rpm_compute_f400
-     0x26f82  isc_stepper_output_state_machine_eed4
-     0x27cb7  startup_phase_reset_eed6_cluster
-     0x28413  startup_phase_reset_eed6_eefa_bulk
-     0x28fff  tcu_shift_torque_and_knock_mgmt
-     0x29fba  fuel_pw_and_airvol_compute
-   IMPORTANT: address-matching and boundary sanity checks confirm these comments are
-   PLAUSIBLY still valid, not that their content has been RE-VERIFIED under the current
-   Sleigh grammar. The analysis inside them (register/table reads, xref chains, gating
-   conditions) was derived by decompiling under the OLD grammar, which is known to have
-   had bugs (see CHANGELOG.md and this file's history) including at least one confirmed
-   function mis-split (0x28fff, the tcu_shift_torque_and_knock_mgmt case, which is
-   itself one of the 9 -- its own boundary fix should be spot-checked against the
-   current live disassembly before relying on it, ironic as that is). Each imported
-   comment is tagged in-place with "[IMPORTED FROM OLD XML ... NOT YET RE-VERIFIED]" so
-   this is visible directly in Ghidra, not just here. Two of the nine explicitly
-   document their own open items (Load1B's real steady-state writer, at 0x27cb7 and
-   0x28413) which remain unresolved regardless of re-verification status.
-   DONE (2026-07-14): the 0x28fff boundary and its caller xref have been re-verified
-   against the live listing. `tcu_shift_torque_and_knock_mgmt` still spans exactly
-   0x28fff-0x29c32, unchanged. Its one caller is a `pjsr @0x28fff:24` at 0x169b1,
-   inside the function formerly labeled `isr_sci3_eri`, now correctly renamed
-   `isr_ipu_ch2ch4_input_capture` (see item 7) -- xref type still COMPUTED_CALL,
-   matching the original finding exactly, just under the corrected name. As a bonus
-   check, 0x16956 (cited in item 7 for the F5DE period-delta write) does fall inside
-   this same ISR body, consistent with item 7's structural description. This spot-check
-   is now closed; the other 8 of the 9 imported comments remain unverified beyond
-   address/boundary sanity. All useful content has already been extracted from the
-   source XML (test/rvr/RVR_1998_x3 4g63t 21000011 md352553.hex.xml); per the user
-   (2026-07-14) that file no longer exists in the project -- nothing further to do here.
-
-7. logging.txt (test/rvr/) - MUT verification log - RE-VERIFICATION IN PROGRESS,
+3. 0x20640/0x20843 reachability -- low priority, does not block anything
+5. logging.txt (test/rvr/) - MUT verification log - RE-VERIFICATION IN PROGRESS,
    CONFIRMED + REFUTED(partial) sections now done
-   Separate from the XML in item 6: a hand-curated, already-deduplicated summary
+   Separate from the old imported-XML plate comments (previously tracked as a separate
+   item here, dropped since there's no ROM available to re-verify them against --
+   left to the community to re-check on publish): a hand-curated, already-deduplicated summary
    (805 lines) of MUT RequestID address/semantic verification, produced session 10
    (2026-07-03) under the OLD/buggy Sleigh grammar - i.e. before the MAP3-6 dispatch
    fixes that later changed how surrounding bytes decode. Since the decoder has
@@ -332,7 +270,7 @@ Open items
    dead/legacy code path, or disassembler noise that happens to decode
    plausibly.
 
-7b. continued from 7
+5b. continued from 5
 
 
   "new_str": "   crank-period buffer at F9A0-F9A8 (written by the confirmed-real
@@ -411,21 +349,7 @@ Open items
    searching for a schematic-based confirmation of this mapping.",
   "description": "Add new RPM lead (cam-sensor-derived period signal) discovered this session, reopening the RPM identity open item"
 
-8. H8/538 pattern file wired up but unverified against real H8/538 ROM data
-   File: h8\data\patterns\h8538pattern.xml (new H8:BE:32:H8538F entry in
-   patternconstraints.xml)
-   The function-start pattern file for H8/538 is a verbatim copy of
-   h8539pattern.xml (H8/539F) -- same four patterns (link FP,#imm:8/16;
-   stm reglist,@-SP; prts; prtd), same hit-count claims, all of which
-   actually describe the H8/539F RVR 21000011 ROM, not any H8/538 ROM.
-   Comments have been corrected to say so explicitly rather than implying
-   538-specific verification. H8/538 and H8/539F share the same core ISA
-   and likely the same compiler prologue/epilogue idioms per NOTES.TXT, so
-   this is a reasonable starting point, but needs the same verification
-   pass h8539pattern.xml got (load a real H8/538 ROM, check hit counts and
-   false-positive rate for each pattern) before it should be trusted.
-
-9. Unify H8/520, H8/538, and H8/539F onto a single shared instruction-decode
+6. Unify H8/520, H8/538, and H8/539F onto a single shared instruction-decode
     core, instead of three independent implementations
     Confirmed this session, via the grepable hardware manuals and IDA's own
     ana.cpp (which is a single generic decoder for the entire H8/500 family,
@@ -482,22 +406,7 @@ Open items
         520-specific would need preserving rather than dropped in the
         swap-over.
 
-Priority
 --------
-Item 4 (Step 5d XML verification) is the highest-leverage next step -- item
-3's five previously-uninvestigated address tables are now resolved (none
-were jump tables; four turned out to be a real calibration-table catalog,
-one is unresolved low-confidence data), leaving only 0x13898 still open in
-item 3, still pending the same Step 5d tool. Item 5 is confirmed
-low priority and doesn't block anything else. Items 1 and 2 are reference
-material and longstanding carryover items. Items 6, 7, and 8 are
-lower-priority re-verification/import housekeeping (items 6/7 for
-old-grammar-era documentation, item 8 for the newly-wired but unverified
-H8/538 pattern file). Item 9 (single-core unification)
-is intentionally deferred -- explicitly NOT started yet, on hold until the
-rest of this file's h8539f-specific items are resolved, so the eventual
-port carries forward a clean, fully-verified core rather than known-open
-bugs.
 
 Build/test workflow (Sleigh compile + deploy) -- reference, add once, stop asking
 ----------------------------------------------------------------------------------
