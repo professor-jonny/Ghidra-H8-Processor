@@ -1636,7 +1636,7 @@ undefined2 DAT_0001f51e;
 ushort DAT_0001f51a;
 undefined2 DAT_0000f0f2;
 undefined2 DAT_0000f0f4;
-undefined FUN_00028b2f;
+undefined sci1_periodic_phase_dispatch_f526;
 undefined sci1_tx_response_feeder;
 undefined sci1_dispatch_and_latch_response;
 undefined f526_state_reset_dispatch;
@@ -4558,9 +4558,12 @@ bool check_flag_fe8a_bit1_set(void)
 //     consumer o2_sensor2_threshold_flag_update_f226_bit13 (0x22f16). VERIFIED.
 //   - channel #0xB -> word @0xF15E/F15F -> MUT MAP/Boost (RequestID 0x38 -> table entry 0xF15F).
 // VERIFIED.
+//   - channel #8 -> word @0xF160/F161 -> MUT ReqID 0x39 (table entry 0xF161). CONFIRMED live
+//     signal (2026-07-15 MUT sweep), physical sensor identity not yet determined - distinct from
+//     the neighboring channel #0xB (MAP/Boost) word, not a shared/artifact cell.
 //   - channel #0xA -> word @0xF162 region, NOT individually re-checked this pass
 //   - channel #9 -> word @0xF166/F16A region, NOT individually re-checked this pass
-// 5 of 8 channels now cross-verified against MUT table + consumer. Remaining 3 (channels 0/2/9/0xA
+// 6 of 8 channels now cross-verified against MUT table + consumer. Remaining 2 (channels 0/2/9/0xA
 // region) not yet individually re-checked - do not assume correct without checking.
 
 undefined2 adc_read_sequence_main(undefined2 param_1)
@@ -6795,10 +6798,28 @@ void peripheral_ff42_ff62_enable(void)
 // signal chain (P54/T2IOC1 -> period-delta -> F5DE -> F384 -> F5CA/F5CC ->
 // engine_torque_pct_scale_calc @0x2184b).
 // 
+// [UPDATE 2026-07-15] SECOND OUTPUT TAP CONFIRMED. This ISR has two symmetric
+// edge-detect branches (rising-edge block @0x16936, falling-edge block @0x169dc)
+// handling alternating captures from the same 2-tooth cam signal. Each branch
+// independently computes a normalized period-delta (mulxu.w 0x10 scale + signed
+// rounding correction). The rising branch's result feeds F5D2/F5D4 -> F5DE ->
+// F384 -> F5CA/F5CC chain (as above). The FALLING branch's result feeds
+// F5D6/F5D8 directly - a previously untraced second output, written at
+// 0x16a38/0x16a3c, consumed by tcu_periodic_dispatch (@0x2c12b) ->
+// tcu_shift_ratio_buffer_update (@0x2c16e). Two independent downstream consumers
+// (torque-scale calc and TCU shift-ratio logic) drawing period data from the same
+// capture ISR is strong corroborating evidence this is a genuine engine-speed
+// signal, not incidental - a real RPM source would legitimately feed both paths.
+// See plate comments on tcu_shift_ratio_buffer_update and
+// tcu_torque_converter_slip_calc for the downstream trace. Disassembly for the
+// whole ISR is clean under the current grammar - no decode issues.
+// 
 // Still open: physical confirmation that P54/T2IOC1 on this ECU's pinout is wired
 // to the actual camshaft position sensor per the RVR wiring diagram (this comment
 // confirms the SILICON-level pin identity; the BOARD-level wiring to the physical
-// sensor is a separate, still-unconfirmed step).
+// sensor is a separate, still-unconfirmed step). Also open: absolute RPM
+// scale/units for F5D6/F5D8 - the 0x10 divisor's real-world meaning and timer
+// tick rate haven't been derived yet.
 
 undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -9789,6 +9810,23 @@ undefined2 egr_activity_condition_check(void)
 
 
 
+// [NEW 2026-07-15] egr_target_f448_update
+// 
+// ACTUATOR function, not a MUT RequestID target (F448 not present in the
+// 0x2fad0 MUT table). Top-level EGR target dispatcher - performs the actual
+// store to F448.
+// 
+// Logic: forces F448=0x80 (fixed override) when byte@0x2de is set AND both
+// F20E bit4 and F510 bit4 are set (an EGR-disable/override condition pair -
+// F510 also appears in the SCI1 command-dispatcher bit-flag family
+// documented in review.md item 7, worth checking for a relationship).
+// Otherwise calls a precondition check (0x18689); if that returns nonzero,
+// forces F448=0 (EGR off). If preconditions pass, calls
+// egr_duty_target_calc (0x186fa) for the computed target, passes it through
+// 0x1a26e (purpose not yet traced), and stores the result to F448.
+// 
+// F448 = EGR actuator duty/position target.
+
 void egr_target_f448_update(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
@@ -9863,6 +9901,21 @@ undefined2 egr_coolant_rpm_enable_check(undefined2 param_1,undefined2 param_2,un
 }
 
 
+
+// [NEW 2026-07-15] egr_duty_target_calc
+// 
+// ACTUATOR function, not a MUT RequestID target (F448 not present in the
+// 0x2fad0 MUT table). Computes an EGR duty target via two lookup-table
+// interpolations (0x2e4a/0x2df2 selected by F0F8 bit5 and F1F2 bit11
+// gating; 0x2ea2 constant table) combined via pjsr @0x142f3, with an
+// optional override lookup (0x2eae) gated on F25E bit9 / EFFA / byte@0x2dd.
+// Does not itself store the result - returns in R0 to its sole caller,
+// egr_target_f448_update (0x18650), which performs the actual F448 write
+// (see that function's plate comment for the store).
+// 
+// F448 = EGR position/duty target, an actuator output. Reference example
+// for the actuator-driver shape (see also canister_purge_duty_calc_f4ac,
+// isc_f402_stepper_target_calc).
 
 undefined2 egr_duty_target_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -11289,6 +11342,25 @@ LAB_0001955c:
 }
 
 
+
+// [NEW 2026-07-15] canister_purge_duty_calc_f4ac
+// 
+// ACTUATOR function, not a MUT RequestID target (F4AC not present in the
+// 0x2fad0 MUT table). Reference example for the general "actuator driver"
+// shape used to help classify other traced cells as request-vs-actuator:
+// lookup table (0x2ce8/0x2b06 constant refs via pjsr @0x14656 axis
+// interpolation) -> threshold-select (pjsr @0x14000) -> clamp to 0xFF ->
+// store to F4AC.
+// 
+// Gating: checks F4A2 bit7 and F4A4 bit7 (purge-enable conditions), F4BE
+// bits (mode select), falls back to a fixed constant @0xe5e or 0xFF
+// (purge off) when conditions aren't met. Writes F0BA (MUT_E1, the shared
+// scratch cell documented in review.md item 7) as a side effect via the
+// 0x14219 calls @0x195de/0x195e7 - one more confirmed writer to add to
+// that cell's "many unrelated callers" list if not already covered.
+// 
+// F4AC itself = canister purge solenoid duty cycle target, an actuator
+// output. Not yet checked whether any MUT ID reads it indirectly.
 
 void canister_purge_duty_calc_f4ac(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -15204,7 +15276,7 @@ void main_loop(void)
     bVar4 = 0;
     *(undefined2 *)(uint)CONCAT12(uVar5,uVar3 - 2) = 0xaa4;
     *(undefined2 *)(uint)CONCAT12(uVar5,uVar3 - 4) = 2;
-    f520_f0f2_f0f4_mode_select(sVar2);
+    f516_hibits_f520_f0f2_mode_select(sVar2);
     *(undefined2 *)(uint)CONCAT12(uVar5,uVar3 - 6) = 0xaa8;
     *(undefined2 *)(uint)CONCAT12(uVar5,uVar3 - 8) = 2;
     (*status_word_consumer_periodic)();
@@ -15762,6 +15834,21 @@ void main_loop_engine_control_update(void)
 }
 
 
+
+// gear_state_config_loader_f1fc: derives a 3-bit TCU gear-config index (F1FA) from
+// F15A/F15B, which is then used to select values from ROM lookup tables (base 0x222,
+// 0x262, 0x272, 0x282) driving F1FC/F1F0/F1F2/F1F4.
+// 
+// MUT SWEEP FINDING (2026-07-15): F15A/F15B (MUT ReqID 0x3B) is CONFIRMED DEAD for
+// MUT-reading purposes. This function calls zero_var_f15a() (0x156c2) and then
+// immediately reads the same word back - no other function anywhere in the ROM writes
+// F15A (confirmed via whole-image byte-pattern search, only 2 hits total: the zero and
+// this read). So F1FA is always 0 here; the gear-config selection is structurally a
+// no-op / always picks index 0. Flagged in mut_verification_status.md as the same class
+// of finding as the confirmed-dead MUT_83/0xF0BB cell - do not log MUT ReqID 0x3B.
+// Open question (not investigated this session): whether this is legacy/vestigial code
+// from an earlier ROM revision that did write F15A, or an intentional always-index-0
+// simplification.
 
 void gear_state_config_loader_f1fc(void)
 
@@ -22159,6 +22246,12 @@ void f2ce_f2cc_o2_mode11_correction_calc(void)
 // injpw_airvol_reset_on_fuelcut: gated on 0xF25A bit-mask 0x28 (matches logging.txt's
 // claimed fuel-cut condition), zeroes 0xF970/F972 (InjPulseWidth/AirVol) plus 0xF250/F252.
 // VERIFIED - logging.txt CONFIRMED-section claim holds under current decoder.
+// 
+// MUT SWEEP FOLLOW-UP (2026-07-15): the F970 and F972 resets here are single ushort
+// stores, corroborating fuel_pw_and_airvol_compute's finding that F970/F971 and F972/F973
+// are each one 16-bit word with no independent low/high-byte writer. Resolves MUT ReqIDs
+// 0x2A (F971) and 0x2B (F972) from BLANK to CONFIRMED - see mut_verification_status.md
+// and review.md item 7b.
 
 ushort injpw_airvol_reset_on_fuelcut(void)
 
@@ -27099,6 +27192,19 @@ void isc_stepper_trim_dispatch(void)
 
 
 
+// [NEW 2026-07-15] isc_f402_stepper_target_calc
+// 
+// ACTUATOR function, not itself a MUT RequestID target (F402 not present
+// in the 0x2fad0 MUT table), but directly upstream of two that are:
+// computes the core ISC stepper target (lookup table @0x28ea via pjsr
+// @0x14656, plus F42A + F43A correction terms, saturated via pjsr
+// @0x1442d), stores to F402. F402 then feeds isc_eeca_eecc_eece_correction_calc
+// (0x27a81, resolves MUT ReqID 0x08/0x0A) and isc_f3fa_f3fc_f3fe_correction_calc
+// (0x27990, same mode-shadow idiom, targets not currently MUT IDs) - see
+// those functions' plate comments.
+// 
+// F402 = ISC stepper motor position/target, actuator output.
+
 void isc_f402_stepper_target_calc(void)
 
 {
@@ -27869,6 +27975,28 @@ undefined2 isc_f406_ramp_gate_condition_check(void)
 
 
 
+// [NEW 2026-07-15, UPDATED same session] isc_f3fa_f3fc_f3fe_correction_calc
+// 
+// Resolves MUT RequestID 0x09 (F3FB) and 0x0B (F3FD) - see
+// mut_verification_status.md master table.
+// 
+// Same mode-shadow idiom as isc_eeca_eecc_eece_correction_calc (0x27a81,
+// which resolves MUT ReqID 0x08/0x0A) - computes one ISC correction term
+// (lookup table via pjsr @0x144b4, combined with F402 and F408+0x100 via
+// two pjsr @0x14036 calls and a final pjsr @0x1442d saturate), then writes
+// the SAME 16-bit value to exactly one of three shadow words based on
+// identical gating logic:
+//   - F0F8 bit4 == 0                                -> F3FA/F3FB word
+//   - F0F8 bit4 == 1, byte@0x2c7 != 1                -> F3FC/F3FD word
+//   - F0F8 bit4 == 1, F0F8 bit0 == 1, byte@0x2c7 == 1 -> F3FE/F3FF word (not a MUT ID)
+// 
+// CONFIRMED (2026-07-15): MUT ReqID 0x09/0x0B genuinely read F3FB/F3FD, the
+// LOW byte of the F3FA/F3FC words (big-endian chip) - verified against
+// adc_sensor_convert_single (0x171c3)'s single-byte fetch for ReqID<=0xBF.
+// This is NOT a scraper artifact (contrast the F5C0 cluster in review.md
+// item 7, where odd-offset rows were confirmed artifacts) - the 0x2fad0
+// table's entries for these IDs genuinely decode to the low-byte address.
+
 void isc_f3fa_f3fc_f3fe_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
@@ -27996,6 +28124,28 @@ isc_eeca_update_gate_condition_check(undefined2 param_1,undefined2 param_2,undef
 }
 
 
+
+// [NEW 2026-07-15] isc_eeca_eecc_eece_correction_calc
+// 
+// Resolves MUT RequestID 0x08 (EECA) and 0x0A (EECC) - see
+// mut_verification_status.md master table.
+// 
+// Computes a single ISC correction term (lookup table @0x144b4 + F402 offset,
+// clamped against F408, scaled via 0x1405c/0x14036/0x14000), then writes that
+// SAME value to exactly one of three shadow RAM cells depending on mode flags:
+//   - F0F8 bit4 == 0                                -> EECA  (MUT ReqID 0x08)
+//   - F0F8 bit4 == 1, byte@0x2c7 != 1                -> EECC  (MUT ReqID 0x0A)
+//   - F0F8 bit4 == 1, F0F8 bit0 == 1, byte@0x2c7 == 1 -> EECE  (not a MUT ID)
+// 
+// MUT reading 0x08 vs 0x0A is just reading whichever mode happens to be
+// active, not two independent values. Sole caller: isc_eeca_update_dispatch
+// (0x27a20).
+// 
+// Same mode-select idiom (F0F8 bit4/bit0 + byte@0x2c7) also appears in
+// isc_f3fa_f3fc_f3fe_correction_calc (0x27990) for a different ISC term
+// (F3FA/F3FC/F3FE, not currently MUT IDs) - worth checking for more
+// instances of this pattern when tracing other BLANK MUT rows adjacent to
+// confirmed ISC cells.
 
 void isc_eeca_eecc_eece_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -28286,7 +28436,7 @@ void engine_warmup_periodic_dispatch(void)
   (*knock_sensor_diagnostic_update)();
   *(undefined2 *)(uint)CONCAT12(uVar1,unaff_SP + -0xe) = 0x7ca9;
   *(undefined2 *)(uint)CONCAT12(uVar1,unaff_SP + -0x10) = 2;
-  eeea_bit7_f09a_update();
+  f516_request_latch_f09a_calib_select();
   *(undefined2 *)(uint)CONCAT12(uVar1,unaff_SP + -0x12) = 0x7cad;
   *(undefined2 *)(uint)CONCAT12(uVar1,unaff_SP + -0x14) = 2;
   engine_warmup_dispatch_b();
@@ -28459,7 +28609,25 @@ LAB_00027db2:
 
 
 
-void eeea_bit7_f09a_update(void)
+// [FOUND 2026-07-15] Consumer of the sci1_meta_cmd_dispatch_c0_ff (0x28869)
+// actuator-request bits on @0xf516.
+// 
+// Latch state machine gated on @0xeeea bit7:
+// - Not latched: if (f516 bit6) OR (ram byte @0x205 != 0) OR (f594 bit7):
+//   latch on (eeea |= 0x80), and unless mode f502==1, load output register
+//   @0xf09a from calibration value @0xf052.
+// - Latched: if (ram @0x205==0) AND ((f516 bit5==0) OR (ef6e > 3)): latch off
+//   (eeea &= ~0x80), load @0xf09a from calibration value @0xf050 instead.
+// - Every call unconditionally clears @0xf516 bits 2, 5, 6, 8 on exit.
+// 
+// This confirms f516 bits 2/5/6/8 are ONE-SHOT REQUEST flags: dispatcher
+// commands C3(bit6)/C4(bits6+8)/FA(bits2+5) set them, this function consumes
+// and clears them each call. f09a looks like a selector between two
+// calibration/setpoint values (f050 vs f052) - plausibly two alternate
+// target/shift maps. Physical meaning of f050/f052/f09a still unconfirmed.
+// See mut_verification_status.md dispatcher section.
+
+void f516_request_latch_f09a_calib_select(void)
 
 {
   ushort uVar1;
@@ -28695,6 +28863,21 @@ void eee4_eeda_bit6_update_from_f0f8_bit12(void)
 }
 
 
+
+// [FOUND 2026-07-15] Reads @0xf516 bit7 near the end: if set, calls
+// startup_phase_reset_eed6_eefa_bulk (0x28413) - the bulk zero of the entire
+// EED6-EEFA RAM cluster (includes EED8 = Load1B, see mut_verification_status.md
+// item 1). Always clears @0xf516 bits 1 and 7 on exit (bit1's setter is still
+// unknown - not present in sci1_meta_cmd_dispatch_c0_ff's table or hardcoded
+// cases either).
+// 
+// This makes f516 bit7 - set by dispatcher command 0xFC
+// (sci1_meta_cmd_dispatch_c0_ff, 0x28869) - a LIVE, on-demand trigger for this
+// bulk diagnostic/RAM-axis-pointer reset, not just a startup-time call. In
+// other words: command 0xFC over SCI1 can force a Load1B/diag-flag reset at
+// runtime. Also gates several other EEE0/EEE4/EEDA/EED6/EEE2/EEE6/EEE8 flag
+// toggles via swap_invert_high_byte earlier in the function - not yet
+// individually decoded.
 
 void eee0_eeee_diag_flags_reset_dispatch(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -29078,7 +29261,26 @@ LAB_00028692:
 
 
 
-void f520_f0f2_f0f4_mode_select(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+// [FOUND 2026-07-15] Second, separate consumer of sci1_meta_cmd_dispatch_c0_ff
+// (0x28869) actuator-request bits on @0xf516 - reads the HIGH bits (11/12/13/15,
+// masks 0x800/0x1000/0x2000/0x8000), NOT the low bits (2/5/6/8) that
+// f516_request_latch_f09a_calib_select (0x27e1a) consumes.
+// 
+// Clears f516 &= 0x7FF (top 5 bits) on entry, then derives a mode value into
+// @0xf520 (0x80 if f594 bit7 set OR f516 bit15; 0 if f516 bit11; 0x20 if
+// f516 bit13; 0x08 if f516 bit12; else 0), then a 4-bit sub-mode into
+// @0xf0f2 based on f520's bits, while @0xf0f4 is hardcoded to 8.
+// 
+// OPEN QUESTION: no static writer found anywhere for f516 bits 11/12/13/15 -
+// sci1_meta_cmd_dispatch_c0_ff's C0-FF table only ever sets bits 0-8 (via
+// f510/f512, or the f516 bits 2/5/6/7/8 hardcoded cases). Since that
+// dispatcher's actuator table uses a COMPUTED address
+// (CONCAT12(page,idx<<1)-0xAF0), it's likely another command range/dispatcher
+// elsewhere uses the same computed-addressing trick and lands on f516's high
+// bits - not yet located. Worth grepping for other users of that address
+// pattern, or literal writes of 0x800/0x1000/0x2000/0x8000 to f516.
+
+void f516_hibits_f520_f0f2_mode_select(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
   ushort uVar1;
@@ -29207,7 +29409,7 @@ void sci1_protocol_state_machine(undefined2 param_1,undefined2 param_2,undefined
   if (uVar2 == 0) {
     *(undefined2 *)(uint)CONCAT12(uVar6,uVar4 - 6) = 0x8827;
     *(undefined2 *)(uint)CONCAT12(uVar6,uVar4 - 8) = 2;
-    (*FUN_00028b2f)(0);
+    (*sci1_periodic_phase_dispatch_f526)(0);
   }
   else if ((*(ushort *)((uint)bVar5 << 0x10 | 0xf520) & extraout_R2) == 0) {
     if ((*(ushort *)((uint)bVar5 << 0x10 | 0xf520) & 0x20) != 0) {
@@ -29262,28 +29464,61 @@ void sci1_dispatch_and_latch_response(undefined2 param_1,undefined2 param_2,unde
 
 
 
-// [FOUND 2026-07-14] Real command-byte dispatcher for SCI1, separate from the
-// MUT table (0x2fad0)/adc_sensor_convert_single (0x171c3) read path used
-// throughout mut_verification_status.md.
+// [FOUND 2026-07-14, UPDATED 2026-07-15] Real command-byte dispatcher for SCI1,
+// separate from the MUT table (0x2fad0)/adc_sensor_convert_single (0x171c3)
+// read path used throughout mut_verification_status.md.
 // 
 // - Command byte < 0xC0 (boundary check @0x28870): looks up a WORD in a ROM
 //   pointer table at 0x2530 (command_byte<<1, DP=2), dereferences it, returns
 //   a byte. DIFFERENT table from the 0x2fad0 MUT table. NOT YET MAPPED.
 // 
-// - Command byte 0xC0-0xFF: explicit per-byte case handling, direct bit
-//   manipulation on @0xf516/@0xf512/@0xf510 (bset/bclr, one bit per command,
-//   no arithmetic) - structurally consistent with actuator/relay/solenoid
-//   TRIGGER flags, not sensor data. Examples: 0xC3->f512 bit6, 0xC4->f516
-//   bits, 0xD9->f510 bit0, 0xFA->f516 bit2/bit5, 0xFB->f516 bit6, 0xFC->f516
-//   bit7. Also touches f50e/f594/f596/f1fc (gear index) and a 4-byte struct
-//   at ROM 0x232 for the 0xEC-0xEF/0xFD-0xFF range.
+// - Command byte 0xC0-0xD8 (excl. C3/C4/CA/CB): TABLE-DRIVEN via a 4-byte-per-
+//   entry table at ROM 0x13740 (cmd_c0_d8_actuator_bit_table, 20 entries,
+//   (cmd-0xC0)*4). Byte0 selects the target register (idx 1 -> @0xf512, idx 0
+//   -> @0xf510 via computed address CONCAT12(1,idx<<1)-0xAF0), bytes2-3 are
+//   the bitmask applied. FULLY DECODED: clean one-bit-per-command sweep
+//   across f512 bits 0-4,6 and f510 bits 0-13. Slots C0-C2/C5/CC are stubbed
+//   mask=0 (unimplemented/reserved). 0xCA/0xCB have live table entries but
+//   are UNREACHABLE - intercepted earlier and always error.
 // 
-// NOT YET DONE: which physical actuator (if any) each F516/F512/F510 bit
-// drives; the <0xC0 pointer table; whether this is reachable from SCI3 or
-// only SCI1; whether the RVR MUT profile's documented Mode5 RequestIDs
-// (01-06, 17, 1A etc.) map onto this 0xC0-0xFF range or the <0xC0 table.
-// See mut_verification_status.md "REAL COMMAND DISPATCHER FOUND" section for
-// full details. Caller: sci1_dispatch_and_latch_response (0x2882b).
+// - Hardcoded (non-table) cases: 0xC3->f512 bit6, 0xC4->f516 bits6+8,
+//   0xD9->f510 bit0, 0xFA->f516 bit2+5, 0xFB->f516 bit6, 0xFC->f516 bit7.
+//   Also touches f50e/f594/f596/f1fc (gear index) and a 4-byte struct at ROM
+//   0x232 (gear_indexed_4byte_struct_ec_ef, per-gear byte-reversed) for
+//   0xEC-0xEF, and a per-gear word at ROM 0x252
+//   (gear_indexed_word_table_fe_ff) for 0xFE/0xFF.
+// 
+// - ALL f516 bits now accounted for except bit1/bit12:
+//   - bits 2/5/6/8 (C3/C4/FA): consumed by f516_request_latch_f09a_calib_select
+//     (0x27e1a) - latched calibration selector for output f09a.
+//   - bit7 (FC): consumed by eee0_eeee_diag_flags_reset_dispatch (0x282c1),
+//     which on-demand calls startup_phase_reset_eed6_eefa_bulk (0x28413) - a
+//     BULK RESET of the entire EED6-EEFA RAM cluster, including Load1B (EED8,
+//     open MUT item 1). Command 0xFC is a live "force diagnostic/load-cluster
+//     reset" trigger, not a startup-only path.
+//   - bits 9/11/13/15: NOT set by this dispatcher at all - traced entirely to
+//     an unrelated periodic phase-sequencer, sci1_periodic_phase_dispatch_f526
+//     (0x28b2f, called from sci1_protocol_state_machine 0x287af), an 8-way
+//     jump table (fully clean in disassembly, decompiler just renders it
+//     badly). idx0 = f588_duty_gate_f516_bit11_set sets bit11; idx1-6 =
+//     phase_cases_1to6_f516_hibit_f54a_writer sets bit9+15 or bit9+13
+//     depending on an internal accumulator value. Consumed by
+//     f516_hibits_f520_f0f2_mode_select (0x28700) for bits 11/13/15 (bit9 is
+//     read separately, by case3 of the phase sequencer itself).
+//   - bit1: cleared by eee0_eeee_diag_flags_reset_dispatch but no setter
+//     found anywhere. STILL OPEN.
+//   - bit12: read by f516_hibits_f520_f0f2_mode_select but NO setter found
+//     anywhere, including in the periodic phase sequencer. STILL OPEN.
+//   - f510/f512: still NO known reader anywhere in the program.
+// 
+// NOT YET DONE: writer for f516 bits 1/12; any reader for f510/f512; physical
+// hardware meaning of any bit; the <0xC0 pointer table; whether this
+// dispatcher is reachable from SCI3 or only SCI1; whether the RVR MUT
+// profile's Mode5 RequestIDs (01-06, 17, 1A etc.) map onto this 0xC0-0xFF
+// range or the <0xC0 table - NO evidence of overlap found (Mode5 bytes are
+// all <0x20, structurally distinct from this dispatcher's 0xC0-0xFF range).
+// See mut_verification_status.md "REAL COMMAND DISPATCHER FOUND" / Load1B
+// item 1 for full details. Caller: sci1_dispatch_and_latch_response (0x2882b).
 
 ushort sci1_meta_cmd_dispatch_c0_ff(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -29474,8 +29709,34 @@ void f510_f512_f00e_f514_reset(void)
 
 // WARNING: Control flow encountered bad instruction data
 // WARNING: Removing unreachable block (ram,0x000250f2)
+// [CORRECTED 2026-07-15] RETRACTING the earlier "Bad Instruction" caution -
+// raw disassembly is 100% clean throughout. What looked like decompiler
+// trouble was just Ghidra's switch-statement reconstruction failing to
+// present an 8-entry jump table cleanly (visible directly in disassembly at
+// 0x28b4c/0x28b50: `mov:g.w @(-0x74ae:16,R4)=>switchD_00028b50,R4` /
+// `jmp @R4`). NOT an unresolved/mis-split function - it's a completely normal
+// indexed jump table, just poorly rendered by the decompiler's switch logic.
+// 
+// Called from sci1_protocol_state_machine (0x287af). Gates on phase counter
+// @0xf526 (valid range 0-7, reset to 0 if >7 via bhi check), increments a
+// separate counter @0xf532 each call. The 8 jump targets (confirmed via
+// disassembly table at 0x28b52-0x28b60):
+//   idx0 (0x28b62) f588_duty_gate_f516_bit11_set
+//   idx1-6 (0x28b89-0x28cc6) phase_cases_1to6_f516_hibit_f54a_writer (ONE
+//     Ghidra function covering all six of these - see its plate comment for
+//     full per-case breakdown, including the f516 bit13/bit15 writer)
+//   idx7 (0x28cc8) valid jump target (xref confirmed) but not yet
+//     disassembled/defined in Ghidra - small remaining gap.
+// Not part of the SCI1 command-dispatcher investigation itself - this is an
+// independent periodic/duty-cycle state machine that happens to share the
+// f516 register with sci1_meta_cmd_dispatch_c0_ff (0x28869). Case idx1
+// (f526==5) case body separately also calls a chain of fueling/lambda
+// functions per the decompiler read of that entry - not yet re-verified
+// against this cleaner disassembly-based picture, treat with some caution
+// until cross-checked.
 
-undefined2 FUN_00028b2f(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+undefined2
+sci1_periodic_phase_dispatch_f526(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
   char *pcVar1;
@@ -29631,8 +29892,26 @@ undefined2 FUN_00028b2f(undefined2 param_1,undefined2 param_2,undefined2 param_3
 // WARNING: Removing unreachable block (ram,0x00028c80)
 // WARNING: Removing unreachable block (ram,0x00028cba)
 // WARNING: Removing unreachable block (ram,0x00028cc2)
+// [FOUND 2026-07-15] CONFIRMED clean in disassembly (verified, not decompiler
+// noise): `bset.w @0xf516:16, 0xb` - this is the missing WRITER for f516 bit11
+// that f516_hibits_f520_f0f2_mode_select (0x28700) consumes (see its plate
+// comment / dispatcher notes). Resolves that open question.
+// 
+// Logic: if (@0xf522 bit0 == 0) OR (@0xf588 >= @0xf58c) [duty/period counter
+// elapsed]: clear f522 bit0, zero f58c, set f516 bit11, and if @0xf102 bit5 is
+// set, advance the phase counter @0xf526 by 1.
+// 
+// f526 is the same phase-index consumed by the switch in FUN_00028b2f's
+// case-0..7 block - this function is a computed-jump branch target reached
+// FROM inside that function (address 0x28b2f), i.e. Ghidra has split what is
+// really one logical routine into these pieces because of an unresolved jump
+// table there. Sibling branch: f528_f52e_zero_f526_advance_alt_branch
+// (0x28b89), same phase-advance idea gated on the opposite f102 bit5 state.
+// Not yet named/traced: what f102 bit5, f522 bit0, f526's phase meaning, or
+// f588/f58c actually represent physically (duty-cycle test sequencer is a
+// reasonable guess given the pattern, unconfirmed).
 
-void FUN_00028b62(void)
+void f588_duty_gate_f516_bit11_set(void)
 
 {
   if (((DAT_0001f522 & 1) == 0) || (DAT_0001f58c <= DAT_0001f588)) {
@@ -29688,8 +29967,48 @@ void FUN_00028b62(void)
 // WARNING: Removing unreachable block (ram,0x00028c80)
 // WARNING: Removing unreachable block (ram,0x00028cba)
 // WARNING: Removing unreachable block (ram,0x00028cc2)
+// [CORRECTED 2026-07-15] Prior name/comment undersold this function - raw
+// disassembly (confirmed 100% clean, no bad instructions at all - the earlier
+// "decompiler trouble" was purely a switch-reconstruction presentation issue
+// in Ghidra's decompiler, not anything wrong with the ROM) shows this single
+// function body (0x28b89-0x28d22) actually contains the shared code for
+// jump-table cases 1 through 6 (of 8) from sci1_periodic_phase_dispatch_f526's
+// switch on @0xf526, not just "case 1's zero+advance" as originally named.
+// 
+// Case 1 (entry @0x28b89): if @0xf102 bit5==0: zero f528/f52a/f52c/f52e, set
+//   f530=10, advance phase (f526++).
+// Case 2 (@0x28ba8, LONG body, falls through several internal labels):
+//   tracks f52a/f52c/f52e as up/down counters gated on f102 bit5 and
+//   (f102^f106) bit5; once f52e reaches 0x50(80): sets/clears f528 bit9 based
+//   on f52a bit15, decrements/right-shifts f530 countdown; once f530==0 AND
+//   f52c<5: reset phase to 0 (abort, no advance). Once f530==0:
+//     - if f528==0x0200: @0xf516 |= 0x8200 (BITS 9 AND 15)
+//     - elif f528==0x0220: @0xf516 |= 0x2200 (BITS 9 AND 13), then advance
+//     - else: reset phase to 0 (abort)
+//   This is the WRITER for f516 bits 13 and 15 (both also set bit9 alongside),
+//   resolving that open question from sci1_meta_cmd_dispatch_c0_ff's plate
+//   comment - CONFIRMED NOT related to the SCI1 command dispatcher, this is
+//   purely an internal periodic/duty state machine.
+// Case 3 (@0x28c5a): checks elapsed counter f532>=0x28(40) AND @0xf516 bit9 -
+//   if both true, sets f54a=0x55 and continues; else gated on f102 bit5 to
+//   either abort or just advance. (Bit9 here is READ, confirming it's a real
+//   gating flag co-set by case 2 above.)
+// Case 4 (@0x28c78): trivial gate on f590>=4, abort or advance only.
+// Case 5 (@0x28c83): checks @0xf520 bits 7/5, sets f54a to 0xef/0xf8/8 and
+//   f54c=8, sets f58c=1 or 2 (the SAME duty-period register checked by
+//   f588_duty_gate_f516_bit11_set's case 0!), calls a subroutine at 0x166cd,
+//   then advances.
+// Case 6 (@0x28cba): trivial gate on f590>=4, clears f584, abort or advance.
+// Case 7 (@0x28cc8): confirmed a VALID jump target via xref, but not yet
+//   disassembled/defined as code in Ghidra - small gap, follow-up needed.
+// 
+// f54a/f54c look like output/duty targets for whatever hardware this
+// sequencer drives (possibly an actuator self-test or duty-cycle output
+// generator, given the f588_duty_gate_f516_bit11_set connection at case0/
+// case5). f516 bit12 is NOT set anywhere in this function - still unresolved.
+// Physical meaning of the whole sequencer still unconfirmed.
 
-void FUN_00028b89(void)
+void phase_cases_1to6_f516_hibit_f54a_writer(void)
 
 {
   if ((DAT_0001f102 & 0x20) == 0) {
@@ -31466,6 +31785,13 @@ void tcu_f382_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 p
 // logging.txt OPEN ITEMS #1) - this function's gating on F17A is real and confirmed, but
 // do not read that as F17A being RPM.
 // Reset path: injpw_airvol_reset_on_fuelcut (0x24680) - see that function's comment.
+// 
+// MUT SWEEP FOLLOW-UP (2026-07-15): both 0xF970 and 0xF972 are written here as single
+// 16-bit stores, not separate byte writes. This confirms MUT ReqID 0x2A (F971) is simply
+// the low byte of the F970/F971 InjPulseWidth word, and ReqID 0x2B (F972) is simply the
+// high byte of the F972/F973 AirVol word - same idiom as the F3FA/F3FB and F3FC/F3FD
+// mode-shadow pairs found elsewhere in this project. Both rows updated from BLANK/POINTER
+// to CONFIRMED in mut_verification_status.md; see review.md item 7b.
 
 void fuel_pw_and_airvol_compute(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -34329,6 +34655,24 @@ void tcu_torque_converter_slip_calc_far_trampoline(void)
 
 
 
+// [NEW 2026-07-15] tcu_torque_converter_slip_calc
+// 
+// Decompiler output for this function is still garbage (heavy CONCAT12/stack-
+// address artifacts) even under the current grammar - this is decompiler
+// presentation only; raw disassemble_function output is clean and was used for
+// this analysis instead (see review.md's decompiler-reliability note).
+// 
+// Reads F714/F716/F718/F71A/F71C/F71E (6 rolling samples, no static writers
+// found - same indirect/bank-prefixed blind spot as other MUT cells), smooths
+// them via two 3-sample sums (evens vs odds), combines with a running total, and
+// runs the result through div_u16_sat scaled by a threshold table indexed off
+// F18C. Gated by hysteresis flags in F226 (bits 0x4000/0x8000/0xC000) and F6D6/
+// F6C8, calls tcu_shift_quality_index_calc and tcu_shift_pattern_threshold_select
+// for tiered thresholds. Structurally this is torque-converter slip detection
+// (smoothing + saturation + hysteresis on what looks like a turbine/output speed
+// delta) - consistent with the function name, but the F714-F71E input chain's
+// ultimate producer is not yet traced.
+
 void tcu_torque_converter_slip_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
@@ -34779,6 +35123,31 @@ void tcu_periodic_dispatch(void)
 }
 
 
+
+// [NEW 2026-07-15] tcu_shift_ratio_buffer_update
+// 
+// Sole caller: tcu_periodic_dispatch (@0x2c12b), which passes
+// (F5D6 - F5D8) / 4 as the input sample. F5D6/F5D8 are written directly inside
+// isr_ipu_ch2ch4_input_capture's falling-edge branch (@0x16a38/0x16a3c) - a
+// second, independently-computed period-delta output from the same 2-tooth cam
+// capture ISR that also feeds engine_torque_pct_scale_calc via the F5DE chain.
+// See the ISR's plate comment for the full trace.
+// 
+// Structure (clean disassembly, no decompiler artifacts - verified against raw
+// disassemble_function output):
+//   - F61E..F62E: 8-deep shift-register history of the raw input sample.
+//   - F630/F632: gear-indexed lookup (table @0x32b8, index = F5E8 << 1) fed
+//     through a saturated division (pjsr @0x141ba) - F5E8 is a gear index
+//     written inside tcu_shift_torque_and_knock_mgmt, not a speed value, so
+//     F630/F632 is best read as a gear ratio, not raw RPM.
+//   - F634..F63C: 4-deep shift-register of successive F630 deltas, clamped to
+//     limits at 0x102A/0x102C (rate-of-change/acceleration filter on the ratio).
+//   - F96E: stores the raw delta result for this cycle.
+// 
+// Net effect: converts the falling-edge cam period into a gear-ratio estimate
+// with rate limiting, for TCU shift-quality/shift-ratio logic (see caller of
+// this and tcu_torque_converter_slip_calc). Not itself an RPM output, but
+// downstream of one - the F5D6/F5D8 input is the RPM-candidate signal.
 
 void tcu_shift_ratio_buffer_update(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
