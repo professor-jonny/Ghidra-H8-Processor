@@ -6,6 +6,7 @@ These processors are screenprinted as **MH7202** and **MH7203** in Mitsubishi EC
 
 Forked and substantially extended from [c4ashley/ghidra-h8-500](https://github.com/c4ashley/ghidra-h8-500)
 (which itself extended [Hurricos](https://git.laboratoryb.org/hurricos/ghidra-h8-500)).
+
 H8/539F-specific work by [professor-jonny](https://github.com/professor-jonny).
 
 ## Features
