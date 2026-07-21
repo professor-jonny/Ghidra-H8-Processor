@@ -19,6 +19,9 @@
 
 	<notes>2012/11/19 [Tactrix] Updated to standardized file naming.
 2024 [Analysis] Corrected and extended table definitions from ROM binary analysis.
+2025 [Ghidra] Reclassified 4x "Unknown Early 3D [f3a8/f3aa]" tables from Unknown/fuel-injector-guess to Transmission/TCU, based on confirmed disassembly tracing (see tcu_torque_target_ramp_calc, tcu_slip_control_init, tcu_rx_main_scheduler). Axis scaling for these 4 tables is still tentative -- only the subsystem identity changed.
+2026-07 [Ghidra, session 3] RECLASSIFIED AGAIN, superseding the 2025 entry above: all 10 tables in the f3a8/f3aa/f3ac/f3ae/f3b0/f3b2 cluster (the 4 "TCU Torque Ramp Target" tables + the 6 "Open Loop Lambda ..." tables) are confirmed to be a single SHARED "Knock-to-TCU Torque Coordination" register group, category changed to Knock Control. Confirmed via matching enable-condition disassembly in both tcu_rx_main_scheduler and knock_process_main (identical RAM 0xf1f2 bit7 gate). This was checked specifically to rule out address aliasing/misidentification - see logging.txt session 3 "0xF3AC/0xF3AE CONFLICT - CONFIRMED INTENTIONAL" for the full resolution. Table names updated in place; old "Lambda ..." names kept parenthetically for continuity with prior tuning notes. Treat the AFR/uint8 scaling on the ex-Lambda tables as SUSPECT pending further work - the dual TCU/knock interpretation of the same bytes is confirmed, but which (if either) numeric scaling is correct is not yet resolved.
+2026-07 [Ghidra, session 4] Octane Level (MUT 0x27, RAM 0xEEC8/EEC9) decay-vs-knock mechanism confirmed and documented in RVR_base.xml's shared notes section - this is the "knock retard" equivalent on this ECU (no discrete retard-degrees value exists). See RVR_base.xml notes and logging.txt session 4 for full detail.
 ROM ID: 21 00 00 11 at file offset 0x021A. XML address = file_offset + 0x10000.
 Key axes confirmed from ROM data:
   RPM axis @2d2b0: 500-7000 RPM (14 elem), @2d332: 0-11000 RPM (18 elem)
@@ -31,6 +34,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 </notes>
 
 	<!-- ===== FUEL - RVR MT specific addresses ===== -->
+
+	<table name="Auto/Manual Selection Code (Address AAF)" category="Transmission" address="10aaf" type="1D" level="2" scaling="Hex8"/>
 
 	<table name="Limp Home - TPS Table" category="Fuel" address="11dc9" type="3D" level="2" swapxy="true" scaling="uint8">
 		<table name="TPS" address="2d3f8" type="X Axis" elements="5" scaling="Volts16"/>
@@ -511,5 +516,79 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		</table>
 		<table name="PN1" address="1024e" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
+
+
+
+	<!-- ===== UNKNOWN / PARTIALLY IDENTIFIED TABLES =========================== -->
+	<!--                                                                         -->
+	<!-- RAM axis pointer identities (confirmed from decompiler analysis):       -->
+	<!--   0xeff4 = computed engine LOAD (MAF-derived, 27 table refs)            -->
+	<!--            location: between MAF Scaling and Air Temp Comp              -->
+	<!--   0xeffc = engine COOLANT TEMP (19 table refs)                          -->
+	<!--            location: post-start enrich, accel enrich, cranking area     -->
+	<!--   0xefea = RPM (14 table refs, ascending RPM-shaped data)               -->
+	<!--            location: between fuel maps and open-loop tables              -->
+	<!--   0xefe0 = ISCV demand / error (12 table refs)                          -->
+	<!--            location: ISCV stepper context (FUN_0001774a)                -->
+	<!--   0xeff8 = Engine Speed / RPM (same region as Decel Fuel Cut Retard)    -->
+	<!--   0xefee = Lambda / AFR (slowly-descending data toward 0x80=stoich)     -->
+	<!--   0xeffe = O2 sensor voltage correction                                 -->
+	<!--   0xeffa = Coolant Temp or Time-after-start (3 identical-data tables)   -->
+	<!--   0xeffc = Coolant Temp (confirmed from cranking/enrichment context)    -->
+	<!--   0xeff2 = Load (closed-loop fuel correction area)                      -->
+	<!--   0xeff6 = Load or RPM (single table near ignition maps)                -->
+	<!--   0xeff0 = Load (near ignition maps and idle correction)                -->
+	<!--                                                                         -->
+	<!-- 3D axis pairs (confirmed from decompiler):                              -->
+	<!--   f3ac/f3ae = Open-loop lambda correction, cylinder bank 1 (FUN_2a971) -->
+	<!--   f3b0/f3b2 = Open-loop lambda correction, cylinder bank 2 (FUN_2a678) -->
+	<!--   f3a8/f3aa = Lambda correction variant (related bank, FUN_2b0b0)      -->
+	<!--   f3a4/f3a6 = Timing correction (near ignition maps)                   -->
+	<!--   f69a/f69c/f69e/f6a0 = Knock retard secondary axes                    -->
+	<!--                                                                         -->
+	<!-- NOTE: ROM axis breakpoints for efXX tables are not stored as separate   -->
+	<!-- ROM arrays. The efXX value is a live RAM index variable address.        -->
+	<!-- Axis address attributes below use nearest confirmed ROM axis as         -->
+	<!-- visual placeholder only. Element counts are exact from ROM scan.        -->
+	<!-- ======================================================================= -->
+
+	<!-- ===== TABLES REMOVED 2026-07-03 (session 10) - VERIFICATION FAILED ===== -->
+	<!-- The ~60 speculative table definitions formerly listed here (Load        -->
+	<!-- Correction A1-A18, Open Loop Fuel Target vs RPM A-I, Engine Speed        -->
+	<!-- Correction cluster, ISCV/Lambda/O2/Temp-Enrichment/Boost-Spool guess-    -->
+	<!-- tables, Knock Retard Per-Cyl [f3a4/f69a etc] cluster, and others) were   -->
+	<!-- removed after Ghidra verification found:                                -->
+	<!--   1. ZERO of a 28-address sample have any code xref treating them as    -->
+	<!--      an independently-addressed lookup table (get_bulk_xrefs, session   -->
+	<!--      10). The one address with any reference at all (0x11412) is read   -->
+	<!--      as a single scalar threshold byte inside isc_integrator_update,    -->
+	<!--      not iterated via axis_lookup_interp/table_lookup_interp the way    -->
+	<!--      every genuine table lookup in this ROM is called.                  -->
+	<!--   2. Most of these addresses physically fall INSIDE the byte ranges of  -->
+	<!--      real, already-confirmed tables (High/Low Octane Ignition Maps 1&2, -->
+	<!--      High/Low Octane Fuel Maps, Warmup Retard, Boost Enhancement        -->
+	<!--      Enrich/Enlean Map, Idle Stepper Lookup Table, Knock Sensor Filter  -->
+	<!--      Maps 1-5) - a byte-range overlap check flagged 3400+ collisions.   -->
+	<!-- This whole block was originally built from data-shape pattern guessing  -->
+	<!-- (e.g. "looks like a ramp", "looks like an axis") layered onto the file  -->
+	<!-- without cross-checking against the tables already defined earlier in    -->
+	<!-- this same document, or against Ghidra. It is the confirmed root cause   -->
+	<!-- of garbled/overlapping table data when this file is opened in          -->
+	<!-- ECUFlash. Full removed listing preserved in                             -->
+	<!-- logging_session10_removed_tables.xml for reference / future re-mining   -->
+	<!-- if any of these RAM concepts (eff4=Load, effc=Coolant, efea=RPM-shaped  -->
+	<!-- axis data, etc - still believed accurate at the RAM level per the       -->
+	<!-- notes above) turn out to have a genuine, non-overlapping ROM table      -->
+	<!-- backing them after further Ghidra work.                                -->
+	<!-- NOTE: the f3a8/f3aa/f3ac/f3ae/f3b0/f3b2 "Knock-TCU Torque Coordination" -->
+	<!-- RAM registers themselves remain genuinely confirmed (session 3, via     -->
+	<!-- knock_process_main / tcu_rx_main_scheduler decompilation - see          -->
+	<!-- logging.txt). What is NOT confirmed, and was removed here along with    -->
+	<!-- everything else, is the specific ROM CALIBRATION TABLE ADDRESSES        -->
+	<!-- (108ca, 10a24, 10a40, 10a5c, 125de, 12616, 1264e, 125fa, 12632, 1266a)  -->
+	<!-- that were guessed for those registers - those addresses were never      -->
+	<!-- independently traced to a ROM table read and (per the overlap check)    -->
+	<!-- several sit inside Warmup Retard's already-claimed byte range.          -->
+	<!-- ========================================================================== -->
 
 </rom>

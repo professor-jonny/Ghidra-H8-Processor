@@ -16,7 +16,43 @@
 
   <global><range space="ram" first="0x00010000" last="0x0002FFFF"/></global>
 
+  <!-- SP (plain 16-bit), not SP24, per review.md item 8's Z180 precedent:
+       Ghidra's stack-frame analyzer only recognizes direct arithmetic on the
+       literal register named here. SP24/spSegment() is used only to build a
+       disposable local pointer for the actual memory dereference; SP itself
+       is always adjusted with plain SP = SP +/- n. -->
   <stackpointer register="SP" space="ram" growth="negative"/>
+
+  <!-- Default TP/DP/EP/CP/BR page registers to 0. Without this, Ghidra's
+       constant-propagation has no basis to fold the "zext(TP) << 16" term
+       (and equivalents) in FP24/Rs_banked reconstruction away in the
+       common single-page case  see review.md item 1.
+       NOTE: tracked_set belongs in the compiler spec (here), not the
+       processor spec  pspec's context_data only accepts context_set.
+       NOTE (review.md item 8, Z180-precedent fix): SP/SP24 reconstruction
+       no longer depends on this for stack-frame recognition  SP is now
+       the plain 16-bit <stackpointer> below, adjusted with direct
+       arithmetic, matching Z180's push16/pop16. TP is still tracked here
+       because the spSegment() dereference address computation (a disposable
+       local, never written back to SP) still benefits from it folding to a
+       known page in the common case. -->
+  <context_data>
+    <tracked_set space="ram">
+      <set name="TP" val="0"/>
+    </tracked_set>
+    <tracked_set space="ram">
+      <set name="DP" val="0"/>
+    </tracked_set>
+    <tracked_set space="ram">
+      <set name="EP" val="0"/>
+    </tracked_set>
+    <tracked_set space="ram">
+      <set name="CP" val="0"/>
+    </tracked_set>
+    <tracked_set space="ram">
+      <set name="BR" val="0"/>
+    </tracked_set>
+  </context_data>
 
   <returnaddress><varnode space="stack" offset="0x0" size="2"/></returnaddress>
 

@@ -53,10 +53,9 @@
 	<!--<register name="controlL" hidden="true" />
 	<register name="controlH" hidden="true" />-->
   </register_data>
-  <!--<default_memory_blocks>
-    <memory_block name="ram" start_address="ram:0x20000" length="0x8000" mode="rw" initialized="false"/>
-    <memory_block name="ram" start_address="ram:0x0000" length="0x1ffff" mode="rx" initialized="false"/>
-  </default_memory_blocks>-->
+  <default_memory_blocks>
+    <memory_block name="ram" start_address="ram:0xFD80" length="0x200" mode="rw" initialized="false"/>
+  </default_memory_blocks>
   <!--<global> // defined in h8.cspec
 	  <range space="ram"/>
   </global>-->
@@ -110,7 +109,7 @@
     <symbol name="SCI2_ERI_vector"   address="ram:0x00E0" type="code_ptr" entry="true"/>
     <symbol name="SCI2_RXI_vector"   address="ram:0x00E4" type="code_ptr" entry="true"/>
     <symbol name="SCI2_TXI_vector"   address="ram:0x00E8" type="code_ptr" entry="true"/>
-    <symbol name="ADC_ADI_vector"    address="ram:0x00D0" type="code_ptr" entry="true"/>
+    <symbol name="ADC_ADI_vector"    address="ram:0x00F0" type="code_ptr" entry="true"/>
 	<!-- SFR registers -->
 	<symbol name="P1DDR" address="ram:0xFF80" entry="false" />
 	<symbol name="P2DDR" address="ram:0xFF81" entry="false" />
