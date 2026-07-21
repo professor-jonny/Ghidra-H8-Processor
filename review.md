@@ -743,7 +743,43 @@ Open items
      check for silent regression on previously-good decompiles, not just
      the two known-bad ones.
 
-   Step 3 -- DP/EP banking (Rn_banked/Rs_banked/disp8_banked/disp16_banked
+     RE-VERIFIED (2026-07-21, follow-up session): grepped the current live
+     decompile dump (test/RVR_1998_x3 4g63t 21000011 md352553.hex.c) for
+     unaff_SP/unaff_FP/unaff_R3/unaff_EP. Zero unaff_SP hits anywhere in the
+     file -- Step 1 holds. sat_add_u16 and div_u32_u16_rounded (the two
+     documented repro functions) both force_decompile clean in live Ghidra:
+     proper in_stack_*/stack0xfffe recognition, no unaff_SP/unaff_FP, no
+     manual ZEXT24 reconstruction. The known-inconsistent sat_add_u16 caller
+     pair (originally 21000011.hex.c:3401 vs :8600, now ~3160/3253 after line
+     drift) also both look sane -- real stack-frame values via
+     stack0xfffe/asStack_20, no bare (ushort) truncation of an unresolved SP.
+
+     Two remaining unaff_FP hits were found in the on-disk .c dump
+     (sci1_boot_build_row_addr_frame and sci1_periodic_phase_dispatch_f526 /
+     FUN_0002f490) and investigated live in Ghidra:
+       - sci1_boot_build_row_addr_frame (0x205fe): force_decompile shows this
+         is CLEAN in live Ghidra -- the on-disk .c dump was simply stale for
+         this function. Not a real finding.
+       - sci1_periodic_phase_dispatch_f526 (0x28b2f) and FUN_0002f490: BOTH
+         genuinely still show unaff_FP/unaff_R3/unaff_R5 live, but this is
+         CONFIRMED UNRELATED to the SP24/FP segmentop work -- it's the same
+         pre-existing "Bad Instruction" jump-table reconstruction problem on
+         this function already flagged under item 7 (the ~140 Bad
+         Instruction backlog candidate). Several switch cases (0/2/4/6) hit
+         `halt_baddata()` with "WARNING: Bad instruction - Truncating
+         control flow here"; the decompiler abandons register tracking
+         entirely for those case bodies, which is what surfaces as
+         unaff_FP/unaff_R3/unaff_R5, not a banking/segmentop gap.
+         FUN_0002f490 is byte-for-byte identical logic to case 0 of the
+         dispatcher -- looks like an orphaned duplicate fragment Ghidra split
+         off from the same bad-instruction region, not a separate bug.
+     CONCLUSION: Step 2 (FP) verification holds -- no regression found from
+     the segmentop/spSegment-reuse fix. The two lingering unaff_FP sites are
+     the pre-existing jump-table/Bad Instruction issue at 0x28b2f, tracked
+     separately, not a Step 2 failure. No action needed on Step 2 itself;
+     the 0x28b2f jump-table re-split remains open per item 7.
+
+ DP/EP banking (Rn_banked/Rs_banked/disp8_banked/disp16_banked
    R0-R5 rows, 55 sites in h8539f.slaspec by this session's grep count):
      Separate decision point, NOT automatically bundled with steps 1-2.
      DP/EP banking is used far more pervasively than SP/FP (every general
@@ -826,6 +862,160 @@ Open items
    current narrower/more-broken unaff_SP output. Not done this session;
    flagging as the fallback option, not a recommendation to revert yet.
 
+   Step 3a (EP banking) ATTEMPTED and REVERTED (2026-07-21) -- full history
+   also recorded in h8539f.pspec's own comment block. Summary: tried
+   spSegment(EP,...) + a second <register name="EP"/> in constresolve;
+   blocked at the schema level (constresolve only accepts one
+   register/varnode, and TP already holds that slot for SP/FP). Reverted
+   spSegment(EP,...) too, reasoning at the time being that an unresolved-
+   constresolve userop call would decompile as an opaque CALLOTHER with no
+   pointer significance and regress the many already-working EP-banked
+   accesses. Live repro identified: flash_vpp_pulse_handshake_echo_verify
+   @0x20992 (ldc.b R2,EP then an EP-banked @R4 access) decompiled as
+   unaff_R3/CONCAT12 garbage.
+
+   PRECEDENT CHECK (2026-07-21, same session) -- VERIFIED FIRSTHAND against
+   the actual shipped Ghidra 12.0.4 x86 module source, not just inferred:
+   x86-16-real.pspec's <constresolve> names ONLY DS. But ia.sinc calls the
+   same segment() userop throughout with SS (segment(SS,addr16) in Mem16
+   EA forms; segment(SS,SP) in the push22/push24/push28/pop22/pop24/pop28
+   macros), ES (segment(ES,DI) in the eseDI1/2/4/8 string-op constructors),
+   CS (segment(CS,IP) in RET/RETF; segment(currentCS,rm16) in indirect
+   CALL/JMP), and an arbitrary runtime seg16 for explicit segment-override
+   prefixes -- none of which are in constresolve. This is core, actively-
+   exercised x86 functionality, not a dead code path: a userop call to a
+   non-constresolve register IS legal and produces a real segmented
+   pointer, just without constresolve's constant-folding benefit.
+
+   Step 3b (EP banking, RETRIED) -- ATTEMPTED, RESULT: FAIL on the intended
+   repro, but not for the reason expected (2026-07-21, same session).
+   All 18 EP-banked sites (disp8_banked/disp16_banked targetBase=4/5,
+   Rn_banked/Rs_banked/Rn_banked2 R4/R5, eab/eaw_predec/postinc R4/R5)
+   converted to spSegment(EP,...), constresolve left TP-only per the
+   precedent above. Compiled clean (exit 0, same baseline WARN lines),
+   installed full file set (timestamps confirmed matching via
+   Compare-Object), reloaded via ReloadSleighLanguage.java (success,
+   same benign CompileCheck.java noise as Step 2's reload) -- no crash,
+   no schema violation, no stuck-modal recovery needed this time.
+
+   BUT: force_decompile on flash_vpp_pulse_handshake_echo_verify @0x20992
+   after the user's fresh reanalyze still shows unaff_R3, byte-for-byte
+   identical to the pre-fix output. Checked the actual disassembly rather
+   than trusting the decompiler symptom: R3 in this function is never an
+   EP-banked pointer at all -- it's used purely as a scb/f loop counter
+   (mov:i #0x1a:16,R3 / scb/f R3,... throughout). The real EP-banked
+   access in this function is `mov:g.b R0,@R4` (0x209a4), which IS one of
+   the 18 converted sites. So spSegment(EP,...) may well be working
+   correctly for what it targets -- this repro's unaff_R3 was misdiagnosed
+   originally. It's most likely an artifact of the stc.b EP,@-SP /
+   ldc.b @SP+,EP save/restore pair bracketing the function combined with
+   the stm/ldm (R2 R3 R4 R5) register-list push/pop at entry/exit -- a
+   different mechanism than the EP-banked EA constructors step 3
+   targets, so not evidence against the spSegment(EP,...) approach itself.
+   NOT YET DONE (at the time of the paragraph above): re-check against a
+   repro that actually exercises one of the 18 converted @R4/@R5 EP-banked
+   sites directly (not confounded by a stc/ldc-EP save-restore wrapper).
+
+   RE-VERIFIED LIVE (2026-07-21, same-day follow-up, against the correct
+   repro this time): confirmed via Pulsar that the .slaspec source now has
+   all 18 EP-banked sites (Rn_banked/Rs_banked/Rn_banked2 R4/R5,
+   disp8_banked/disp16_banked targetBase=4/5, eab/eaw_predec/postinc R4/R5)
+   correctly calling spSegment(EP, ...), and confirmed via PowerShell that
+   source and installed .sla/.pspec/.slaspec/.sinc timestamps are all in
+   sync (no stale-copy issue this time) -- the grammar change is genuinely
+   live in the running Ghidra instance.
+
+   force_decompile on flash_vpp_pulse_handshake_echo_verify (0x20992) against
+   the ACTUAL EP-banked instruction this time (mov:g.b R0,@R4 @0x209a4, R4
+   loaded from R2/EP via the ldc.b R2,EP + mov:g.w R3,R4 sequence at entry --
+   this is a genuine dynamic/runtime EP value, not the pinned EP=0 default
+   tracked_set already handles) still FAILS, but differently than before:
+
+     char *unaff_R3;
+     ...
+     *unaff_R3 = param_1;
+
+   No more CONCAT12/ZEXT24 reconstruction garbage (that part of the output
+   changed), but there is still NO bank widening at all -- no <<16, no
+   |0x10000. It's a bare, untyped, single-register pointer. spSegment(EP,...)
+   compiles and runs without crashing (no schema violation, no "Multiple
+   segmentops" error this time), but at the decompiler-output level it
+   produces exactly what this file's own earlier pspec comment predicted:
+   a userop call to a register not in constresolve decompiles as an opaque
+   CALLOTHER with no pointer significance. EP still isn't in constresolve
+   (blocked by the single-register-per-space schema limit -- TP already
+   holds that slot for SP/FP), so the segmentop call is legal (matching the
+   x86 SS/ES/CS precedent) but never gets constresolve's pointer-recognition
+   benefit, and collapses to a page-less raw pointer instead.
+
+   CONCLUSION: Step 3b is installed and stable (no crash), but does NOT fix
+   this repro. Root cause is structural (the constresolve single-register
+   limit), not a grammar defect in the 18 rewritten sites -- the sites
+   themselves look correct.  Grammar changes left in place (installed,
+   working, just not delivering the intended decompiler benefit for
+   genuinely dynamic EP values); nothing found indicates a regression on
+   previously-good EP-banked decompiles, but that comparison against
+   mut_verification_status.md's already-confirmed EP-banked functions is
+   STILL NOT DONE and remains the next concrete step, alongside deciding
+   whether to revert Step 3b (no benefit for the dynamic case, added
+   complexity) or leave it (harmless, arguably marginally cleaner output,
+   and already matches x86 precedent shape) while treating the
+   dynamic-EP-pointer-recognition gap as an accepted, documented limitation.
+   Possibly worth first checking how many functions in this ROM actually do
+   a genuinely dynamic (non-zero, runtime-loaded) ldc.b ...,EP the way this
+   repro does, vs. relying on the tracked_set-pinned EP=0 default -- if
+   dynamic EP is rare, this gap may not be worth further engineering effort
+   beyond what's already here.
+
+   REGRESSION CHECK (2026-07-21, same-day follow-up): confirmed no
+   regression from Step 3b. Six already-confirmed EP-adjacent functions
+   (isc_eeca_eecc_eece_correction_calc, wgdc_correction_integrator_update,
+   fuel_pw_and_airvol_compute, isc_f402_stepper_target_calc,
+   canister_purge_duty_calc_f4ac, isc_f3fa_f3fc_f3fe_correction_calc)
+   force_decompile clean -- though note these all use direct absolute
+   (DP-banked) addressing, not @R4/@R5, so they don't directly exercise the
+   EP segmentop path. A live grep of the whole ROM's current decompile for
+   unaff_R4/unaff_R5 found exactly two genuine hits (boot_ram_block_copy
+   @0x20024, sci1_boot_checksum_accumulate @0x202b2), and diffing both
+   against the pre-session hex_old.c snapshot confirms the identical
+   unaff_R4/unaff_R5 symptom already existed there (via the old
+   CONCAT12(in_EP,unaff_R4) idiom) before any of today's EP/segmentop work
+   -- pre-existing, not introduced by Step 3b.
+
+   NEW BUG CLASS IDENTIFIED, NOT PREVIOUSLY TRACKED (2026-07-21): the root
+   cause of unaff_R4/unaff_R5 on these two functions is NOT EP-banking or
+   segmentop/constresolve at all -- it's that R4 (and sometimes R5) is a
+   genuine incoming register parameter on these boot-loader functions
+   (boot_ram_block_copy, sci1_boot_checksum_accumulate, and likely other
+   sci1_boot_*/flash_* functions not yet enumerated) that Ghidra's default
+   H8 calling-convention/prototype model never recognizes -- the function
+   signature only declares the stack/standard-register params, so R4/R5
+   show up as \"unaff\" regardless of how the address math underneath is
+   written (true both for the old manual zext/shift/or pattern and the new
+   spSegment call -- confirmed identical opacity either way). This is a
+   DIFFERENT bug from the EP-segmentop/constresolve gap documented above and
+   should be tracked separately: fixing it needs a custom calling-convention
+   entry / per-function set_function_prototype declaring R4 (and R5 where
+   relevant) as real input parameters for the affected boot-loader
+   functions, not any further grammar work on EP banking. Supporting
+   evidence this is isolated to R4/R5-as-parameter rather than banked
+   addressing in general: a parallel grep for unaff_R0/unaff_R1/unaff_R2
+   across the ENTIRE current decompile returned ZERO hits -- DP-banked
+   (R0-R3) accesses never show this opacity anywhere in the ROM, only R4/R5
+   do, and only on this small boot-loader cluster.
+   NOT YET DONE: (1) enumerate every remaining unaff_R4/unaff_R5 site across
+   the full ROM to size this bug class properly (only two confirmed so far,
+   likely more in the sci1_boot_*/flash_* family given the shared boot
+   protocol); (2) design and test a custom prototype/calling-convention fix
+   for R4/R5-as-parameter on the affected functions; (3) re-verify that the
+   badly-chosen flash_vpp_pulse_handshake_echo_verify repro used earlier in
+   this item is retired as a segmentop test case, since its EP value is a
+   genuine runtime parameter that no static-analysis mechanism (segmentop,
+   constresolve, or otherwise) can ever resolve to a literal address --
+   testing segmentop's value against a genuinely constant-EP function (the
+   DP=1-style pattern already confirmed working elsewhere) would be a fairer
+   comparison and hasn't been done yet either."
+
 --------
 
 Build/test workflow (Sleigh compile + deploy) -- reference, add once, stop asking
@@ -866,12 +1056,5 @@ Steps:
    Sanity check after copying (both listings should show matching timestamps for
    every h8539f* file): Get-ChildItem "$src" | Select Name,LastWriteTime
    and the same command against $dst.
-4. Test in the Ghidra project as normal (reanalyze / re-open the program to pick up
-   the new .sla). NOTE: an already-open program can cache old instruction-level
-   pcode even after reanalyze/close+reopen/delete+recreate-function -- if a source
-   change still doesn't show up in decompile output after confirming the install
-   directory has fresh files, importing into a fresh project is the reliable way
-   to confirm the fix, since a new project reads the language definition cold.
-5. Safety net: if a bad compile or bad copy breaks the installed language, just
-   delete the .sla in the Ghidra install languages folder above -- Ghidra
-   regenerates it from the baseline/source shipped there. Nothing is unrecoverable.
+4. run the script  ReloadSleighLanguage.java in Ghidra to refresh the open project with the new sleigh files.
+5. Test in the Ghidra project as normal
