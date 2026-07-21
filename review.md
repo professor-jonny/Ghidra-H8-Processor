@@ -34,10 +34,30 @@ Verified correct
 Open items
 ----------
 
-2. Address Table bookmark at 0x13898 (5 entries) -- still unresolved
-   No code xref, no clean repeating structure, sits in a messy byte region
-   alongside other coincidental-looking pointer values -- treat with
-   suspicion pending the Step 5d verification tool (item 4 below).
+2. Address Table bookmark at 0x13898 (5 entries) -- RESOLVED, false positive
+   (2026-07-21 session). Decoded the 5 words: 0x1709A, 0x170EB, 0x17136,
+   0x1713C, 0x17148. Checked each live in Ghidra:
+     - 0x1709A: real function, unnamed -- SCI1 RX setup handler (touches
+       SCI1_RDR, buffer descriptor @0xF9BA-0xF9C2, status bits 0xFECA/
+       0xFECC/0xFF0D). Runs 0x1709A-0x170E9, ends in prts.
+     - 0x170EB: real function, unnamed -- SCI1 TX setup handler, mirror
+       structure (touches SCI1_TDR instead). Runs the full 0x170EB-0x17134,
+       ends in prts at 0x17134.
+     - 0x17136/0x1713C/0x17148: NOT functions. Confirmed via raw disassembly
+       listing that 0x17134 is the prts ending 0x170EB's body, and every
+       byte from 0x17136 onward is undecoded filler (??), not reached by
+       any real code. Trial create_function (dry_run) at each of the three
+       produced only 6-12 byte fragments with no real prologue/epilogue --
+       Ghidra arbitrarily chunking meaningless bytes, not evidence of real
+       entry points.
+   No xref exists anywhere to 0x13898 itself, nor to 0x1709A or 0x170EB
+   individually -- so even the 2 genuine function pointers are not
+   confirmed to be read as a table at runtime. Conclusion: 0x13898 is a
+   coincidental 2-genuine-pointer + 3-junk-word cluster, not a real
+   dispatch/jump table. No function definitions were added (0x1709A/
+   0x170EB already exist as functions; 0x17136/3C/48 correctly have none).
+   Closing this item -- no further action needed unless a future xref scan
+   turns up an actual code read of 0x13898.
    The other 6 Address Table bookmarks originally listed here (0x10140,
    0x2d8ec, 0x2d9ac, 0x2d9ec, 0x2da6c, 0x2db2c) are resolved: none were
    jump/dispatch tables. 0x2d8ec is a genuine ISCV/idle-RPM dispatch
