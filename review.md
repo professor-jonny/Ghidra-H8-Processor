@@ -160,8 +160,39 @@ Open items
        div_u32_u16_rounded now that more functions are named). Also: Load1B producer
        not found (only reset paths located), WGDC vs WGDCCorr relationship untraced,
        a four-way coolant-temp address conflict with none reconciled, two undecoded
-       gear-config table addresses, ~140 remaining "Bad Instruction" bookmarks
-       clustered at 0x10000-0x10090/0x14000-0x14e10.
+       gear-config table addresses.
+       CORRECTED (2026-07-21): the "~140 remaining Bad Instruction bookmarks
+       clustered at 0x10000-0x10090/0x14000-0x14e10" figure below is STALE --
+       that backlog is resolved under the newer Sleigh grammar. Ghidra's
+       current error list shows only 3 remaining Bad Instruction entries:
+         - 000201ae "Failed to disassemble ... due to conflicting instruction"
+           (mov:g.w #0x8141:16,@(0x15f2:16,SP)) -- CHECKED: this is a genuine
+           call target (4 UNCONDITIONAL_CALL xrefs from 20175/2017e/2019a/
+           201a3, matches the "call to offcut address within same function"
+           pattern already noted in sci1_boot_cmd_type_rx_validate/
+           sci1_boot_cmd_dispatch's decompile). The boot ROM deliberately
+           calls into the middle of another instruction's byte encoding to
+           save ROM space; the two overlapping decodes (straight-line vs.
+           entered-at-the-call-target) legitimately conflict under Ghidra's
+           one-address-one-instruction listing model. Not a grammar bug --
+           both decodes are individually correct, they just can't coexist
+           in the listing. No fix needed/possible at the Sleigh level.
+         - 00020462 "Failed to disassemble ... due to conflicting instruction"
+           (subx.w @(-0x4863:16,SP),SP) -- CHECKED: same pattern, one xref
+           (UNCONDITIONAL_CALL from 20315), same offcut-call-target
+           explanation as 201ae above.
+         - 0002f4d0 "Maximum run of repeated byte instructions exceeded"
+           (btst.w 0xf,@(-0x1:16,SP), flow from 0002f4cc) -- CHECKED: zero
+           xrefs to either 2f4cc or 2f4d0; inspect_memory_content at 0x2f4a0
+           confirms a solid run of 0xFF fill bytes (flash padding/unused
+           space). Ghidra's repeated-byte disassembly guard is correctly
+           rejecting a spurious flow into unreached filler, not failing on
+           real code.
+       CONCLUSION: none of the 3 remaining entries are actual Sleigh grammar
+       defects -- 2 are legitimate overlapping-instruction artifacts from
+       intentional offcut-call code reuse, 1 is a non-issue (unreached flash
+       padding). The Bad Instruction backlog is effectively CLOSED; nothing
+       further to do here.
      - RETRACTED DEAD ENDS: explicitly do-not-re-investigate list, including a claim
        that "0x3898[chan] dispatch table" was decoded as a generic ADC/DMA transfer
        descriptor state machine (init/start/poll/ready/done), NOT RPM-specific.
@@ -764,8 +795,15 @@ Open items
          genuinely still show unaff_FP/unaff_R3/unaff_R5 live, but this is
          CONFIRMED UNRELATED to the SP24/FP segmentop work -- it's the same
          pre-existing "Bad Instruction" jump-table reconstruction problem on
-         this function already flagged under item 7 (the ~140 Bad
-         Instruction backlog candidate). Several switch cases (0/2/4/6) hit
+         this function already flagged under item 7 as a Bad Instruction
+         backlog candidate. NOTE (2026-07-21): the general "~140 Bad
+         Instruction backlog" this was filed under has since been corrected/
+         closed (see item 5's open-items list) -- but 0x28b2f's problem is a
+         DECOMPILER-level jump-table reconstruction failure
+         (halt_baddata()/"Could not recover jumptable"), not one of the 3
+         disassembler-level Bad Instruction bookmark entries that backlog
+         correction covered. This item stays OPEN on its own merits,
+         untouched by that correction. Several switch cases (0/2/4/6) hit
          `halt_baddata()` with "WARNING: Bad instruction - Truncating
          control flow here"; the decompiler abandons register tracking
          entirely for those case bodies, which is what surfaces as
@@ -1015,6 +1053,42 @@ Open items
    testing segmentop's value against a genuinely constant-EP function (the
    DP=1-style pattern already confirmed working elsewhere) would be a fairer
    comparison and hasn't been done yet either."
+
+   DP BANKING -- CHECKED, DEFERRED (2026-07-21, same-day follow-up): searched
+   for the one instruction shape that could ever put a genuinely dynamic
+   (non-constant) value into DP -- `ldc.b Rn,DP` (register-direct source,
+   byte pattern 8D A0-A7, mask FFF8) -- across the entire ROM. ZERO matches.
+   Every ldc.b...,DP site in this binary uses the imm8 (compile-time
+   constant) form or a statically-known memory source; DP is never loaded
+   from a register at runtime anywhere in this ROM. This is consistent with,
+   and explains, the earlier finding that a live grep for unaff_R0/unaff_R1/
+   unaff_R2 across the whole decompile returned zero hits -- there is no
+   live decompiler symptom for DP banking to fix, because tracked_set's
+   DP=0 pin already covers every DP value this ROM ever actually uses.
+   DECISION: do NOT convert the remaining ~37 DP-banked sites
+   (Rn_banked/Rs_banked/disp8_banked/disp16_banked R0-R3 rows) to
+   spSegment(DP,...). No repro exists to justify the much larger blast
+   radius (every general register-indirect/displacement addressing mode
+   in the ISA, not just EP's narrow R4/R5 slice), and Step 3b already
+   proved that even a real repro wouldn't benefit from the conversion --
+   same constresolve single-register-per-space limit as EP, no reason to
+   expect a different outcome for DP.
+   STATUS: left OPEN but DEFERRED, not closed outright -- if a future ROM
+   (different revision, different calibration) or a not-yet-analyzed
+   function turns out to load DP dynamically, re-run this same byte-pattern
+   search first to confirm a real repro exists before reopening any
+   grammar work here.
+
+   ITEM 8 OVERALL STATUS (2026-07-21): Step 1 (SP) and Step 2 (FP) are
+   DONE/PASSED -- genuine fixes, verified live, no regressions found.
+   Step 3 (EP) is installed and stable but delivers no decompiler benefit
+   for dynamic EP values, due to the constresolve single-register-per-space
+   limit (TP already holds that slot) -- documented, accepted limitation,
+   matches x86 SS/ES/CS precedent exactly. DP banking is deferred per the
+   note above, with a concrete zero-cost re-check (the byte-pattern search)
+   to run first if it's ever suspected of mattering. No further action
+   planned on item 8 unless one of these deferred branches produces a live
+   repro.
 
 --------
 
