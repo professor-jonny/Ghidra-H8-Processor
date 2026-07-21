@@ -1176,7 +1176,7 @@ undefined2 DAT_0000f276;
 undefined2 DAT_0000f278;
 undefined2 DAT_0000f27a;
 undefined2 DAT_0000f27c;
-undefined FUN_000242f5;
+undefined f0ba_f2d0_o2_mode7_8_correction_calc;
 undefined f25e_gate_chain_dispatch_b;
 undefined f2a0_f2c6_dual_timer_decay_and_f2c8_blend_dispatch;
 undefined f2ca_table_override_from_f114_gate;
@@ -2022,14 +2022,6 @@ short DAT_0001f638;
 short DAT_0001f636;
 undefined DAT_0000f3d6;
 undefined DAT_0000f3d8;
-
-void FUN_00012171(void)
-
-{
-  return;
-}
-
-
 
 short sat_add_u16(void)
 
@@ -5626,6 +5618,22 @@ undefined2 sci1_tx_response_feeder(undefined2 param_1)
 
 
 
+// SCI1 receive-frame byte accumulator. Confirmed 2026-07-22 while tracing the
+// sci1_meta_cmd_dispatch_c0_ff (0x28869) command-byte source: on each SCI1
+// receive interrupt, appends one live byte (from DAT_0001fecd, the SCI1 UART
+// receive-data register) into an 11-byte buffer starting at RAM 0xf534
+// (labeled sci1_rx_frame_buf_0), indexed by the running counter DAT_0001f584
+// (0-10, computed store address = ((f584<<1)|0x10000)-0xacc, which equals
+// 0xf534 exactly when f584==0). Buffer resets (f584=0, f590=0, f522 bit7
+// cleared) on frame-boundary/error conditions (f522 bit0==0, or the f522
+// bit7 "frame complete" flag already set). f522 bit5 gets set as a
+// side-channel flag when fecc bits 3-5 indicate something (not yet named).
+// sci1_dispatch_and_latch_response (0x2882b) later reads buffer index 0
+// (0xf534) as the command byte and passes it unfiltered to the 0x28869
+// dispatcher -- confirms the command byte really is live, wire-controlled
+// data, not a fixed/internal value. See mut_verification_status.md "DP=2
+// POINTER TABLE ... RESOLVED" section for the full chain.
+
 undefined2 sci1_rx_frame_accumulator(undefined2 param_1)
 
 {
@@ -6538,7 +6546,7 @@ undefined2 peripheral_block_ff00_warm_init(undefined2 param_1)
 
 
 
-void FUN_0001709a(void)
+void sci1_rx_setup(void)
 
 {
   DAT_0001fecc = DAT_0001fecc & 0x87;
@@ -6554,7 +6562,7 @@ void FUN_0001709a(void)
 
 
 
-undefined2 FUN_000170eb(undefined2 param_1)
+undefined2 sci1_tx_setup(undefined2 param_1)
 
 {
   DAT_0001f9ba = 0x4000;
@@ -9959,6 +9967,17 @@ void o2_heater_iat_zone_select_f4f0(void)
 
 
 // WARNING: Restarted to delay deadcode elimination for space: ram
+// [VERIFIED 2026-07-22] o2_heater_duty_f4da_calc: writes F4DA (PWM-style duty
+// value, clamped 0-0xFF via clamp_u8). Gated by two temperature-threshold state
+// bits (F4D8 bit0/bit1, compared against 0x10F02/0x10F04/0x1017A/0x10F00 ROM
+// tables), an O2 heater soak-enable check (o2_heater_soak_enable_check), and a
+// force-off check (o2_heater_force_off_check, forces F4DA=0xFF when tripped).
+// Also sets F046 (mode select) based on F3F0 bit4. This is an actuator output
+// (O2 sensor heater duty cycle), NOT a MUT sensor read -- F4DA is not itself a
+// MUT ReqID in the 0x2fad0 table, sits just outside the F4Dx/F4Ex cluster
+// (ReqID 0x8C-0x93) documented in mut_verification_status.md. Referenced here
+// because it was checked as a candidate producer for that cluster and ruled
+// out (writes F4DA only, not any of the 8 cluster addresses).
 
 void o2_heater_duty_f4da_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -14272,6 +14291,23 @@ void rpm_load_zone_counter_update(void)
 
 
 
+// [VERIFIED 2026-07-22] inj_channel_state_init: unconditionally sets 6 RAM cells
+// (EE8C/EE8E/EE90/EE92/EE94/EE96 -- MUT ReqID 0x60-0x65, per-table entries
+// MUT_60_entry..MUT_65_entry at ROM 0x2fb90) to the neutral value 0x8080 (no
+// gating conditions, no per-cylinder differentiation in this function). Matches
+// the shape of a per-cylinder fuel-trim/balance array (6 entries, centered at
+// 0x80=neutral for what may be a signed offset scale), but this is INFERENCE,
+// not confirmed semantics.
+// No runtime/per-cycle updater has been found despite checking every *inj*- and
+// *cyl*-named function in the ROM (fueling_inj_pw_calc, fueling_inj_target_select,
+// fueling_inj_accum_clamp_drain, per_cyl_knock_flag_update_cyl_a/b -- none touch
+// this address range). Static xref search also returns zero hits (consistent
+// with this ROM's known indirect/bank-prefixed addressing blind spot).
+// Open question: if these 6 values move during live logging, a real runtime
+// writer exists via indirect addressing and is worth re-tracing. If they never
+// move, this may be an unused/init-only feature. See mut_verification_status.md
+// EE8C-EE96 cluster entry.
+
 void inj_channel_state_init(void)
 
 {
@@ -15893,7 +15929,7 @@ void engine_periodic_correction_master_dispatch(void)
 {
   knock_octane_trim_master_dispatch();
   knock_octane_secondary_dispatch();
-  (*FUN_000242f5)();
+  (*f0ba_f2d0_o2_mode7_8_correction_calc)();
   f2d2_composite_correction_calc();
   f2ce_f2cc_o2_mode11_correction_calc();
   injpw_airvol_reset_on_fuelcut();
@@ -17472,7 +17508,7 @@ undefined2 f1fe_bit3_clear_and_f1f2_bit4_set_check(void)
 
 
 
-void FUN_000242f5(void)
+void f0ba_f2d0_o2_mode7_8_correction_calc(void)
 
 {
   undefined2 uVar1;
@@ -19363,6 +19399,13 @@ ushort isc_f34c_correction_calc
 
 
 
+// [CHECKED 2026-07-22] isc_f4d6_gated_offset_calc: gated by isc_f4d6_gate_condition_check
+// and a >0x13 threshold check, computes a saturated 2x-multiply offset. Return
+// value only (in_stack_00000004) -- decompiler shows no direct RAM store in this
+// function body; caller not traced this session. Checked as a candidate producer
+// for the F4Dx/F4Ex MUT ReqID 0x8C-0x93 cluster (mut_verification_status.md) and
+// ruled out -- no write to any of F84F/EEFB/F4DF/F4DD/F4E5/F4E7/F4EB/F4DB found here.
+
 short isc_f4d6_gated_offset_calc(void)
 
 {
@@ -20336,6 +20379,16 @@ ushort isc_f426_f03a_decay_calc(ushort param_1)
 }
 
 
+
+// [VERIFIED 2026-07-22] f4de_f4e2_octane_correction_calc: writes F4DE (interpolated
+// correction value, two axis_lookup_interp calls, zeroed when F20E bit0/bit4 set)
+// and F4E0/F4E2 (a mirrored/shifted copy pair with saturating div/mul against
+// F0A/F0C/F0E thresholds), gated on a config flag (0x102eb) and o2_config4_mode16_check.
+// Confirms F4DE/F4E2 (already-named MUT table addresses) plus reveals F4E0 as a
+// third address in the same write group (not itself a listed MUT ReqID in the
+// 0x2fad0 table). Checked as a candidate producer for the separate F4Dx/F4Ex MUT
+// ReqID 0x8C-0x93 cluster (mut_verification_status.md) and ruled out -- none of
+// F84F/EEFB/F4DF/F4DD/F4E5/F4E7/F4EB/F4DB are touched by this function.
 
 void f4de_f4e2_octane_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -23398,13 +23451,39 @@ void sci1_dispatch_and_latch_response(void)
 
 
 
-// [FOUND 2026-07-14, UPDATED 2026-07-15] Real command-byte dispatcher for SCI1,
+// [FOUND 2026-07-14, UPDATED 2026-07-15, 2026-07-22] Real command-byte dispatcher for SCI1,
 // separate from the MUT table (0x2fad0)/adc_sensor_convert_single (0x171c3)
 // read path used throughout mut_verification_status.md.
 // 
-// - Command byte < 0xC0 (boundary check @0x28870): looks up a WORD in a ROM
-//   pointer table at 0x2530 (command_byte<<1, DP=2), dereferences it, returns
-//   a byte. DIFFERENT table from the 0x2fad0 MUT table. NOT YET MAPPED.
+// - Command byte < 0xC0 (boundary check @0x28870): looks up a WORD via
+//   eaw_disp16 addressing on Rn_banked(R0), DP=2 -- i.e. effective address
+//   = ((DP<<16)|R0) + (-0x530), a genuine 24-bit banked ROM read, NOT a
+//   raw absolute offset (grammar traced 2026-07-22: h8539f.slaspec's
+//   eaw_disp16 constructor uses Rn_banked, and Rn_banked for R0 computes
+//   (zext(DP)<<16)|zext(R0) before the disp16 add). Table region labeled
+//   sci1_cmd_lt0xc0_ptrtable_unprogrammed @ 0x1fad0.
+//   RESOLVED 2026-07-22: swept the ENTIRE possible table span (cmd 0x00-0xBF,
+//   0x1FAD0-0x1FC4E) plus generous padding (0x1F800-0x1FC90, ~1200 bytes) --
+//   ALL 0xFF, i.e. this table is completely UNPROGRAMMED/blank on this ROM
+//   (RVR_1998_x3 4g63t 21000011 md352553.hex). Confirmed these are real,
+//   in-range, successfully-read addresses (not an invalid-address error --
+//   contrast-tested against a genuinely out-of-range address, e.g. 0x2530,
+//   which fails outright with "Unable to read bytes"). This branch is a
+//   dead/unimplemented code path on THIS ROM. NOT checked on the other two
+//   ROM files present in test/rvr/roms/ (21000012/md352554, w4a51/md352554)
+//   -- open, if ever revisited.
+//   REACHABILITY CONFIRMED 2026-07-22: this branch is genuinely reachable,
+//   not hypothetical. Caller sci1_dispatch_and_latch_response (0x2882b)
+//   invokes this function unconditionally on command-byte value (gated only
+//   by flags f522 bit6/bit5, never by byte range). The command byte is read
+//   from RAM 0xf534, labeled sci1_rx_frame_buf_0 this session -- traced via
+//   search_byte_patterns (get_bulk_xrefs came back empty, known banked-access
+//   blind spot) to sci1_rx_frame_accumulator (0x16759), which computes
+//   ((f584<<1)|0x10000)-0xacc == 0xf534 when index f584==0. f584 is a 0-10
+//   running index into an 11-byte accumulator filled live from DAT_0001fecd
+//   (the SCI1 UART receive-data register) as bytes arrive on the wire -- i.e.
+//   0xf534 is genuinely the first byte of whatever a connected tool sends,
+//   completely unfiltered before reaching this dispatcher.
 // 
 // - Command byte 0xC0-0xD8 (excl. C3/C4/CA/CB): TABLE-DRIVEN via a 4-byte-per-
 //   entry table at ROM 0x13740 (cmd_c0_d8_actuator_bit_table, 20 entries,
@@ -23413,7 +23492,11 @@ void sci1_dispatch_and_latch_response(void)
 //   the bitmask applied. FULLY DECODED: clean one-bit-per-command sweep
 //   across f512 bits 0-4,6 and f510 bits 0-13. Slots C0-C2/C5/CC are stubbed
 //   mask=0 (unimplemented/reserved). 0xCA/0xCB have live table entries but
-//   are UNREACHABLE - intercepted earlier and always error.
+//   are UNREACHABLE - intercepted earlier and always error. RE-VERIFIED
+//   2026-07-22 via direct read_memory of the first 80 bytes (0x13740): byte0=1/
+//   byte2-3=0x0000 for C0-C4 (stub), then a clean descending one-bit sweep
+//   (0x10,0x08,0x04,0x02,0x01) starting at entry C5 -- exact match, no
+//   discrepancy found against this comment's existing claim.
 // 
 // - Hardcoded (non-table) cases: 0xC3->f512 bit6, 0xC4->f516 bits6+8,
 //   0xD9->f510 bit0, 0xFA->f516 bit2+5, 0xFB->f516 bit6, 0xFC->f516 bit7.
@@ -23445,14 +23528,24 @@ void sci1_dispatch_and_latch_response(void)
 //     anywhere, including in the periodic phase sequencer. STILL OPEN.
 //   - f510/f512: still NO known reader anywhere in the program.
 // 
+// MODE5 ACTUATOR REQUESTID CONCLUSION (2026-07-22): the RVR EvoScan XML
+// profile's 8 Mode5 (Actuator Test) RequestIDs -- 0x01 Fuel Pump Relay,
+// 0x02 EGR Solenoid, 0x03 Purge Control Solenoid, 0x04 A/C Relay,
+// 0x05/0x06 Condenser Fan Hi/Lo, 0x17 Ignition Timing Fix, 0x1A ISC Step Fix
+// -- do NOT map onto anything live on this ROM. Checked both candidate
+// mechanisms exhaustively: they're not in the 0xC0-0xFF table-driven range
+// (wrong byte values), and the <0xC0 DP=2 table they'd otherwise use is
+// completely unprogrammed (see above). Treat as inherited-but-unimplemented
+// on this specific calibration, not merely unverified. Do not transmit any
+// of these 8 commands to a real vehicle expecting a specific effect.
+// 
 // NOT YET DONE: writer for f516 bits 1/12; any reader for f510/f512; physical
-// hardware meaning of any bit; the <0xC0 pointer table; whether this
-// dispatcher is reachable from SCI3 or only SCI1; whether the RVR MUT
-// profile's Mode5 RequestIDs (01-06, 17, 1A etc.) map onto this 0xC0-0xFF
-// range or the <0xC0 table - NO evidence of overlap found (Mode5 bytes are
-// all <0x20, structurally distinct from this dispatcher's 0xC0-0xFF range).
-// See mut_verification_status.md "REAL COMMAND DISPATCHER FOUND" / Load1B
-// item 1 for full details. Caller: sci1_dispatch_and_latch_response (0x2882b).
+// hardware meaning of any bit; whether this dispatcher is reachable from SCI3
+// or only SCI1; whether the DP=2 table is programmed on either of the other
+// two ROM files in test/rvr/roms/.
+// See mut_verification_status.md "REAL COMMAND DISPATCHER FOUND" / "DP=2
+// POINTER TABLE ... RESOLVED" / Load1B item 1 for full details. Caller:
+// sci1_dispatch_and_latch_response (0x2882b).
 
 ushort sci1_meta_cmd_dispatch_c0_ff
                  (undefined2 param_1,undefined2 param_2,undefined2 param_3,short param_4)

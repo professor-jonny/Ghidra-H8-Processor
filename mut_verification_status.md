@@ -801,3 +801,220 @@ untraced. Next step agreed with user: continue working the *_calc/
 prioritize clusters adjacent to CONFIRMED cells (per the F5C0 and
 F970-F973 precedents) over isolated BLANK rows, since isolated BLANK
 rows have so far always come back zero-hit on static xref.
+
+PRODUCER-SIDE SWEEP, ROUND 3 (2026-07-22 session)
+------------------------------------------------------------------
+Continued the *_calc function-list approach from Round 2.
+
+EE8C-EE96 cluster (ReqID 0x60-0x65): addresses independently RE-CONFIRMED --
+these already carry live Ghidra data labels MUT_60_entry..MUT_65_entry at
+ROM 0x2fb90 (6-entry, 2-byte-stride table), so the master table's scrape was
+correct. ONE writer found: inj_channel_state_init (0x21f00, renamed from
+FUN_00021f1a in an earlier pass -- same function, Ghidra just resolved a
+mid-body address to it) unconditionally sets all six to neutral value 0x8080,
+no gating conditions. No runtime/per-cycle updater found despite checking
+every *inj*- and *cyl*-named function (fueling_inj_pw_calc, which DOES show
+a genuine 4-way per-cylinder repeating write pattern at F186/188/18A/18C +
+F190/192/194/196 -- confirming this ROM does use per-cylinder arrays
+elsewhere, just not reachable from this specific search for THIS cluster).
+Plate comment added to inj_channel_state_init documenting all of this.
+Remains OPEN: if these 6 values move during live logging, a real runtime
+writer exists via indirect addressing not yet located; if they never move,
+likely an unused/init-only feature.
+
+F84F/EEFB/F4DF/F4DD/F4E5/F4E7/F4EB/F4DB cluster (ReqID 0x8C-0x93): addresses
+RE-CONFIRMED via live Ghidra data labels MUT_8C_entry..MUT_93_entry at ROM
+0x2fbe8 (8-entry, 2-byte-stride table, immediately following WGDCCorr/0x8B
+and preceding the F0BB dead-cell run at 0x94/0x95). Disassembly comment
+added at 0x2fbe8 documenting this. Checked three nearby *_calc functions as
+candidate producers -- all ruled out, none write any of the 8 target
+addresses:
+  - o2_heater_duty_f4da_calc (0x19bbc): confirmed real O2 heater PWM duty
+    writer (F4DA only), plate comment added.
+  - isc_f4d6_gated_offset_calc (0x259df): computed offset, no direct RAM
+    store in this function body, plate comment added.
+  - f4de_f4e2_octane_correction_calc (0x265c9): confirmed writer of F4DE/
+    F4E0/F4E2 (a related-but-distinct triplet, F4E0 not previously
+    documented as part of this write group), plate comment added.
+No producer found for any of the 8 cluster addresses. All three ROM-level
+findings above should be considered solid/current; the producer question
+for this cluster remains genuinely open.
+
+DP=2 POINTER TABLE (<0xC0 dispatcher branch) -- RESOLVED (2026-07-22 session)
+------------------------------------------------------------------
+Followed up on review.md item "c" (resolve the <0xC0 pointer table in
+sci1_meta_cmd_dispatch_c0_ff @0x28869, gating whether Mode5 RequestIDs
+01-06/17/1A map onto it).
+
+MECHANISM CONFIRMED (grammar-level, not guesswork this time): the relevant
+instruction is `mov:g.w @(-0x530:16,R0),R1` at 0x2887e, preceded by
+`ldc.b 0x2,DP` at 0x2887b. This EA form compiles via h8539f.slaspec's
+eaw_disp16 constructor, which uses Rn_banked (NOT raw Rn) as its base:
+  Rn_banked "R0" (Rn=0): local addr:4 = (zext(DP) << 16) | zext(R0); export addr;
+  eaw_disp16: tmp = (Rn_banked + disp16); export *:2 tmp;
+So the effective address is ((DP<<16)|R0) + disp16, evaluated as a full
+24-bit quantity (banking happens BEFORE the disp16 add, confirmed by
+decompile_function's own constant-folded output under tracked_set:
+`((param_4 << 1) | 0x20000) - 0x530`, where 0x20000 = DP(2)<<16). This
+matches the space="ram" default_memory_blocks layout, which per
+list_segments has a SEPARATE lowercase "ram" block spanning 0x10000-0x2ffff
+(the ROM image itself, loaded at base 0x10000) alongside the real chip
+"RAM" block at 0xee80-0xffff. DP=2 banked addresses land in the ROM/"ram"
+block, not chip RAM -- consistent with this being a ROM-resident pointer
+table, not a runtime-computed one.
+
+For cmd_byte=0x01 (Fuel Pump Relay, one of the 8 disputed Mode5 rows):
+  addr = ((2<<16) | (0x01<<1)) - 0x530 = 0x020002 - 0x530 = 0x1FAD2
+
+LIVE ROM CHECK: read_memory/inspect_memory_content at 0x1fad2, and swept the
+entire plausible table span for cmd_byte 0x00-0xBF (0x1FAD0-0x1FC4E, 384
+bytes) plus generous padding on both sides (0x1F800-0x1FC90, ~1200 bytes
+total) -- ALL 0xFF. This is unprogrammed/blank flash, not a decode error
+(0x1fad2 itself IS a valid, in-range address inside the ram:0x10000-0x2ffff
+block -- reads succeed and return real backing bytes, they're just all
+0xFF, unlike a truly out-of-range address which fails outright as
+confirmed by contrast-testing 0x2530 directly, which errors with "Unable
+to read bytes").
+
+CONCLUSION: on THIS ROM image (RVR_1998_x3 4g63t 21000011 md352553.hex),
+the DP=2 pointer table that would service SCI1 command bytes <0xC0 is
+entirely blank. Every command byte in that range that reaches the table
+read will dereference 0xFFFF -> attempt a byte read at ROM 0xFFFFFF-ish
+(FF as page, i.e., effectively an invalid/wrapped access) -- this branch
+is a dead/unimplemented code path on this specific ROM revision, not a
+live actuator-command mechanism. Confirms (rather than merely leaves open)
+that RequestIDs 01-06/17/1A do NOT map onto anything live via this route
+either. Combined with the earlier finding that they also don't fall in the
+0xC0-0xFF table-driven range, there is now no remaining live-code candidate
+mechanism for those 8 RequestIDs on this ROM -- they should be treated as
+inherited-but-unimplemented on this specific calibration, not merely
+"unverified." mut_verification_status.md's Mode5 XML fix (below) can be
+updated accordingly if desired, though "(UNVERIFIED)" vs "(UNIMPLEMENTED ON
+THIS ROM)" is a wording choice, not a new investigative step -- the
+open item is effectively closed absent a different ROM revision to compare
+against (a different .hex file/calibration might have this table
+programmed; not checked, out of scope for this ROM).
+
+Reachability check: sci1_meta_cmd_dispatch_c0_ff has exactly one caller,
+sci1_dispatch_and_latch_response (0x2882b), consistent with the existing
+plate comment -- this is a static-reachability check, not proof the <0xC0
+branch never executes in the field, but combined with the blank table it
+would return garbage/0xFF if it ever did fire.
+
+REACHABILITY CONFIRMATION + MODE5 ACTUATOR ID SUMMARY (2026-07-22, same
+session, follow-up to the DP=2 table finding above)
+------------------------------------------------------------------
+Re-verified the caller chain end-to-end rather than trusting the prior
+write-up on faith:
+
+- sci1_dispatch_and_latch_response (0x2882b) calls sci1_meta_cmd_dispatch_c0_ff
+  UNCONDITIONALLY on command-byte value -- gated only by flags f522 bit6=1/
+  bit5=0, never by the byte's range. Confirmed via decompile_function, not
+  assumption.
+- The command byte itself is read from RAM 0xf534. get_bulk_xrefs on 0xf534
+  returns zero (known banked-access blind spot), but search_byte_patterns
+  found it referenced at 0x16759 (sci1_rx_frame_accumulator). That function
+  computes `((DAT_0001f584 << 1) | 0x10000) - 0xacc`, which equals exactly
+  0xf534 when the running index f584 is 0. f584 is an incrementing 0-10
+  index into an 11-byte accumulator filled from DAT_0001fecd (the live
+  SCI1 UART receive-data register) as bytes arrive on the wire.
+  CONCLUSION: 0xf534 is byte 0 of the real SCI1 receive-frame buffer --
+  i.e. it's genuinely the first byte of whatever a connected tool sends
+  over the wire, completely unfiltered before reaching the dispatcher.
+  This means the blank DP=2 table found above is a real, reachable dead
+  end for any tool that ever sends a command byte <0xC0 -- not a
+  hypothetical/unreachable code path.
+- Spot-checked the 0xC0-0xD8 actuator bit table at ROM 0x13740 directly
+  against raw bytes (read_memory, 80 bytes from 0x13740): confirmed byte0=1/
+  byte2-3=0x0000 (stub/mask=0) for entries C0-C4, then a clean descending
+  one-bit sweep (0x10,0x08,0x04,0x02,0x01) starting at entry C5, exactly
+  matching the existing plate comment with no discrepancy found.
+
+FINAL ANSWER, Mode5 (Actuator Test) RequestIDs, this ROM
+(RVR_1998_x3 4g63t 21000011 md352553.hex):
+
+| ReqID | Name (per XML profile, UNCONFIRMED on this ROM) |
+|-------|--------------------------------------------------|
+| 0x01  | Fuel Pump Relay                                   |
+| 0x02  | EGR Solenoid                                      |
+| 0x03  | Purge Control Solenoid                            |
+| 0x04  | A/C Relay                                         |
+| 0x05  | Condenser Fan Hi/Lo (exact split unclear)         |
+| 0x06  | Condenser Fan Hi/Lo (exact split unclear) or 6th distinct actuator |
+| 0x17  | Ignition Timing Fix                               |
+| 0x1A  | ISC Step Fix                                      |
+
+STATUS: none of these 8 IDs correspond to anything live on THIS ROM.
+Exhaustive check of both candidate mechanisms came back negative:
+  (1) 0xC0-0xFF table-driven dispatcher: fully decoded, real bit-toggle
+      logic exists here, but for different command byte VALUES (0xC0+),
+      not 0x01-0x1A. No overlap.
+  (2) <0xC0 DP=2 pointer table: mechanism now fully resolved (see above),
+      and the entire table span is unprogrammed 0xFF on this ROM image.
+Names above are inherited from a generic Mitsubishi MUT-II EFI profile
+template, not confirmed by anything this ROM's own code does. Do not
+transmit any of these 8 commands to a real vehicle expecting a specific
+effect -- best current evidence is they do nothing (or return garbage) on
+this specific calibration.
+
+OPEN, NOT YET DONE: whether a different ROM revision (e.g.
+"RVR_1998_x3 4g63t 21000012 md352554.hex" or the w4a51 AT calibration,
+both present in test/rvr/roms/) has this same DP=2 table actually
+programmed. Not checked -- out of scope unless revisited.
+
+USER-PROVIDED XML: Mitsubishi_MUTII_EFI_RVR_X3_logging_profile.xml
+------------------------------------------------------------------
+This EvoScan logging profile (test/rvr/xml/evoscan/) is the user's working
+master list for actually logging the car, built from this file's earlier
+rounds. It already correctly reflects most of the CONFIRMED/OPEN/BLANK
+rows above, including the full 2026-07-14 Unk_0xNN sweep.
+
+BUG FOUND AND FIXED (2026-07-22): its Mode5 (Actuator Tests) block had 8
+rows (RequestID 01/02/03/04/05/06/17/1A -- Fuel Pump Relay, EGR Solenoid,
+Purge Control Solenoid, A/C Relay, Condenser Fan Hi/Lo, Ignition Timing Fix,
+ISC Step Fix) each annotated "[RAM CONFIRMED ...]" pointing at the MODE 2
+address for that same RequestID number -- e.g. RequestID 0x17 here claimed
+RAM 0xf13d, which is actually TPS's real, independently-confirmed Mode2
+address, not anything actuator-related. This was a paste-across error: the
+Mode2 annotation template got copied onto Mode5 rows without updating the
+underlying mechanism.
+
+What's actually confirmed on the actuator side (see review.md item 7 /
+"REAL COMMAND DISPATCHER FOUND" section above for the original trace,
+extended this session by a full decompile of sci1_meta_cmd_dispatch_c0_ff,
+0x28869): a genuine, live actuator/relay dispatcher exists, handling SCI1
+command bytes 0xC0-0xFF with direct bit manipulation on RAM F510/F512/F516,
+gear-indexed reads via F1FC into ROM tables at 0x232/0x252, and real H8
+hardware timer register names (T2CRH, TMDRA) appearing in the disassembly.
+Actuator-test functionality 100% EXISTS in this ROM -- not in question.
+
+What remains UNRESOLVED: whether RequestIDs 01-06/17/1A (the 8 disputed
+rows) map onto this 0xC0-0xFF dispatcher at all. They structurally do NOT
+(all 8 values are <0x20, nowhere near the 0xC0-0xFF range), so either (a) a
+different, not-yet-found mechanism handles them, or (b) these specific
+RequestIDs don't correspond to anything real on this ECU and were inherited
+from generic EvoScan/Evo tooling convention without verification. A second
+candidate mechanism was explored: the SAME dispatcher function also handles
+command bytes <0xC0 via a DP=2-banked pointer table (raw instruction:
+`ldc.b 0x2,DP` + `mov:g.w @(-0x530:16,R0)`). This table was NOT resolved --
+this project has no verified DP-bank-to-physical-address mapping for the
+H8/539F SLEIGH implementation (confirmed via h8539f-sleigh-grammar notes),
+and a manual resolution attempt this session (assuming DP=2 maps linearly
+to a fixed offset) was unverified guesswork, not a confirmed finding -- it
+should NOT be trusted or built upon without independently deriving the real
+DP-bank semantics first, ideally with input from someone who knows this
+specific H8 variant's banking hardware.
+
+FIX APPLIED: the 8 Mode5 rows had their false "[RAM CONFIRMED]" claims
+removed, Display names marked "(UNVERIFIED)", and Notes rewritten to
+explain exactly which real Mode2 address was mistakenly borrowed for each,
+plus a block comment above <Mode5> explaining the full situation (real
+dispatcher exists and is solid; these specific RequestIDs don't provably
+connect to it; do not transmit any of these 8 commands to a real vehicle
+without independent verification, since an unverified ACTUATOR command --
+unlike a read-only Mode2 item -- could trigger unintended hardware action).
+
+NEXT STEP if pursued: either (a) get a real DP-bank mapping (from hardware
+docs or someone familiar with this H8 variant) and properly resolve the
+<0xC0 pointer table, or (b) determine some other way whether these 8
+RequestIDs correspond to anything real on this ECU at all.
