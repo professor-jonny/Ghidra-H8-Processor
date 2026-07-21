@@ -623,7 +623,11 @@ Open items
      are committed as of now, so "revert tracked_set" and "revert segmentop
      experiment" are both one `git checkout` away, not a manual rewrite).
 
-   Step 1 -- SP-only segmentop spike, isolated:
+   Step 1 -- SP-only segmentop spike, isolated: DONE / PASSED.
+     unaff_SP is fixed -- segmentop confirmed to work for this data-space
+     (ram) widening case. Proceeding to Step 2 (FP extension) below.
+
+     [original spike plan, kept for reference]
      Add ONE <segmentop> block to h8539f.pspec, space="ram", scoped to the
      TP->SP widening only. Try the plain (non-protected) form first, since
      "protected" pulls in x86-16-analyzer side effects that have no reason
@@ -665,8 +669,65 @@ Open items
      the discussion #2749 poster needed) as a separate follow-up spike, not
      as a next default step.
 
-   Step 2 -- SP validated, FP extension:
-     Only after step 1 passes. FP uses an identical TP-banked shape but
+   Step 2 -- SP validated, FP extension: DONE / PASSED (2026-07-21, verified
+     in a fresh project + fresh ROM import per the note below).
+
+     FINAL APPROACH: FP reuses the existing spSegment userop/segmentop
+     (no separate fpSegment) -- see history below for why.
+
+     Verification: sat_add_u16 (0x14000, the documented @(disp8,FP) repro
+     case) now decompiles cleanly with no crash, no unaff_FP, no manual
+     ZEXT24 reconstruction -- resolves to clean stack references
+     (in_stack_00000004 / stack0xfffe) instead.
+
+     BUG FOUND + FIXED (2026-07-21): the fpSegment <segmentop> comment block
+     added to h8539f.pspec contained a literal "--" inside an XML comment
+     ("...same approach as SP since it worked -- FP uses...") which is
+     illegal XML (SAXParseException: "The string \"--\" is not permitted
+     within comments"). This made SleighLanguageValidator reject the whole
+     .pspec on language load -- confirmed via application.log, not decompile
+     testing, since a broken pspec fails at language-load time before any
+     decompile is even attempted. Root cause was unrelated to the earlier
+     stale-file/caching issue (see Build/test workflow note above) -- this
+     was a genuine syntax bug in the new content itself. Fixed by replacing
+     the "--" with ";". Re-swept the whole file for any other literal "--"
+     inside comment bodies (excluding the <!-- / --> delimiters themselves)
+     -- none found. Recompiled (exit 0) and reinstalled the full file set;
+     source and install timestamps now match. LESSON: avoid "--" as a prose
+     separator inside XML comments anywhere in .pspec/.cspec files going
+     forward -- use ";" or a single "-" instead.
+
+     BUG #2 FOUND + FIXED (2026-07-21, same session): after fixing the "--"
+     above, the second segmentop itself was structurally illegal -- Ghidra
+     only allows ONE <segmentop> per address space. Symptom was NOT a
+     parse/validation error this time but a hard decompiler failure on
+     program open: "Decompiler: Unable to initialize the DecompilerInterface:
+     Could not register program: Low-level Error: Multiple segmentops
+     defined for same space", surfaced first as a generic ecu-setup-script
+     abort ("Decompiler openProgram() FAILED... do a full Ghidra restart"),
+     then confirmed directly by the user. This also left the running Ghidra
+     instance unresponsive to further MCP calls (close_program/
+     list_open_programs both timed out), consistent with a stuck modal error
+     dialog blocking the GUI thread -- required a full Ghidra restart + a
+     fresh ROM re-import to recover, exactly as the abort message said.
+     FIX: removed the second segmentop and its fpSegment pcodeop entirely;
+     FP now calls the SAME spSegment(TP, FP) userop as SP, since the pcode
+     body (zext(base)<<16 | zext(inner)) and base register (TP) are
+     identical for both -- there was never a need for a second userop.
+     BUG #3 FOUND + FIXED (2026-07-21, same session): the rewritten comment
+     explaining bug #2 ALSO contained a "--" (second time in one session --
+     caught by the user, not self-caught). Re-swept both .pspec and .cspec
+     afterward with a tighter regex; both clean.
+     LESSON (updated): "--" as a prose separator in these XML comment blocks
+     is clearly an easy slip to repeat under time pressure -- default to ";"
+     from the start rather than relying on a post-hoc sweep to catch it.
+
+     VERIFIED 2026-07-21: after the spSegment-reuse fix, compiled clean,
+     reinstalled the full file set, and confirmed via force_decompile in a
+     freshly-restarted Ghidra + freshly re-imported ROM that sat_add_u16
+     (0x14000, @(disp8,FP) addressing) now decompiles correctly with no
+     crash and no unaff_FP. Step 2 marked PASSED above on this basis.
+     FP uses an identical TP-banked shape but
      currently has NO shared pseudo-register the way SP has SP24 (FP24 is
      defined as a register at slaspec line 35 but, per this session's grep,
      is never actually assigned anywhere -- FP-relative accesses build a
@@ -784,10 +845,33 @@ Steps:
    Exit code 0 = success (WARN lines about unreferenced tables/NOP constructors are
    pre-existing and expected -- only ERROR lines or a nonzero exit code mean the
    grammar actually broke). This produces h8539f.sla next to the .slaspec source.
-3. Copy the compiled .sla into the Ghidra install so it can be tested there:
-   Copy-Item "...\github\Ghidra-H8-Processor\h8\data\languages\h8539f.sla" "...\ghidra_12.0.4_PUBLIC\Ghidra\Processors\h8\data\languages\h8539f.sla" -Force
+3. Copy ALL changed language files into the Ghidra install, not just h8539f.sla --
+   BUG FOUND 2026-07-21: copying only the .sla left a stale .pspec installed (the
+   .pspec/.cspec/.sinc files are read separately at runtime, not compiled into the
+   .sla), which silently made a source-level fix (a new <segmentop> block) invisible
+   in the already-open Ghidra project even after reanalyze/close/reopen -- wasted a
+   full test cycle before the mismatch was caught by comparing file timestamps.
+   Always copy the full set together:
+   $src = "...\github\Ghidra-H8-Processor\h8\data\languages"
+   $dst = "...\ghidra_12.0.4_PUBLIC\Ghidra\Processors\h8\data\languages"
+   Copy-Item "$src\h8539f.sla"    "$dst\h8539f.sla"    -Force
+   Copy-Item "$src\h8539f.pspec"    "$dst\h8539f.pspec"    -Force
+   Copy-Item "$src\h8539f.cspec"    "$dst\h8539f.cspec"    -Force
+   Copy-Item "$src\h8539f.slaspec"  "$dst\h8539f.slaspec"  -Force
+   Copy-Item "$src\h8539f-arith.sinc"  "$dst\h8539f-arith.sinc"  -Force
+   Copy-Item "$src\h8539f-bit.sinc"    "$dst\h8539f-bit.sinc"    -Force
+   Copy-Item "$src\h8539f-branch.sinc" "$dst\h8539f-branch.sinc" -Force
+   Copy-Item "$src\h8539f-logic.sinc"  "$dst\h8539f-logic.sinc"  -Force
+   Copy-Item "$src\h8539f-mem.sinc"    "$dst\h8539f-mem.sinc"    -Force
+   Sanity check after copying (both listings should show matching timestamps for
+   every h8539f* file): Get-ChildItem "$src" | Select Name,LastWriteTime
+   and the same command against $dst.
 4. Test in the Ghidra project as normal (reanalyze / re-open the program to pick up
-   the new .sla).
+   the new .sla). NOTE: an already-open program can cache old instruction-level
+   pcode even after reanalyze/close+reopen/delete+recreate-function -- if a source
+   change still doesn't show up in decompile output after confirming the install
+   directory has fresh files, importing into a fresh project is the reliable way
+   to confirm the fix, since a new project reads the language definition cold.
 5. Safety net: if a bad compile or bad copy breaks the installed language, just
    delete the .sla in the Ghidra install languages folder above -- Ghidra
    regenerates it from the baseline/source shipped there. Nothing is unrecoverable.

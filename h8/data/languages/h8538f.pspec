@@ -76,7 +76,7 @@
 
     <!--
       H8/538F ON-CHIP PERIPHERAL REGISTER NAMES
-      Ported from h8539f.pspec -- the H8/538 shares the same peripheral map as the
+      Ported from h8539f.pspec  the H8/538 shares the same peripheral map as the
       H8/539F at the same I/O addresses (per NOTES.TXT), EXCLUDING the flash memory
       control registers (FLMCR, FLM_EBR1/2, FLMER, FLMSR), which are 539F-specific
       since the H8/538 uses EPROM/masked ROM, not flash.
