@@ -2,7 +2,7 @@
 
 A Ghidra processor module for the Hitachi H8/500 family, with full support for the **H8/539F**.
 
-This processors are screenprinted as **MH7202** and **MH7203** in Mitsubishi ECUs (RVR X3, Evo5/6, Galant/Legnum, etc.).
+These processors are screenprinted as **MH7202** and **MH7203** in Mitsubishi ECUs (RVR X3, Evo5/6, Galant/Legnum, etc.).
 
 Forked and substantially extended from [c4ashley/ghidra-h8-500](https://github.com/c4ashley/ghidra-h8-500)
 (which itself extended [Hurricos](https://git.laboratoryb.org/hurricos/ghidra-h8-500)).
