@@ -1,0 +1,471 @@
+# h8539f-branch.sinc -- control-flow instruction family.
+#
+# Control-flow instruction family: bra/16 condition codes, bsr, jmp/jsr/
+# pjmp/pjsr (direct A2 literal forms + the 0x11-escaped MAP6-chained forms),
+# rts/prts/prtd, scb, dadd/dsub, rtd, trapa/trap:vs, rte, bpt, sleep, link,
+# unlk.
+#
+# Depends on definitions still in the top-level h8539f.slaspec at the time of
+# writing: opcode_special/opcode/opcode47/mode/sz/cond/cc tokens+subtables,
+# Rn/Rs/Rn_banked/Rs_banked/Rs24 register attaches, addr16/addr16_dp/addr24/
+# disp8/disp16/disp16_banked/reloffs8/reloffs16/s8/s16 tokens+subtables,
+# SP/SP24/CP/TP/FP/SR/CCR registers, SpreadFlags()/CollectFlags() helpers,
+# $(ZF)/$(NF)/$(VF)/$(CF) flag macros. This file's @include must come after
+# all of these are defined in the slim top-level file.
+#
+# ============================================================================
+# --- KNOWN GAPS, carried forward rather than silently dropped -------------
+# ============================================================================
+# 1. `bpt` (A2[0x0B]) is implemented as a mnemonic-only constructor at
+#    `opcode_special=0x0B`, matching ana.cpp/ins.cpp (CF=0, same class as
+#    nop/sleep). Not documented in either grepable datasheet, so this is
+#    disassembly-level only -- no behavioral pcode body, since there's no
+#    public source describing what it actually does at runtime.
+# 2. `dadd`/`dsub` are direct register-to-register forms only, confirmed
+#    against GNU binutils' `as` H8/500 machine-dependent reference
+#    (docs-2.10/as_8.html section 8.7.5), whose opcode legend lists
+#    `dadd rs,rd` and `dsub rs,rd` as bare register-to-register forms with
+#    no `ea` operand, unlike instructions that genuinely do take an EA
+#    operand (e.g. `add[:g] sz ea,rd`). The direct-register form below is
+#    the complete instruction, not a partial implementation.
+#
+# ============================================================================
+# --- JMP / JSR / PJMP / PJSR -----------------------------------------------
+# ============================================================================
+# JMP   <EA>               Jump
+#       no flags
+#       Per H8/500 Programming Manual 2.2.19: "Effective address -> PC". Register-
+#       indirect form (@Rn) is per-register banked via Rn_banked (R2/R3->DP,
+#       R4/R5->EP, FP/SP->TP) -- NOT same-page. BUG FIX: this
+#       constructor previously discarded Rn_banked's already-correctly-banked
+#       24-bit address and re-folded the raw 16-bit register value with CP
+#       (the wrong bank register for R4/R5, and redundant/conflicting with
+#       Rn_banked's own export either way). Confirmed via the switch-dispatch
+#       instruction in FUN_00028b2f (RVR X3 ROM): `ldc.b 0x2,EP; ... jmp @R4`
+#       sets EP explicitly right before the jump, which only makes sense if
+#       @R4 actually reads EP -- not CP. Fixed to just `goto [Rn_banked];`,
+#       matching the pattern already used correctly by :pjmp/:pjsr's Rs24 forms.
+:jmp       "@"^Rn_banked                   is opcode_special=0x11; mode = 13 & sz = 0 & Rn_banked
+{
+	goto [Rn_banked];
+}
+:jmp       "@"^addr16_dp^":16"         is opcode_special=0x10; addr16_dp [targetBase=0;]
+{
+	addr:4 = zext(*:2 addr16_dp) | (zext(CP) << 16);
+	goto [addr];
+}
+#       BUG FIX: same CP re-folding bug as :jmp/:jsr @Rn_banked above.
+#       Confirmed against the H8/538-539 hardware manual (section 3.4.4-3.4.6 and
+#       Table 3-8, "Effective Address Calculation"): DP banks R0-R3, EP banks R4/R5,
+#       TP banks R6(SP)/R7(FP) for @Rn, @(d:8,Rn), AND @(d:16,Rn) forms alike -- not
+#       just plain register-indirect. disp8_banked/disp16_banked already compute the
+#       correctly-banked 24-bit address; this constructor was discarding it and
+#       re-folding with CP instead. Fixed to use disp8_banked directly, matching the
+#       [targetBase=Rs;] gating already used correctly by the disp16 sibling below.
+:jmp       "@("^disp8_banked^":8,"^Rs^")"  is opcode_special=0x11; opcode=28 & Rs; disp8_banked [targetBase=Rs;]
+{
+	goto [disp8_banked];
+}
+:jmp       "@("^disp16_banked^":8,"^Rs^")" is opcode_special=0x11; opcode=30 & Rs; disp16_banked [targetBase=Rs;]
+{
+	goto [disp16_banked];
+}
+
+#absaddr24: "@"^addr24^":24" is addr24 { export *[const]:3 addr24; }
+absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
+
+# PJMP  @aa:24             Page jump
+#       no flags
+# NOTE: absaddr24 exports *[const]:4 addr24, which is a DEREFERENCED LOAD from
+# that constant address, not the bare address itself. Used directly as
+# `goto absaddr24;` (no brackets), this made Ghidra treat the destination as an
+# indirect jump through a pointer stored AT addr24, rather than a jump TO
+# addr24 - producing "could not flow into non-existent memory" and showing the
+# target as DAT_0000xxxx (a data reference) instead of a clean code label, with
+# the disassembly's trailing "= 04h"/"= ??" being the (irrelevant) dereferenced
+# byte value. Fixed by using the raw addr24 token value directly (not
+# absaddr24's broken export) zero-extended into a local addr:4, then
+# `goto [addr];` - matching every other jmp/jsr constructor in this file (see
+# :jmp and :jsr above, which all compute into a local `addr` from a raw address
+# token and use `goto [addr]` / `call [addr]`, never a *[const] dereference).
+:pjmp      "@"^addr24^":24" is opcode_special=0x13; addr24
+{
+	addr:4 = zext(addr24:3);
+	goto [addr];
+}
+:pjmp      "@"^Rs24        is opcode_special=0x11; opcode=0x18 & Rs24 { goto [Rs24]; }
+
+
+#       BUG FIX: same CP/EP bank-register bug as :jmp above, plus
+#       an extra dereference (*:2 Rn_banked read memory AT the banked address
+#       instead of calling the address itself). Fixed to call [Rn_banked]
+#       directly, matching :jsr's addr16 form and :pjsr's Rs24 form.
+:jsr       "@"^Rn_banked is opcode_special=0x11; mode=13 & sz=1 & Rn_banked
+{
+	pcNext:4 = inst_next;
+	    SP = SP - 2;
+	    local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
+	    call   [Rn_banked];
+}
+:jsr       "@"^addr16^":16" is opcode_special=0x18; addr16
+{
+	pcNext:4 = inst_next;
+	SP = SP - 2;
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
+	addr:4 = (zext(CP) << 16) | addr16;
+	call [addr];
+}
+
+# PJSR  <EA>               Page jump to subroutine
+#       no flags
+# NOTE: absaddr24 exports *[const]:4 addr24 - a DEREFERENCED LOAD from that
+# constant address, not the bare address. `call absaddr24;` (no brackets) made
+# Ghidra treat the call target as a pointer stored AT addr24, not addr24
+# itself - this is the same bug fixed in :pjmp above, and explains both the
+# DAT_0000fe7e reference and "= ??" seen on pjsr in earlier disassembly dumps,
+# and the abandoned `#addr:4 = absaddr24;` attempt commented out below (that
+# would have copied the dereferenced value, not the address - same flaw).
+# Fixed identically to :pjmp: raw addr24 token, zero-extended into a local
+# addr:4, then `call [addr];`.
+:pjsr    "@"^addr24^":24"  is opcode_special=3; addr24
+{
+    pcNext:4 = inst_next;
+	    SP = SP - 2;
+	    local ptr24a:4 = spSegment(TP, SP);
+	*:2 ptr24a = pcNext[0,16];
+	    SP = SP - 2;
+	    local ptr24b:4 = spSegment(TP, SP);
+	*:2 ptr24b = zext(pcNext[16,8]);
+	    addr:4 = zext(addr24:3);
+	    call    [addr];
+}
+:pjsr       "@"^Rs24      is opcode_special=0x11; opcode=0x19 & Rs24
+{
+    pcNext:4 = inst_next;
+	    SP = SP - 2;
+	    local ptr24a:4 = spSegment(TP, SP);
+	*:2 ptr24a = pcNext[0,16];
+	    SP = SP - 2;
+	    local ptr24b:4 = spSegment(TP, SP);
+	*:2 ptr24b = zext(pcNext[16,8]);
+	    call   [Rs24];
+}
+#:pjsr      "@"^Rs        is opcode_special=0x11; Rs & opcode=0x18
+#{
+#	rsNext:1 = &Rs + 2;
+#    pcNext:4 = inst_next;
+#	    SP24 = SP24 - 2;
+#	*:2 SP24 = pcNext[0,16];
+#	    SP24 = SP24 - 2;
+#	*:2 SP24 = zext(pcNext[16,8]);
+#	  addr:4 = (zext(Rs[0,8]) << 16) | zext(*[register]:2 rsNext);
+#	    call   [addr];
+#}
+
+# ============================================================================
+# --- BSR --------------------------------------------------------------------
+# ============================================================================
+# BSR   disp
+#       no flags
+:bsr    reloffs8           is opcode_special=0x0e; reloffs8
+{
+	pcNext:4 = inst_next;
+	SP = SP - 2;
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
+	call reloffs8;
+}
+:bsr    reloffs16          is opcode_special=0x1e; reloffs16
+{
+	pcNext:4 = inst_next;
+	SP = SP - 2;
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
+	call reloffs16;
+}
+
+# ============================================================================
+# --- LINK / UNLK -------------------------------------------------------------
+# ============================================================================
+# LINK  FP,#xx             Link stack
+#       no flags
+:link      "FP",s8                      is mode=1 & sz=0 & Rn=7; s8
+{
+	    SP = SP - 2;
+	    local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = FP;
+	    FP = SP;
+	    SP = SP + sext(s8);
+}
+:link      "FP",s16                     is mode=1 & sz=1 & Rn=7; s16
+{
+	    SP = SP - 2;
+	    local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = FP;
+	    FP   = SP;
+	    SP = SP + sext(s16);
+}
+
+# UNLK                     Unlink stack
+#       no flags
+:unlk    "FP"                           is opcode_special=0xF
+{
+	SP =       FP;
+	local ptr24:4 = spSegment(TP, SP);
+	  FP = *:2 ptr24;
+	SP = SP + 2;
+}
+
+# ============================================================================
+# --- RTS / PRTS / PRTD / RTE / RTD ------------------------------------------
+# ============================================================================
+# RTS                      Return from subroutine
+#       no flags
+:rts                                    is opcode_special=0x19
+{
+	local ptr24:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24);
+	SP = SP + 2;
+	return [pc24];
+}
+
+# PRTS                     Page return from subroutine
+#       no flags
+#       Per H8/500 Programming Manual 2.2.36: @SP+ -> CP, then @SP+ -> PC.
+:prts                                   is opcode_special=0x11; opcode_special=0x19
+{
+	local ptr24a:4 = spSegment(TP, SP);
+	cpword:2 = *:2 ptr24a;
+	CP = cpword:1;
+	SP = SP + 2;
+	local ptr24b:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24b);
+	SP = SP + 2;
+	return [pc24];
+}
+
+# PRTD  #xx                Page return and deallocate
+#       no flags
+:prtd    s8                             is opcode_special=0x11; opcode_special=0x14; s8
+{
+	local ptr24a:4 = spSegment(TP, SP);
+	cp24:4 = zext(*:1 ptr24a) << 16;
+	SP = SP + 2;
+	local ptr24b:4 = spSegment(TP, SP);
+	pc24:4  = zext(*:2 ptr24b) | cp24;
+	SP = SP + 2;
+	SP = SP + sext(s8);
+	return [pc24];
+}
+:prtd    s16                            is opcode_special=0x11; opcode_special=0x1C; s16
+{
+	local ptr24a:4 = spSegment(TP, SP);
+	cp24:4 = zext(*:1 ptr24a) << 16;
+	SP = SP + 2;
+	local ptr24b:4 = spSegment(TP, SP);
+	pc24:4  = zext(*:2 ptr24b) | cp24;
+	SP = SP + 2;
+	SP = SP + sext(s16);
+	return [pc24];
+}
+
+# RTE
+#       flags are restored from the stack
+:rte                                    is opcode_special=0xA
+{
+	local ptr24a:4 = spSegment(TP, SP);
+	SR = *:2 ptr24a;
+	SpreadFlags();
+	SP = SP + 2;
+
+	local ptr24b:4 = spSegment(TP, SP);
+	cp16 = *:2 ptr24b;
+	CP = cp16:1;
+	SP = SP + 2;
+
+	local ptr24c:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24c);
+	SP = SP + 2;
+	return [pc24];
+}
+
+# RTD   #xx:8            Return and deallocate (same page, 8-bit immediate)
+#                        @SP+ -> PC;  SP + sext(#xx) -> SP
+#                        Opcode: 0x14 data  (was wrongly 0x30, then wrongly 0x04 --
+#                        confirmed against ana.cpp's A2[0x14]=H8500_rtd. 0x04/0x0C
+#                        are MAP5's entry bytes (A2[4]/A2[12]), not rtd's; this gate
+#                        was silently squatting on MAP5's bytes, which is part of why
+#                        MAP5 could never be wired up without a collision here.)
+:rtd    s8              is opcode_special=0x14; s8
+{
+	local ptr24:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24);
+	SP = SP + 2;
+	SP = SP + sext(s8);
+	return [pc24];
+}
+
+# RTD   #xx:16           Return and deallocate (same page, 16-bit immediate)
+#                        Opcode: 0x1C data(H) data(L)  (was wrongly 0x34, then wrongly
+#                        0x0C -- confirmed against ana.cpp's A2[0x1C]=H8500_rtd. 0x0C
+#                        is MAP5's word-form entry byte (A2[12]), not rtd's; see the
+#                        byte-form fix above for the same collision.)
+:rtd    s16             is opcode_special=0x1C; s16
+{
+	local ptr24:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24);
+	SP = SP + 2;
+	SP = SP + sext(s16);
+	return [pc24];
+}
+
+# ============================================================================
+# --- Bcc / BRA ---------------------------------------------------------------
+# ============================================================================
+# Bcc   disp               Branch conditionally
+#       no flags
+# NOTE: bra (cc=0, "Branch Always") is split out from the generic cc-table path
+# below. Per IDA SDK ins.cpp, bra is CF_USE1|CF_STOP (true unconditional jump,
+# no fallthrough), while every other condition (including brn, "Branch Never")
+# is CF_USE1 only (fallthrough preserved). The generic `cc` table exports a
+# constant 1:1 for cond=0, which previously produced `if (1) goto reloffs8;` -
+# still a conditional-goto pcode shape that keeps a fallthrough edge at
+# disassembly-flow time, even though it always takes the branch.
+# `cc` is a subtable (built from the `cond` token field), so it cannot be
+# constrained directly with `cc=0` syntax - SLEIGH rejected that with
+# "Constraining currently undefined operand: cc". Constrain on the underlying
+# `cond` field instead; SLEIGH prefers the more specific `cond=0` pattern over
+# the general `cc` match, so this only affects bra.
+# `cc` must still be matched in the pattern (not just `cond`) so the `:b^cc`
+# print piece has an operand to interpolate - omitting it produced
+# "operand cc is undefined" from sleigh. Matching `cc` alongside `cond=0` is
+# fine: since `cc` is built from `cond`, constraining `cond=0` forces `cc` to
+# resolve deterministically to the "ra" production anyway.
+# NOTE: the 16-bit-displacement form below is NOT split out the same way.
+# `opcode47=3 & cond=0` does not collide with `rtd s8`: `rtd s8` is gated on
+# `opcode_special=0x14` (see its constructor above, per ana.cpp's
+# A2[0x14]=H8500_rtd), so the two do not share a byte.
+:b^cc      "#"^reloffs8^":8"    is   opcode47=2 & cond=0 & cc; reloffs8 { goto reloffs8; }
+:b^cc      "#"^reloffs8^":8"    is   opcode47=2 & cc; reloffs8 { if (cc) goto reloffs8; }
+:b^cc      "#"^reloffs16^":16"  is   opcode47=3 & cc; reloffs16 { if (cc) goto reloffs16; }
+
+# ============================================================================
+# --- SCB ----------------------------------------------------------------
+# ============================================================================
+# SCB/cc Rn,disp           Subtract, compare and branch conditionally
+#        no flags
+:scb/"f"   Rs, reloffs8         is   opcode_special=1; opcode=23 & Rs; reloffs8
+{
+	Rs = Rs - 1;
+	if (Rs != 0xFFFF) goto reloffs8;
+}
+:scb/"ne"  Rs, reloffs8         is   opcode_special=6; opcode=23 & Rs; reloffs8
+{
+	if (!$(ZF)) goto inst_next;
+	Rs = Rs - 1;
+	if (Rs != 0xFFFF) goto reloffs8;
+}
+:scb/"eq"  Rs, reloffs8         is   opcode_special=7; opcode=23 & Rs; reloffs8
+{
+	if ($(ZF)) goto inst_next;
+	Rs = Rs - 1;
+	if (Rs != 0xFFFF) goto reloffs8;
+}
+
+# ============================================================================
+# --- TRAPA / TRAP:VS / RTE / SLEEP ------------------------------------------
+# ============================================================================
+trapVector: address is op_imm4 [ address = 0x40 + 4 * op_imm4; ] { export *[const]:4 address; }
+# TRAPA  #xx               Trap always
+#        no flags
+:trapa "#"^trapVector    is opcode_special=8; opcode47=1 & trapVector
+{
+	addr:4 = inst_next;
+	PUSH(addr[0,16]);
+	PUSH(addr[16,8]);
+	PUSH(SR[0,16]);
+	tvec:4 = trapVector;
+	call [*:4 tvec];
+}
+
+:nop                    is opcode_special=0 { }
+
+# TRAP/VS                Trap if V (overflow) bit is set
+#                        Vector at H'0010-H'0013 (maximum mode)
+#                        Opcode: 0x09
+:"trap/vs"               is opcode_special=0x09
+{
+	if (!$(VF)) goto inst_next;
+	vectorAddress:4 = *:4 0x10:4;
+	nextpc:4 = inst_next;
+	lo:2 = nextpc:2;
+	hi:2 = zext(nextpc[16,8]);
+	PUSH(lo);
+	PUSH(hi);
+	PUSH(SR[0,16]);
+	call [vectorAddress];
+}
+
+# SLEEP                  Transition to power-down mode
+#                        Opcode: 0x1A  (was wrongly 0x2C; 0x2C is bra)
+:sleep                  is opcode_special=0x1A { }
+
+# BPT                     Breakpoint trap
+#                         Opcode: 0x0B  (confirmed against ana.cpp's
+#                         A2[0x0B]=H8500_bpt). NOT documented in either
+#                         grepable datasheet text (h8500prog_text.txt,
+#                         h8538539_text.txt both searched, zero "BPT" hits) --
+#                         likely an undocumented in-circuit-emulator opcode.
+#                         ins.cpp gives it CF=0 (no operand/flag semantics),
+#                         same class as nop/sleep, so implemented the same
+#                         way: mnemonic-only, no pcode body. This is a
+#                         disassembly-level implementation, not a full
+#                         behavioral model -- there is no public source to
+#                         verify a trap-vector/stack-push behavior against.
+:bpt                    is opcode_special=0x0B { }
+
+# ============================================================================
+# --- DADD / DSUB (MAP3-nested-into-MAP6, direct-register form only) --------
+# ============================================================================
+# DADD  Rs,Rd              Decimal (BCD) add with extended carry
+#       Z: Z == 1 && result == 0
+#       C: decimal carry occurred (mathematical result > 99)
+# This instruction reportedly exists and computes with Word operands, but the hardware manual notes "correct results are not assured."
+# A word-size version is not included here -- semantics unconfirmed.
+# See this file's "KNOWN GAPS" note at top -- RESOLVED: binutils' `as`
+# H8/500 reference confirms `dadd rs,rd` is a bare register-to-register
+# instruction with no EA operand, so this direct-register form is the
+# complete instruction, not a partial one.
+:dadd.b       Rn,Rd                     is mode=10 & sz = 0 & Rn; opcode_special=0; opcode=20 & Rd
+{
+	rs_low:2   = zext(Rn[0,4]);
+	rs_high:2  = zext(Rn[4,4]);
+	rd_low:2   = zext(Rd[0,4]);
+	rd_high:2  = zext(Rd[4,4]);
+	sum_low:2  = rs_low  + rd_low + zext($(CF));
+	sum_high:2 = rs_high + rd_high + (sum_low / 10);
+	Rd = (sum_low % 10) + ((sum_high % 10) * 10);
+	$(CF) = (sum_high >= 10);
+	$(ZF) = ($(ZF) == 1) && (Rd == 0);
+}
+
+# DSUB  Rs,Rd              Decimal (BCD) subtract with extended carry
+#       Z: Z == 1 && result == 0
+#       C: decimal borrow occurred (mathematical result < 0)
+# This instruction reportedly exists and computes with Word operands, but the hardware manual notes "correct results are not assured."
+# A word-size version is not included here -- semantics unconfirmed.
+# Same binutils-confirmed complete-instruction status as dadd.b above.
+:dsub.b       Rn,Rd                     is mode=10 & sz = 0 & Rn; opcode_special=0; opcode=22 & Rd
+{
+	rs_low:2   = 9 - zext(Rn[0,4]) + 1;
+	rs_high:2  = 9 - zext(Rn[4,4]);
+	rd_low:2   = zext(Rd[0,4]);
+	rd_high:2  = zext(Rd[4,4]);
+	diff_low:2  = rs_low  + rd_low  + zext($(CF));
+	diff_high:2 = rs_high + rd_high + (diff_low / 10);
+	Rd = (diff_low % 10) + ((diff_high % 10) * 10);
+	$(CF) = (diff_high < 10);
+	$(ZF) = ($(ZF) == 1) && (Rd == 0);
+}

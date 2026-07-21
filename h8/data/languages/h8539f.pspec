@@ -32,6 +32,48 @@ H8/539F Processor Spec for Ghidra
  <programcounter register="PC"/>
  <data_space space="ram" />
 
+ <!-- SP24 segmentop spike (review.md item 8, step 1, 2026-07-15).
+      Widens the 16-bit SP into the 24-bit ram space via TP (the page
+      register), replacing the manual (zext(TP) << 16) | zext(SP) pattern
+      that Ghidra's stack-frame analyzer could not recognize as "the stack
+      pointer, just wider" (see review.md item 8 for the full writeup).
+      Uses the pcode based segmentop form (matching the Z180 pspec's real,
+      currently shipping bank switched precedent) rather than the older
+      baseop/innerop attribute form, since that form is the one flagged in
+      Ghidra issues #841 and #817 as producing decompiler crashes or a
+      silently dropped segment.
+      SCOPE: SP only, this step. Do NOT wire FP or DP/EP banking through
+      this segmentop yet; see review.md item 8 steps 2/3.
+      UPDATE (review.md item 8, step 2): Step 1 passed (unaff_SP fixed).
+      FP reuses THIS SAME segmentop/userop (spSegment) rather than getting
+      its own; Ghidra only allows ONE <segmentop> per address space
+      (confirmed 2026-07-21 via a real "Multiple segmentops defined for
+      same space" DecompilerInterface registration failure after a first
+      attempt added a second fpSegment segmentop here). Since the pcode
+      body is identical (same zext(base)<<16 | zext(inner) shape, same TP
+      base register for both SP and FP), calling spSegment(TP, FP) in
+      SLEIGH works fine with no separate declaration needed.
+      constresolve added 2026-07-15: every real-world working precedent
+      checked (Z180 pspec's rBBR, Intel 8048 pspec's DBF) declares
+      constresolve on the SAME register that is also passed explicitly as
+      the base argument to the userop call in SLEIGH. Omitting it left the
+      decompiler treating spSegment(...) as an opaque value-producing
+      CALLOTHER with no pointer significance, consistent with SP24 never
+      appearing anywhere in the stage_1 decompile output. -->
+ <segmentop space="ram" userop="spSegment">
+   <pcode>
+     <input name="base" size="1"/>
+     <input name="inner" size="2"/>
+     <output name="res" size="4"/>
+     <body><![CDATA[
+res = (zext(base) << 16) | zext(inner);
+]]></body>
+   </pcode>
+   <constresolve>
+     <register name="TP"/>
+   </constresolve>
+ </segmentop>
+
  <default_memory_blocks>
    <!-- Internal RAM + I/O: single block covers 0xEE80-0xFFFF.
         H8/539F on-chip RAM starts at 0xEE80 (ecurom.idc); I/O registers begin at
