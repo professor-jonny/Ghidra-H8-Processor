@@ -104,16 +104,16 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 {
 	pcNext:4 = inst_next;
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = pcNext[0,16];
+	    local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
 	    call   [Rn_banked];
 }
 :jsr       "@"^addr16^":16" is opcode_special=0x18; addr16
 {
 	pcNext:4 = inst_next;
 	SP = SP - 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = pcNext[0,16];
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
 	addr:4 = (zext(CP) << 16) | addr16;
 	call [addr];
 }
@@ -133,11 +133,11 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 {
     pcNext:4 = inst_next;
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = pcNext[0,16];
+	    local ptr24a:4 = spSegment(TP, SP);
+	*:2 ptr24a = pcNext[0,16];
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = zext(pcNext[16,8]);
+	    local ptr24b:4 = spSegment(TP, SP);
+	*:2 ptr24b = zext(pcNext[16,8]);
 	    addr:4 = zext(addr24:3);
 	    call    [addr];
 }
@@ -145,11 +145,11 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 {
     pcNext:4 = inst_next;
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = pcNext[0,16];
+	    local ptr24a:4 = spSegment(TP, SP);
+	*:2 ptr24a = pcNext[0,16];
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = zext(pcNext[16,8]);
+	    local ptr24b:4 = spSegment(TP, SP);
+	*:2 ptr24b = zext(pcNext[16,8]);
 	    call   [Rs24];
 }
 #:pjsr      "@"^Rs        is opcode_special=0x11; Rs & opcode=0x18
@@ -173,16 +173,16 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 {
 	pcNext:4 = inst_next;
 	SP = SP - 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = pcNext[0,16];
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
 	call reloffs8;
 }
 :bsr    reloffs16          is opcode_special=0x1e; reloffs16
 {
 	pcNext:4 = inst_next;
 	SP = SP - 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = pcNext[0,16];
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = pcNext[0,16];
 	call reloffs16;
 }
 
@@ -194,16 +194,16 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 :link      "FP",s8                      is mode=1 & sz=0 & Rn=7; s8
 {
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = FP;
+	    local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = FP;
 	    FP = SP;
 	    SP = SP + sext(s8);
 }
 :link      "FP",s16                     is mode=1 & sz=1 & Rn=7; s16
 {
 	    SP = SP - 2;
-	    SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = FP;
+	    local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = FP;
 	    FP   = SP;
 	    SP = SP + sext(s16);
 }
@@ -213,8 +213,8 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 :unlk    "FP"                           is opcode_special=0xF
 {
 	SP =       FP;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	  FP = *:2 SP24;
+	local ptr24:4 = spSegment(TP, SP);
+	  FP = *:2 ptr24;
 	SP = SP + 2;
 }
 
@@ -225,8 +225,8 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #       no flags
 :rts                                    is opcode_special=0x19
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
+	local ptr24:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24);
 	SP = SP + 2;
 	return [pc24];
 }
@@ -236,12 +236,12 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #       Per H8/500 Programming Manual 2.2.36: @SP+ -> CP, then @SP+ -> PC.
 :prts                                   is opcode_special=0x11; opcode_special=0x19
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	cpword:2 = *:2 SP24;
+	local ptr24a:4 = spSegment(TP, SP);
+	cpword:2 = *:2 ptr24a;
 	CP = cpword:1;
 	SP = SP + 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
+	local ptr24b:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24b);
 	SP = SP + 2;
 	return [pc24];
 }
@@ -250,22 +250,22 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #       no flags
 :prtd    s8                             is opcode_special=0x11; opcode_special=0x14; s8
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	cp24:4 = zext(*:1 SP24) << 16;
+	local ptr24a:4 = spSegment(TP, SP);
+	cp24:4 = zext(*:1 ptr24a) << 16;
 	SP = SP + 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4  = zext(*:2 SP24) | cp24;
+	local ptr24b:4 = spSegment(TP, SP);
+	pc24:4  = zext(*:2 ptr24b) | cp24;
 	SP = SP + 2;
 	SP = SP + sext(s8);
 	return [pc24];
 }
 :prtd    s16                            is opcode_special=0x11; opcode_special=0x1C; s16
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	cp24:4 = zext(*:1 SP24) << 16;
+	local ptr24a:4 = spSegment(TP, SP);
+	cp24:4 = zext(*:1 ptr24a) << 16;
 	SP = SP + 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4  = zext(*:2 SP24) | cp24;
+	local ptr24b:4 = spSegment(TP, SP);
+	pc24:4  = zext(*:2 ptr24b) | cp24;
 	SP = SP + 2;
 	SP = SP + sext(s16);
 	return [pc24];
@@ -275,18 +275,18 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #       flags are restored from the stack
 :rte                                    is opcode_special=0xA
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	SR = *:2 SP24;
+	local ptr24a:4 = spSegment(TP, SP);
+	SR = *:2 ptr24a;
 	SpreadFlags();
 	SP = SP + 2;
 
-	SP24 = (zext(TP) << 16) | zext(SP);
-	cp16 = *:2 SP24;
+	local ptr24b:4 = spSegment(TP, SP);
+	cp16 = *:2 ptr24b;
 	CP = cp16:1;
 	SP = SP + 2;
 
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
+	local ptr24c:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24c);
 	SP = SP + 2;
 	return [pc24];
 }
@@ -300,8 +300,8 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #                        MAP5 could never be wired up without a collision here.)
 :rtd    s8              is opcode_special=0x14; s8
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
+	local ptr24:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24);
 	SP = SP + 2;
 	SP = SP + sext(s8);
 	return [pc24];
@@ -314,8 +314,8 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #                        byte-form fix above for the same collision.)
 :rtd    s16             is opcode_special=0x1C; s16
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	pc24:4 = (zext(CP) << 16) | zext(*:2 SP24);
+	local ptr24:4 = spSegment(TP, SP);
+	pc24:4 = (zext(CP) << 16) | zext(*:2 ptr24);
 	SP = SP + 2;
 	SP = SP + sext(s16);
 	return [pc24];
