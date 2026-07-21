@@ -297,17 +297,29 @@ macro CollectFlags()
 	SR[3,1] = $(NF);
 }
 
+# spSegment: userop backing the <segmentop> declared in h8539f.pspec
+# (review.md item 8, step 1). Declaring this as a pcodeop is required for
+# SLEIGH to accept spSegment(...) calls below -- the pspec <segmentop
+# userop="spSegment"> tag alone does not implicitly declare the callable
+# symbol; omitting this line fails compilation with "unknown macro, userop,
+# or specific symbol 'spSegment'".
+define pcodeop spSegment;
+
+# fpSegment: REMOVED (review.md item 8, step 2) -- Ghidra only allows one
+# <segmentop> per address space, so FP now reuses spSegment above instead
+# of having its own userop. Same pcode shape, same TP base register.
+
 macro PUSH(val)
 {
 	SP = SP - 2;
-	SP24 = (zext(TP) << 16) | zext(SP);
-	*:2 SP24 = val;
+	local ptr24:4 = spSegment(TP, SP);
+	*:2 ptr24 = val;
 }
 
 macro POP(reg)
 {
-	SP24 = (zext(TP) << 16) | zext(SP);
-	reg  = *:2 SP24;
+	local ptr24:4 = spSegment(TP, SP);
+	reg  = *:2 ptr24;
 	SP   = SP + 2;
 }
 
@@ -538,8 +550,8 @@ Rn_banked:       "R2"              is Rn=2 { local addr:4 = (zext(DP) << 16) | z
 Rn_banked:       "R3"              is Rn=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
 Rn_banked:       "R4"              is Rn=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
 Rn_banked:       "R5"              is Rn=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
-Rn_banked:       "FP"              is Rn=6 { local addr:4 = (zext(TP) << 16) | zext(FP); export addr; }
-Rn_banked:       "SP"              is Rn=7 { local addr:4 = (zext(TP) << 16) | zext(SP); export addr; }
+Rn_banked:       "FP"              is Rn=6 { local ptr24:4 = spSegment(TP, FP); export ptr24; }
+Rn_banked:       "SP"              is Rn=7 { local ptr24:4 = spSegment(TP, SP); export ptr24; }
 
 
 Rs_banked:       "R0"              is Rs=0 { local addr:4 = (zext(DP) << 16) | zext(R0); export addr; }
@@ -548,17 +560,17 @@ Rs_banked:       "R2"              is Rs=2 { local addr:4 = (zext(DP) << 16) | z
 Rs_banked:       "R3"              is Rs=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
 Rs_banked:       "R4"              is Rs=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
 Rs_banked:       "R5"              is Rs=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
-Rs_banked:       "FP"              is Rs=6 { local addr:4 = (zext(TP) << 16) | zext(FP); export addr; }
-Rs_banked:       "SP"              is Rs=7 { local addr:4 = (zext(TP) << 16) | zext(SP); export addr; }
+Rs_banked:       "FP"              is Rs=6 { local ptr24:4 = spSegment(TP, FP); export ptr24; }
+Rs_banked:       "SP"              is Rs=7 { local ptr24:4 = spSegment(TP, SP); export ptr24; }
 
-r0_push: "R0 " is reglist0=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R0; }
-r1_push: "R1 " is reglist1=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R1; }
-r2_push: "R2 " is reglist2=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R2; }
-r3_push: "R3 " is reglist3=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R3; }
-r4_push: "R4 " is reglist4=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R4; }
-r5_push: "R5 " is reglist5=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = R5; }
-fp_push: "FP " is reglist6=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = FP; }
-sp_push: "SP " is reglist7=1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); *:2 SP24 = SP; }
+r0_push: "R0 " is reglist0=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = R0; }
+r1_push: "R1 " is reglist1=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = R1; }
+r2_push: "R2 " is reglist2=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = R2; }
+r3_push: "R3 " is reglist3=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = R3; }
+r4_push: "R4 " is reglist4=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = R4; }
+r5_push: "R5 " is reglist5=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = R5; }
+fp_push: "FP " is reglist6=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = FP; }
+sp_push: "SP " is reglist7=1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); *:2 ptr24 = SP; }
 r0_push:       is reglist0=0 { }
 r1_push:       is reglist1=0 { }
 r2_push:       is reglist2=0 { }
@@ -567,14 +579,14 @@ r4_push:       is reglist4=0 { }
 r5_push:       is reglist5=0 { }
 fp_push:       is reglist6=0 { }
 sp_push:       is reglist7=0 { }
-sp_pop:  "SP " is reglist7=1 { SP24 = (zext(TP) << 16) | zext(SP); SP = *:2 SP24; }
-fp_pop:  "FP " is reglist6=1 { SP24 = (zext(TP) << 16) | zext(SP); FP = *:2 SP24; SP = SP + 2; }
-r5_pop:  "R5 " is reglist5=1 { SP24 = (zext(TP) << 16) | zext(SP); R5 = *:2 SP24; SP = SP + 2; }
-r4_pop:  "R4 " is reglist4=1 { SP24 = (zext(TP) << 16) | zext(SP); R4 = *:2 SP24; SP = SP + 2; }
-r3_pop:  "R3 " is reglist3=1 { SP24 = (zext(TP) << 16) | zext(SP); R3 = *:2 SP24; SP = SP + 2; }
-r2_pop:  "R2 " is reglist2=1 { SP24 = (zext(TP) << 16) | zext(SP); R2 = *:2 SP24; SP = SP + 2; }
-r1_pop:  "R1 " is reglist1=1 { SP24 = (zext(TP) << 16) | zext(SP); R1 = *:2 SP24; SP = SP + 2; }
-r0_pop:  "R0 " is reglist0=1 { SP24 = (zext(TP) << 16) | zext(SP); R0 = *:2 SP24; SP = SP + 2; }
+sp_pop:  "SP " is reglist7=1 { local ptr24:4 = spSegment(TP, SP); SP = *:2 ptr24; }
+fp_pop:  "FP " is reglist6=1 { local ptr24:4 = spSegment(TP, SP); FP = *:2 ptr24; SP = SP + 2; }
+r5_pop:  "R5 " is reglist5=1 { local ptr24:4 = spSegment(TP, SP); R5 = *:2 ptr24; SP = SP + 2; }
+r4_pop:  "R4 " is reglist4=1 { local ptr24:4 = spSegment(TP, SP); R4 = *:2 ptr24; SP = SP + 2; }
+r3_pop:  "R3 " is reglist3=1 { local ptr24:4 = spSegment(TP, SP); R3 = *:2 ptr24; SP = SP + 2; }
+r2_pop:  "R2 " is reglist2=1 { local ptr24:4 = spSegment(TP, SP); R2 = *:2 ptr24; SP = SP + 2; }
+r1_pop:  "R1 " is reglist1=1 { local ptr24:4 = spSegment(TP, SP); R1 = *:2 ptr24; SP = SP + 2; }
+r0_pop:  "R0 " is reglist0=1 { local ptr24:4 = spSegment(TP, SP); R0 = *:2 ptr24; SP = SP + 2; }
 r0_pop:        is reglist0=0 { }
 r1_pop:        is reglist1=0 { }
 r2_pop:        is reglist2=0 { }
@@ -606,9 +618,11 @@ eaw_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz
 # register -- "Rn_banked = Rn_banked - 2" never actually decremented the real
 # register. Fixed by writing one constructor per register that mutates the
 # real register directly, then banks the (already-updated, for predec; or
-# pre-update, for postinc) value for export. SP keeps using the SP24
-# pseudo-register on export, as before, to preserve Ghidra's stack-depth
-# tracking (see file header NOTE); other registers use a local bank/reg pair.
+# pre-update, for postinc) value for export. SP now uses a disposable local
+# (spSegment(TP,SP)) on export too, same as every other register here --
+# SP itself is only ever touched by direct SP +/- n arithmetic, which is what
+# lets Ghidra's stack-frame analyzer recognize it as the real stack pointer
+# (see h8539f.cspec's <stackpointer> and review.md item 8's Z180 precedent).
 # ---------------------------------------------------------------------------
 eab_predec:       "@-R0"    is Rn=0 & mode = 11 & sz = 0 { R0 = R0 - 1; local addr:4 = (zext(DP) << 16) | zext(R0); export *:1 addr; }
 eab_predec:       "@-R1"    is Rn=1 & mode = 11 & sz = 0 { R1 = R1 - 1; local addr:4 = (zext(DP) << 16) | zext(R1); export *:1 addr; }
@@ -616,8 +630,8 @@ eab_predec:       "@-R2"    is Rn=2 & mode = 11 & sz = 0 { R2 = R2 - 1; local ad
 eab_predec:       "@-R3"    is Rn=3 & mode = 11 & sz = 0 { R3 = R3 - 1; local addr:4 = (zext(DP) << 16) | zext(R3); export *:1 addr; }
 eab_predec:       "@-R4"    is Rn=4 & mode = 11 & sz = 0 { R4 = R4 - 1; local addr:4 = (zext(EP) << 16) | zext(R4); export *:1 addr; }
 eab_predec:       "@-R5"    is Rn=5 & mode = 11 & sz = 0 { R5 = R5 - 1; local addr:4 = (zext(EP) << 16) | zext(R5); export *:1 addr; }
-eab_predec:       "@-FP"    is Rn=6 & mode = 11 & sz = 0 { FP = FP - 1; local addr:4 = (zext(TP) << 16) | zext(FP); export *:1 addr; }
-eab_predec:       "@-SP"    is Rn=7 & mode = 11 & sz = 0 { SP = SP - 1; SP24 = (zext(TP) << 16) | zext(SP); export *:1 SP24; }
+eab_predec:       "@-FP"    is Rn=6 & mode = 11 & sz = 0 { FP = FP - 1; local ptr24:4 = spSegment(TP, FP); export *:1 ptr24; }
+eab_predec:       "@-SP"    is Rn=7 & mode = 11 & sz = 0 { SP = SP - 1; local ptr24:4 = spSegment(TP, SP); export *:1 ptr24; }
 
 eaw_predec:       "@-R0"    is Rn=0 & mode = 11 & sz = 1 { R0 = R0 - 2; local addr:4 = (zext(DP) << 16) | zext(R0); export *:2 addr; }
 eaw_predec:       "@-R1"    is Rn=1 & mode = 11 & sz = 1 { R1 = R1 - 2; local addr:4 = (zext(DP) << 16) | zext(R1); export *:2 addr; }
@@ -625,8 +639,8 @@ eaw_predec:       "@-R2"    is Rn=2 & mode = 11 & sz = 1 { R2 = R2 - 2; local ad
 eaw_predec:       "@-R3"    is Rn=3 & mode = 11 & sz = 1 { R3 = R3 - 2; local addr:4 = (zext(DP) << 16) | zext(R3); export *:2 addr; }
 eaw_predec:       "@-R4"    is Rn=4 & mode = 11 & sz = 1 { R4 = R4 - 2; local addr:4 = (zext(EP) << 16) | zext(R4); export *:2 addr; }
 eaw_predec:       "@-R5"    is Rn=5 & mode = 11 & sz = 1 { R5 = R5 - 2; local addr:4 = (zext(EP) << 16) | zext(R5); export *:2 addr; }
-eaw_predec:       "@-FP"    is Rn=6 & mode = 11 & sz = 1 { FP = FP - 2; local addr:4 = (zext(TP) << 16) | zext(FP); export *:2 addr; }
-eaw_predec:       "@-SP"    is Rn=7 & mode = 11 & sz = 1 { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:2 SP24; }
+eaw_predec:       "@-FP"    is Rn=6 & mode = 11 & sz = 1 { FP = FP - 2; local ptr24:4 = spSegment(TP, FP); export *:2 ptr24; }
+eaw_predec:       "@-SP"    is Rn=7 & mode = 11 & sz = 1 { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); export *:2 ptr24; }
 
 eab_postinc:      "@R0+"    is Rn=0 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R0); R0 = R0 + 1; export *:1 addr; }
 eab_postinc:      "@R1+"    is Rn=1 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R1); R1 = R1 + 1; export *:1 addr; }
@@ -634,8 +648,8 @@ eab_postinc:      "@R2+"    is Rn=2 & mode = 12 & sz = 0 { local addr:4 = (zext(
 eab_postinc:      "@R3+"    is Rn=3 & mode = 12 & sz = 0 { local addr:4 = (zext(DP) << 16) | zext(R3); R3 = R3 + 1; export *:1 addr; }
 eab_postinc:      "@R4+"    is Rn=4 & mode = 12 & sz = 0 { local addr:4 = (zext(EP) << 16) | zext(R4); R4 = R4 + 1; export *:1 addr; }
 eab_postinc:      "@R5+"    is Rn=5 & mode = 12 & sz = 0 { local addr:4 = (zext(EP) << 16) | zext(R5); R5 = R5 + 1; export *:1 addr; }
-eab_postinc:      "@FP+"    is Rn=6 & mode = 12 & sz = 0 { local addr:4 = (zext(TP) << 16) | zext(FP); FP = FP + 1; export *:1 addr; }
-eab_postinc:      "@SP+"    is Rn=7 & mode = 12 & sz = 0 { SP24 = (zext(TP) << 16) | zext(SP); SP = SP + 1; export *:1 SP24; }
+eab_postinc:      "@FP+"    is Rn=6 & mode = 12 & sz = 0 { local ptr24:4 = spSegment(TP, FP); FP = FP + 1; export *:1 ptr24; }
+eab_postinc:      "@SP+"    is Rn=7 & mode = 12 & sz = 0 { local ptr24:4 = spSegment(TP, SP); SP = SP + 1; export *:1 ptr24; }
 
 eaw_postinc:      "@R0+"    is Rn=0 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R0); R0 = R0 + 2; export *:2 addr; }
 eaw_postinc:      "@R1+"    is Rn=1 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R1); R1 = R1 + 2; export *:2 addr; }
@@ -643,8 +657,8 @@ eaw_postinc:      "@R2+"    is Rn=2 & mode = 12 & sz = 1 { local addr:4 = (zext(
 eaw_postinc:      "@R3+"    is Rn=3 & mode = 12 & sz = 1 { local addr:4 = (zext(DP) << 16) | zext(R3); R3 = R3 + 2; export *:2 addr; }
 eaw_postinc:      "@R4+"    is Rn=4 & mode = 12 & sz = 1 { local addr:4 = (zext(EP) << 16) | zext(R4); R4 = R4 + 2; export *:2 addr; }
 eaw_postinc:      "@R5+"    is Rn=5 & mode = 12 & sz = 1 { local addr:4 = (zext(EP) << 16) | zext(R5); R5 = R5 + 2; export *:2 addr; }
-eaw_postinc:      "@FP+"    is Rn=6 & mode = 12 & sz = 1 { local addr:4 = (zext(TP) << 16) | zext(FP); FP = FP + 2; export *:2 addr; }
-eaw_postinc:      "@SP+"    is Rn=7 & mode = 12 & sz = 1 { SP24 = (zext(TP) << 16) | zext(SP); SP = SP + 2; export *:2 SP24; }
+eaw_postinc:      "@FP+"    is Rn=6 & mode = 12 & sz = 1 { local ptr24:4 = spSegment(TP, FP); FP = FP + 2; export *:2 ptr24; }
+eaw_postinc:      "@SP+"    is Rn=7 & mode = 12 & sz = 1 { local ptr24:4 = spSegment(TP, SP); SP = SP + 2; export *:2 ptr24; }
 #eab_abs8:         "@"^addr8^":8"            is Rn = 5 & mode = 0 & sz = 0; addr8  { export *:1 addr8; }
 #eaw_abs8:         "@"^addr8^":8"            is Rn = 5 & mode = 0 & sz = 1; addr8  { export *:2 addr8; }
 eab_abs8_br:      "@"^addr8_br^":8"         is Rn = 5 & mode = 0 & sz = 0; addr8_br      { export *:1 addr8_br; }
@@ -699,8 +713,8 @@ Rn_banked2:      "R2"              is Rn2=2 { local addr:4 = (zext(DP) << 16) | 
 Rn_banked2:      "R3"              is Rn2=3 { local addr:4 = (zext(DP) << 16) | zext(R3); export addr; }
 Rn_banked2:      "R4"              is Rn2=4 { local addr:4 = (zext(EP) << 16) | zext(R4); export addr; }
 Rn_banked2:      "R5"              is Rn2=5 { local addr:4 = (zext(EP) << 16) | zext(R5); export addr; }
-Rn_banked2:      "FP"              is Rn2=6 { local addr:4 = (zext(TP) << 16) | zext(FP); export addr; }
-Rn_banked2:      "SP"              is Rn2=7 { local addr:4 = (zext(TP) << 16) | zext(SP); export addr; }
+Rn_banked2:      "FP"              is Rn2=6 { local ptr24:4 = spSegment(TP, FP); export ptr24; }
+Rn_banked2:      "SP"              is Rn2=7 { local ptr24:4 = spSegment(TP, SP); export ptr24; }
 
 eab_direct2:      Rn2                       is Rn2 & mode2 = 10 & sz2 = 0         { export Rn2; } # see eab_direct note above re: :1/[0,8] usage
 eaw_direct2:      Rn2                       is Rn2 & mode2 = 10 & sz2 = 1         { export Rn2; }
@@ -710,10 +724,10 @@ eab_disp8_2:      "@("^disp8^":8,"^Rn_banked2^")"   is Rn_banked2 & mode2 = 14 &
 eaw_disp8_2:      "@("^disp8^":8,"^Rn_banked2^")"   is Rn_banked2 & mode2 = 14 & sz2 = 1; disp8     { tmp = (Rn_banked2 + disp8);  export *:2 tmp; }
 eab_disp16_2:     "@("^disp16^":16,"^Rn_banked2^")" is Rn_banked2 & mode2 = 15 & sz2 = 0; disp16    { tmp = (Rn_banked2 + disp16); export *:1 tmp; }
 eaw_disp16_2:     "@("^disp16^":16,"^Rn_banked2^")" is Rn_banked2 & mode2 = 15 & sz2 = 1; disp16    { tmp = (Rn_banked2 + disp16); export *:2 tmp; }
-eab_predec2:      "@-SP"                    is Rn2=7 & mode2 = 11 & sz2 = 0       { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:1 SP24; }
-eaw_predec2:      "@-SP"                    is Rn2=7 & mode2 = 11 & sz2 = 1       { SP = SP - 2; SP24 = (zext(TP) << 16) | zext(SP); export *:2 SP24; }
-eab_postinc2:     "@SP+"                    is Rn2=7 & mode2 = 12 & sz2 = 0       { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:1 tmp; }
-eaw_postinc2:     "@SP+"                    is Rn2=7 & mode2 = 12 & sz2 = 1       { SP24 = (zext(TP) << 16) | zext(SP); tmp = SP24; SP = SP + 2; export *:2 tmp; }
+eab_predec2:      "@-SP"                    is Rn2=7 & mode2 = 11 & sz2 = 0       { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); export *:1 ptr24; }
+eaw_predec2:      "@-SP"                    is Rn2=7 & mode2 = 11 & sz2 = 1       { SP = SP - 2; local ptr24:4 = spSegment(TP, SP); export *:2 ptr24; }
+eab_postinc2:     "@SP+"                    is Rn2=7 & mode2 = 12 & sz2 = 0       { local ptr24:4 = spSegment(TP, SP); tmp = ptr24; SP = SP + 2; export *:1 tmp; }
+eaw_postinc2:     "@SP+"                    is Rn2=7 & mode2 = 12 & sz2 = 1       { local ptr24:4 = spSegment(TP, SP); tmp = ptr24; SP = SP + 2; export *:2 tmp; }
 eab_predec2:      "@-"^Rn_banked2           is Rn_banked2 & mode2 = 11 & sz2 = 0  { Rn_banked2 = Rn_banked2 - 1; export *:1 Rn_banked2; }
 eaw_predec2:      "@-"^Rn_banked2           is Rn_banked2 & mode2 = 11 & sz2 = 1  { Rn_banked2 = Rn_banked2 - 2; export *:2 Rn_banked2; }
 eab_postinc2:     "@"^Rn_banked2^"+"        is Rn_banked2 & mode2 = 12 & sz2 = 0  { tmp = Rn_banked2; Rn_banked2 = Rn_banked2 + 1; export *:1 tmp; }
@@ -1294,12 +1308,12 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 #       no flags
 
 r6b_disp8: "@("^disp8^":8","FP"^")" is disp8 {
-	local addr:4 = (zext(TP) << 16) | zext(FP + disp8);
-	export *:1 addr;
+	local ptr24:4 = spSegment(TP, FP + disp8);
+	export *:1 ptr24;
 }
 r6w_disp8: "@("^disp8^":8","FP"^")" is disp8 {
-	local addr:4 = (zext(TP) << 16) | zext(FP + disp8);
-	export *:2 addr;
+	local ptr24:4 = spSegment(TP, FP + disp8);
+	export *:2 ptr24;
 }
 
 # MOV:L #xx:8,Rd           Move data:S, short format
