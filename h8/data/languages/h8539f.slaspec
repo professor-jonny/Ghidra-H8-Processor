@@ -20,6 +20,23 @@ define space register type=register_space size=1;
 
 # --- General purpose registers (2 bytes each, offsets 0x00-0x0F) ---
 define register offset=0x00 size=2 [ R0 R1 R2 R3 R4 R5 FP SP ];
+# R0R1: REVERTED 2026-07-22 (same-day follow-up). Confirmed via a genuine full
+# Ghidra restart + fresh ROM reopen (not a stale-reload artifact) that this
+# "just another register" approach does NOT avoid the pollution it was meant
+# to fix: isr_sci1_eri (0x15caa, no call relationship to any R0:R1 math
+# helper) still shows "Unable to track spacebase fully for stack" after a
+# cold restart, and muldiv_u16_scaled still shows "Restarted to delay
+# deadcode elimination for space: register" plus messy stack0xfffe casts,
+# byte-for-byte identical before and after the restart and before and after
+# an explicit set_function_prototype re-application. So a real overlapping
+# register in the register space can still perturb the decompiler's global
+# return-value/stack-tracking model just by existing, not just via the
+# join+solo-pentry construct originally blamed. Falling back to plain ushort
+# on the affected 6 math helpers (see h8539f.cspec) -- accepts the known
+# dropped-R1-half warning on just those 6 functions, which is a smaller,
+# already-understood, and non-spreading problem. Backup of the R0R1 state
+# (files as of this session) is in backup_20260722_pre_r0r1_revert/ if this
+# needs re-diagnosing later.
 # --- Control/segment registers (1 byte each, offsets 0x10-0x17) ---
 # TP is at 0x13 (matches old size=1 row index 19 -> byte 19 = 0x13)
 define register offset=0x10 size=1 [ CP DP EP TP BR _ _ _ ];

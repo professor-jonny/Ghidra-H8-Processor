@@ -1,17 +1,65 @@
 === TODO, BUGS, ETC ===
 
-Function purges are not automatically determined. X86 stcdall purges seem to be analysed
-by a plugin ("ghidra.app.plugin.core.function.X86FunctionPurgeAnalyzer") so a plugin is
-probably needed to sort this out for the H8/500, too.
+DESIGN: function purges are determined automatically by two Ghidra Analyzers modelled
+on Ghidra's own X86FunctionPurgeAnalyzer: H8FunctionPurgeAnalyzer covers PRTD/RTD
+(variable, immediate-encoded purge sizes), and H8ExtraPopAnalyzer covers the
+fixed-size RTS(2)/PRTS(4)/RTE(6) returns via func.setStackPurgeSize(). Note this does
+not eliminate the spacebase warning quirk below -- extrapop being correctly resolved
+and the decompiler's stack-pointer solver tracking the spacebase fully are two
+separate mechanisms; see the quirk below for why the warning still fires even with
+purge sizes fully determined.
 
-Still having trouble with the decompiler being "unable to track spacebase fully for stack."
-This may be responsible for the decompiler having difficulty assigning local variables.
+QUIRK (understood, accepted, not fixing): the decompiler prints "unable to track
+spacebase fully for stack" on functions that use @-SP/@SP+ (predec/postinc) stack
+addressing -- e.g. isr_sci1_eri. Not an extrapop bug and not a missing DP/EP spacebase
+declaration (we deliberately don't model DP/EP as spacebase registers -- see the
+x86-segment precedent, can't have two spacebase regs writing into the same ram space).
+
+Root cause is in Ghidra's own StackSolver (coreaction.cc, ActionStackPtrFlow::
+analyzeExtraPop): it only recognises SP-derived varnodes defined via INT_ADD, COPY,
+INDIRECT, MULTIEQUAL, or INT_AND. Our eab_predec/eab_postinc constructors for @-SP/@SP+
+do `SP = SP - 1` (fine) then export a `ptr24` local built via our own spSegment()
+userop (a CALLOTHER) -- which isn't one of the five recognised shapes, so the solver
+can't solve for it and prints the warning. This is inherent to layering a custom
+segment userop on a plain SP stackpointer for 24-bit addressing; not a Ghidra defect
+worth reporting upstream, just a narrow analyzer meeting an addressing model it wasn't
+built for. Treated as cosmetic unless a specific function's decompiled *output* (not
+just the warning) is shown to be wrong.
+
+This may be partially responsible for the decompiler having difficulty assigning local
+variables, though that hasn't been confirmed as a downstream effect yet.
 
 Maybe consider making all general registers 24-bit (or giving them access to a 24-bit
-extension) with copies of DP/EP/TP in the high byte, like I've already done for FP/SP.
-Maybe this will make it easier for the decompiler to understand pointers, etc. Though
-it will probably make it harder to do 32-bit maths, such as MULXU where the result is
-in R0:R1.
+extension) with copies of DP/EP/TP in the high byte. CORRECTION: FP/SP are NOT actually widened registers either -- `define register` still declares
+R0-R5/FP/SP as plain size=2 (16-bit). SP24/FP24 are separate size=4 pseudo-registers,
+and for every other Rn the "24-bit" value is just a `local addr`/`local ptr24` computed
+fresh at each addressing-mode use site (via `(zext(DP)<<16)|zext(Rn)` or spSegment()),
+not persistent register state. So this idea would be new work across the board, not an
+extension of an existing FP/SP pattern -- and per the spacebase quirk above, doing it via
+a userop like spSegment() is exactly what keeps the decompiler's stack-pointer solver
+from tracking these varnodes, so a real 24-bit-register approach would need to avoid
+CALLOTHER if it's meant to also fix that warning. Maybe this will make it easier for
+the decompiler to understand pointers, etc. Though it will probably make it harder to
+do 32-bit maths, such as MULXU where the result is in R0:R1.
+
+STOP -- before attempting broad widening, read this: this was already tried and hit a
+hard Ghidra platform ceiling, not just left undone. Two separate one-per-address-space
+limits are already maxed out:
+  1. <segmentop> -- Ghidra allows only ONE per address space. This is *why* spSegment()
+     exists as a single shared userop for TP-banked registers (FP/SP push-pop, R4-R7)
+     instead of each bank register getting its own inline widening.
+  2. constresolve (context resolution) -- also one-per-space, and TP already holds that
+     slot. EP banking was actually built, wired up, and confirmed stable, but delivers
+     NO decompiler benefit for dynamic EP values because of this -- proven dead end,
+     not an oversight.
+Widening DP/EP the way SP/FP were partially done would hit the exact same ceiling that
+already made EP banking a no-op. This is a hard platform limit, confirmed by testing,
+not unclaimed work -- don't re-attempt "widen everything" without a new mechanism that
+gets around limits 1 and 2 above. The only narrower, still-open option is reworking
+just the SP/FP push-pop path to avoid spSegment()'s CALLOTHER shape (e.g. inline
+arithmetic like R0-R3 already use) purely to fix the spacebase solver warning above --
+that's a real tradeoff (lose segment-aware pointer typing for SP/FP) and does NOT
+touch DP/EP's separately-confirmed limitation at all.
 
 Also maybe consider padding all 24-bit things to 32-bit.
 
