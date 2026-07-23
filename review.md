@@ -80,13 +80,35 @@ Open items
    wired into the script -- `verify_xml_table()` and the Step 5d call site
    are the next concrete step.
 
-4. 0x20640/0x20843 reachability -- low priority, does not block anything.
-   Zero xrefs found from anywhere presently mapped in the binary (including
-   the switch at 0x28b2f, whose real 8 case targets all land elsewhere).
-   Bytes decode as real, deliberate-looking instructions (bpl/nop/ldm.w),
-   not 0xFF filler, so not simple padding either. Left as a placeholder
-   function (sci1_boot_switch_case4_frag_20640). Open: find what, if
-   anything, actually reaches this address.
+4. 0x20843 reachability -- RESOLVED as a real grammar bug (2026-07-23), not
+   dead/blank space. This is the `bpl` branch target from
+   sci1_boot_switch_case4_frag_20640 (0x20640). First byte at 0x20843 is
+   0xFF; Ghidra currently disassembles it as an undefined 1-byte instruction
+   because no Sleigh constructor matches it.
+
+   Root cause, confirmed against ana.cpp (h8500_ana, A2tail[]/switch(code)):
+   byte 0xFF is a completely valid, real instruction on hardware -- it's a
+   MAP4 dispatch (A2tail[(code>>4)-6] = A2tail[9] = MAP4) using 16-bit
+   register-displacement addressing (`ds16` in ana.cpp's switch(code) case
+   0xF0-0xFF, i.e. `@(d:16,Rn)` mode).
+
+   The Sleigh grammar (h8539f.slaspec) only implements the MAP4 escape for
+   first-byte range 0xE0-0xEF (documented throughout as "opcode47=14",
+   8-bit-displacement `ds8` addressing). There is no equivalent constructor
+   for first-byte range 0xF0-0xFF ("opcode47=15", 16-bit-displacement `ds16`
+   addressing) anywhere in the .sinc files -- confirmed via grep, zero hits.
+   This is a genuine, previously-undocumented implementation gap, not a
+   hardware oddity or intentional dead space (memory dump at 0x20843 also
+   confirms non-FF-filler bytes following, ruling out padding).
+
+   TO FIX: in h8539f.slaspec / the mem.sinc MAP4 section, add the
+   opcode47=15 (0xF0-0xFF) mirror of the existing opcode47=14 (0xE0-0xEF)
+   MAP4 constructors, swapping the ds8 8-bit-displacement addrMode for the
+   ds16 16-bit-displacement equivalent (matching ana.cpp's ds16(insn,
+   insn.Op1, code, dtype) call for this byte range). Cross-check against
+   the existing 0xE0-0xEF constructors as a template. After fixing, re-run
+   the build/test workflow below and re-disassemble 0x20843 to confirm a
+   real instruction (not a 1-byte undefined stub) is produced.
 
 5. RPM identity -- FINAL STATE (2026-07-15). Best candidate: P54/T2IOC1,
    polled by isr_ipu_ch2ch4_input_capture (0x168e3, renamed from an earlier
