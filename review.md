@@ -48,10 +48,18 @@ Open items
    (canister purge, P4DR.7 -- CONFIRMED forceable via SCI1 cmd 0xD1, the
    strongest real actuator-test candidate found on this ROM). Separately,
    f0e6 bits 8-11 are an unrelated O2 sensor upstream/downstream control
-   mode field (via o2_sensor_control_dispatch). Open: bit13 (P6DR.2)
-   untraced; SCI1 cmd 0xCD sets f510 bit13 (read by
-   o2_upstream_enable_check) -- a fourth SCI1-reachable actuator chain, but
-   it doesn't terminate in a physical pin the way the other three do.
+   mode field (via o2_sensor_control_dispatch). bit13 (P6DR.2): CHECKED
+   2026-07-23 via xref trace (corroborates a prior 2026-07-22 byte-pattern
+   sweep) -- no directly-encoded writer exists anywhere in this ROM
+   (mirror_status_f0e6_to_ports reads/forwards it to P6DR.2 faithfully, but
+   nothing else touches bit 0x2000). Consistent with this ROM's known
+   static-analysis blind spot for bank-prefixed/indirect RAM writes -- not
+   proof no writer exists at all, just that none is reachable via a literal-
+   address instruction. Low priority to pursue further absent a new lead.
+   Separately, SCI1 cmd 0xCD sets f510 bit13 (a different bit13, different
+   RAM word, read by o2_upstream_enable_check) -- a fourth SCI1-reachable
+   actuator chain, but it doesn't terminate in a physical pin the way the
+   other three do.
 
 2. Address table / table-of-tables cleanup -- CLOSED (2026-07-21), one
    thread still open. 0x13898 was a false-positive 2-genuine-pointer +
@@ -59,9 +67,23 @@ Open items
    real function pointers anywhere). Other bookmarks resolved: 0x2d8ec is a
    genuine ISCV/idle-RPM dispatch structure; 0x2d9ac/0x2d9ec/0x2da6c/0x2db2c
    are a real calibration-table catalog (see in-place Ghidra bookmarks,
-   category "H8539F-Analysis"). Still open: 0x10140 confirmed not a jump
-   table, but its actual purpose is unresolved (low priority, doesn't block
-   anything).
+   category "H8539F-Analysis"). RESOLVED 2026-07-23: 0x10140 is not a
+   separate mystery address at all -- it's just an ordinary row inside the
+   H8 interrupt vector table, which actually runs from ~0x10100 through past
+   0x10152 (item 11's sweep had only confirmed the back portion,
+   0x10152-0x12170, as the repeating f9c4/f9ba pointer run; the front
+   portion, 0x10100-0x10151, is the same 4-byte-pointer-per-vector table
+   with varied real targets). Read raw bytes directly: entries at this
+   address and its neighbors are 24-bit pointers (00 01 xx xx format) to
+   confirmed real code -- 0x15197 is the ROM's own entry()/reset handler,
+   0x1682b is isr_tpu5_tgi5a_sci1_rx_poll (one of item 10's 18
+   spacebase-warning functions), 0x18865/0x18871/0x18872 are further real
+   targets. Repeated entries pointing back to entry() are simply unused
+   vectors falling back to the reset handler, standard practice. No further
+   action needed -- purpose was always "interrupt vector," Ghidra's
+   `pointer`/no-xref classification at this one address was just an
+   analysis gap in an otherwise-already-identified table region, not
+   evidence of anything unusual.
 
 3. XML table verification design -- NOT YET IMPLEMENTED. Community EcuFlash
    XML table defs and the ROM byte-pattern scraper are both individually
@@ -80,35 +102,58 @@ Open items
    wired into the script -- `verify_xml_table()` and the Step 5d call site
    are the next concrete step.
 
-4. 0x20843 reachability -- RESOLVED as a real grammar bug (2026-07-23), not
-   dead/blank space. This is the `bpl` branch target from
-   sci1_boot_switch_case4_frag_20640 (0x20640). First byte at 0x20843 is
-   0xFF; Ghidra currently disassembles it as an undefined 1-byte instruction
-   because no Sleigh constructor matches it.
+4. 0x20843 reachability -- REVISED (2026-07-23): this is the `bpl` branch
+   target from sci1_boot_switch_case4_frag_20640 (0x20640). Confirmed real
+   instruction, not dead/blank space or a missing grammar family (see below
+   for the two now-superseded theories tried first).
 
-   Root cause, confirmed against ana.cpp (h8500_ana, A2tail[]/switch(code)):
-   byte 0xFF is a completely valid, real instruction on hardware -- it's a
-   MAP4 dispatch (A2tail[(code>>4)-6] = A2tail[9] = MAP4) using 16-bit
-   register-displacement addressing (`ds16` in ana.cpp's switch(code) case
-   0xF0-0xFF, i.e. `@(d:16,Rn)` mode).
+   Full byte decode against ana.cpp, confirmed correct: FF 12 3C B7 9C 1D ->
+   `divxu.w @(0x123C:16,SP), SP` (or similar register pairing) -- byte 1
+   (0xFF) is a MAP4 escape (A2tail[9]=MAP4) with ds16 16-bit-displacement
+   addressing (register = code&7 = 7 = SP); bytes 2-3 (12 3C) are the
+   0x123C displacement; byte 4 (0xB7) resolves via A4tail[(0xB7>>3)-4] =
+   A4tail[18] = H8500_divxu.
 
-   The Sleigh grammar (h8539f.slaspec) only implements the MAP4 escape for
-   first-byte range 0xE0-0xEF (documented throughout as "opcode47=14",
-   8-bit-displacement `ds8` addressing). There is no equivalent constructor
-   for first-byte range 0xF0-0xFF ("opcode47=15", 16-bit-displacement `ds16`
-   addressing) anywhere in the .sinc files -- confirmed via grep, zero hits.
-   This is a genuine, previously-undocumented implementation gap, not a
-   hardware oddity or intentional dead space (memory dump at 0x20843 also
-   confirms non-FF-filler bytes following, ruling out padding).
+   SUPERSEDED THEORY 1 (grammar gap): initially looked like the Sleigh
+   grammar only implements MAP4 for opcode47=14 (0xE0-0xEF, 8-bit
+   displacement) and is missing an opcode47=15 (0xF0-0xFF, 16-bit
+   displacement) mirror. WRONG -- the EA-addressing infrastructure
+   (eab_disp16/eaw_disp16, mode=15) is already generic across all of
+   mode=10-15 and does not need a MAP4-specific opcode47=15 family; see
+   h8539f.slaspec's "BUG 4b" comment (~line 813-824), which already found
+   and removed a MAP4-only 0x80-0x9F duplicate block for the same reason.
 
-   TO FIX: in h8539f.slaspec / the mem.sinc MAP4 section, add the
-   opcode47=15 (0xF0-0xFF) mirror of the existing opcode47=14 (0xE0-0xEF)
-   MAP4 constructors, swapping the ds8 8-bit-displacement addrMode for the
-   ds16 16-bit-displacement equivalent (matching ana.cpp's ds16(insn,
-   insn.Op1, code, dtype) call for this byte range). Cross-check against
-   the existing 0xE0-0xEF constructors as a template. After fixing, re-run
-   the build/test workflow below and re-disassemble 0x20843 to confirm a
-   real instruction (not a 1-byte undefined stub) is produced.
+   SUPERSEDED THEORY 2 (missing divxu.w EA form): checked h8539f-arith.sinc
+   directly -- `:divxu.w eaw_disp16,Rd is eaw_disp16; opcode=23 & Rd { ... }`
+   (line 716) ALREADY EXISTS in source and should cover this exact
+   instruction. Also wrong as a diagnosis of "nothing is written" -- the
+   constructor is present.
+
+   ACTUAL OPEN BUG: despite that constructor existing in h8539f-arith.sinc,
+   Ghidra still fails to disassemble real bytes at 0x20843 (re-disassembling
+   both 6 and 8 bytes at this address only ever produces a 1-byte undefined
+   function body -- confirmed twice, same result). This means the compiled
+   .sla does not actually match this byte pattern at runtime, even though
+   the source text looks correct -- the same "compiles fine, doesn't match
+   live ROM bytes" failure class as BUG 5 (h8539f.slaspec ~line 693-695:
+   "Chaining ... compiles (no error) but does not match at runtime"). BUG 5's
+   root cause there was byte-1-scoped tokens (eab_direct/eaw_direct) not
+   shifting to byte 2 despite an intervening subtable -- the MAP4 path here
+   is a similar or deeper multi-byte layering (byte1 MAP4 escape -> ds16
+   payload -> byte4 A4tail dispatch), so eaw_disp16 (built on the plain
+   byte-1-scoped `addrMode` token) may be colliding with, or never actually
+   reached along, the real MAP4 control-flow path the compiler generates.
+
+   TO FIX: trace the compiled .sla's actual decision tree for this byte
+   pattern (not just the .sinc source text) to find where the real
+   MAP4-then-divxu path diverges from what eaw_disp16/opcode=23 expects to
+   match against. Likely needs the same fix pattern as BUG 5 (a
+   byte-position-scoped duplicate token/subtable, e.g. an "eaw_disp16_map4"
+   analogous to the existing _2-suffixed byte-2-scoped forms) rather than
+   reusing the plain eaw_disp16 subtable as-is inside the MAP4 dispatch
+   path. After fixing, re-run the build/test workflow below and
+   re-disassemble 0x20843 (currently a stuck 1-byte FUN_00020843 stub) to
+   confirm a real multi-byte divxu.w instruction is produced instead.
 
 5. RPM identity -- FINAL STATE (2026-07-15). Best candidate: P54/T2IOC1,
    polled by isr_ipu_ch2ch4_input_capture (0x168e3, renamed from an earlier
@@ -140,12 +185,30 @@ Open items
        a genuine decompiler jump-table reconstruction failure
        (halt_baddata()/"Could not recover jumptable" on switch cases
        0/2/4/6) -- a real open item on its own merits, unrelated to the
-       page-banking work in item 9. FUN_0002f490 looks like an orphaned
-       duplicate fragment split off from the same bad region.
-   Open: writer for f516 bits 1/12/13/15, any reader for f510/f512,
-   physical meaning of any bit, the <0xC0 pointer table, SCI1-vs-SCI3
-   reachability, and the 0x28b2f jump-table re-split. Full detail in
-   mut_verification_status.md.
+       page-banking work in item 9.
+   FIXED (2026-07-23): sci1_periodic_phase_dispatch_f526's body was wrongly
+   absorbing 0x2800c-0x28b51 (2.9KB before its own entry at 0x28b2f) due to
+   a stale computed-jump xref from the switch at 0x28b50 -- same root cause
+   as the earlier sci1_boot_switch_case4_frag_20640/0x20640 fix (see git
+   history). Verified via the actual jump-table bytes at 0x28b52 (8 entries,
+   all in 0x28xxx, matching the plate comment) that 0x2800c was never a real
+   target. Deleted and recreated the function at 0x28b2f; body is now
+   correctly 0x28b2f-0x28b51 (79 bytes), matching the 8-entry switch. The
+   freed-up region 0x2800a-0x28081 turned out to contain two real,
+   previously-absorbed functions (FUN_0002800a, FUN_00028038/now
+   FUN_00028082 after further splitting) -- see new item 11 below.
+   FUN_0002f490 CHECKED 2026-07-23: NOT an orphaned duplicate function --
+   it's unprogrammed 0xFF flash filler (64 bytes read, all 0xFF), same
+   category as the other confirmed-blank regions in item 11. The stale
+   xref from the switch at 0x28b50 pointing to it is a leftover of the
+   exact same stale-computed-jump-xref bug already fixed for this switch
+   (0x2800c) -- the real jump table at 0x28b52 (read directly, 8 words) only
+   targets 0x28b62/8b89/8ba8/8c5a/8c78/8c83/8cba/8cc8, all in 0x28xxx, none
+   at 0x2f490. Closed -- no action needed beyond noting the stale xref if a
+   future cleanup pass touches this switch's xref table.
+   Open: any reader for f510/f512, physical meaning of any bit, the <0xC0
+   pointer table, and SCI1-vs-SCI3 reachability. Full detail
+   in mut_verification_status.md.
 
 7. MUT BLANK/actuator sweep -- mostly resolved, full detail in
    mut_verification_status.md. Confirmed: EECA/EECC (mode-shadow copies,
@@ -297,6 +360,165 @@ Open items
     experiment surfaces something not already covered by #817/#5199, or if
     a function's decompiled output is ever found to be actually wrong (not
     just warned).
+
+11. Function-boundary / undefined-code-gap sweep (2026-07-23) -- prompted by
+    the item 6 fix above. Used find_code_gaps (84 gaps ROM-wide initially) and
+    manually inspected raw bytes at each gap before acting -- size/heuristic
+    flags alone were not reliable (many "orphaned instruction" gaps were
+    genuine 0xFF erased-flash filler or repeating-constant data tables, not
+    missed code; conversely many "no orphaned instructions" gaps were real
+    unbound code). Also checked for mid-function prts/rte occurrences
+    ROM-wide (search_byte_patterns on 1119 and 0a0a) as a possible signal of
+    wrongly-absorbed function boundaries elsewhere -- none found; every real
+    rte/prts hit landed exactly at a correct function's tail. The apparent
+    extra 0a0a hits were inside a data table (0x12995, an arithmetic
+    progression 00/0a/14/1e...), a reminder that raw byte-pattern search
+    needs manual byte inspection before acting, same lesson as item 3.
+
+    22 new functions created and verified this session (each: dry-run,
+    create, get_function_by_address to confirm sane non-overlapping bounds):
+      FUN_0002800a (0x2800a, 46b), FUN_00028082 (0x28082, 60b, formerly
+        FUN_00028038's absorbed tail), FUN_00027fb1 (0x27fb1, 52b),
+      FUN_00024cd2 (0x24cd2, 36b) -- also caused Ghidra to auto-discover
+        FUN_00024d36 immediately after it,
+      FUN_00014079 (71b), FUN_000140fc (47b), FUN_0001431f (77b),
+      FUN_000143e8 (69b), FUN_00014502 (9b), FUN_0001460d (72b),
+      FUN_00014838 (28b), FUN_0001497b (44b, gap RESOLVED 2026-07-23 --
+        see below),
+      FUN_000164f8 (13b), FUN_00016505 (13b, second small function found
+        immediately after FUN_000164f8), FUN_00016786 (63b),
+      FUN_0001a146 (22b), FUN_0001a2d0 (22b), FUN_00022898 (85b),
+      FUN_000254dd (103b), FUN_0002561d (14b), FUN_00026982 (135b),
+      FUN_00027644 (143b, gap RESOLVED 2026-07-23 -- see below),
+        FUN_000278ef (68b), FUN_00027bc6 (37b).
+    Gap count dropped 84 -> 68 after this pass, all as expected shrinkage
+    (no new gaps appeared elsewhere -- ROM-wide total is stable).
+
+    Confirmed genuine 0xFF filler / real data tables, NOT missed code (left
+    untouched): the isr/flag-check cluster's small 1-15 byte gaps
+    (0x1519d, 0x175ef, 0x193ec, 0x185f3, 0x19191, 0x1a2fc, etc.), the boot
+    region's 0x20d42/0x20de3/0x21edf/0x22f92/0x24e5d/0x260e5/0x28e90/
+    0x28f23/0x2a930/0x2b832, and the three huge regions 0x10152-0x12170
+    (repeating f9c4/f9ba-style pointer table), 0x1a49a-0x1ffff, and
+    0x2cee4-0x2ffff (both confirmed 0xFF filler/reserved flash space).
+
+    NOT YET RESOLVED, flagged as higher-risk (real, varied, non-filler
+    bytes present but deliberately not touched given this region's
+    documented fragility -- see item 4's BUG 5 class of issue):
+      0x20208-0x202b1 (170b), 0x2031e-0x2036c (79b, borders the
+        scratch_pjmp_demo experimental stub), 0x20747-0x20771 (43b),
+      0x2077d-0x2077e (2b) -- all inside/adjacent to
+        sci1_boot_ihex_colon_record_decode_dispatch's boot-record parsing;
+      0x20134-0x2014b (24b) and 0x20a14-0x20a7f (108b) -- ambiguous,
+        short/irregular byte patterns that could be small data tables
+        (flash constants) rather than code, not confidently classified
+        either way.
+    RESOLVED 2026-07-23: 0x149a7-0x149c7 (33b) and 0x276d3-0x276fa (40b),
+    the two residual slivers left by the two partial fixes above -- same
+    dry-run-create-verify method as the rest of this pass. Both raw byte
+    reads showed varied, non-repeating bytes (not filler); both dry-run
+    creates produced clean, exact-size bodies with no overlap warnings;
+    both decompile cleanly with no decompiler garbage/warnings:
+      gear_indexed_table_lookup_f1fc (0x149a7, 33b) -- gear-indexed table
+        lookup (uses f1fc, the same gear-index register as the SCI1
+        dispatcher's EC-EF case), reads *(stack_param + (f1fc & 7)*4).
+      f0f8_gated_constant_select_f3f4_neighbor (0x276d3, 40b) -- small
+        mode-selected constant picker gated on f0f8 bits 4/0, structurally
+        similar to the neighboring f3f4_bit2_3_4_hysteresis_gate_check
+        (0x27644).
+    Neither has any incoming xref yet (get_xrefs_to: none found for either)
+    -- same situation as several of the other 22 functions from this pass,
+    likely reached via computed/indirect calls given FUN_000149a7's own
+    gear-index-table-lookup shape. Not itself concerning; call-site tracing
+    not yet done for either, low priority given the physical meaning of
+    f1fc/f0f8 in this context is already established elsewhere.
+
+    TO CONTINUE: same method (read real bytes first, dry-run create,
+    verify bounds against neighbors) -- do NOT run Ghidra's built-in
+    "Function Start Search" analyzers over this region; per manual
+    inspection during this session they add nothing for already-defined
+    code and risk re-triggering the same heuristic mis-splits that caused
+    the original absorption bugs (item 6, and originally
+    sci1_boot_switch_case4_frag_20640/0x20640).
+
+----------------------------------------------------------------------------------
+12. Cross-binary function matching (4g63t md352553 -> w4a51 md352554) -- IN
+    PROGRESS (2026-07-23). Two RVR_1998_x3 H8/539F ROMs are open in the same
+    Ghidra instance: the well-analyzed 4g63t ROM (md352553.hex, 719 functions,
+    source of nearly every name/finding in this file and mut_verification_status.md)
+    and the largely-unanalyzed w4a51 ROM (md352554.hex, 787 functions, mentioned
+    in mut_verification_status.md as a candidate for cross-checking the DP=2
+    pointer table on a different calibration).
+
+    Used ghidra:bulk_fuzzy_match (source=4g63t, target=w4a51, threshold=0.9) across
+    all 718 named source functions, paginated in full. Of 718, only 43 produced a
+    confident, unambiguous cross-binary match -- expected, since the two ROMs are
+    different calibrations/revisions, not identical images. All 43 renamed on the
+    w4a51 program via rename_function_by_address:
+      - 26 shared math/utility helpers (sat_add_u16, sat_sub_u16,
+        sat_sub_u16_clamp0, sat_mul_u16, mul_u16_hi, div_u16_sat,
+        div_u32_u16_sat, div_u16_rounded, div_s32_s16_rounded, muldiv_u16,
+        muldiv_s16_rounded, mul_u16_x2_sat_alt, mul_u16_x2_sat,
+        mul_u16_shr8_sat, mul_fixedpoint_8, clamp_u8, passthrough_or_sat,
+        clamp_u16, get_high_byte, round_high_byte_signed, inc_if_signed_flag,
+        zero_ram_range, axis_interp_lerp_u8frac_256, weighted_blend_4term_u8frac,
+        axis_lookup_interp, axis_interp_lerp_u8frac) -- all score 1.0.
+      - 17 named engine functions: channel_validity_gated_handler_dispatch
+        (0.9567), toggle_flag_fe8b_bit4, trap_hang, isr_nmi,
+        sci_fifo_f58a_advance_and_load_fed3 (0.915), isr_tpu5_tgi5b_sci1_tie_clear,
+        ff0d_clear_bits5_6, adc_sensor_convert_multi, byte_sum_banked,
+        sum_byte_array, memcpy_banked, boot_ram_block_copy,
+        control_state_latch_prev, rpm_sync_ready_check (0.915),
+        mirror_f18a_to_f18e, mirror_f406_f408_to_f40a_f40c,
+        f510_f512_f00e_f514_reset.
+
+    FLAGGED, NOT AUTO-RENAMED -- four collision/false-positive groups need a
+    human decision before touching them:
+      - w4a51 0x15fb2: 15 different 4g63t stub_empty_*/noop_return* names all
+        fuzzy-match this one target (expected -- they're trivially identical
+        empty/one-instruction stubs in the source ROM too). Suggest a single
+        generic name (e.g. noop_return) rather than picking one of the 15
+        arbitrarily.
+      - w4a51 0x16b18: latch_request_f588 AND sci_request_latch_f58a_conditional
+        both match -- not yet decompiled/compared to determine which name fits,
+        or whether this is one merged function on w4a51 where 4g63t had two.
+      - w4a51 0x16b61: sci1_rx_frame_accumulator AND fedd5_fifo_rx_store_byte
+        both match -- same situation as above, needs decompile comparison.
+      - update_max (4g63t 0x268b3, score 0.9) -> w4a51 0x14aac -- collides with
+        sat_sub_u16's own 1.0-confidence match at the same address. Almost
+        certainly a false positive (shape-alike code, not the same function);
+        recommend discarding rather than renaming.
+
+    NEXT STEPS AGREED, NOT YET STARTED:
+      a. Set proper function prototypes (param/return types, calling convention)
+         on the 43 matched functions in both ROMs -- these are shared
+         library-style routines with identical signatures everywhere, so this
+         is cheap and immediately cleans up decompiler output at every call site
+         in both programs.
+      b. Resolve the four flagged collisions above (decompile-and-compare,
+         then rename or merge as appropriate).
+      c. Build a Ghidra Function ID (FID) database from the source (4g63t) ROM's
+         now-named function set. Function ID analysis is already enabled in this
+         project's analyzer list (see item on auto-analysis re-corrupting fixed
+         regions, above) but currently has no populated database to match
+         against. A FID database turns this from a manual per-ROM-pair
+         bulk_fuzzy_match exercise into something that runs automatically during
+         normal auto-analysis on any newly-opened ROM.
+      d. Validate the FID database by re-opening w4a51 fresh and confirming
+         Function ID reproduces today's 43 matches (and ideally more, once
+         prototypes/signatures are cleaner) without a manual fuzzy-match pass.
+      e. STATED GOAL: once validated on a second known ROM, use the same FID
+         database (or an expanded one covering both 4g63t and w4a51) to assist
+         disassembly/naming on a genuinely UNKNOWN ROM -- this is the actual
+         motivation for building it now rather than repeating the manual
+         bulk_fuzzy_match step per ROM pair indefinitely.
+
+    Also worth doing once the above is further along: identify which of the 43
+    matched functions/data patterns are good candidates for struct definitions
+    (e.g. the mode-shadow triplets EECA/EECC/EECE, the F5C0-C8 snapshot cluster,
+    the 0x20a14 range-classification table from this session) -- these recur
+    across ROMs and would give an unknown ROM's disassembly the same structural
+    hints, not just function names.
 
 ----------------------------------------------------------------------------------
 Build/test workflow
