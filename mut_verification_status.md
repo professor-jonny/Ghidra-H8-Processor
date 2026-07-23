@@ -706,6 +706,33 @@ not, and its case 7 (which calls into fueling/lambda functions) is
 unrelated background-task content, not confirmed reliable either.
 Bits 1/12/13/15 remain open - not resolved by this finding.
 
+UPDATE 2026-07-23: bits 13/15 writer found separately - see
+phase_cases_1to6_f516_hibit_f54a_writer (0x28b89) case 2, which sets bit9
+alongside either bit15 (f528==0x0200) or bit13+advance (f528==0x0220). Not
+related to the SCI1 command dispatcher, purely an internal duty/phase state
+machine (same family as bit11's writer above).
+
+Bits 1/12: EXHAUSTIVELY CHECKED 2026-07-23, no writer exists anywhere in
+this ROM. Pulled the complete xref list to RAM 0xf516 via Ghidra
+(get_xrefs_to) - all 10 references, covering every known reader/writer
+(sci1_meta_cmd_dispatch_c0_ff, phase_cases_1to6_f516_hibit_f54a_writer,
+f588_duty_gate_f516_bit11_set, peripheral_fec0_fed0_state_update). None
+sets bit1 (0x2) or bit12 (0x1000) anywhere. peripheral_fec0_fed0_state_update
+only reads f516 (gates on bits 12-15==0) and clears bit9, contrary to an
+earlier assumption it might be a bit1/12 writer candidate - it isn't.
+The one remaining loose thread, case 7 at 0x28cc8 (previously flagged in
+sci1_periodic_phase_dispatch_f526's plate comment as "a valid jump target
+via xref, not yet disassembled"), was re-checked and is currently undefined
+data with ZERO xrefs - that plate-comment claim appears to be stale/
+unconfirmed, not a live branch, so it isn't hiding a writer either.
+CONCLUSION: bit1 (cleared by eee0_eeee_diag_flags_reset_dispatch, see FC
+note above) and bit12 (read by f516_hibits_f520_f0f2_mode_select) are
+write-only-from-nowhere on this ROM - most likely dead flags from a removed
+feature or a different ROM revision, not a gap in analysis coverage. Not
+worth further search time on this ROM; only reopen if a fresh
+disassembly/analysis pass changes the xref set at 0xf516, or if the w4a51
+ROM (item 12 in review.md) shows a different picture.
+
 MUT BLANK/UNTRACED SWEEP, ROUND 2 (2026-07-15 session, in progress)
 ------------------------------------------------------------------
 Goal: work through the ~150 BLANK/NAMED-untraced rows, and separately
@@ -1348,6 +1375,16 @@ literal-address instruction. f1f6 bit3 (which gates whether f0e6 bit13 is
 mirrored to P6DR.2 at all, per mirror_status_f0e6_to_ports) was checked as
 an adjacent lead (search_byte_patterns "F1 F6", 9 hits) but NOT further
 traced this round -- a plausible next step.
+
+CORROBORATED 2026-07-23: independent xref-based check (get_xrefs_to on RAM
+0xf0e6, all 26 references) reaches the same conclusion via a different
+method than the 2026-07-22 byte-pattern sweep - every xref is accounted for
+(mirror_status_f0e6_to_ports, or one of the already-documented bit0/1/2/3/
+4+5/6/7 writers), none touch bit13 (mask 0x2000). Two independent
+methods (byte-pattern sweep and xref trace) agreeing strengthens the case
+that any writer, if one exists, uses bank-prefixed/indirect addressing that
+neither approach can see - not worth further search time without a new
+lead (e.g. tracing f1f6 bit3's own writer, still unexamined).
 
 CORRECTION to the previous round's note (2026-07-22, same session,
 verified via direct read_memory rather than left as a flagged assumption):
