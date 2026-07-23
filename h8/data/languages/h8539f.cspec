@@ -145,6 +145,117 @@
        run. Kept as a separate named prototype (rather than deleting it and relying on
        default_proto alone) so these 5 explicit assignments stay valid without needing
        to be reverted. -->
+  <!-- ADDED 2026-07-22: some prts/pjsr-returning leaf functions (e.g. sat_add_u16,
+       confirmed via disassembly of its computed-call sites such as
+       isc_f462_position_ramp @0x184a5) pass ALL arguments on the stack with no
+       register pre-binding at all  unlike __stdcall_far, which reserves the
+       first parameter for R0. Caller pushes each arg via "mov Rn,@-SP" (Rn used
+       only as staging, not as an ABI register) then cleans up its own pushed
+       bytes with an explicit "adds.b N,SP" after the call (caller-cleanup,
+       cdecl-style), while the callee's own extrapop=4 only accounts for the
+       prts return address it pops itself. Reuses the same stack offset=4
+       convention as __stdcall_far, which is what correctly reconstructs the
+       FP+6 addressing seen in this function's own prologue once linked. -->
+  <!-- ADDED 2026-07-22: some prts/pjsr-returning, all-stack-param math helpers
+       (sat_add_s16, sat_sub_u16_clamp0, muldiv_u16_scaled, muldiv_s16_rounded_3op,
+       div_u32_u16_rounded, select_min_xy_triple) genuinely return a 32-bit value
+       across the R0:R1 register pair on every path (confirmed via disassembly:
+       both registers explicitly set in both the normal and saturated/overflow
+       branches, not just R1-as-scratch). __stdcall_far_allstack's single 2-byte
+       R0 <output> pentry can't express this: declaring these as "ushort" silently
+       drops the R1 half (decompiler warnings + broken parameter binding observed
+       on muldiv_u16_scaled), and declaring them as "uint" against the 2-byte
+       pentry made Ghidra fall back to a bogus hidden-return-pointer convention
+       (__return_storage_ptr__) that doesn't match this hardware at all. This
+       variant instead joins R0:R1 into one real 4-byte output location, matching
+       the actual register-pair return mechanism.
+       BUG FIXED 2026-07-22: initial version used the illegal tag join a="R0"
+       b="R1"; Ghidra's schema only allows addr/register inside a pentry.
+       Corrected to addr space="join" piece1="R0" piece2="R1" - but that
+       required two throwaway solo R0/R1 pentries to satisfy Ghidra's
+       "join must overlap a previous entry" rule, and those solo entries
+       turned out to pollute the decompiler's GLOBAL return-value candidate
+       model: after installing, ~18 unrelated functions across the ROM (ISRs,
+       axis_lookup_interp, sci1_boot_build_data_frame, etc - none of which
+       call any of the affected math helpers) started showing "Unable to
+       track spacebase fully for stack" / "Restarted to delay deadcode
+       elimination for space: register", confirmed via diffing full pre/post
+       decompile dumps (test/RVR_1998_x3 4g63t 21000011 md352553.hex.c vs
+       _math_fix.hex.c): 0 such warnings before, 27 after, spread across 18
+       functions with no call relationship to the 6 changed functions.
+       REPLACED 2026-07-22 with a genuine overlapping register R0R1 (see
+       h8539f.slaspec, offset=0x00 size=4, same AX/AL-style overlap technique
+       as any normal register alias) instead of the join/solo-pentry
+       workaround. A real register can't pollute the global return-value
+       model the way solo join-support pentries did, since it isn't a special
+       construct - it's declared in the language's register space like any
+       other register.
+       REVERTED 2026-07-22 (same-day follow-up): confirmed via a genuine full
+       Ghidra restart + fresh ROM reopen that R0R1 does NOT avoid the
+       pollution either. isr_sci1_eri and muldiv_u16_scaled both still showed
+       the exact same warnings/messy output as the join+solo-pentry version,
+       byte-for-byte identical before/after the restart and before/after an
+       explicit set_function_prototype re-application on muldiv_u16_scaled.
+       So a real overlapping register in the register space can still
+       perturb the decompiler's global return-value/stack-tracking model
+       just by existing. R0R1 has been removed from h8539f.slaspec entirely.
+       Falling back to a plain 2-byte ushort R0 output pentry here (matching
+       __stdcall_far_allstack) accepts the known dropped-R1-half warning
+       on just the 6 math helpers, a smaller and already-understood problem
+       that does not spread to unrelated functions. Backup of the R0R1 state
+       is in backup_20260722_pre_r0r1_revert/ if this needs re-diagnosing. -->
+  <prototype name="__stdcall_far_allstack_32ret" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    </unaffected>
+  </prototype>
+
+  <prototype name="__stdcall_far_allstack" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    </unaffected>
+  </prototype>
+
   <prototype name="__stdcall_far" extrapop="4" stackshift="2">
     <input>
       <pentry minsize="1" maxsize="2">

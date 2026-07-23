@@ -1,6 +1,106 @@
-MUT RequestID Master Table (all 150 entries, ROM 0x2fad0)
+METHODOLOGY / RECIPE (added 2026-07-22, distilled from what's actually
+worked across sessions -- read this first, especially when starting the
+same kind of investigation on a different ECU/ROM)
 ============================================================
-Built 2026-07-13 by decoding the live 150x16-bit address table at ROM
+Goal of this whole document: fully name and document every MUT RequestID,
+dispatcher command byte, RAM flag, and physical output pin on this ECU so
+the result can become a reusable, shareable signature applicable to other
+Mitsubishi H8/500-family ECUs, not just this one ROM.
+
+WHAT HAS RELIABLY WORKED:
+
+1. Prefer tracing FORWARD FROM REAL HARDWARE over backward from assumed
+   command semantics. Command-byte/RAM-flag chains (e.g.
+   sci1_meta_cmd_dispatch_c0_ff's f510/f512/f516 bits) very often terminate
+   in further internal RAM state machines with no confirmed physical
+   meaning. Starting instead from confirmed hardware registers -- H8 port
+   data registers P1DR-PCDR (0xfe80-0xfe97), SCI1/2/3 UART registers
+   (0xfec0-0xfed5), timer registers (0xff2x+) -- and tracing BACKWARD to
+   find their writers is far more likely to land on something with a real,
+   nameable physical identity (a relay, a solenoid, a lamp). See the
+   "PHYSICAL OUTPUT PIN TRACE" section below for the method that produced
+   the first confirmed command-byte-to-physical-pin chain in this project.
+
+2. ALWAYS confirm you have a function's true ENTRY POINT before commenting
+   or labeling. search_byte_patterns matches raw bytes anywhere in the ROM,
+   including mid-function -- it does NOT return function boundaries. Call
+   get_function_by_address on every hit before treating it as "the
+   function". Plate comments silently fail (or attach nowhere useful) if
+   set on a non-entry address -- verify with a decompile/re-read after
+   every batch_set_comments call, don't trust the tool's own success flag
+   alone.
+
+3. For any register/table you plan to describe as a bitmask, byte layout,
+   or repeating structure: verify FINAL entries and conclusions via
+   individual read_memory calls anchored on absolute addresses, not by
+   eyeballing one long combined hex dump and counting bytes by hand. This
+   project has already produced two separate miscounting errors doing it
+   the fast way (a table entry-count error, and a specific bit-mask
+   misread) -- both caught only because they were double-checked
+   independently before being written down as fact. The slow way is worth
+   it whenever a finding is about to be saved as an established fact
+   rather than a rough lead.
+
+4. Before accepting a plausible-looking hypothesis (e.g. "this graduated
+   mode-select value looks like a PWM fan-speed driver"), check the ACTUAL
+   register labels via list_globals for anything you're about to name as a
+   guess. This project had a specific case where a well-reasoned-sounding
+   fan-PWM hypothesis was completely wrong once the real register labels
+   (SCI1/2/3 UART SMR/BRR/SCR) were checked -- the corrected finding is
+   preserved alongside the original wrong one in the relevant plate comment
+   so future readers don't rediscover the same dead end.
+
+5. When re-deriving a decompiler's rendering of an addressing mode (banked/
+   segmented EA forms in particular), trace the actual Sleigh grammar
+   constructor (the .slaspec/.sinc pcode body) rather than reverse-
+   engineering the intent from the decompiler's C-like output alone -- the
+   decompiler's CONCAT/tracked_set folding is a useful cross-check but the
+   grammar itself is the ground truth for what an instruction actually
+   computes. See the DP=2 pointer table derivation below for a worked
+   example (eaw_disp16 -> Rn_banked chain).
+
+6. Label AND comment as you go, not as a final pass. Every RAM cell, ROM
+   table, and function that gets a confirmed (or well-evidenced
+   provisional) meaning should get: a descriptive name via rename_or_label/
+   rename_function, and a plate comment stating what's confirmed, what's
+   inferred, what's still open, and pointing back to the relevant section
+   of this file. This is what actually accumulates into a reusable
+   signature -- comments only in this markdown file, without corresponding
+   Ghidra labels, don't transfer to a fresh project the same way.
+
+7. When a hypothesis turns out wrong, CORRECT THE EXISTING PLATE COMMENT IN
+   PLACE (don't just note the correction elsewhere) -- the whole point is
+   that the next person (or the next session) reads the function and gets
+   the corrected understanding immediately, not a stale wrong one plus a
+   pointer to a correction buried in this file's chronological log.
+
+8. Keep confidence levels explicit and honest in every write-up:
+   CONFIRMED (independently re-derived from live disassembly/memory, ideally
+   twice), LIKELY/well-evidenced (a real mechanism traced, but physical
+   real-world identity inferred rather than proven), or OPEN/no writer
+   found. Do not let a "LIKELY" finding get cited elsewhere as if it were
+   CONFIRMED -- several sections below deliberately flag this distinction
+   (e.g. the P1DR.5/ignition-output lead) precisely so it doesn't harden
+   into an unearned fact over time.
+
+WHAT HAS NOT WORKED / TO AVOID:
+- Relying on external tooling's actuator/RequestID lists (EvoScan's UI,
+  MUT-III's mutdata.mdb, MUT-II hand-programmer documentation) as a source
+  of ground truth for THIS ROM. These reflect a generic/shared convention
+  across many Mitsubishi ECUs and have already been shown to NOT match
+  what this specific ROM's dispatcher actually implements (the DP=2 table
+  finding). Use them only as naming inspiration once a real ROM mechanism
+  is independently confirmed, never as a substitute for tracing the ROM
+  itself.
+- Chasing a RAM flag that turns out to be shared across 100+ xref sites
+  (e.g. f20e, f502) to a single conclusive meaning in one sitting -- these
+  are typically genuine shared engine-state words, not actuator-specific.
+  Recognize the scale early (a bulk search_byte_patterns hit count is a
+  fast signal) and either scope the trace narrowly (one specific
+  consumer/writer pair) or note it as a low-priority/impractical thread
+  rather than getting stuck.
+
+
 0x2fad0 (indexed via adc_sensor_convert_single @0x171c3) and cross-
 referencing every entry against Mitsubishi_MUTII_EFI.xml (the standard
 Evo 4/5/6+ EFI EvoScan profile the RVR's own MUT profile was adapted
@@ -962,9 +1062,323 @@ OPEN, NOT YET DONE: whether a different ROM revision (e.g.
 both present in test/rvr/roms/) has this same DP=2 table actually
 programmed. Not checked -- out of scope unless revisited.
 
-USER-PROVIDED XML: Mitsubishi_MUTII_EFI_RVR_X3_logging_profile.xml
+PHYSICAL OUTPUT PIN TRACE (2026-07-22, "work backward from real hardware
+outputs" session)
 ------------------------------------------------------------------
-This EvoScan logging profile (test/rvr/xml/evoscan/) is the user's working
+Different approach from the sci1_meta_cmd_dispatch_c0_ff RAM-flag chain:
+instead of starting from command bytes, started from the H8's real port
+data registers (P1DR-PCDR, ROM 0xfe80-0xfe97, confirmed via list_globals)
+and traced backward to find genuine physical-output-driving code, since the
+f510/f512/f516 flag chains kept terminating in further RAM state machines
+with no confirmed hardware meaning (and one earlier hypothesis this
+session -- that f516's high bits drove a PWM dual-speed fan -- was
+CHECKED AND REFUTED: fec0-fed5 are SCI1/2/3 UART registers per
+list_globals, not a timer/PWM peripheral; see the corrected plate comment
+at 0x28700).
+
+FOUND: mirror_status_f0e6_to_ports (ROM 0x156ce, now labeled) is a genuine
+RAM-flag-to-port-pin mirror -- 8 bits of RAM 0xf0e6 map directly onto real
+P1DR/P2DR/P4DR/P6DR/PCDR pins, several gated by per-variant ROM config
+bytes at 0x102e4-0x102ee. RAM 0xf0e6 itself has been labeled
+output_relay_flags_f0e6. Full bit map:
+
+  bit0 (0x01) -> P1DR.4, direct
+  bit1 (0x02) -> P2DR.7, gated by ROM byte 0x102ee
+  bit2 (0x04) -> P4DR.7, gated by ROM byte 0x102ed (polarity flips on its bit3)
+  bit3 (0x08) -> PCDR.3, direct, INVERTED (bit clear = pin set)
+  bit4 (0x10) -> P4DR.4, gated by ROM byte 0x102e4==1
+  bit5 (0x20) -> PCDR.6, same gate as bit4
+  bit6 (0x40) -> PCDR.7, direct
+  bit7 (0x80) -> P1DR.5, gated by ROM byte 0x102e6==0
+  bit13(0x2000)-> P6DR.2, INVERTED, gated by f1f6 bit3
+
+ONE bit's writer fully traced: bit3, via knock_octane_f0e6_bit3_gate_dispatch
+(ROM 0x284a3). Sets/clears based on an RPM threshold, the EED6/EED8/EEDA
+per-cylinder cluster (same cluster used by the warmup/calibration-select
+system under f516_request_latch_f09a_calib_select), and a call into
+knock_octane_pattern_match_state_machine (ROM 0x28557) -- a bit-pattern
+state machine over the EED0-EEE8 array family driving internal timers
+f51a/f51c/f51e/f04a, structurally consistent with misfire/sustained-knock
+pattern detection. HYPOTHESIS (not confirmed against real hardware): PCDR
+bit3 is a check-engine/MIL lamp driver or a knock-condition dash warning
+output. This is circumstantial -- flag as unconfirmed if cited elsewhere.
+
+The other 8 bits (0/1/2/4/5/6/7/13) are NOT yet traced beyond a one-shot
+unconditional set of bit1 at cold-init (engine_state_f498_init, 0x17302 --
+not diagnostically useful). ~20 more xref sites to f0e6 exist in the ROM,
+untraced: 0x17341/173d5/173db/174c9/174cf/1861d/18623/187ba/187c2/18bb1/
+18bbb/18dbf/18dc5/18ddd/19359/1935f/19377/197ce/197d8/19806/19891/19904/
+1998f/19e4c/27c94 -- these are the natural next targets, since they're the
+best current lead for identifying genuine actuator names (fuel pump relay,
+A/C clutch relay, radiator fan, etc.) against real physical pins rather
+than unconfirmed RAM-flag semantics. Also worth doing the same "start from
+port registers, trace backward" sweep for P3DR/P5DR/P7DR/P8DR/P9DR/PADR/
+PBDR, which haven't been checked yet at all this session.
+
+NOTE ON SCOPE: this thread grew out of trying to identify more MUT
+actuator-test names beyond the 8 (Fuel Pump Relay/EGR/Purge/AC Relay/
+Condenser Fan Hi-Lo/Ignition Timing Fix/ISC Step Fix) already found
+unmapped-on-this-ROM in the DP=2 pointer table finding above. It has NOT
+yet produced a confirmed mapping back to any MUT/EvoScan-style RequestID
+or actuator name -- it's a parallel, independent hardware-level
+investigation, not (yet) a resolution of the original Mode5 RequestID
+question. The two threads may or may not converge; worth keeping in mind
+if resuming either one.
+
+SESSION CORRECTIONS + FIRST CONFIRMED SCI1-DISPATCHER-TO-PHYSICAL-PIN CHAIN
+(2026-07-22, continuation of "PHYSICAL OUTPUT PIN TRACE" above)
+------------------------------------------------------------------
+Two corrections to prior work in this same session, both caught and fixed
+before propagating further -- noting the process here since it's a useful
+lesson for future signature-naming work: eyeballing a long combined
+read_memory hex dump for a repeating-structure table is error-prone.
+Individual per-entry read_memory calls anchored on absolute address are
+slower but far more reliable; use that method when precision matters (e.g.
+finalizing a table's entry count or a specific bit assignment).
+
+CORRECTION 1: cmd_c0_d8_actuator_bit_table (ROM 0x13740) is 25 entries
+(cmd 0xC0-0xD8 inclusive), not 20 as the original plate comment said.
+Confirmed the table's true end: bytes immediately after the 0xD8 entry
+(0x137a0+4) break the 4-byte-entry pattern entirely.
+
+CORRECTION 2: f516_hibits_f520_f0f2_mode_select (0x28700) does NOT drive a
+PWM dual-speed radiator/condenser fan, despite its graduated f0f2 mode
+values initially looking exactly like a plausible fan-speed selector. The
+consuming peripheral registers (0xfec0-0xfed5) are confirmed via
+list_globals to be SCI1/2/3 UART SMR/BRR/SCR/TDR/SSR/RDR registers, not a
+timer/PWM channel -- this is UART baud-rate/serial-config switching, most
+likely a slow-init-handshake vs fast-K-line-comms speed change typical of
+MUT/ISO-style diagnostic protocols. Plate comment at 0x28700 corrected in
+place so this dead end isn't picked up as a lead again.
+
+NEW FINDING: first confirmed end-to-end chain from a sci1_meta_cmd_dispatch_c0_ff
+command byte all the way to a real physical output pin:
+  cmd 0xD8 -> sets f510 bit1 (cmd_c0_d8_actuator_bit_table entry 24,
+    00 ff 00 02, triple-confirmed via independent read_memory calls)
+  -> read by engine_mode_f20e_f510_check (0x174a1): true unless
+    (f20e bit4 SET AND f510 bit1 CLEAR)
+  -> consumed by ign_advance_f0e6_bit7_update (0x173c0), gated on ROM
+    config byte 0x102e6==0
+  -> sets/clears output_relay_flags_f0e6 (0xf0e6) bit7
+  -> mirrored by mirror_status_f0e6_to_ports (0x156ce) onto P1DR bit5
+    (physical pin 0xfe82), same 0x102e6==0 gate
+This is the FIRST bit in the whole sci1_meta_cmd_dispatch_c0_ff table with
+a fully traced path to a real port pin. Confidence on the CHAIN itself is
+high (every link independently verified against live disassembly/memory).
+Confidence on WHAT PHYSICAL COMPONENT P1DR.5 actually drives is LOW -
+f20e is an extremely widely-shared engine-mode flag word (170+ xref sites,
+not practically fully traceable), so the physical identity is only a weak
+inference (ignition-confirm/coil-adjacent, given the function's inherited
+name "ign_advance_f0e6_bit7_update" and f20e's general "engine
+running/ignition active" flavor) - NOT a confirmed component name. Do
+not treat "P1DR.5 = ignition output" as established; it's a lead only.
+
+Also worth noting: cmd 0xD8's table entry (0x0002) breaks what was
+otherwise a perfectly clean descending-by-half bit sweep across D4-D8
+(0x0040, 0x0020, 0x0010, 0x0008, then D8 should be 0x0004 by the pattern
+but is actually 0x0002) - unexplained irregularity, possibly a deliberately
+skipped/reserved bit2, not yet investigated further.
+
+REMAINING WORK for full f510/f512/f516 physical-pin identification (the
+"completely name everything" goal): systematically trace every other bit's
+reader the same way bit1 was just traced here - i.e. for each bit,
+find its RAM consumer function, then follow that consumer's output until
+it either reaches a real port register (P1DR-PCDR, confirmed labeled) or a
+clearly-general/shared system (like f20e or f502) where further tracing
+isn't practical. The ~20 untraced output_relay_flags_f0e6 (0xf0e6) writer
+xref sites listed in the "PHYSICAL OUTPUT PIN TRACE" section above remain
+the best next targets, plus doing the same "start from port register,
+trace backward" sweep for P3DR/P5DR/P7DR/P8DR/P9DR/PADR/PBDR which haven't
+been touched at all yet.
+
+EGR + PURGE SOLENOID FINDINGS (2026-07-22, continuation of port-backward
+trace)
+------------------------------------------------------------------
+Continued the f0e6 writer sweep. Three more bits identified, two with
+high confidence and coherent, self-consistent gating logic:
+
+- f0e6 bit1 -> P2DR.7 (0xfe83) = EGR solenoid control. Writer:
+  egr_f0e6_bit1_update (0x18600), gate: egr_activity_condition_check
+  (0x18628), RPM-windowed (disabled at engine-off and at high RPM with a
+  decaying counter active). NOT reachable from sci1_meta_cmd_dispatch_c0_ff
+  -- purely internal engine-state driven. Same ROM gate byte (0x102ee)
+  used by both writer and port-mirror side.
+
+- f0e6 bits4+5 (mask 0x30) -> P4DR.4 (0xfe87) + PCDR.6 (0xfe97) = EGR
+  valve position/sequence drive (two-bit, likely open/close or step
+  direction). Writer: egr_f0e6_valve_bits_update (0x18b63), fed by RAM
+  0xf490 (an EGR valve-state word maintained by a larger EGR state machine
+  -- egr_sequence_control @ 0x187cf, egr_mode_dispatch @ 0x187a0 which
+  selects between 3 hardware EGR variants on ROM byte 0x102e4: 0=none,
+  1=this sequence drive, 2=egr_position_target_f494_calc, a different
+  position-target strategy not yet traced). NOT reachable from the SCI1
+  dispatcher either -- also purely internal.
+
+- f0e6 bit2 -> P4DR.7 (0xfe87) = canister PURGE solenoid control. Writer:
+  purge_f0e6_bit2_update (0x18db0), gate: purge_enable_check (0x18dca),
+  RPM/coolant-temp hysteresis-band gated (classic purge-control pattern).
+  ***THIS ONE IS REACHABLE FROM THE SCI1 DISPATCHER*** -- purge_enable_check
+  has a force-override path: when f20e bit4 is SET and f510 bit8 is SET,
+  purge is forced active regardless of the normal hysteresis. f510 bit8
+  is set by sci1_meta_cmd_dispatch_c0_ff command byte 0xD1 (table entry
+  17, 00 ff 01 00 at ROM 0x13784, confirmed via read_memory). Full chain:
+    cmd 0xD1 -> f510 bit8 -> purge_enable_check override
+    -> output_relay_flags_f0e6 bit2 -> P4DR.7 (physical pin)
+  This is the STRONGEST candidate found in the whole investigation for a
+  genuine, externally-triggerable MUT/EvoScan-style actuator command on
+  this ROM -- recommend prioritizing this for real-hardware verification
+  if that becomes possible. Exact real-world f20e-bit4 trigger condition
+  not fully pinned down (f20e is the same widely-shared 170+-xref flag
+  word noted elsewhere as impractical to fully trace), but the mechanism
+  itself, cmd byte through to the physical pin, is fully confirmed live.
+
+RUNNING TALLY of output_relay_flags_f0e6 bits identified so far:
+  bit0: ISC/knock-condition-gated, NOT SCI1-reachable (P1DR.4)
+  bit1: EGR solenoid, NOT SCI1-reachable (P2DR.7)
+  bit2: PURGE solenoid, SCI1-REACHABLE via cmd 0xD1 (P4DR.7)  <-- best lead
+  bit3: TWO writers (see below), NOT SCI1-reachable (PCDR.3)
+  bit4+5: EGR valve position/sequence (two-bit), NOT SCI1-reachable
+        (P4DR.4 + PCDR.6)
+  bit6: writer not yet traced (PCDR.7)
+  bit7: SCI1-REACHABLE via cmd 0xD8 (f510 bit1), physical meaning LOW
+        CONFIDENCE (P1DR.5, weakly inferred ignition-adjacent)
+  bit13: writer not yet traced (P6DR.2) -- but see f510 bit13/0x2000
+        read by o2_upstream_enable_check below, a possible lead
+Remaining genuinely untraced: bit6 (PCDR.7), bit13 (P6DR.2).
+
+XREF SWEEP, ROUND 4 (2026-07-22 session, continuation): worked through the
+remaining ~12 untraced f0e6 xref sites listed above. Most resolved to
+functions already covered by name (get_function_by_address confirmed each
+address before treating it as new, per this file's own methodology note):
+0x17341 -> inside engine_state_f498_init (already known, cold-init bit1
+set). 0x1861d -> inside egr_f0e6_bit1_update (already known). 0x19e4c ->
+inside channel_dispatch_and_snapshot_update (already known F5C0 snapshot
+function; decompiled directly this round to confirm it only READS f0e6
+bit0 into F5C8, adds no new writer).
+
+bit0 CONFIRMED: writer is isc_f0e6_bit0_update (0x174c0, already named from
+an earlier pass but not yet decompiled/closed out). Full body is a clean
+two-way branch on knock_condition_eval() -- sets bit0 if knock condition
+true, clears it otherwise. No SCI1/dispatcher involvement. NOT
+SCI1-reachable.
+
+bit3 has a SECOND writer, not previously documented: warmup_state_f594_f0e6_init
+(0x27c86) unconditionally ORs in bit3 (`DAT_0001f0e6 = DAT_0001f0e6 | 8`) as
+part of a 3-line warmup-state init (also sets F09A from a ROM constant and
+F594=0x41). This is separate from and additional to the already-known
+conditional writer knock_octane_f0e6_bit3_gate_dispatch (0x284a3, RPM/knock-
+pattern gated). Two writers to the same bit -- one unconditional warmup-set,
+one conditional runtime gate -- is a real, not-yet-reconciled finding; the
+bit3->MIL/warning-lamp hypothesis should be treated as even less certain
+until the warmup-init interaction is understood (does warmup unconditionally
+turn the lamp/output ON, later governed by the runtime gate?). Neither
+writer is SCI1-reachable.
+
+NEW MULTI-BIT FIELD FOUND (separate from the tracked bit0-7/13 set):
+o2_sensor_control_dispatch (0x19720) writes f0e6 bits 8-11 (mask 0xf0ff,
+i.e. `uVar2 | (f0e6 & 0xf0ff)`) based on O2 sensor upstream/downstream
+enable-check results (o2_upstream_enable_check @0x197f4,
+o2_downstream_enable_check @0x198f2). This nibble is NOT part of the
+port-pin bit0-7/13 set documented above (no entry in
+mirror_status_f0e6_to_ports' bit map for bits 8-11) -- likely an internal
+O2-control-mode field, not a physical-pin flag. Not yet further traced;
+noting for completeness since it came up in the same xref sweep.
+
+Also of note: o2_upstream_enable_check (0x197f4) reads f510 bit13 (0x2000)
+as part of its override-gating logic (`(f20e & 0x10)==0 || (f510 &
+0x2000)==0`), alongside its read of f0e6 bit8/9. This is the same f510
+word the SCI1 dispatcher writes bits into for the purge (bit8) and P1DR.5
+(bit1) chains above -- worth checking whether anything in
+sci1_meta_cmd_dispatch_c0_ff's table sets bit13, which would make O2
+sensor override SCI1-reachable too. NOT YET CHECKED.
+
+STILL OPEN, next targets: bit6 (PCDR.7) and bit13 (P6DR.2) writers
+remain untraced -- no candidate xref site from the original ~20-site list
+turned out to touch them; a fresh xref/byte-pattern sweep specifically
+for these two bits (rather than relying on the original generic f0e6
+xref list, which turned out to be dominated by already-covered
+functions) is the concrete next step.
+
+XREF SWEEP, ROUND 5 (2026-07-22 session, continuation): re-ran the F0E6
+byte-pattern search fresh (broader than the original ~20-site list -- 28
+hits total this time, including 3 new addresses: 0x156d1 (inside
+mirror_status_f0e6_to_ports itself, expected), 0x28538/0x2853e (inside
+knock_octane_f0e6_bit3_gate_dispatch, already known). Checked every
+remaining unresolved address via get_function_by_address before treating
+as new, per this file's own methodology note.
+
+BIT6 NOW FULLY RESOLVED. Writer is f0e6_bit6_update (0x19350, already
+labeled from an earlier pass but not yet decompiled/closed out) -- clean
+two-way branch on ign_advance_rpm_zone_enable_check() (0x19364), same
+shape as bit0/bit7's writers. That check function is an RPM-zone
+hysteresis gate (ROM lookup tables 0xd6e/0xd70/0xd72 selected by f43e
+state, load-based override via f186) with a CONFIRMED SCI1 override path:
+it also reads f510 bit7 (0x80) alongside f20e bit4, bypassing the normal
+RPM/load check when both are set. f510 bit7 is set by
+sci1_meta_cmd_dispatch_c0_ff command byte 0xD2 (table entry 18, ROM
+0x13788, confirmed via direct read_memory: bytes `00 ff 00 82` -- byte0=0
+selects f510, mask 0x0082 sets bits 1 AND 7 simultaneously). This also
+resolves the "D8 sweep irregularity" flagged earlier in this file and in
+review.md: cmd 0xD2's two-bit mask (0x0082) is not an anomaly in the D-row
+sweep pattern -- it deliberately triggers two independent override checks
+at once (bit7 for this ign_advance_rpm_zone_enable_check chain, bit1 for a
+still-unfound separate consumer, NOT to be confused with the different
+"bit1" already traced via cmd 0xD8/engine_mode_f20e_f510_check, which is a
+different f510 bit1 reference entirely despite the coincidental naming --
+re-verify carefully if revisited).
+
+This is a THIRD confirmed SCI1-reachable actuator chain on this ROM (after
+cmd 0xD1's purge-solenoid override and cmd 0xD8's P1DR.5/f0e6-bit7 chain):
+  cmd 0xD2 -> f510 bit7 -> ign_advance_rpm_zone_enable_check override
+  -> output_relay_flags_f0e6 bit6 -> PCDR.7 (physical pin)
+Physical real-world component identity is still NOT confirmed (same
+low-confidence "ignition-adjacent" inference as the bit7/P1DR.5 chain,
+based on naming continuity with ign_advance_f0e6_bit7_update rather than
+independent hardware verification) -- treat as a lead, not a fact.
+
+BIT13 REMAINS GENUINELY OPEN (as an f0e6 output-pin writer). Exhaustive:
+all 28 hits from the fresh F0E6 byte-pattern sweep are now accounted for
+(either the port-mirror function itself, or one of the already-documented
+bit0/1/2/3/4+5/6/7 writers/gates). None write f0e6 bit13 (mask 0x2000).
+This is consistent with this ROM's known static-analysis blind spot for
+bank-prefixed/indirect RAM writes (same class of gap documented elsewhere
+in this file for Knock Voltage, Coolant Temp, and others) -- f0e6 bit13's
+writer, if a dedicated one exists, is not reachable via a directly-encoded
+literal-address instruction. f1f6 bit3 (which gates whether f0e6 bit13 is
+mirrored to P6DR.2 at all, per mirror_status_f0e6_to_ports) was checked as
+an adjacent lead (search_byte_patterns "F1 F6", 9 hits) but NOT further
+traced this round -- a plausible next step.
+
+CORRECTION to the previous round's note (2026-07-22, same session,
+verified via direct read_memory rather than left as a flagged assumption):
+f510 bit13 (the DIFFERENT bit13, on a different RAM word, read by
+o2_upstream_enable_check as part of its O2-sensor-override gate) IS
+SCI1-reachable after all. sci1_meta_cmd_dispatch_c0_ff's 0xC0-0xD8 table
+entry for cmd 0xCD, at ROM 0x13770 (confirmed via read_memory: bytes
+`00 ff 20 00`), targets f510 (byte0=0) with mask 0x2000 = bit13. This
+directly matches the bit o2_upstream_enable_check (0x197f4) reads as part
+of its `(f20e & 0x10)==0 || (f510 & 0x2000)==0` override-gating condition.
+So the O2 sensor upstream-enable override chain (cmd 0xCD -> f510 bit13 ->
+o2_upstream_enable_check override -> o2_sensor_control_dispatch's f0e6
+bits8-11 field) is a FOURTH confirmed SCI1-reachable chain on this ROM,
+alongside cmd 0xD1 (purge), 0xD8 (P1DR.5/f0e6 bit7), and 0xD2 (PCDR.7/f0e6
+bit6). Unlike the other three, this one does not terminate in a physical
+port pin (f0e6 bits8-11 are an internal O2-control-mode field per the
+earlier finding, not part of mirror_status_f0e6_to_ports' bit map) -- so
+its real-world effect, if any, is forcing the ECU's O2 sensor read/control
+logic into an override mode rather than toggling a discrete relay/solenoid.
+Physical significance not yet assessed; flagging as a genuine new lead,
+not yet fully characterized.
+
+RUNNING TALLY, UPDATED (2026-07-22, end of session): f0e6 bits 0/1/2/3
+(x2 writers)/4+5/6/7 all have confirmed writers; only bit13 remains
+untraced. Three of those chains (bit2/purge, bit7/P1DR.5, bit6/PCDR.7)
+are confirmed SCI1-reachable via cmd 0xD1/0xD8/0xD2 respectively. A
+fourth SCI1-reachable chain (cmd 0xCD -> f510 bit13 -> O2 sensor override)
+exists but does not terminate in f0e6/a physical pin -- tracked
+separately, not folded into the f0e6 tally.
+
+
 master list for actually logging the car, built from this file's earlier
 rounds. It already correctly reflects most of the CONFIRMED/OPEN/BLANK
 rows above, including the full 2026-07-14 Unk_0xNN sweep.
