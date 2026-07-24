@@ -442,8 +442,44 @@ Open items
     sci1_boot_switch_case4_frag_20640/0x20640).
 
 ----------------------------------------------------------------------------------
-12. Cross-binary function matching (4g63t md352553 -> w4a51 md352554) -- IN
-    PROGRESS (2026-07-23). Two RVR_1998_x3 H8/539F ROMs are open in the same
+12. Cross-binary function matching (4g63t md352553 -> w4a51 md352554, plus
+    4g63t -> Evo5 stock 22580006_EVO5_Stock.hex) -- IN PROGRESS (2026-07-23).
+
+    Evo5 UPDATE (2026-07-23, see test/functions_evo5.md for the full
+    checklist): a third ROM added to this effort, and it matched
+    substantially better than w4a51 -- of 721 named 4g63t functions,
+    almost the entire set came back at 0.9+, with 267 landing at a perfect
+    1.0 (byte-identical). Most of the 1.0 list has already been
+    renamed/prototyped as a direct carry-over from the verified 4g63t
+    prototypes in functions.md; remaining unchecked items cluster in the O2
+    sensor mode-select family (~30 functions, 0x19b2a-0x1a37f) and the
+    ISC/EGR/status-flag update cluster (~60 functions, 0x21f-0x28f range),
+    plus boot/flash/SCI1 routines (0x20024-0x20e00). 18 near-1.0 matches
+    (0.92-0.99) are flagged for decompile-and-verify before renaming.
+    Collision pattern is the same structural one seen on w4a51 (stub/noop
+    cluster, a few real function pairs landing on the same target address)
+    -- confirms these are inherent ambiguities in the source ROM's own
+    code shape, not ROM-pair-specific artifacts. One collision differs:
+    update_max, which collided on w4a51, does NOT collide on Evo5 --
+    worth cross-referencing when the w4a51 collision is eventually
+    resolved. One new collision not seen on w4a51: sci_fifo_f58a_advance_
+    and_load_fed3 makes the sci1_rx_frame_accumulator/fedd5_fifo_rx_store_
+    byte pair into a three-way collision on Evo5. Having three independent
+    ROMs now agree on function identity strengthens the case for building
+    the FID database (next step c below) sooner rather than later.
+
+    SCRIPT IDEA, NOT YET WRITTEN: a rename-only script to clear the
+    remaining `[ ]` rows across functions.md/functions_evo5.md. Scope:
+    Score-1.0 matches ONLY (near-1.0 and flagged collisions stay manual --
+    only a 1.0 guarantees identical internal RAM/DAT addresses, see
+    discussion above). Per row: rename_function_by_address(target_addr,
+    source_name), optionally set_function_prototype() carried over from
+    functions.md. Must NOT touch data -- no apply_data_type/create_struct/
+    rename_data calls, since address/type work is only safe on addresses
+    individually verified, not implied by a function rename. Flip the
+    checklist `[ ]` -> `[x]` as each row is applied for an audit trail.
+
+    Two RVR_1998_x3 H8/539F ROMs are open in the same
     Ghidra instance: the well-analyzed 4g63t ROM (md352553.hex, 719 functions,
     source of nearly every name/finding in this file and mut_verification_status.md)
     and the largely-unanalyzed w4a51 ROM (md352554.hex, 787 functions, mentioned
@@ -519,6 +555,99 @@ Open items
     the 0x20a14 range-classification table from this session) -- these recur
     across ROMs and would give an unknown ROM's disassembly the same structural
     hints, not just function names.
+
+----------------------------------------------------------------------------------
+13. DAT_ global address renaming (2026-07-24) -- NOT YET STARTED. Distinct from
+    the per-function prototype/rename work in item 12/functions_evo5.md: a single
+    DAT_ address (e.g. DAT_0001f0f8) is read/written across dozens of functions,
+    so renaming it improves every decompile that touches it at once, rather than
+    one function at a time. Tracked separately here rather than folded into
+    functions_evo5.md's checklist, since the unit of work (a global address) does
+    not map 1:1 to that file's per-function rows.
+
+    SCOPE (deliberately narrow to start): only the DAT_ addresses referenced by
+    the ~85 functions typed/prototyped on the 4g63t ROM during the 2026-07-24
+    functions_evo5.md session (item 12 above), not a ROM-wide sweep. Expand scope
+    later once a naming convention is proven out on this set.
+
+    Candidate clusters observed during that session (grouped by apparent role,
+    inferred from the surrounding bit-check/threshold functions already named --
+    NOT yet verified against ana.cpp or cross-referenced independently, treat as
+    a starting hypothesis only):
+      - Status/flag words with many named bit-check functions already pointing
+        at them: DAT_0001f0f8, DAT_0001f0fa, DAT_0001f20e, DAT_0001f216,
+        DAT_0001f224, DAT_0001f226, DAT_0001f21c, DAT_0001f33e, DAT_0001f3a4,
+        DAT_0001f3f0, DAT_0001f3f2, DAT_0001f3f4, DAT_0001f490, DAT_0001f510,
+        DAT_0001f512, DAT_0001f516, DAT_0001f520, DAT_0001f524.
+      - Timer/counter RAM cells paired with named functions: DAT_0001ef6a,
+        DAT_0001ef70, DAT_0001ef78, DAT_0001efa0-DAT_0001efd8 range (several
+        distinct efXX timers/latches, each already has a dedicated
+        _check/_update function name to anchor from).
+      - Calibration/constant-table pointers, one per named _select/_constant_
+        function (e.g. DAT_00010c22-DAT_00010d92 range) -- lower priority,
+        since these are ROM-immutable lookup constants rather than live state,
+        and a generic TABLE_xxx name style may fit better than a semantic one.
+      - SCI1/SCI2/SCI3 channel registers confirmed genuinely parallel in item
+        12's collision resolution: f588/f522/fecb (SCI1) vs f58a/f524/fed3
+        (SCI2/3) -- naming these with a channel-number prefix (sci1_/sci2_)
+        would make the parallel structure visible at the DAT_ level too, not
+        just in the function names that already reflect it.
+
+    METHOD, once started: use ghidra:rename_global_variable (or rename_data
+    where the symbol is data-typed) one address at a time, dry_run first.
+    Do NOT batch-rename by pattern-matching address ranges -- as item 3 and
+    item 11 both found on this ROM, apparent groupings from one investigation
+    angle can hide false positives; confirm each address's role via its actual
+    xrefs/callers before committing a name, the same discipline used for the
+    function-level work above.
+
+----------------------------------------------------------------------------------
+14. DP-banked CONCAT decompiler noise -- PARTIALLY FIXED (2026-07-24). Follow-on from the
+    earlier bankify-macro pilot (Rn_banked R0-R3 direct-register form, disp8_banked/
+    disp16_banked's live jmp @(disp,Rs) use). That pilot converted ~31 call sites (disp8_banked/
+    disp16_banked/Rn_banked/Rs_banked/Rn_banked2/eab_predec/eab_postinc/eaw_predec/eaw_postinc,
+    R0-R3) to call a shared `bankifyDP` macro, but the macro itself still inlined
+    `(zext(DP) << 16) | zext(reg)` as raw pcode -- textbook "concatenate a 1-byte value with a
+    2-byte value," so Ghidra's decompiler correctly rendered every one of those sites as
+    `CONCAT12(DP, reg)`. Not a regression from the pilot, just an unfinished half of it.
+
+    FIXED: `bankifyDP` now calls the existing `spSegment` pcodeop (`result = spSegment(DP,
+    reg);`) instead of inlining the zext/shift/OR, reusing the same `<segmentop space="ram"
+    userop="spSegment">` already declared in h8539f.pspec for EP/TP/FP/SP (item 9, steps 1-3b).
+    DP is deliberately NOT added to `<constresolve>` -- Ghidra only allows one fully-resolved
+    register per address space and TP already holds that slot -- so this doesn't constant-fold
+    DP=0/1 the way the old inline pattern did, but it's a real segmented pointer, not an opaque
+    CALLOTHER, and it stops emitting CONCAT12 at every DP-banked callsite. Identical tradeoff
+    already proven safe for EP in step 3b.
+
+    Verified via full ROM-wide before/after decompile diff (md352553.hex.c vs
+    md352553_fix2.hex.c, RVR_1998_x3 4g63t 21000011): CONCAT total 315 -> 77 (-238); WARNING:
+    count unchanged 644 -> 644 (no new decompiler warnings anywhere -- the key regression
+    check); extraout_ unchanged 509 -> 509 (expected, different bug class, item 10); unaff_
+    89 -> 83 (-6, bonus cleanup). Compiled clean (sleigh.bat, exit 0, only pre-existing WARN
+    lines), full file set copied to the Ghidra install with matching timestamps, reload done.
+
+    NOT YET FIXED: 77 CONCATs remain (18 CONCAT12 + 44 CONCAT11 + 15 CONCAT22), suspected but
+    NOT YET CONFIRMED to trace to the separate `addr16_dp` construct (h8539f.slaspec ~line 506),
+    which has its own independent inline `(zext(DP) << 16) | (addr16)` that never went through
+    `bankifyDP` and was out of scope for this pass. TO CONTINUE: pull a sample of the remaining
+    CONCAT12 sites in md352553_fix2.hex.c and confirm they're addr16_dp call sites (not some
+    third source) before deciding whether addr16_dp needs the same spSegment treatment, and
+    separately investigate what's generating the 44 CONCAT11 / 15 CONCAT22 occurrences, which
+    are a different byte-width shape than anything bankifyDP or addr16_dp produces.
+
+    PRIORITIZATION (decided 2026-07-24): finish this CONCAT cleanup (addr16_dp + the
+    CONCAT11/CONCAT22 source) BEFORE starting item 13's DAT_ renaming or any struct work.
+    Reasoning: renaming/typing a DAT_ address or building a struct requires trusting the
+    decompile at that address; if the access still shows CONCAT/unaff_/extraout_ noise, the
+    inferred type/shape may be an artifact of the addressing bug rather than the real field
+    layout, risking rework once addressing is clean. The CONCAT fix is narrow, well-understood
+    (spSegment pattern already proven twice, on EP and now DP-via-bankifyDP), and has a fast,
+    already-working verification loop (before/after CONCAT/WARNING/extraout_/unaff_ diff), so
+    it's worth closing out first rather than building item 12/13 work on top of unverified
+    decompile output. Order: (1) confirm/fix addr16_dp, (2) identify the CONCAT11/CONCAT22
+    source, (3) re-run the ROM-wide diff to confirm clean, (4) then resume item 13 DAT_
+    renaming and struct work on trustworthy decompile output.
 
 ----------------------------------------------------------------------------------
 Build/test workflow
