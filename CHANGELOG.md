@@ -20,8 +20,42 @@ short of the MUT table itself (absolute 0x2FAD0). There is no real page-2 scan g
 stale leftovers, corrected to describe the actual scan range. If page-2 tables still turn up
 unlabeled, the cause is a byte-signature mismatch, not an unreached region. review.md's item 2
 has been updated to drop this as a resolved item; the README's matching "page 1 only" wording
-still needs a separate check.
-## [Unreleased]
+still needs a sepa## [Unreleased]
+
+### Fixed — `bankifyDP` macro converted to `spSegment` pcodeop, eliminating most DP-banked CONCAT12 decompiler noise
+
+`bankifyDP` (h8539f.slaspec ~line 436) previously inlined `(zext(DP) << 16) | zext(reg)`
+as raw pcode at every call site — `disp8_banked`/`disp16_banked`/`Rn_banked`/`Rs_banked`/
+`Rn_banked2`/`eab_predec`/`eab_postinc`/`eaw_predec`/`eaw_postinc` for R0–R3, ~31 sites total
+from the earlier bankify-macro pilot. Because that's literally "concatenate a 1-byte value
+with a 2-byte value," Ghidra's decompiler correctly rendered every one of those call sites as
+`CONCAT12(DP, reg)` — not a bug, just the most honest printout of that exact pcode shape.
+
+Fixed by having `bankifyDP` call the existing `spSegment` pcodeop instead (`result =
+spSegment(DP, reg);`), reusing the same `<segmentop space="ram" userop="spSegment">`
+already declared in h8539f.pspec for EP/TP/FP/SP (review.md item 9, steps 1-3b). DP is not
+added to `<constresolve>` -- Ghidra only allows one fully-resolved register per address space
+and TP already holds that slot -- so this doesn't constant-fold DP=0/1 the way the old inline
+zext pattern did, but it's a real segmented pointer, not an opaque CALLOTHER, and it stops
+emitting CONCAT12 at every DP-banked callsite. Exact same tradeoff already proven safe for
+EP in step 3b.
+
+Verified via full ROM-wide before/after decompile diff (`md352553.hex.c` vs
+`md352553_fix2.hex.c`, RVR_1998_x3 4g63t 21000011):
+- `CONCAT` total: 315 -> 77 (-238)
+- `WARNING:` count: 644 -> 644 (unchanged -- no new decompiler warnings anywhere)
+- `extraout_`: 509 -> 509 (unchanged -- expected, different bug class, review.md item 10)
+- `unaff_`: 89 -> 83 (-6, bonus cleanup)
+
+Compiled clean (`sleigh.bat`, exit 0, only pre-existing WARN lines), full file set copied to
+the Ghidra install (.sla/.pspec/.cspec/.slaspec/all .sinc, timestamps verified matching),
+reload done, before/after diff confirms no regressions.
+
+**Not fully closed**: 77 CONCATs remain (18 CONCAT12 + 44 CONCAT11 + 15 CONCAT22), suspected
+to trace to the separate `addr16_dp` construct (h8539f.slaspec ~line 506), which has its own
+independent inline `(zext(DP) << 16) | (addr16)` that never went through `bankifyDP` at all.
+Not yet confirmed or fixed -- see review.md's new tracked item.
+ [Unreleased]
 
 ### Added — `H8FunctionPurgeAnalyzer`: stack-purge-size analyzer for `prtd`/`rtd`
 
