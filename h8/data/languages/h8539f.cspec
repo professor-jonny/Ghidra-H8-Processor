@@ -110,6 +110,32 @@
           <addr offset="4" space="stack"/>
         </pentry>
       </input>
+      <!-- ATTEMPTED 2026-07-24, REVERTED same day: tried adding a tight 1-byte
+           pentry (<register name="R0:1"/>) ahead of the existing R0 pentry to
+           fix the item 15 CONCAT11 regression (a bare "minsize=1 maxsize=2"
+           output pentry lets Ghidra bind ANY return size in [1,2] to the full
+           2-byte R0 register, so byte-sized bool/undefined1 returns still
+           reserve R0's high byte, padded as a synthetic extraout_var and
+           rendered as CONCAT11(extraout_var, realByte) at every call site,
+           confirmed via live disassembly + decompile on
+           egr_activity_condition_check/egr_f0e6_bit1_update; changing the C
+           return type alone had zero effect, so the pentry sizing is the real
+           cause). REVERTED because "R0:1" is not valid Ghidra pentry register
+           syntax, it threw CompilerSpecNotFoundException /
+           "Unknown pentry register: R0:1" on load (XmlParseException in
+           AddressXML.restoreXml), since Ghidra <register> entries must name an
+           actual defined register, and h8539f.slaspec defines no byte-sized
+           sub-register of R0 (R0 is only ever a single 2-byte register at
+           offset 0x00, see the R0:R1 pairing that was itself tried and
+           reverted 2026-07-22 for related reasons, same area). Back to the
+           original single-pentry form below. The root-cause diagnosis above
+           still stands as a confirmed, real finding, only this specific fix
+           attempt was invalid syntax. Next attempt should look for Ghidra's
+           actual supported mechanism for a narrower-than-register return
+           (per-prototype size hints, extension attributes, or a real
+           byte-sized register definition added to h8539f.slaspec first) rather
+           than a colon-suffixed register name, which does not exist in this
+           schema. -->
       <output>
         <pentry minsize="1" maxsize="2">
           <register name="R0"/>

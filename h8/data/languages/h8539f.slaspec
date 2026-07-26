@@ -95,6 +95,7 @@ define token addrMode(8)
 	sz = (3, 3)
 	mode = (4, 7)
 ;
+
 define token instr8(8)
 	Rd = (0,2)
 	Rdb = (0,2)
@@ -633,6 +634,7 @@ eab_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz
 eaw_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & mode = 14 & sz = 1; disp8     { tmp = (Rn_banked + disp8);  export *:2 tmp; }
 eab_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 0; disp16    { tmp = (Rn_banked + disp16); export *:1 tmp; }
 eaw_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & mode = 15 & sz = 1; disp16    { tmp = (Rn_banked + disp16); export *:2 tmp; }
+
 # ---------------------------------------------------------------------------
 # predec/postinc (mode=11/12), all 8 registers (BUG: collision+mutation fix).
 # ana.cpp's phrase() does `code & 7` uniformly -- there is no separate SP path

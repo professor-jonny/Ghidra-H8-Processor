@@ -55,6 +55,19 @@ reload done, before/after diff confirms no regressions.
 to trace to the separate `addr16_dp` construct (h8539f.slaspec ~line 506), which has its own
 independent inline `(zext(DP) << 16) | (addr16)` that never went through `bankifyDP` at all.
 Not yet confirmed or fixed -- see review.md's new tracked item.
+
+### Investigated -- remaining CONCAT sites (addr16_dp theory ruled out; item closed as done)
+
+Follow-up same day: traced all 77 remaining CONCATs to their real sources. `addr16_dp` turned
+out NOT to be involved -- it's live in the grammar but operates on a compile-time literal, and
+isn't exercised by this ROM's code. The actual sources: CONCAT12 (18) is 24-bit far-call
+pointer reconstruction from jump-table bytes -- inherent to the compiler's jump-table encoding,
+not a grammar bug, and several of those functions already carry pre-existing in-source warnings
+(dated 2026-07-15) marking their decompile as untrustworthy. CONCAT22 (15) splits between
+genuine 32-bit division dividend/remainder math (~10) and `byte_sum_banked` calls using a
+separate Rs32/Rn32 register-pair pointer construct unrelated to DP banking (~5). CONCAT11 (44)
+is all byte-pair-to-word math in fixed-point/multiply/division helpers. None require a SLEIGH
+grammar fix -- this closes out the CONCAT cleanup effort; see review.md item 14 for full detail.
  [Unreleased]
 
 ### Added — `H8FunctionPurgeAnalyzer`: stack-purge-size analyzer for `prtd`/`rtd`
