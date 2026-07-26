@@ -1469,3 +1469,383 @@ NEXT STEP if pursued: either (a) get a real DP-bank mapping (from hardware
 docs or someone familiar with this H8 variant) and properly resolve the
 <0xC0 pointer table, or (b) determine some other way whether these 8
 RequestIDs correspond to anything real on this ECU at all.
+
+
+f516 BIT1/BIT12 WRITER SEARCH -- CLOSED (2026-07-26)
+=====================================================
+Picked up sci1_meta_cmd_dispatch_c0_ff's own "NOT YET DONE: writer for f516
+bits 1/12" item. get_xrefs_to(0x1f516) only returns 10 hits (the source-level
+touches Ghidra's xref DB tracked), all inside already-documented functions,
+none touching bit1 (0x0002) or bit12 (0x1000).
+
+Went further than a plain xref check: ran search_byte_patterns for the raw
+address bytes "F5 16" across the WHOLE ROM. Returned 27 hits, not 10 -- the
+extra 17 are individual instructions inside multi-branch functions that
+Ghidra's xref generation apparently doesn't enumerate exhaustively (each
+mov/bset/bclr touching the literal address is a separate hit even when
+several live in the same source-level statement or the same function).
+
+Manually inspected every one of the 27:
+  - 1 false positive: 0x232d0, inside status_word_bit3_conditional_update_via_table.
+    The "F5 16" bytes there are coincidental (table-offset arithmetic bytes,
+    not an address reference) -- confirmed by reading
+    TABLE_STATUS_WORD_PTRS_137A8 (0x137a8) directly, byte-for-byte: 16 real
+    entries (f20e, f212, f21c, f220, f25e, f236, f11e, f122, f22a, f126,
+    f12a, f22e, f232, ee8c, ee8e, plus a leading 0x0000 pad), none of them
+    f516. A textbook case of the "raw byte-pattern search needs manual
+    inspection before acting" lesson from review.md items 3/11.
+  - 26 genuine hits, ALL falling inside functions already catalogued in the
+    sci1_meta_cmd_dispatch_c0_ff plate comment: the dispatcher itself,
+    f516_request_latch_f09a_calib_select (0x27e1a),
+    eee0_eeee_diag_flags_reset_dispatch (0x282c1),
+    f516_hibits_f520_f0f2_mode_select (0x28700),
+    peripheral_fec0_fed0_state_update (0x165ec),
+    f588_duty_gate_f516_bit11_set (0x28b62), and
+    phase_cases_1to6_f516_hibit_f54a_writer (0x28c25 region). This last one's
+    case 7 (@0x28cc8) had never actually been disassembled/defined as code
+    before (a genuine gap, same class as item 11's function-boundary sweep) --
+    disassembled it live this session: it's real code (sets f526/f54a/f58c on
+    various gates) but does NOT touch f516 at all, closing that last unknown
+    jump-table branch.
+
+RESULT: none of the 26 genuine touches set bit1 or bit12. Every literal-
+address instruction anywhere in this ROM that touches RAM word 0xf516 is now
+accounted for. This is a stronger result than a plain xref check (it also
+found the case-7 gap and the false-positive table-lookalike), but the
+conclusion is the same as item 1's f0e6 bit13 finding: CLOSED as "no writer
+reachable via literal addressing," NOT "confirmed no writer exists." A DP-
+banked/indirect write is still theoretically possible (this ROM has at least
+one confirmed real DP-banked mechanism -- the sub-0xC0 pointer table earlier
+in this dispatcher), but this project has no verified DP-bank-to-physical-
+address mapping to chase that with, same caveat as the <0xC0 table above.
+
+Plate comment at sci1_meta_cmd_dispatch_c0_ff (0x28869) updated in place to
+reflect this (methodology item 7 -- corrected/closed inline, not just noted
+here). Do not re-run the same literal-address byte sweep without a new lead
+(e.g. an actual confirmed DP-bank mapping, or a live hardware/log capture
+showing these bits toggling).
+
+
+~20 UNTRACED output_relay_flags_f0e6 WRITER SITES -- CLOSED (2026-07-26)
+==========================================================================
+Worked through the full untraced-xref list from the "PHYSICAL OUTPUT PIN
+TRACE" section above: 0x17341/173d5/173db/174c9/174cf/1861d/18623/187ba/
+187c2/18bb1/18bbb/18dbf/18dc5/18ddd/19359/1935f/19377/197ce/197d8/19806/
+19891/19904/1998f/19e4c/27c94.
+
+RESULT: this list was mostly STALE, not actually untraced. Decompiling each
+address showed almost all of them land inside functions that the SAME
+2026-07-22 session had already fully documented under other addresses
+(egr_f0e6_bit1_update/egr_activity_condition_check @0x18600-18628,
+egr_f0e6_valve_bits_update @0x18b90ish, purge_f0e6_bit2_update/
+purge_enable_check @0x18db0ish, f0e6_bit6_update/ign_advance_rpm_zone_
+enable_check @0x19340ish, o2_sensor_control_dispatch/o2_upstream_enable_
+check/o2_downstream_enable_check @0x197ce-199xx). The address list was
+apparently captured by an xref sweep BEFORE the individual per-bit write-ups
+existed, then never refreshed.
+
+Genuinely NEW findings from this pass:
+  1. isc_f0e6_bit0_update (0x174c9): confirmed bit0's writer -- gated purely
+     on knock_condition_eval(). Matches what review.md item 1 already said in
+     brief, now independently re-derived and folded into this file's own bit
+     map.
+  2. warmup_state_f594_f0e6_init (0x27c86): NEW writer for bit3 (mask 0x08),
+     unconditional set as part of warmup-state init (also sets f09a, f594).
+     Second writer for bit3 alongside knock_octane_f0e6_bit3_gate_dispatch
+     (0x284a3) -- same init-then-steady-state pattern as bit1's two writers.
+  3. egr_mode_dispatch (0x187a0) and egr_sequence_control (0x187cf) traced
+     as the orchestration layer above egr_f0e6_valve_bits_update: mode
+     dispatch picks between 3 hardware variants (config byte 0x102e4: 0=no
+     EGR/clear bits4-5, 1=sequence-control via egr_sequence_control, 2=
+     egr_position_target_f494_calc, a THIRD variant not yet individually
+     decompiled -- low priority, doesn't change any f0e6 bit finding since
+     egr_sequence_control terminates in the already-known
+     egr_f0e6_valve_bits_update either way).
+  4. channel_dispatch_and_snapshot_update (0x19e4c) reads f0e6 bit0 (not a
+     writer) to update a SEPARATE status word f5c8 -- a false "writer" hit
+     from whatever originally built the untraced-address list (READ, not
+     WRITE, of f0e6).
+
+MOST IMPORTANT OUTCOME: re-deriving the full bit map this way surfaced a
+REAL BIT-NUMBERING ERROR in review.md item 1's summary, present since
+2026-07-23 and never caught until this cross-check. review.md had said
+"bit3 = EGR solenoid (P2DR.7)" and "bit7 = canister purge (P4DR.7)" -- both
+PIN-correct but BIT-NUMBER-wrong. The actual mapping (re-derived directly
+from mirror_status_f0e6_to_ports @0x156ce, see bit table earlier in this
+file):
+  - EGR solenoid / P2DR.7 is bit1 (0x02), not bit3.
+  - Canister purge / P4DR.7 is bit2 (0x04), not bit7.
+  - The REAL bit3 (0x08, PCDR.3, inverted) is unrelated to EGR -- it's the
+    knock/MIL-adjacent output covered by knock_octane_f0e6_bit3_gate_dispatch
+    + the newly-found warmup_state_f594_f0e6_init.
+  - The REAL bit7 (0x80, P1DR.5) is unrelated to purge -- it's
+    ign_advance_f0e6_bit7_update, forceable via SCI1 cmd 0xD8, and was not
+    mentioned at all in review.md's old summary.
+Anyone testing "cmd 0xD1 = force purge" or targeting "bit7" for purge on
+real hardware based on the old review.md text would have been chasing the
+wrong bit (though cmd 0xD1's mechanism itself -- forcing f510 bit8, read by
+purge_enable_check -- was always correctly traced; only the review.md
+SUMMARY's bit-number label was wrong, not the underlying dispatcher finding
+at 0x18dbf). review.md item 1 corrected in place 2026-07-26.
+
+Full corrected f0e6 bit map (all 8 low bits + bit13 now have a known writer
+or a closed "no literal writer" verdict; bits 8-11 are the separate O2
+control-mode field, not part of the port-mirror table):
+  bit0 (0x01) P1DR.4  -- isc_f0e6_bit0_update, knock-gated
+  bit1 (0x02) P2DR.7  -- egr_f0e6_bit1_update (+ unconditional init set),
+                          EGR solenoid, well-evidenced, NOT SCI1-reachable
+  bit2 (0x04) P4DR.7  -- purge_f0e6_bit2_update, canister purge,
+                          SCI1-reachable via cmd 0xD1 (strongest actuator
+                          candidate on this ROM)
+  bit3 (0x08) PCDR.3  -- knock_octane_f0e6_bit3_gate_dispatch (+ unconditional
+                          warmup-init set), INVERTED, MIL/knock-lamp
+                          candidate, unconfirmed identity
+  bit4 (0x10) P4DR.4  -- egr_f0e6_valve_bits_update, EGR valve phase A
+  bit5 (0x20) PCDR.6  -- egr_f0e6_valve_bits_update, EGR valve phase B
+  bit6 (0x40) PCDR.7  -- f0e6_bit6_update, SCI1-reachable via cmd 0xD2,
+                          ignition-zone-adjacent, unconfirmed identity
+  bit7 (0x80) P1DR.5  -- ign_advance_f0e6_bit7_update, SCI1-reachable via
+                          cmd 0xD8, ignition-adjacent, unconfirmed identity
+  bit13(0x2000) P6DR.2 -- CLOSED, no literal-address writer found anywhere
+                          (blind-spot caveat applies, see item 1 above)
+
+REMAINING OPEN: exact physical identity of bit3/bit6/bit7 outputs (all
+"plausible X" inferences, none independently confirmed against real
+hardware); egr_position_target_f494_calc (the third EGR hardware variant,
+config==2) not individually decompiled; P3DR/P5DR/P7DR/P8DR/P9DR/PADR/PBDR
+still completely unswept from the port-register-backward direction. The
+f0e6 output-pin trace itself is now essentially complete for bits 0-7/13.
+
+
+cmd_c0_d8_actuator_bit_table CC-D8 REGION -- OFF-BY-ONE FOUND AND FIXED (2026-07-26)
+=====================================================================================
+While chasing the EGR "third hardware variant" (egr_position_target_f494_calc,
+config==2) and its gate function check_mode_gate_f510 (which checks f510
+bits 0x1800 = bits 11/12), re-derived the CC-D2 region of
+cmd_c0_d8_actuator_bit_table directly via read_memory instead of trusting
+the existing plate comment's transcription. Found it was off by one entry
+across the whole CC-D8 span:
+
+  WRONG (all prior notes):  CD-D2: mask 0x2000,0x1000,0x0800,0x0400,0x0200,
+                             0x0100 ; D3: mask 0x0082 (dual-bit anomaly) ;
+                             D4-D8: mask 0x0040,0x0020,0x0010,0x0008,0x0002
+                             (D8 said to break pattern, expected 0x0004)
+
+  CORRECT (verified via read_memory at 0x13768-0x137a3, every entry
+  individually): CA=0(skip) CB=0(skip) CC=0x2000(bit13) CD=0x1000(bit12)
+  CE=0x0800(bit11) CF=0x0400(bit10) D0=0x0200(bit9) D1=0x0100(bit8)
+  D2=0x0082(bit7+bit1) D3=0x0040(bit6) D4=0x0020(bit5) D5=0x0010(bit4)
+  D6=0x0008(bit3) D7=0x0004(bit2) D8=0x0002(bit1)
+
+This single correction retroactively DISSOLVES two previously-flagged
+"anomalies" that were actually the same off-by-one artifact seen from two
+different wrong vantage points:
+  - The "D3 two-bit entry (0x0082)" -- the dual-bit value is real, but it's
+    D2's entry, not D3's.
+  - The "D8 pattern break (expected 0x0004, got 0x0002)" -- there is no
+    break. D8 correctly continues an unbroken 13-entry descending bit sweep
+    running CC(bit13) -> CD(12) -> CE(11) -> CF(10) -> D0(9) -> D1(8) ->
+    D2(7, +bonus bit1) -> D3(6) -> D4(5) -> D5(4) -> D6(3) -> D7(2) -> D8(1).
+    D2's extra bit1 is the ONLY genuine deviation in the whole table: cmd
+    0xD2 deliberately triggers two independent override checks at once
+    (its own bit7 slot, plus a duplicate of D8's bit1), exactly matching
+    what was already hypothesized about cmd 0xD2 in the f0e6_bit6_update
+    plate comment -- just now correctly attributed to the D2 table entry
+    instead of split across two wrongly-labeled "anomalies".
+
+ALSO FOUND while re-decompiling sci1_meta_cmd_dispatch_c0_ff's actual
+branch logic (not just the table bytes) to double check this: the real
+gate condition for the ENTIRE table-driven range (all of C0-D8 except the
+unconditionally-skipped CA/CB) is `(f00e==0) AND (f25a bit4 set)` at the
+moment the command byte is processed -- if either is false, the table
+lookup is bypassed entirely and the function just echoes f516 back and
+returns 0xFF, regardless of what the table says. This was NOT previously
+documented at this level of precision (earlier notes only mentioned a
+narrower f00e==0 gate on CA/CB specifically, which turned out to actually
+be an unconditional hard skip, not a runtime gate at all -- see the CA/CB
+correction above). Practical implication: forcing ANY table-driven actuator
+bit via SCI1 (e.g. cmd 0xD1's purge override) requires f25a bit4 to be set
+at command-processing time, on top of whatever downstream conditions
+(f20e, f594, etc.) were already documented for each individual bit's
+consumer. f25a's physical/logical meaning is not yet characterized -- next
+lead if pursuing the purge/ignition-override actuator chains further as a
+real hardware test target.
+
+Plate comment at sci1_meta_cmd_dispatch_c0_ff (0x28869) and review.md item
+6 (SCI1 command dispatcher paragraph, "cmd 0xCD sets f510 bit13") both
+corrected in place to cite CC instead of CD and the corrected table.
+
+STILL OPEN: f510 bits 9-13 (set by cmd D0-CC per the corrected table) have
+not been traced FORWARD to their consumers the way bit1 (D8), bit7/bit8
+(D2/D1, purge+ignition overrides), and bit13 (CC, read by
+o2_upstream_enable_check) already have been -- bits 9/10/11/12 specifically
+(CF/CE/CD/D0... wait: D0=bit9, CF=bit10, CE=bit11, CD=bit12) are still
+unidentified consumers, a good next target if returning to this thread.
+egr_position_target_f494_calc's own gate (check_mode_gate_f510, checking
+f510 bits 11+12 together via mask 0x1800) is itself a currently-untraced
+consumer of exactly two of these bits -- worth checking next, since it
+would mean SCI1 commands CD and/or CE can influence the EGR "position
+target" hardware variant (a duty-cycle/stepper-style EGR valve control,
+distinct from the relay-style two-bit sequence already traced), which
+would be a genuinely new SCI1-to-EGR-actuator chain if confirmed.
+
+
+FIFTH SCI1 ACTUATOR-FORCE CHAIN FOUND -- EGR VALVE VIA TIMER 6 PWM (2026-07-26)
+================================================================================
+Followed up the "STILL OPEN" lead from the previous section (whether
+check_mode_gate_f510, reading f510 bits 11/12, is itself an untraced
+consumer of the newly-corrected cmd_c0_d8_actuator_bit_table region). It is
+-- and it terminates in the best-evidenced physical actuator found in this
+whole investigation so far.
+
+CHAIN: SCI1 cmd 0xCD (sets f510 bit12) or cmd 0xCE (sets f510 bit11)
+  -> check_mode_gate_f510 (0x18ae5): override active if f20e bit4 SET and
+     either bit is present
+  -> egr_position_target_f494_calc (0x18bc2, the THIRD EGR hardware
+     variant, selected when ROM config byte 0x102e4==2): overridden path
+     forces f494 to a fixed ROM calibration value at 0xe6e instead of the
+     normal RPM-band-computed duty target
+  -> serial_fef9_duty_scale_and_set (0x15a11, runs only when config==2)
+  -> ff88_set_scaled_clamped (0x16c33): scales f494*16, clamps to [1, 2048]
+  -> writes DAT_0001ff88, confirmed via list_globals to be T6GR1H/L -- a
+     REAL Timer 6 PWM duty/compare register, not a RAM flag or an inferred
+     port-pin label.
+
+CONFIRMED THIS VARIANT IS ACTIVE ON THIS ROM: read ROM byte 0x102e4
+directly -- value is 2 (RVR_1998_x3 4g63t 21000011 md352553.hex). So this
+isn't a dead/alternate-hardware code path the way the <0xC0 DP=2 table was
+-- it is the live EGR control mechanism on this exact ROM.
+
+CORROBORATION Timer 6 is a real, actively-configured PWM channel (not just
+a coincidentally-named RAM address): peripheral_block_ff70_ff88_cold_init
+(0x16b52), found via a raw search_byte_patterns sweep for "FF 80" (the same
+method used to close the f516 bit1/bit12 search earlier), initializes at
+cold boot: T6CRH(0xff80)=1, T6GR2H(0xff8a)=0x7FF (2047 -- matches
+ff88_set_scaled_clamped's clamp ceiling of 2048 almost exactly, consistent
+with GR2=PWM period and GR1=PWM duty, a standard H8 compare-match PWM
+pair), T6GR1H(0xff88)=1 (initial duty), T6OER(0xff84)=0 (output-enable
+register, exact polarity not determined without an H8/500 datasheet). Same
+init function also sets TMDRB (0xff35, Timer 1's UNRELATED mode register)
+bit3 specifically when config==2 -- a secondary hardware reconfiguration
+tied to the same variant selector, not yet explained, low priority
+side-note.
+
+WHY THIS IS THE STRONGEST CANDIDATE SO FAR: every other SCI1-actuator
+chain found in this investigation (cmd 0xD1 purge override, cmd 0xD8/0xD2
+ignition-adjacent overrides) terminates in an f0e6 bit mirrored to a port
+pin whose PHYSICAL identity is only an inferred, unconfirmed guess (e.g.
+"P1DR.5 = ignition-adjacent" based on naming and a widely-shared f20e flag,
+not proof). This chain terminates in an unambiguous, confirmed H8 timer
+peripheral register (T6GR1) that is demonstrably configured as a real PWM
+channel at boot with a matching period/duty register pair. The remaining
+gap isn't "is this a real register" (it is) but "what's physically wired
+to Timer 6's PWM output pin on the vehicle" -- no H8/500 pinout
+cross-reference has been done in this project to answer that.
+
+f20e bit4's meaning is still the same unresolved 170+-xref-site blind spot
+affecting several of these chains -- would resolve a lot of remaining
+uncertainty across bit7/bit8/bit11/bit12 overrides simultaneously if ever
+pinned down, but isn't practically traceable in one sitting.
+
+NEXT STEPS if continuing: (1) find the H8/500 pin assigned to Timer 6's
+PWM output (T6's output pin per the H8/500 pinout, cross-referenced
+against this ECU's harness pinout if available) to get a real physical
+identity instead of just "Timer 6 PWM"; (2) check T6OER's bit polarity
+against an H8/500 timer datasheet to confirm the output is actually
+enabled, not just configured; (3) decompile egr_table_row_lookup_f496 and
+the ROM constant at 0xe6e to characterize what duty value cmd 0xCD/0xCE
+actually forces (e.g. full-open, full-closed, or some fixed test position);
+(4) the parallel, still-untraced config==1 "sequence control" f0e6 bits4/5
+chain remains present in the ROM but is DEAD CODE on this specific ROM
+build (0x102e4==2, not 1) -- worth flagging as such if it's ever cited
+elsewhere, since only variant 2 (this PWM chain) is actually live here.
+
+
+"DO ANY OTHER TIMERS DO THE SAME THING AS TIMER 6" -- ANSWERED (2026-07-26)
+============================================================================
+Checked whether any of the other 6 on-chip timers (T1,T2,T3,T4,T5,T7 --
+each with GR1/GR2 compare registers per list_globals) are used as an
+actuator PWM output the way Timer 6 (T6GR1, driving the EGR position-target
+variant) is.
+
+METHOD: get_xrefs_to on each timer's GR1 compare register, using the
+correct banked address (0x1ffXX, not the bare 0xffXX list_globals shows --
+list_globals appears to truncate/not display the bank digit, learned this
+the hard way after an initial round of xref checks against the wrong
+address returned false "no writer" results for T6 itself, which IS a known
+writer).
+
+RESULT: no other timer has a confirmed writer.
+  - T2 (GR1H/CNTH) IS touched, but only as an INPUT -- read by
+    isr_ipu_ch2ch4_input_capture (0x168fa), the cam-position/coarse-RPM
+    capture ISR already documented elsewhere. Not an actuator output.
+  - T1, T3, T4, T5, T7: zero xrefs found to their GR1 registers anywhere in
+    the ROM. Either genuinely unused on this ROM, or (same caveat as
+    always) a literal-addressing blind spot -- not exhaustively ruled out,
+    a byte-pattern sweep for T3/T5/T7 was attempted but produced too many
+    false positives (their address bytes, e.g. "FF 58" for T3, are common
+    generic immediate-mask values elsewhere in the ROM, unlike f516's
+    sweep which had a low, checkable hit count) to be useful without a
+    much more targeted approach than time allowed for this pass.
+
+SO: Timer 6 remains the ONLY hardware timer confirmed as an actuator PWM
+output on this ROM.
+
+BUT a bigger, separate finding fell out of searching for "duty"-named
+functions to answer this: there's a SEPARATE, NON-timer PWM mechanism --
+software_pwm_output_scheduler (0x158d7) -- a software bit-banged PWM
+running on a 48-step counter (f0f0), almost certainly driven by a periodic
+timer ISR (which one, not yet identified). It drives SEVEN independent
+duty-cycle outputs onto real port pins, not RAM flags:
+
+  F448 (EGR duty, egr_target_f448_update) -> P1DR bit3 (0xfe82.3), gated
+    ROM config 0x102de!=0 -- CONFIRMED ACTIVE (0x102de=1 on this ROM). A
+    SECOND, independent EGR duty mechanism, coexisting with Timer 6's
+    hardware-PWM EGR path (F494, config 0x102e4==2, also active). Whether
+    these drive the same physical valve, two different EGR components, or
+    one is a dead/unused parallel path despite its gate passing is NOT
+    determined without real vehicle wiring info.
+  F452/F454/F456/F458 (all four from o2_sensor_control_dispatch, the O2
+    upstream/downstream control-mode function traced earlier this session)
+    -> P2DR bits 0/1/2/3 respectively, each independently gated on f1f2
+    bits 14/1/2. Resolves what those four O2-dispatch outputs physically
+    are: four independent PWM-driven O2 heater duty outputs.
+  F44C (wgdc_output_clamp_f44c, ALREADY CONFIRMED as WGDC -- turbo
+    Wastegate Duty Cycle, MUT RequestID 0x86 in an earlier, independent
+    verification session) -> PADR bit1 (0xfe93.1). *** BEST FINDING OF
+    THIS SESSION *** -- this is the first time in this whole investigation
+    an already MUT-confirmed value has been traced all the way to a real
+    physical output pin. WGDC = PADR.1, software-PWM driven.
+  F45C (isc_target_calc_and_store, an ISC DUTY SOLENOID path -- distinct
+    from the separately-documented ISC STEPPER MOTOR mechanism,
+    isc_stepper_mode_state_reload_d/f406/f408 found earlier this session --
+    this ROM appears to carry code for BOTH an idle duty solenoid and an
+    idle stepper motor) -> PADR bit2 (0xfe93.2), gated f1f2 bit12.
+
+This means PADR (Port A), previously flagged in the "PHYSICAL OUTPUT PIN
+TRACE" section as completely unswept, now has two confirmed bits: bit1 =
+WGDC, bit2 = ISC duty. P1DR and P2DR (already partially mapped via the
+f0e6 port-mirror table) each gain an ADDITIONAL, independently-driven bit
+beyond their f0e6-mirrored ones -- P1DR now has 3 known bits (0e6-mirror
+bit4=ISC-knock-gated, bit5=ignition-adjacent, PLUS this new bit3=EGR duty),
+P2DR now has 5 known bits (0e6-mirror bit7=EGR solenoid, PLUS these four
+new bits0-3=O2 heater duties).
+
+Plate comment at software_pwm_output_scheduler (0x158d7) written up in
+full. canister_purge_duty_calc_f4ac (F4AC, a previously-found actuator
+function from an earlier session) was checked too -- it is NOT consumed by
+this scheduler or any other traced function (xrefs to F4AC are only
+self-references and an init write); its physical output mechanism remains
+untraced, a good next target if continuing this thread.
+
+NEXT STEPS if continuing: (1) find what periodically calls
+software_pwm_output_scheduler (likely a timer-driven ISR, would confirm
+the soft-PWM's actual output frequency/resolution); (2) trace F4AC
+(canister purge duty, separate from the f0e6-bit2 on/off purge already
+found) to its real consumer -- still missing; (3) characterize the
+remaining f1f2 gate bits (1/2/12/14) controlling which O2/ISC channels are
+active -- likely bank1/bank2 or single/dual-heater hardware variants; (4)
+determine via real hardware whether the two parallel EGR duty mechanisms
+(Timer 6 vs this scheduler's P1DR.3) are redundant, separate components, or
+one is inactive on the actual vehicle despite both config gates passing in
+ROM.
