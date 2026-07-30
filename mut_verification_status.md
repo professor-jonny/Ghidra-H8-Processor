@@ -264,14 +264,14 @@ sci1_boot_ihex_data_byte_store), misleadingly named sci1_boot_ihex_data_byte_sto
 | 81 | F5C1 | --                                                  | BLANK (untraced) -- LIKELY SCRAPER ARTIFACT (2026-07-14 sweep): see 0x80/F5C0 finding -- the real structure at this ROM location is 16-bit-word-spaced (F5C0/C2/C4/C6/C8), so F5C1 (odd byte offset) does not align with any real field boundary found. |
 | 82 | F5C3 | --                                                  | BLANK (untraced) -- LIKELY SCRAPER ARTIFACT (2026-07-14 sweep): same as 0x81/F5C1 -- odd byte offset does not align with the confirmed 16-bit-word structure (F5C0/C2/C4/C6/C8). |
 | 83 | F0BB | --                                                  | BLANK (untraced) |
-| 84 | F495 | RadFans (Cooling Fan Duty Cycle)                    | NAMED (untraced) -- source: GalantLegnum profile (RequestID 0x84 not present in the base Evo profile) |
-| 85 | F449 | --                                                  | BLANK (untraced) |
-| 86 | F44D | Wastegate Duty Cycle (WGDC)                         | CONFIRMED |
+| 84 | F495 | RadFans (Cooling Fan Duty Cycle)                    | REFUTED (2026-07-26): F495 is the LOW byte of the 16-bit word F494 -- exhaustively traced this session as the EGR position/duty target written EXCLUSIVELY by egr_position_target_f494_calc (0x18bc2, the Timer-6-PWM EGR hardware variant, config 0x102e4==2, CONFIRMED ACTIVE on this ROM) and consumed EXCLUSIVELY by serial_fef9_duty_scale_and_set -> ff88_set_scaled_clamped -> T6GR1 (real H8 Timer 6 PWM compare register). No fan-related code touches F494/F495 anywhere. The GalantLegnum profile's "RadFans" label for RequestID 0x84 does not match this ROM -- likely a different platform/generation's RequestID map, or the profile is simply wrong for this cell. This IS a genuine, confirmed, live actuator value (EGR duty), just mislabeled. |
+| 85 | F449 | EGR Duty Cycle 2 (secondary EGR output)             | CONFIRMED (2026-07-26): F449 is the LOW byte of F448, written by egr_target_f448_update (0x18650) and consumed by software_pwm_output_scheduler (0x158d7) -> P1DR bit3 (real port pin), gated ROM config 0x102de!=0, CONFIRMED ACTIVE on this ROM (0x102de=1). A SECOND, independent EGR duty output, coexisting with F494/ReqID-0x84's Timer-6-hardware-PWM EGR path. No prior name in any profile -- newly identified this session. |
+| 86 | F44D | Wastegate Duty Cycle (WGDC)                         | CONFIRMED (name matches; PHYSICAL PIN ADDED 2026-07-26): writer chain wgdc_correction_integrator_update (0x18fe0) -> wgdc_output_clamp_f44c (0x19110) already confirmed. NEW this session: F44C is also consumed by software_pwm_output_scheduler (0x158d7) -> PADR bit1 (real port pin, 0xfe93.1) -- the first time in this whole investigation an already MUT-confirmed value has been traced all the way to a physical output pin. |
 | 87 | F163 | --                                                  | BLANK (untraced) |
 | 88 | F167 | --                                                  | BLANK (untraced) |
 | 89 | F169 | --                                                  | BLANK (untraced) |
 | 8A | F13F | Load Error                                          | NAMED (untraced) |
-| 8B | F4AD | WGDC Correction (WGDCCorr)                          | OPEN -- relationship to WGDC not determined, see below |
+| 8B | F4AD | WGDC Correction (WGDCCorr)                          | REFUTED as WGDC-related, RENAMED (2026-07-26): F4AD is the LOW byte of F4AC, and F4AC is written EXCLUSIVELY by canister_purge_duty_calc_f4ac (0x19560) -- a CANISTER PURGE duty-cycle target, structurally and functionally unrelated to WGDC/F44C (different writer function, different subsystem, no shared inputs found). This resolves the long-open "relationship to WGDC not determined" question definitively: there is no relationship. The profile's "WGDCCorr" label is wrong for this cell -- should be read as Canister Purge Duty Cycle 2 (a second, duty-modulated purge output, alongside the already-traced simple on/off purge at F0E6 bit2 / SCI1 cmd 0xD1). NOTE: F4AC/F4AD's own physical hardware sink is STILL untraced -- checked this session whether software_pwm_output_scheduler reads it (it does not); the real output path remains unknown. |
 | 8C | F84F | --                                                  | BLANK (untraced) |
 | 8D | EEFB | --                                                  | BLANK (untraced) |
 | 8E | F4DF | --                                                  | BLANK (untraced) |
@@ -360,8 +360,12 @@ CONFIRMED (address + semantics both verified against live disassembly)
 - ISCSteps (0x16 -> RAM 0xEED4/EED5): writer isc_stepper_output_state_
   machine_eed4 (0x26f82), closed-loop idle stepper state machine.
 - WGDC (0x86 -> RAM 0xF44C/F44D): writer chain wgdc_correction_integrator_
-  update (0x18fe0) -> wgdc_output_clamp_f44c (0x19110). Relationship to
-  WGDCCorr (0x8B -> F4AD) NOT yet determined -- see Open Items below.
+  update (0x18fe0) -> wgdc_output_clamp_f44c (0x19110). RESOLVED 2026-07-26:
+  physical output pin found (software_pwm_output_scheduler -> PADR bit1),
+  and the "relationship to WGDC" question for 0x8B/F4AD is now CLOSED --
+  there isn't one. F4AD/F4AC is canister purge duty (canister_purge_duty_
+  calc_f4ac), a completely separate subsystem. See the ReqID 0x86/0x8B
+  table rows above for full detail.
 - TCU Shift Torque Cmd Lo/Hi per gear (ROM 0x1328e/0x13296): gear-indexed
   ((gear&3)<<1), read into RAM 0xF39E/F3A0, used as a raw SCI3 protocol
   command byte to the TCU -- never used arithmetically. Small values (1-2)
@@ -470,8 +474,11 @@ Open items (non-RPM)
    the MUT/SCI3 path, a stray 0xFC-equivalent command would zero this
    whole cluster rather than just fail to answer a read. No evidence yet
    that it IS reachable from SCI3 (see dispatcher section above).
-2. WGDC (0xF44C/F44D) vs WGDCCorr (0xF4AD) relationship not determined --
-   likely two stages of one pipeline, not yet traced which is which.
+2. WGDC (0xF44C/F44D) vs WGDCCorr (0xF4AD) relationship -- CLOSED
+   (2026-07-26): there is no relationship. F4AD's profile label
+   "WGDCCorr" is wrong -- it's canister_purge_duty_calc_f4ac's output
+   (canister purge duty cycle), a different subsystem entirely from WGDC.
+   See ReqID 0x8B row above.
 3. Coolant Temp four-way address conflict: RVR_base.xml (F0C4/F0C8), MUT
    profile (F109/F10F), and a fourth independently-traced ADC path
    (F84E->F12E->F130->F29A, via coolant_temp_validity_and_scale, 0x2142c)
@@ -1849,3 +1856,116 @@ determine via real hardware whether the two parallel EGR duty mechanisms
 (Timer 6 vs this scheduler's P1DR.3) are redundant, separate components, or
 one is inactive on the actual vehicle despite both config gates passing in
 ROM.
+
+
+TCU SERIAL RX FRAME FOUND -- F4CA AND THE TCU LINK (2026-07-26)
+=================================================================
+Picked up on a question about RAM cell F4CA. Traced it to a small
+checksummed receive-frame validator inside tcu_rx_main_scheduler
+(0x2aa36, ~0x2b160-0x2b1cc), gated on (f1f2 bit13 OR ram-bit 0x2c8) AND
+tcu_rx_frame_state_counter_f4ce==5:
+
+  checksum = (F4C4 + F4C6 + F4C8 + F4CA) & 0xFF
+  if checksum == F4CC:
+      F4BC,F4BE,F4C0,F4C2 = F4C4,F4C6,F4C8,F4CA   # "confirmed good" latch
+      tcu_rx_frame_timeout_counter_f4d2 = 0
+      if (F4C0 & 7) != 0: F4A4 |= 4
+
+CONFIRMED GENUINELY SERIAL, not just an internal protocol: F4C2 (the
+confirmed-copy cell for F4CA) is ALSO written directly by
+serial_fec5_byte_to_fifo (0x166bf) -- "fec5" is inside the already-
+confirmed fec0-fed5 SCI1/2/3 UART register range (see
+f516_hibits_f520_f0f2_mode_select). This is a real UART RX path, most
+likely a dedicated ECU<->TCU serial link, separate from the SCI1
+diagnostic protocol traced everywhere else in this file.
+
+DOWNSTREAM IMPACT -- connects directly to the canister-purge actuator work
+from earlier this session:
+  - F4BC and F4BE (confirmed copies of F4C4/F4C6) are read directly inside
+    canister_purge_duty_calc_f4ac (0x19560) as an addend and a mode-gate
+    respectively. So canister purge duty is genuinely influenced by data
+    arriving over the TCU link, not just internal engine-side state --
+    plausibly purge gets suspended/modulated during transmission shifts.
+  - F4C2 (confirmed copy of F4CA) is read by
+    tcu_link_confirmed_flag_f226_bit7_update (0x22225, renamed 2026-07-26
+    from f226_bit7_update_from_f4c2_check), which sets status flag F226
+    bit7 when (F4C2 & 0x60)==0x40 -- best working hypothesis is a "TCU
+    link confirmed/handshake OK" status bit, gated on the same F4A4 bit7
+    purge-enable flag and a separate config byte (0x102fd).
+
+RENAMED IN GHIDRA (2026-07-26): F4C4/F4C6/F4C8/F4CA -> tcu_rx_frame_raw_
+byte0-3_f4c4/f4c6/f4c8/f4ca; F4CC -> tcu_rx_frame_checksum_f4cc; F4BC/F4BE/
+F4C0/F4C2 -> tcu_rx_confirmed_byte0-3_f4bc/f4be/f4c0/f4c2; F4CE -> tcu_rx_
+frame_state_counter_f4ce; F4D2 -> tcu_rx_frame_timeout_counter_f4d2.
+Function f226_bit7_update_from_f4c2_check renamed to
+tcu_link_confirmed_flag_f226_bit7_update. Plate comments written on
+tcu_rx_main_scheduler, tcu_link_confirmed_flag_f226_bit7_update,
+serial_fec5_byte_to_fifo, and canister_purge_duty_calc_f4ac (updated in
+place to cross-reference this).
+
+STILL OPEN: what F4C4/F4C6 (the raw sources of F4BC/F4BE, i.e. the actual
+TCU-reported values influencing purge) represent physically -- likely
+gear/shift-state or torque-converter data given the parent function's
+"tcu_" naming and neighboring tcu_shift_ratio_buffer_update/
+tcu_torque_converter_slip_calc functions elsewhere in this ROM (not
+individually decompiled this session); which SCI channel (2 vs 3) "fec5"
+belongs to, and whether it's the same physical UART as the
+tcu_periodic_dispatch (0x2c12b) chain; canister_purge_duty_calc_f4ac's own
+still-unresolved F4AC output (checked this session whether
+software_pwm_output_scheduler consumes it -- it does not; F4AC's real
+hardware sink remains untraced, and it's unclear whether F4AC's duty path
+and the already-traced F0E6 bit2 on/off purge path (cmd 0xD1) drive the
+same physical solenoid or two different ones).
+
+
+ACTUATORS x MUT LOGGING TABLE -- CROSS-CHECK (2026-07-26)
+============================================================
+Checked today's actuator finds (F494/EGR-Timer6, F448/EGR-softPWM,
+F44C/WGDC, F45C/ISC-duty, F452-458/O2-heaters, F4AC/purge-duty) against
+the MUT ReqID table at 0x2fad0 directly, by reading its 300 raw bytes and
+matching against each target address. Recognized the pattern immediately:
+every match was off by exactly one byte from what I expected (F495 not
+F494, F449 not F448, etc) -- because adc_sensor_convert_single, for
+ReqID<=0xBF, returns the single byte AT the table-decoded address, and
+this table consistently points at the LOW byte of each target word (same
+convention already established elsewhere in this file, e.g. F3FB/F3FD).
+
+RESULT: three real actuator words are DIRECTLY LOGGABLE via MUT Mode2:
+  ReqID 0x84 -> F495 (low byte of F494, EGR Timer-6-PWM duty target).
+    Table already had a NAME here ("RadFans (Cooling Fan Duty Cycle)",
+    from the GalantLegnum profile) -- REFUTED. F494 is exclusively written
+    by the EGR position-target function and exclusively consumed by the
+    Timer 6 PWM chain; nothing fan-related touches it. The profile's label
+    for this cell does not apply to this ROM.
+  ReqID 0x85 -> F449 (low byte of F448, the second/software-PWM EGR duty
+    output). Was BLANK in the table; now CONFIRMED and named.
+  ReqID 0x8B -> F4AD (low byte of F4AC, canister purge duty). Table
+    already had a name ("WGDC Correction / WGDCCorr") with an explicitly
+    flagged open question about its relationship to WGDC (0x86/F44D) --
+    RESOLVED: there is no relationship. F4AC is written by
+    canister_purge_duty_calc_f4ac, a completely different subsystem from
+    WGDC (wgdc_output_clamp_f44c). The "WGDCCorr" label is wrong; this
+    cell should be understood as a second canister-purge-duty value.
+
+ReqID 0x86 -> F44D (WGDC) was already CONFIRMED by name in this table from
+an earlier session -- today's contribution there was finding its physical
+pin (PADR bit1, via software_pwm_output_scheduler), not the MUT mapping
+itself, which is now a nice end-to-end confirmation: MUT ReqID 0x86 reads
+the exact same RAM cell that a real port pin is driven from. This is the
+strongest example in the whole project of "MUT-loggable value = confirmed
+physical actuator", and a template for what full confidence looks like for
+the others once their physical pins are found too.
+
+F45C (ISC duty solenoid) and F452/F454/F456/F458 (O2 heater duties, all
+four) do NOT appear anywhere in the 0x00-0x95 table -- not loggable via
+this MUT mechanism as currently understood. Worth checking the 0x9A+
+range (per the existing FuelPumpSpeed note, ReqIDs above 0x95 exist in
+some profiles but fall outside this project's already-scraped table) if
+pursuing further.
+
+PRACTICAL UPSHOT for logging: 0x84 and 0x8B's profile labels should NOT be
+trusted for this ROM if building a logging profile off the existing XML --
+use "EGR Duty (Timer 6 PWM target)" and "Canister Purge Duty 2" instead.
+0x85 can be safely added as a new loggable channel ("EGR Duty 2").
+Table rows 0x84/0x85/0x86/0x8B all updated in place above with full
+cross-references.
