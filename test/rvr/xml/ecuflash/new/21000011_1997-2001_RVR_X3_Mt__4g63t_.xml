@@ -78,11 +78,29 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Load" address="2d35e" type="X Axis" elements="14" scaling="Load"/>
 	</table>
 
-	<table name="Post Start Enrich Decay Multiplier" category="Fuel" address="11d98" type="2D" level="2" scaling="EnrichmentAdj">
-		<table name="Time" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
+	<table name="Post Start Enrichment" category="Fuel" address="11d9c" type="2D" level="2" scaling="uint8">
+		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
 	</table>
 
-	<table name="Post Start Enrichment" category="Fuel" address="11da6" type="2D" level="2" scaling="uint8">
+	<!-- UNKNOWN TABLE - discovered 2026-07-28: real header (02 00 F0 CA) at 0x11da6, immediately
+	     following Post Start Enrichment's own 9-byte+FF data block. Same F0CA axis pointer and
+	     9-element+FF-terminator shape as its neighbor, so almost certainly another Engine-Temp-keyed
+	     curve in the same Post Start Enrichment family, but name/scaling/purpose not yet identified.
+	     Raw data bytes (9, before FF terminator): BA 7A 4D 20 1A 13 0D 06 06  a monotonic decay
+	     shape, consistent with a possible "decay multiplier" style curve, but NOT confirmed. -->
+	<table name="Unknown Table 11daa" category="Fuel" address="11daa" type="2D" level="2" scaling="uint8">
+		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
+	</table>
+
+	<!-- UNKNOWN TABLE - discovered 2026-07-28: real header (02 00 F0 CA) at 0x11db4, immediately
+	     following the 0x11daa unknown table's own 9-byte+FF data block. Same F0CA axis pointer and
+	     9-element+FF-terminator shape as its two neighbors (Post Start Enrichment, Unknown Table
+	     11daa)  third and last table in this back-to-back F0CA-axis cluster before a different
+	     table type (03-mode, dual-pointer header) begins at 0x11dc2. Name/scaling/purpose not yet
+	     identified. Raw data bytes (9, before FF terminator): all 0x20 (32 decimal)  a flat curve,
+	     which could mean this calibration is simply unused/disabled on this ROM, or that 0x20 is a
+	     genuine neutral/no-op value for whatever this curve controls. NOT confirmed either way. -->
+	<table name="Unknown Table 11db8" category="Fuel" address="11db8" type="2D" level="2" scaling="uint8">
 		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
 	</table>
 
@@ -168,14 +186,14 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Error" address="2d536" type="X Axis" elements="9" scaling="RPM"/>
 	</table>
 
-	<table name="Idle Stepper Look-up Table" category="ISCV Control" address="12992" type="3D" scaling="ISCVSteps">
+	<table name="Idle Stepper Look-up Table" category="ISCV Control" address="1299a" type="3D" scaling="ISCVSteps">
 		<table name="Coolant Temp" address="2d4c0" type="X Axis" elements="8" scaling="uint16"/>
 		<table name="ISCV Demand" address="2d4d6" type="Y Axis" elements="27" scaling="ISCV_AX2_16"/>
 	</table>
 
 	<!-- ===== LEAN SPOOL - RVR MT ===== -->
 
-	<table name="Lean Spool Trailing Time - Rich Side" category="Lean Spool" address="11db4" type="2D" level="2" scaling="uint8">
+	<table name="Lean Spool Trailing Time - Rich Side" category="Lean Spool" address="11db8" type="2D" level="2" scaling="uint8">
 		<table name="RPM" address="2d2e6" type="X Axis" elements="14" scaling="RPM"/>
 	</table>
 
@@ -225,10 +243,6 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d0a0" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Open Loop Load # 2" category="Fuel" address="11d38" type="2D" level="2" scaling="Load8">
-		<table name="RPM" address="2d0a0" type="Y Axis" elements="16" scaling="RPM"/>
-	</table>
-
 	<table name="Open Loop Throttle Low Load" category="Fuel" address="11cfc" type="2D" level="2" scaling="ThrottleVoltage">
 		<table name="RPM" address="2d0a0" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
@@ -247,10 +261,6 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="MAF Smoothing Table" category="Air" address="1181a" type="2D" level="3" scaling="AirFlow8">
 		<table name="Load" address="2d21e" type="Y Axis" elements="21" scaling="uint16"/>
-	</table>
-
-	<table name="Air Temperature Compensation" category="Air" address="2af78" type="2D" level="3" flipy="true" scaling="uint8">
-		<table name="Degrees" address="2d3ca" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
 	<table name="Barometric Pressure Compensation" category="Air" address="11847" type="3D" level="3" swapxy="true" scaling="BoostBar">
@@ -335,10 +345,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		</table>
 	</table>
 
-	<table name="Idle Stepper Lookup Table" address="12992" type="3D" scaling="ISCVSteps">
-		<table name="Coolant Temp" address="2d4c0" type="X Axis" elements="8" scaling="uint16"/>
-		<table name="ISCV Demand" address="2d4d6" type="Y Axis" elements="27" scaling="ISCV_AX2_16"/>
-	</table>
+
 
 	<table name="Knock Sensor Filter Map 1" category="Knock Control" address="12f22" type="3D" level="1" swapxy="true" scaling="uint8">
 		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
@@ -364,10 +371,6 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
 		<table name="RPM" address="2d24e" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
-
-	<table name="Lean Spool Start RPM" category="Lean Spool" address="109e4" type="1D" level="2" scaling="RPMStatLimit"/>
-
-	<table name="Lean Spool Stop RPM" category="Lean Spool" address="109e6" type="1D" level="2" scaling="RPMStatLimit"/>
 
 	<table name="Boost Control Load Offset" category="Turbo" address="10e0a" type="1D" level="2" scaling="Load16"/>
 

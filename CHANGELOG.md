@@ -20,9 +20,39 @@ short of the MUT table itself (absolute 0x2FAD0). There is no real page-2 scan g
 stale leftovers, corrected to describe the actual scan range. If page-2 tables still turn up
 unlabeled, the cause is a byte-signature mismatch, not an unreached region. review.md's item 2
 has been updated to drop this as a resolved item; the README's matching "page 1 only" wording
-still needs a sepa## [Unreleased]
+still needs a sepa## [U### Fixed — Idle Stepper Look-up Table XML address pointed at header, not data grid (12992 -> 1299a)
 
-### Fixed — `bankifyDP` macro converted to `spSegment` pcodeop, eliminating most DP-banked CONCAT12 decompiler noise
+The EcuFlash XML's "Idle Stepper Look-up Table" / "Idle Stepper Lookup Table" entries
+(both duplicate definitions, `21000011_1997-2001_RVR_X3_Mt__4g63t_.xml`) declared
+`address="12992"`, matching what EcuFlash itself reports in its Edit Table Metadata
+dialog and consistent with the axis addresses (Coolant Temp `2d4c0`/8 elements, ISCV
+Demand `2d4d6`/27 elements). Despite the address/axis metadata being internally
+consistent, opening the table in EcuFlash showed a garbled first row
+(`3, 0, 240, 192, 240, 194, 8, 0`) against an otherwise clean, monotonic ISCV-steps
+surface starting from row 2 onward.
+
+Root-caused by disassembling `idle_stepper_table_lookup_wrapper` (0x268e2), the real
+caller of `table_lookup_interp` for this table: the literal pointer pushed before the
+call is `#0x2992` (bank-relative, resolves to physical `0x12992`), while the two
+preceding axis-setup calls push `#0xd4ba` and `#0xd4d0` — which, once bank-adjusted,
+resolve to `0x2d4ba`/`0x2d4d0`, six bytes before the XML's declared axis addresses
+(`2d4c0`/`2d4d6`). Reading raw ROM bytes at `0x2d4ba` confirmed those six leading
+bytes are `F0 C0 F1 0E 00 08` — i.e. a 4-byte header (two live RAM pointers, `0xf0c0`
+and `0xf1(0)e`-shaped) immediately followed by the real axis array starting at `2d4c0`
+as declared. The exact same header shape (`03` mode byte + RAM pointers `0xf0c0`/
+`0xf0c2`) is what's actually stored at `0x12992` — an 8-byte runtime lookup-context
+header, not table data — which is why EcuFlash was rendering it as a bogus first row.
+
+The real 8x27 (216-byte) ISCVSteps data grid starts 8 bytes later, at `0x1299a`,
+confirmed by direct ROM read: a clean, monotonic surface (`0,0,...,10x8,20x8,30x8...`
+ramping smoothly up to a `160`-clamped ceiling) terminating in a `0xFF` sentinel byte
+with no overrun into neighboring tables. Both XML entries corrected to
+`address="1299a"`. See review.md item 17 for the fuller trace and the caution this
+raises about the file's other `type="3D"` (EcuFlash-convention 2D bilinear) table
+addresses, none of which have been individually re-verified against their real
+calling code yet.
+
+### Fixed — `bankifyDP` macro converted to `spSegment` pcodeop, eliminating most DP-banked CONCAT12 decompiler noisecompiler noise
 
 `bankifyDP` (h8539f.slaspec ~line 436) previously inlined `(zext(DP) << 16) | zext(reg)`
 as raw pcode at every call site — `disp8_banked`/`disp16_banked`/`Rn_banked`/`Rs_banked`/

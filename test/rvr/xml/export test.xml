@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rom>
+  <!-- Exported from Ghidra project: RVR_1998_x3 4g63t 21000011 md352553.hex -->
+  <!-- Source: currently-labeled tables (XML-imported + scraper-found) -->
+  <table name="Spec Index" address="10208" type="1D" scaling="uint16" level="5" />
+  <table name="Software Version" address="1021A" type="2D" category="ECU" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 0)" address="10233" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 1)" address="10237" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 2)" address="1023B" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 3)" address="1023F" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 4)" address="10243" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 5)" address="10247" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 6)" address="1024B" type="3D" scaling="Hex8" level="5" />
+  <table name="Case Number (Spec 7)" address="1024F" type="3D" scaling="Hex8" level="5" />
+  <table name="ECU_PEREPHERY 00" address="10262" type="1D" category="ECU Periphery" scaling="Hex16" level="4" />
+  <table name="ECU_PEREPHERY" address="10272" type="1D" category="ECU Periphery" scaling="Hex16" level="4" />
+  <table name="ECU_PEREPHERY2" address="10292" type="1D" category="ECU Periphery" scaling="Hex16" level="4" />
+  <table name="ECU_PEREPHERY3" address="102A2" type="1D" category="ECU Periphery" scaling="Hex16" level="4" />
+  <table name="ECU_PEREPHERY4" address="102B2" type="1D" category="ECU Periphery" scaling="Hex16" level="1" />
+  <table name="Injector Scaling" address="10808" type="1D" category="Fuel" scaling="InjectorScaling" level="2" />
+  <table name="MAF Sensor Filtering" address="1080C" type="2D" category="Air" scaling="uint16" level="3" />
+  <table name="MAF Size" address="10810" type="1D" category="Air" scaling="AirFlow16" level="3" />
+  <table name="Stationary Rev Limit" address="10872" type="1D" category="Limits" scaling="RPMStatLimit" level="1" />
+  <table name="Rev Limit" address="10886" type="1D" category="Limits" scaling="RPMLimit" level="1" />
+  <table name="Speed Limit" address="10888" type="2D" category="Limits" scaling="VehicleSpeed" level="2" />
+  <table name="Boost Cut Delay Timer" address="10894" type="1D" category="Turbo" scaling="Time" level="4" />
+  <table name="Min Coolant Temp for Closed Loop" address="108A4" type="1D" category="Fuel" scaling="Temp" level="2" />
+  <table name="Lean Spool Start RPM" address="109E4" type="1D" category="Lean Spool" scaling="RPMStatLimit" level="2" />
+  <table name="Lean Spool Stop RPM" address="109E6" type="1D" category="Lean Spool" scaling="RPMStatLimit" level="2" />
+  <table name="Lean Spool Stop RPM" address="109E8" type="1D" category="Lean Spool" scaling="RPMStatLimit" level="1" />
+  <table name="Auto/Manual Selection Code (Address AAF)" address="10AAF" type="1D" category="Transmission" scaling="Hex8" level="2" />
+  <table name="TCU Torque Target Fall Rate Limit" address="10ACE" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Torque Target Rise Rate Limit" address="10AD0" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Min Load Threshold" address="10AD4" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Torque Target Max" address="10AD6" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Torque Reduction Scale" address="10AD8" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Torque Ramp Rate" address="10ADA" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="Idle Stability Timing Control" address="10AE4" type="2D" category="Timing" scaling="uint16" level="2" />
+  <table name="TCU Slip Duty Gain" address="10B08" type="2D" category="Transmission" scaling="uint16" level="3" />
+  <table name="TCU Max Slip Adj Ceiling" address="10B0C" type="2D" category="Transmission" scaling="uint16" level="3" />
+  <table name="TCU Max Slip Adjustment" address="10B1A" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Slip Adj Step - Lockup" address="10B26" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Slip Adj Step - Normal" address="10B28" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Lockup Slip Thresholds" address="10B2A" type="2D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Lockup Slip Counter Threshold" address="10B62" type="1D" category="Transmission" scaling="uint16" level="2" />
+  <table name="Desired Idle RPM with AC on" address="10B6C" type="2D" category="ISCV Control" scaling="RPMTarget" level="2" />
+  <table name="WGDC Correction update delay #1" address="10DF0" type="1D" category="Turbo" scaling="uint16" level="1" />
+  <table name="WGDC Correction update delay #2" address="10DF2" type="1D" category="Turbo" scaling="uint16" level="1" />
+  <table name="Octane Below to Disable Boost Control" address="10DFB" type="1D" category="Turbo" scaling="Percent (256)" level="2" />
+  <table name="Octane Above to Enable Boost Control" address="10DFD" type="1D" category="Turbo" scaling="Percent (256)" level="2" />
+  <table name="Wastegate Solenoid Activation RPM" address="10E02" type="2D" category="Turbo" scaling="RPMStatLimit" level="1" />
+  <table name="Boost Control Load Offset" address="10E0A" type="1D" category="Turbo" scaling="Load16" level="2" />
+  <table name="TCU Solenoid Delta Threshold" address="10F8A" type="2D" category="Transmission" scaling="uint16" level="3" />
+  <table name="TCU Slip Counter Max" address="10F8E" type="1D" category="Transmission" scaling="uint16" level="3" />
+  <table name="Min Temp for Full Boost Control" address="114FE" type="1D" category="Turbo" scaling="Temp" level="3" />
+  <table name="MAF Scaling" address="11804" type="2D" category="Air" scaling="AirFlow8" level="3" />
+  <table name="MAF Smoothing Table" address="1181A" type="2D" category="Air" scaling="AirFlow8" level="3" />
+  <table name="MAF Smoothing Table" address="1181E" type="2D" category="Air" scaling="AirFlow8" level="3" />
+  <table name="Barometric Pressure Compensation" address="11847" type="3D" category="Air" scaling="BoostBar" swapxy="true" level="3" />
+  <table name="High Octane Fuel Map" address="118BB" type="3D" category="Fuel" scaling="AFR" swapxy="true" level="3" />
+  <table name="High Octane Fuel Map 1" address="119BF" type="3D" category="Fuel" scaling="AFR" swapxy="true" level="3" />
+  <table name="High Intake Air Temp ISCV Increase" address="11AA2" type="2D" category="ISCV Control" scaling="ISCVSteps16" flipy="true" level="2" />
+  <table name="Low Octane Fuel Map" address="11AC3" type="3D" category="Fuel" scaling="AFR" swapxy="true" level="3" />
+  <table name="Low Octane Fuel Map 1" address="11BC7" type="3D" category="Fuel" scaling="AFR" swapxy="true" level="3" />
+  <table name="Accel Enrichment" address="11CB5" type="2D" category="Fuel" scaling="EnrichmentAdj" level="2" />
+  <table name="Decel Fuel Cut Resume RPM Offset" address="11CD0" type="2D" category="Fuel" scaling="RPM8" level="2" />
+  <table name="Boost Limit" address="11CEE" type="2D" category="Limits" scaling="LoadBoost" level="2" />
+  <table name="Open Loop Throttle Low Load" address="11CFC" type="2D" category="Fuel" scaling="ThrottleVoltage" level="2" />
+  <table name="Open Loop Throttle High Load" address="11D0C" type="2D" category="Fuel" scaling="ThrottleVoltage" level="2" />
+  <table name="Open Loop Load # 1" address="11D24" type="2D" category="Fuel" scaling="Load8" level="2" />
+  <table name="Open Loop Load # 2" address="11D38" type="2D" category="Fuel" scaling="Load8" level="2" />
+  <table name="Post Start Enrich Trim vs Load" address="11D86" type="2D" category="Fuel" scaling="Percent (128)" level="2" />
+  <table name="Post Start Enrich Decay Multiplier" address="11D98" type="2D" category="Fuel" scaling="EnrichmentAdj" level="2" />
+  <table name="Post Start Enrichment" address="11D9C" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Post Start Enrichment" address="11DA6" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Unknown Table 11daa" address="11DAA" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Lean Spool Trailing Time - Rich Side" address="11DB4" type="2D" category="Lean Spool" scaling="uint8" level="2" />
+  <table name="Lean Spool Trailing Time - Rich Side" address="11DB8" type="2D" category="Lean Spool" scaling="uint8" level="2" />
+  <table name="Limp Home - TPS Table" address="11DC9" type="3D" category="Fuel" scaling="uint8" swapxy="true" level="2" />
+  <table name="Cranking Primer - First Pulse" address="11E3E" type="2D" category="Fuel" scaling="uint8" level="3" />
+  <table name="Accel Enrich Base vs Engine Temp" address="11E7E" type="2D" category="Fuel" scaling="uint8" level="4" />
+  <table name="Decel Fuel Cut Resume Enrich" address="11F08" type="2D" category="Fuel" scaling="EnrichmentAdj" swapxy="true" level="2" />
+  <table name="Boost Enhancement (Anti-lag) Table" address="11F26" type="2D" category="Turbo" scaling="ThrottleVoltage" level="1" />
+  <table name="High Octane Ignition Map 1" address="11F7B" type="3D" category="Timing" scaling="Timing" swapxy="true" level="2" />
+  <table name="SCALING_TABLE_00012065" address="12065" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF7F7 -->
+    <!-- In ptr: RAM:0xF7FD -->
+  </table>
+  <table name="SCALING_TABLE_0001208B" address="1208B" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF6F7 -->
+    <!-- In ptr: RAM:0xFC00 -->
+  </table>
+  <table name="SCALING_TABLE_0001209E" address="1209E" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF6F9 -->
+    <!-- In ptr: RAM:0xFDFD -->
+  </table>
+  <table name="High Octane Ignition Map 2" address="120D9" type="3D" category="Timing" scaling="Timing" swapxy="true" level="1" />
+  <table name="SCALING_TABLE_000121C3" address="121C3" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF7F7 -->
+    <!-- In ptr: RAM:0xF7FD -->
+  </table>
+  <table name="SCALING_TABLE_000121D6" address="121D6" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF6F6 -->
+    <!-- In ptr: RAM:0xFAFE -->
+  </table>
+  <table name="SCALING_TABLE_00012222" address="12222" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF6F6 -->
+    <!-- In ptr: RAM:0xF9FE -->
+  </table>
+  <table name="Low Octane Ignition Map 1" address="12237" type="3D" category="Timing" scaling="Timing" swapxy="true" level="1" />
+  <table name="Low Octane Ignition Map 2" address="12395" type="3D" category="Timing" scaling="Timing" swapxy="true" level="1" />
+  <table name="SCALING_TABLE_0001246F" address="1246F" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF6F8 -->
+    <!-- In ptr: RAM:0xFEFE -->
+  </table>
+  <table name="Boost Enhancement Enrich/Enlean (Anti-lag) Map" address="124F3" type="3D" category="Turbo" scaling="AFR" swapxy="true" level="1" />
+  <table name="Warmup Retard" address="12500" type="3D" category="Timing" scaling="Enrich" level="1" />
+  <table name="Ignition Trim vs Eng Temp" address="127B0" type="2D" category="Timing" scaling="Enrich" level="3" />
+  <table name="Ignition Trim vs Air Temp" address="127BE" type="2D" category="Timing" scaling="Enrich" level="3" />
+  <table name="Warmup Ignition Control vs Eng Temp" address="127CC" type="2D" category="Timing" scaling="Percent (256)" level="2" />
+  <table name="Ignition Trim - Baro" address="127E4" type="2D" category="Timing" scaling="Enrich" level="2" />
+  <table name="Ignition Trim vs Air Temp Active Above Load" address="127EE" type="2D" category="Timing" scaling="Load8" level="3" />
+  <table name="Ignition Coil Charge Time - Normal" address="12808" type="2D" category="Timing" scaling="uint8" level="2" />
+  <table name="Ignition Coil Charge Time - Alt" address="12816" type="2D" category="Timing" scaling="uint8" level="4" />
+  <table name="Knock Control Above Load" address="12832" type="2D" category="Timing" scaling="Load8" level="2" />
+  <table name="Octane Control Above Load" address="12840" type="2D" category="Timing" scaling="Load8" level="2" />
+  <table name="TCU Upshift Torque Offset - Per Gear" address="1287A" type="2D" category="Transmission" scaling="uint8" level="3" />
+  <table name="TCU Downshift Torque Offset - Per Gear" address="1287E" type="2D" category="Transmission" scaling="uint8" level="3" />
+  <table name="Desired Idle RPM-Neutral" address="1288E" type="2D" category="ISCV Control" scaling="RPM8" level="2" />
+  <table name="Desired Idle RPM-Drive" address="12896" type="2D" category="ISCV Control" scaling="RPM8" level="2" />
+  <table name="Desired ISCV intial step position with AC off-Neutral" address="128A2" type="2D" category="ISCV Control" scaling="ISCVSteps" level="2" />
+  <table name="Injector Battery Voltage Latency Compensation" address="128A7" type="2D" category="Fuel" scaling="InjectorLatency" level="2" />
+  <table name="Desired ISCV intial step position with AC off-Drive" address="128AE" type="2D" category="ISCV Control" scaling="ISCVSteps" level="2" />
+  <table name="Desired ISCV intial step position with AC on-Neutral" address="128BA" type="2D" category="ISCV Control" scaling="ISCVSteps" level="2" />
+  <table name="Desired ISCV initial step position with AC on-Drive" address="128C6" type="2D" category="ISCV Control" scaling="ISCVSteps" level="4" />
+  <table name="Decel Fuel Cut Delay - Neutral A/C Off" address="128F6" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Decel Fuel Cut Delay - Neutral A/C Off" address="128FA" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Decel Fuel Cut Delay - In Gear A/C Off" address="12902" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Decel Fuel Cut Delay - Neutral A/C On" address="1290E" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Decel Fuel Cut Delay - In Gear A/C On" address="1291A" type="2D" category="Fuel" scaling="uint8" level="2" />
+  <table name="Decel Fuel Cut Ignition Retard" address="1292A" type="2D" category="Fuel" scaling="Timing" level="2" />
+  <table name="Idle Post Start Step Incr vs Air Temp" address="12938" type="2D" category="Idle" scaling="ISCVSteps" level="3" />
+  <table name="Idle Post Start Decay Time" address="12944" type="2D" category="Idle" scaling="uint8" level="3" />
+  <table name="Idle Error Correction - Neutral" address="1295E" type="2D" category="Idle" scaling="ISCVSteps" level="3" />
+  <table name="Idle Error Correction - Drive AC On" address="1296C" type="2D" category="Idle" scaling="uint8" level="3" />
+  <table name="Idle Stepper Lookup Table" address="12992" type="3D" category="ISCV Control" scaling="ISCVSteps" level="2" />
+  <table name="Idle Stepper Look-up Table" address="1299A" type="3D" category="ISCV Control" scaling="ISCVSteps" />
+  <table name="Max Total Upward WGDC Correction vs TPS" address="12A72" type="2D" category="Turbo" scaling="DynamicBoost" level="2" />
+  <table name="Turbo Boost Error Correction" address="12A80" type="2D" category="Turbo" scaling="DynamicBoost" level="1" />
+  <table name="Max Wastegate Duty # 1" address="12A96" type="2D" category="Turbo" scaling="WGDuty" level="2" />
+  <table name="Max Wastegate Duty # 2" address="12AAA" type="2D" category="Turbo" scaling="WGDuty" level="2" />
+  <table name="Max Wastegate Duty # 3" address="12ABE" type="2D" category="Turbo" scaling="WGDuty" level="2" />
+  <table name="Max Wastegate Duty # 4" address="12AD2" type="2D" category="Turbo" scaling="WGDuty" level="2" />
+  <table name="Boost Desired Engine Load # 1" address="12AF8" type="2D" category="Turbo" scaling="Load8" level="2" />
+  <table name="Knock Sensor Filter Map 1" address="12F22" type="3D" category="Knock Control" scaling="uint8" swapxy="true" level="1" />
+  <table name="Boost Control RPM/MPH Crossover" address="12F84" type="1D" category="Turbo Boost non-JDM" scaling="RPMPerMPH" level="3" />
+  <table name="Knock Sensor Filter Map 2" address="12F8E" type="3D" category="Knock Control" scaling="uint8" swapxy="true" level="1" />
+  <table name="Knock Sensor Filter Map 3" address="12FFA" type="3D" category="Knock Control" scaling="uint8" swapxy="true" level="1" />
+  <table name="Knock Sensor Filter Map 4" address="13066" type="3D" category="Knock Control" scaling="uint8" swapxy="true" level="1" />
+  <table name="Knock Sensor Filter Map 5" address="130D2" type="3D" category="Knock Control" scaling="uint8" swapxy="true" level="1" />
+  <table name="TCU Gear Ratio Periods" address="13284" type="2D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Shift Torque Cmd Lo - Per Gear" address="1328E" type="2D" category="Transmission" scaling="uint16" level="2" />
+  <table name="TCU Shift Torque Cmd Hi - Per Gear" address="13296" type="2D" category="Transmission" scaling="uint16" level="2" />
+  <table name="SCALING_TABLE_00013576" address="13576" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0D2 -->
+    <!-- In ptr: RAM:0xF116 -->
+  </table>
+  <table name="SCALING_TABLE_00023CEA" address="23CEA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF216 -->
+    <!-- In ptr: RAM:0xF436 -->
+  </table>
+  <table name="SCALING_TABLE_0002D080" address="2D080" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C4 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D09A" address="2D09A" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D0C0" address="2D0C0" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D0D2" address="2D0D2" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D0F0" address="2D0F0" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D116" address="2D116" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D130" address="2D130" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF2D8 -->
+  </table>
+  <table name="SCALING_TABLE_0002D146" address="2D146" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D15E" address="2D15E" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C6 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D180" address="2D180" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF35E -->
+  </table>
+  <table name="SCALING_TABLE_0002D192" address="2D192" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D1B4" address="2D1B4" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D1FA" address="2D1FA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF436 -->
+  </table>
+  <table name="SCALING_TABLE_0002D20A" address="2D20A" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D218" address="2D218" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF1E0 -->
+  </table>
+  <table name="SCALING_TABLE_0002D248" address="2D248" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF1E0 -->
+  </table>
+  <table name="SCALING_TABLE_0002D260" address="2D260" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF13A -->
+  </table>
+  <table name="SCALING_TABLE_0002D274" address="2D274" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF13A -->
+  </table>
+  <table name="SCALING_TABLE_0002D28C" address="2D28C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF130 -->
+  </table>
+  <table name="SCALING_TABLE_0002D29C" address="2D29C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF130 -->
+  </table>
+  <table name="SCALING_TABLE_0002D2AA" address="2D2AA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D2CC" address="2D2CC" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D2E0" address="2D2E0" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D302" address="2D302" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D32C" address="2D32C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D356" address="2D356" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D37C" address="2D37C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D3A8" address="2D3A8" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D3C2" address="2D3C2" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF4EA -->
+  </table>
+  <table name="SCALING_TABLE_0002D3DA" address="2D3DA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF13E -->
+  </table>
+  <table name="SCALING_TABLE_0002D3EE" address="2D3EE" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D3FE" address="2D3FE" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D412" address="2D412" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C8 -->
+    <!-- In ptr: RAM:0xF10E -->
+  </table>
+  <table name="SCALING_TABLE_0002D428" address="2D428" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0CA -->
+    <!-- In ptr: RAM:0xF10E -->
+  </table>
+  <table name="SCALING_TABLE_0002D440" address="2D440" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF10E -->
+  </table>
+  <table name="SCALING_TABLE_0002D45C" address="2D45C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0CE -->
+    <!-- In ptr: RAM:0xF10E -->
+  </table>
+  <table name="SCALING_TABLE_0002D472" address="2D472" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF110 -->
+  </table>
+  <table name="SCALING_TABLE_0002D490" address="2D490" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF10E -->
+  </table>
+  <table name="SCALING_TABLE_0002D4A6" address="2D4A6" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0D0 -->
+    <!-- In ptr: RAM:0xF118 -->
+  </table>
+  <table name="SCALING_TABLE_0002D4BA" address="2D4BA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF10E -->
+  </table>
+  <table name="SCALING_TABLE_0002D4D0" address="2D4D0" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D50C" address="2D50C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D530" address="2D530" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D548" address="2D548" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0D4 -->
+    <!-- In ptr: RAM:0xF0BE -->
+  </table>
+  <table name="SCALING_TABLE_0002D570" address="2D570" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D596" address="2D596" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D5BE" address="2D5BE" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF13E -->
+  </table>
+  <table name="SCALING_TABLE_0002D5D6" address="2D5D6" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D5EE" address="2D5EE" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D606" address="2D606" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D620" address="2D620" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D636" address="2D636" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D650" address="2D650" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF196 -->
+  </table>
+  <table name="SCALING_TABLE_0002D66A" address="2D66A" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D684" address="2D684" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D69E" address="2D69E" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D6B4" address="2D6B4" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D6DA" address="2D6DA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D702" address="2D702" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D71A" address="2D71A" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF13E -->
+  </table>
+  <table name="SCALING_TABLE_0002D730" address="2D730" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D74C" address="2D74C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D75A" address="2D75A" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF0BA -->
+  </table>
+  <table name="SCALING_TABLE_0002D76E" address="2D76E" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D784" address="2D784" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D798" address="2D798" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D7B0" address="2D7B0" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D7DA" address="2D7DA" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D806" address="2D806" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D822" address="2D822" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF13E -->
+  </table>
+  <table name="SCALING_TABLE_0002D846" address="2D846" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF130 -->
+  </table>
+  <table name="SCALING_TABLE_0002D856" address="2D856" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D870" address="2D870" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xEF56 -->
+  </table>
+  <table name="SCALING_TABLE_0002D88C" address="2D88C" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF1E8 -->
+  </table>
+  <table name="SCALING_TABLE_0002D89E" address="2D89E" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D8B0" address="2D8B0" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C2 -->
+    <!-- In ptr: RAM:0xF190 -->
+  </table>
+  <table name="SCALING_TABLE_0002D8BC" address="2D8BC" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF170 -->
+  </table>
+  <table name="SCALING_TABLE_0002D8D6" address="2D8D6" type="Scaling">
+    <!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+    <!-- Out ptr: RAM:0xF0C0 -->
+    <!-- In ptr: RAM:0xF1A8 -->
+  </table>
+  <table name="ECU Internal ID#2" address="2FEFA" type="2D" category="Miscellaneous" scaling="ASCII" />
+</rom>

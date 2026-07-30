@@ -282,6 +282,90 @@
     </unaffected>
   </prototype>
 
+  <!-- ADDED 2026-07-30: table_lookup_interp needs TWO distinct all-stack params
+       (a 1-byte EP-bank value at FP+7, a 2-byte struct pointer at FP+8), confirmed
+       via disassembly (ldc.b @(0x7:8,FP),EP then mov:f.w @(0x8:8,FP),R4, both
+       genuinely consumed as separate values, not one blob). Neither __stdcall_far
+       (reserves R0 for a single param, wrong, this is a far pjsr call with no
+       register pre-binding, same all-stack shape as __stdcall_far_allstack) nor
+       __stdcall_far_allstack itself (single collapsed pentry can't bind two
+       differently-sized params separately) fit. This variant splits the all-stack
+       region into two explicit pentries at stack offset 4 (byte) and offset 5
+       (word), mirroring the FP+7/FP+8 gap seen in the real prologue once the
+       3-byte extrapop/stackshift base (matching __stdcall_far_allstack's offset=4
+       start) is accounted for. NOT YET TESTED against a live prototype
+       application/reanalyze, verify table_lookup_interp's 130 call sites
+       decompile with clean literal arguments before relying on this. -->
+  <!-- CORRECTED 2026-07-30: real exported prototype state (table_lookup_interp.xml
+       save-state export) showed Ghidra resolving this function's actual extrapop
+       as 6, not the 4 first assumed by analogy with __stdcall_far_allstack. Only
+       ep_val (offset 4) bound; the pointer param stayed unassigned with the old
+       offset-5 pentry, consistent with the base being off by the same 2-byte gap
+       between extrapop=4 and the true extrapop=6. Shifted both pentries +2
+       (offset 4 to 6 wide, mirroring the real 1-byte-then-word run at FP+7/FP+8)
+       and locked extrapop=6 explicitly so Ghidra stops re-deriving a different
+       value. NOT YET VERIFIED against a live rebind, check
+       get_function_variables shows both params with real Stack[] storage before
+       trusting this. -->
+  <!-- UPDATE 2026-07-30: get_function_variables DOES show both pentries bound
+       (ep_val Stack[0x6]:1, table Stack[0x7]:2, no <UNASSIGNED>), confirmed
+       live and durable across recompile/reinstall/reload. BUT the decompiled
+       function body still ignores this binding entirely: reads a raw
+       stack0xfffe+7 byte into a stray uVar1 that's never used, then builds its
+       real working pointer from garbage (uVar8, an uninitialized undefined3),
+       identical to the pre-fix decompile. TESTING 2026-07-30 (second attempt,
+       different from the already-rejected align=2-at-offset-7 attempt above):
+       pentry 2 moved to offset=8 (even, so align=2 is no longer self-
+       contradictory the way it was at the odd offset=7) to test whether the
+       decompiler's own stack-frame numbering is off-by-one from the pentry
+       declaration's numbering. Pentry 1 left unchanged at offset=6 since it
+       already binds correctly. NOT YET VERIFIED, re-check
+       get_function_variables AND force_decompile's actual body (not just the
+       signature) before trusting this; revert immediately if either the
+       pointer parameter goes back to <UNASSIGNED> or if ep_val's binding
+       regresses. -->
+  <!-- REVERTED 2026-07-30, same day: tested via set_function_prototype +
+       get_function_variables, table came back <UNASSIGNED> at offset=8/align=2,
+       same failure as the original. However this test's validity is itself in
+       question: a live compiler-spec parse exception (CompilerSpecNotFoundException,
+       the double-hyphen-in-comments XML rule violation, caused by a stray bare
+       double-hyphen in one of this file's own comment blocks, now fixed) occurred around
+       this same edit, meaning the test may have run against a degraded/stale
+       compiler-spec state rather than a clean reload of this file. Reverted to
+       offset=7/no-align (the last state independently confirmed working via a
+       direct custom-storage override, not via this calling convention's own
+       pentry resolution) as the safe known-good baseline. Needs a full Ghidra
+       restart, not just ReloadSleighLanguage.java, before any further pentry-
+       offset experiments on this prototype are trustworthy. -->
+  <prototype name="__stdcall_far_2arg" extrapop="6" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="1">
+        <addr offset="6" space="stack"/>
+      </pentry>
+      <pentry minsize="2" maxsize="2">
+        <addr offset="7" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    </unaffected>
+  </prototype>
+
   <prototype name="__stdcall_far" extrapop="4" stackshift="2">
     <input>
       <pentry minsize="1" maxsize="2">
