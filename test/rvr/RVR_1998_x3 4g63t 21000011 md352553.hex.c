@@ -11,6 +11,7 @@ typedef unsigned int    undefined3;
 typedef unsigned int    undefined4;
 typedef unsigned short    ushort;
 typedef unsigned short    word;
+typedef unsigned short    wchar16;
 typedef struct axis_lookup_record axis_lookup_record, *Paxis_lookup_record;
 
 struct axis_lookup_record {
@@ -22,7 +23,6 @@ struct axis_lookup_record {
     ushort wAxis_table;
 };
 
-typedef unsigned short    wchar16;
 
 
 ushort DAT_0001f1fc;
@@ -397,8 +397,8 @@ undefined2 DAT_0001f9be;
 undefined2 DAT_0001f9c0;
 undefined1 DAT_0001f7e1;
 undefined SCI1_TDR;
+undefined1 *DAT_00013282;
 undefined DAT_0000ee80;
-byte[4] TCU_Gear_Ratio_Periods;
 ushort DAT_0001f498;
 undefined2 DAT_00010e22;
 undefined2 DAT_0001f49e;
@@ -617,37 +617,43 @@ short DAT_0001efee;
 undefined ign_advance_enable_flags_f440_update;
 undefined ign_advance_idle_correction_f44e;
 ushort DAT_0001f1e0;
-undefined BYTE_ARRAY_00010dfe;
+ushort DAT_00010e00;
 ushort DAT_0001eec8;
 undefined DAT_00010dfa;
 char DAT_000102f0;
-ushort DAT_00010e08;
-ushort DAT_00010e06;
-ushort DAT_00010e04;
-ushort DAT_00010e02;
+byte[2] DAT_0001f17a;
+byte[2] DAT_00010e08;
+byte[2] DAT_00010e06;
+byte[2] DAT_00010e04;
+byte[2] BYTE_ARRAY_00010e02;
 ushort DAT_0001f200;
 ushort DAT_00010df4;
 undefined2 DAT_00010df6;
 byte[2] Octane_Below_to_Disable_Boost_Control;
 undefined2 DAT_0001f040;
-short DAT_0001f44a;
-short DAT_00010df0;
-short DAT_0001f05c;
+byte[2] Octane_Above_to_Enable_Boost_Control;
+byte[2] DAT_0001f44a;
+byte[2] BYTE_ARRAY_00010df0;
+byte[2] DAT_0001f05c;
 ushort DAT_0001f196;
 short DAT_0001f44e;
-short DAT_00010e0a;
+byte[2] BYTE_ARRAY_00010e0a;
+short DAT_0001f44a;
 short DAT_0001f000;
 short DAT_00010df8;
 undefined2 DAT_00010dee;
 undefined2 DAT_0001f450;
 ushort DAT_00010d7c;
 ushort DAT_00010d80;
-byte[9] TABLE_3D_00010D73;
+ushort DAT_00010d7a;
 ushort DAT_00010d7e;
 undefined2 DAT_0000f43e;
+short DAT_00010d78;
+short DAT_00010d74;
+short DAT_00010d76;
+undefined2 g_status_flags_f21c;
 ushort DAT_0001f26e;
 ushort DAT_00010dda;
-undefined2 g_status_flags_f21c;
 short DAT_00010ddc;
 char DAT_000102ea;
 ushort DAT_0001f4d6;
@@ -776,8 +782,7 @@ undefined2 DAT_0001f218;
 undefined DAT_0000fd00;
 undefined P1DDR;
 undefined P3DDR;
-char DAT_0002fefa;
-char DAT_0002fefb;
+undefined BYTE_ARRAY_0002fefa;
 char DAT_0002fefc;
 char DAT_0002fefd;
 char DAT_0002fefe;
@@ -899,6 +904,10 @@ short DAT_00010bfe;
 undefined2 DAT_0001ef6e;
 undefined map_tps_axis_update;
 undefined iac_position_integrator;
+ushort DAT_0001f108;
+ushort DAT_00010f5c;
+ushort DAT_00010f5a;
+undefined tps_range_clamp_update;
 ushort DAT_0001f10a;
 short DAT_00010f66;
 undefined2 DAT_0000f208;
@@ -993,17 +1002,17 @@ undefined2 DAT_0000f014;
 undefined2 DAT_0000f224;
 ushort DAT_00010a60;
 ushort DAT_00010aa4;
-ushort DAT_00010da2;
+byte[2] DAT_00010da2;
 undefined2 g_status_flags_f226;
-ushort DAT_0001f1b4;
-ushort DAT_0001080c;
-ushort DAT_0001080e;
+byte[2] DAT_0001f1b4;
+byte[2] BYTE_ARRAY_0001080c;
+byte[2] DAT_0001080e;
 char DAT_00010306;
-ushort DAT_00010958;
+byte[2] DAT_00010958;
 undefined2 DAT_0000f1ca;
 undefined2 DAT_0001f1b6;
 undefined inc_if_signed_flag;
-undefined2 DAT_00010810;
+byte[2] BYTE_ARRAY_00010810;
 undefined2 DAT_0001f1e4;
 ushort DAT_0001089a;
 ushort DAT_0001089c;
@@ -1057,9 +1066,10 @@ undefined2 tcu_rx_confirmed_byte3_f4c2;
 char DAT_00010305;
 ushort DAT_000113ce;
 char DAT_000102cb;
-byte[32] Decel_Fuel_Cut_Resume_RPM_Offset;
 ushort DAT_00010a56;
 ushort DAT_00010a54;
+byte DAT_00011ce0;
+undefined1 DAT_00011cde;
 undefined check_flag_f0f8_bit2_clear;
 byte DAT_000102dd;
 undefined2 DAT_00010ee4;
@@ -1091,19 +1101,21 @@ undefined2 DAT_0001ef74;
 short DAT_0001f076;
 ushort DAT_00010a46;
 ushort DAT_00010a42;
-byte[4] Speed_Limit;
+byte[2] BYTE_ARRAY_00010886;
 ushort DAT_00010896;
 ushort DAT_0001f5ee;
 ushort DAT_0001f190;
-ushort DAT_0001088a;
-ushort DAT_00010888;
-ushort DAT_00010892;
+byte[2] DAT_0001f1e8;
+byte[2] DAT_0001088a;
+byte[2] BYTE_ARRAY_00010888;
+byte[2] DAT_00010892;
 char DAT_000102ca;
 ushort DAT_0001088c;
 short DAT_0001f018;
 short DAT_0001f01a;
 short DAT_00010890;
 short DAT_0001088e;
+ushort DAT_00010892;
 undefined2 DAT_000132b6;
 undefined2 DAT_0000f25a;
 undefined2 DAT_0000f212;
@@ -1142,7 +1154,7 @@ undefined2 DAT_000108a0;
 short DAT_0001efa8;
 undefined2 DAT_000108e0;
 undefined2 DAT_000108e2;
-undefined2 DAT_000108a4;
+byte[2] BYTE_ARRAY_000108a4;
 undefined2 DAT_0001150e;
 short DAT_0001f022;
 char DAT_0001031d;
@@ -1168,14 +1180,17 @@ undefined2 DAT_0001f2f6;
 undefined2 DAT_0001f2f4;
 undefined2 DAT_0001f25a;
 byte DAT_000131e4;
+byte DAT_000131d8;
 undefined2 DAT_0000f2cc;
 byte DAT_00011df0;
-byte[14] TABLE_2D_000131D4;
 undefined2 DAT_0000f276;
 undefined2 DAT_0000f278;
 undefined2 DAT_0000f27a;
 undefined2 DAT_0000f27c;
 undefined f0ba_f2d0_o2_mode7_8_correction_calc;
+undefined f25e_gate_chain_dispatch_b;
+undefined f2a0_f2c6_dual_timer_decay_and_f2c8_blend_dispatch;
+undefined f2ca_table_override_from_f114_gate;
 undefined f25e_gate_chain_dispatch_a;
 undefined knock_octane_dual_axis_blend_far_trampoline;
 undefined f25e_bit10_update_from_f216_gate;
@@ -1233,16 +1248,19 @@ ushort DAT_000109d6;
 ushort DAT_000109d4;
 ushort DAT_000109d2;
 undefined2 DAT_0001f2a8;
-ushort DAT_000109e6;
-ushort DAT_000109e4;
-ushort DAT_0001f0ba;
+byte[2] BYTE_ARRAY_000109e6;
+byte[2] BYTE_ARRAY_000109e4;
+byte[2] DAT_0001f0ba;
 undefined2 DAT_0001f28e;
 undefined knock_octane_trim_ramp_update;
 short DAT_000108d2;
 short DAT_0001efb0;
+byte DAT_00011d5c;
+byte DAT_00011d5d;
+byte DAT_00011d5e;
+byte DAT_00011d5f;
 byte DAT_0001321a;
 byte DAT_0001321b;
-byte[48] TABLE_2D_00011D4C;
 undefined calc_staged_index_f0f8;
 undefined2 DAT_0000f10e;
 undefined2 DAT_000108b8;
@@ -1323,8 +1341,8 @@ undefined2 DAT_0000f380;
 undefined2 DAT_0001f350;
 undefined2 DAT_00010b5e;
 undefined2 DAT_0001efbe;
-byte[16] TABLE_2D_00012808;
-byte[14] TABLE_2D_00012824;
+byte DAT_0001280c;
+byte DAT_00012828;
 undefined2 DAT_0000f37e;
 undefined update_flag_fe97_bit2_cond;
 undefined2 DAT_0000f3a4;
@@ -1343,11 +1361,12 @@ undefined2 DAT_0000eec6;
 undefined2 DAT_0000eec8;
 undefined efc2_threshold_update;
 undefined tcu_slip_duty_gain_condition_check;
+ushort DAT_00010b06;
 undefined2 g_status_flags_f33e;
-byte[4] TCU_Slip_Duty_Gain;
 undefined2 DAT_0000ef88;
 undefined f0ec_bit1_threshold_gate_check;
-undefined BYTE_ARRAY_00010f86;
+ushort DAT_00010f88;
+ushort DAT_00010f86;
 ushort DAT_00010f84;
 undefined2 DAT_00010b58;
 undefined2 DAT_0001f3ba;
@@ -1456,7 +1475,7 @@ ushort DAT_00010bd0;
 undefined2 DAT_0000f36e;
 undefined2 DAT_0000f370;
 undefined2 DAT_0001f342;
-undefined2 DAT_00010b1a;
+byte[2] BYTE_ARRAY_00010b1a;
 undefined o2_wideband_mode82_check;
 ushort DAT_0001f5ca;
 ushort DAT_00010adc;
@@ -1513,6 +1532,7 @@ short DAT_0001f426;
 ushort DAT_00010d1a;
 ushort DAT_00010d18;
 ushort DAT_0001f180;
+ushort DAT_0001f0ba;
 undefined2 DAT_0001f4de;
 undefined2 DAT_00010c36;
 undefined update_max;
@@ -1677,7 +1697,6 @@ ushort DAT_0001eeea;
 ushort DAT_0001eeec;
 undefined2 DAT_0001f502;
 undefined2 DAT_0001ef78;
-ushort DAT_0001f108;
 undefined2 DAT_0001ef7a;
 undefined sum_byte_array;
 undefined2 DAT_0000f502;
@@ -1765,7 +1784,7 @@ ushort DAT_0001f54c;
 undefined2 DAT_0001f54e;
 undefined2 DAT_0001f17a;
 undefined2 DAT_0001f550;
-undefined BYTE_ARRAY_00010808;
+byte[2] BYTE_ARRAY_00010808;
 undefined2 DAT_0001f33c;
 undefined2 DAT_0001f33a;
 undefined2 DAT_0001f430;
@@ -1829,9 +1848,10 @@ undefined2 DAT_0001ff46;
 undefined2 DAT_0001f39e;
 undefined sci3_timeout_set_retry;
 undefined2 DAT_0001f37e;
+byte[2] DAT_0001f5ca;
 ushort DAT_0001f1da;
-short DAT_0001f2b0;
 undefined2 DAT_0000f2aa;
+short DAT_0001f2b0;
 ushort DAT_0001f24e;
 undefined DAT_0000fde8;
 undefined2 DAT_0000f2f0;
@@ -2869,7 +2889,7 @@ undefined2 weighted_blend_2term_u8frac_div255(void)
 // declaring the full record struct by value or investigate whether a different calling convention
 // variant resolves the 3rd-param ghost.
 
-void __stdcall_far table_lookup_interp(void)
+void __stdcall_far_2arg table_lookup_interp(void)
 
 {
   undefined1 uVar1;
@@ -5790,6 +5810,19 @@ undefined2 serial_fec3_load_next_byte(undefined2 param_1)
 
 
 
+// [CONTEXT ADDED 2026-07-26] Writes a received UART byte into
+// tcu_rx_confirmed_byte3_f4c2 (F4C2). "fec5" falls inside the fec0-fed5
+// SCI1/2/3 UART register range confirmed elsewhere in this project (see
+// f516_hibits_f520_f0f2_mode_select plate comment for the fec0-fed5 SMR/
+// BRR/SCR/TDR/SSR/RDR register identification). This is the clearest direct
+// evidence that the tcu_rx_main_scheduler frame-validator block (F4C4-F4CC,
+// see 0x2aa36) is genuinely fed by a live UART receive path -- most likely a
+// dedicated ECU<->TCU serial link, distinct from the SCI1 diagnostic
+// protocol (sci1_meta_cmd_dispatch_c0_ff) traced throughout
+// mut_verification_status.md. Which SCI channel (1/2/3) "fec5" specifically
+// belongs to, and whether it's the same physical UART as the
+// tcu_periodic_dispatch (0x2c12b) chain, not yet determined.
+
 undefined2 serial_fec5_byte_to_fifo(undefined2 param_1)
 
 {
@@ -6883,7 +6916,7 @@ adc_sensor_convert_multi(uchar *src_ptr,uchar *dst_ptr,ushort count,ushort mode_
       src_cursor = src_cursor + 2;
       raw_value = (undefined1 *)CONCAT11(*table_result,*puVar1);
       table_result = raw_value;
-      if (raw_value <= (ushort)TCU_Gear_Ratio_Periods._2_2_) {
+      if (raw_value <= DAT_00013282) {
         table_result = *(undefined1 **)((int)((short)raw_value << 1) + -0x530);
       }
       if (table_result < (undefined1 *)&DAT_0000ee80) {
@@ -6942,7 +6975,7 @@ undefined2 adc_sensor_convert_single(void)
                 CONCAT11((char)*(undefined2 *)((int)&stack0xfff9 + 0xc),
                          (char)((ushort)*(undefined2 *)((int)&stack0xfff9 + 0xc) >> 8));
   usTableAddr = usRequestId;
-  if (usRequestId <= (ushort)TCU_Gear_Ratio_Periods._2_2_) {
+  if (usRequestId <= DAT_00013282) {
     usTableAddr = *(undefined1 **)((int)((short)usRequestId << 1) + -0x530);
   }
   if (usTableAddr < (undefined1 *)&DAT_0000ee80) {
@@ -9161,11 +9194,11 @@ void ign_advance_enable_flags_f440_update(void)
 
 {
   if ((DAT_0001f440 & 4) == 0) {
-    if ((ushort)BYTE_ARRAY_00010dfe._0_2_ < DAT_0001f1e0 >> 8) {
+    if (ram0x00010dfe < DAT_0001f1e0 >> 8) {
       DAT_0001f440 = DAT_0001f440 | 4;
     }
   }
-  else if (DAT_0001f1e0 >> 8 <= (ushort)BYTE_ARRAY_00010dfe._2_2_) {
+  else if (DAT_0001f1e0 >> 8 <= DAT_00010e00) {
     DAT_0001f440 = DAT_0001f440 & 0xfffb;
   }
   if ((DAT_0001f440 & 8) == 0) {
@@ -9181,20 +9214,20 @@ void ign_advance_enable_flags_f440_update(void)
   }
   else {
     if ((DAT_0001f440 & 2) == 0) {
-      if (DAT_00010e06 < DAT_0001f17a) {
+      if ((ushort)DAT_00010e06 < (ushort)DAT_0001f17a) {
         DAT_0001f440 = DAT_0001f440 | 2;
       }
     }
-    else if (DAT_0001f17a <= DAT_00010e08) {
+    else if ((ushort)DAT_0001f17a <= (ushort)DAT_00010e08) {
       DAT_0001f440 = DAT_0001f440 & 0xfffd;
     }
     if ((DAT_0001f440 & 1) != 0) {
-      if (DAT_0001f17a <= DAT_00010e04) {
+      if ((ushort)DAT_0001f17a <= (ushort)DAT_00010e04) {
         DAT_0001f440 = DAT_0001f440 & 0xfffe;
       }
       goto LAB_00018f38;
     }
-    if (DAT_0001f17a <= DAT_00010e02) goto LAB_00018f38;
+    if ((ushort)DAT_0001f17a <= (ushort)BYTE_ARRAY_00010e02) goto LAB_00018f38;
   }
   DAT_0001f440 = DAT_0001f440 | 1;
 LAB_00018f38:
@@ -9251,51 +9284,55 @@ undefined2 ign_advance_base_calc_f860(void)
 // Turbo Boost Error Correction / Max Total Upward WGDC Correction tables), reads/writes
 // 0xF44A. Feeds wgdc_output_clamp_f44c (0x19110). VERIFIED - matches logging.txt structure.
 
-ushort wgdc_correction_integrator_update(void)
+byte  [2] wgdc_correction_integrator_update(void)
 
 {
   undefined2 uVar1;
   short sVar2;
   ushort uVar3;
   ushort uVar4;
+  byte abVar5 [2];
   short extraout_R2;
-  byte bVar5;
+  byte abVar6 [2];
+  byte bVar7;
   ushort in_stack_00000004;
   ushort lo;
   
-  bVar5 = 1;
+  bVar7 = 1;
   if (((g_status_flags_f20e & 0x11) == 0) && ((DAT_0001f440 & 0x20) == 0)) {
-    uVar3 = DAT_0001f44a;
+    abVar6 = DAT_0001f44a;
     if ((DAT_0001f440 & 0x10) == 0) {
-      uVar4 = 0;
-      if (DAT_0001f05c == 0) {
-        DAT_0001f05c = DAT_00010df0;
-        sat_sub_u16((DAT_0001f196 >> 1) + 0x20,DAT_0001f44e + DAT_00010e0a);
+      abVar5[0] = 0;
+      abVar5[1] = 0;
+      if (DAT_0001f05c == (byte  [2])0x0) {
+        DAT_0001f05c = BYTE_ARRAY_00010df0;
+        sat_sub_u16((DAT_0001f196 >> 1) + 0x20,DAT_0001f44e + (short)BYTE_ARRAY_00010e0a);
         uVar1 = (*clamp_u8)();
-        *(undefined2 *)((uint)bVar5 << 0x10 | 0xf0ba) = uVar1;
+        *(undefined2 *)((uint)bVar7 << 0x10 | 0xf0ba) = uVar1;
         (*axis_lookup_interp)();
         sVar2 = (*(code *)0x14656)();
         uVar3 = sat_sub_u16(extraout_R2 + sVar2,0x80);
         (*axis_lookup_interp)();
         uVar4 = (*(code *)0x14656)();
-        uVar4 = clamp_u16(uVar3,*(ushort *)((uint)bVar5 << 0x10 | 0xdf2),uVar4);
+        uVar4 = clamp_u16(uVar3,*(ushort *)((uint)bVar7 << 0x10 | 0xdf2),uVar4);
         lo = 200;
         uVar4 = sat_sub_u16(in_stack_00000004 + uVar4,0x80);
         uVar3 = clamp_u16(uVar4,lo,uVar3);
-        uVar4 = sat_sub_u16(uVar3 + 0x80,in_stack_00000004);
-        uVar3 = uVar4;
+        abVar5 = (byte  [2])sat_sub_u16(uVar3 + 0x80,in_stack_00000004);
+        abVar6 = abVar5;
       }
       goto LAB_000190d6;
     }
   }
   else {
-    uVar3 = 0x80;
+    abVar6[0] = 0;
+    abVar6[1] = 0x80;
   }
-  DAT_0001f05c = DAT_00010df0;
-  uVar4 = DAT_00010df0;
+  DAT_0001f05c = BYTE_ARRAY_00010df0;
+  abVar5 = BYTE_ARRAY_00010df0;
 LAB_000190d6:
-  *(ushort *)((uint)bVar5 << 0x10 | 0xf44a) = uVar3;
-  return uVar4;
+  *(byte (*) [2])((uint)bVar7 << 0x10 | 0xf44a) = abVar6;
+  return abVar5;
 }
 
 
@@ -9397,7 +9434,7 @@ void rpm_map_zone_flags_f43e_update(void)
         usZoneBits = 0x200;
       }
     }
-    if ((ushort)TABLE_3D_00010D73._7_2_ <= DAT_0001f118) {
+    if (DAT_00010d7a <= DAT_0001f118) {
       if (DAT_00010d7e <= DAT_0001f10e) {
         usZoneBits = usZoneBits | 0x100;
       }
@@ -9460,14 +9497,14 @@ bool rpm_zone_enable_check(void)
   bool bVar1;
   ushort usThreshold;
   
-  usThreshold = TABLE_3D_00010D73._5_2_ * 0x14;
+  usThreshold = DAT_00010d78 * 0x14;
   if ((DAT_0001f43e & 0x200) == 0) {
     if ((DAT_0001f43e & 0x100) != 0) {
-      usThreshold = TABLE_3D_00010D73._3_2_ * 0x14;
+      usThreshold = DAT_00010d76 * 0x14;
     }
   }
   else {
-    usThreshold = TABLE_3D_00010D73._1_2_ * 0x14;
+    usThreshold = DAT_00010d74 * 0x14;
   }
   if (DAT_0001f26e >> 8 < DAT_00010dda) {
     usThreshold = 0;
@@ -9483,8 +9520,7 @@ bool rpm_zone_enable_check(void)
   if (((((g_status_flags_f20e & 0x10) == 0) || ((DAT_0001f510 & 8) == 0)) &&
       ((((ushort)(DAT_00010ddc * 0x14) < DAT_0001ef6a && ((g_status_flags_f21c & 1) != 0)) ||
        ((DAT_0001f43e & 0x10) == 0)))) &&
-     (((g_status_flags_f20e & 0x10) != 0 ||
-      ((ushort)(TABLE_3D_00010D73._5_2_ * 0x14) < DAT_0001ef6a)))) {
+     (((g_status_flags_f20e & 0x10) != 0 || ((ushort)(DAT_00010d78 * 0x14) < DAT_0001ef6a)))) {
     bVar1 = false;
   }
   else {
@@ -9718,7 +9754,7 @@ LAB_0001955c:
 
 
 
-// [NEW 2026-07-15] canister_purge_duty_calc_f4ac
+// [NEW 2026-07-15, UPDATED 2026-07-26] canister_purge_duty_calc_f4ac
 // 
 // ACTUATOR function, not a MUT RequestID target (F4AC not present in the
 // 0x2fad0 MUT table). Reference example for the general "actuator driver"
@@ -9727,15 +9763,34 @@ LAB_0001955c:
 // interpolation) -> threshold-select (pjsr @0x14000) -> clamp to 0xFF ->
 // store to F4AC.
 // 
-// Gating: checks F4A2 bit7 and F4A4 bit7 (purge-enable conditions), F4BE
-// bits (mode select), falls back to a fixed constant @0xe5e or 0xFF
-// (purge off) when conditions aren't met. Writes F0BA (MUT_E1, the shared
-// scratch cell documented in review.md item 7) as a side effect via the
-// 0x14219 calls @0x195de/0x195e7 - one more confirmed writer to add to
-// that cell's "many unrelated callers" list if not already covered.
+// Gating: checks F4A2 bit7 and F4A4 bit7 (purge-enable conditions), and
+// tcu_rx_confirmed_byte1_f4be (F4BE, RENAMED 2026-07-26) bits (mode select),
+// falls back to a fixed constant @0xe5e or 0xFF (purge off) when conditions
+// aren't met. Also reads tcu_rx_confirmed_byte0_f4bc (F4BC, RENAMED
+// 2026-07-26) as an addend. BOTH of these inputs are checksum-confirmed
+// bytes from a live TCU (transmission control unit) serial RX frame -- see
+// tcu_rx_main_scheduler (0x2aa36) for the full frame validator -- meaning
+// canister purge duty is genuinely influenced by data arriving over an
+// ECU<->TCU link, not just internal engine-side state. Plausible real-world
+// reason: purge commonly gets suspended/modulated during transmission shift
+// events. Writes F0BA (MUT_E1, the shared scratch cell documented in
+// review.md item 7) as a side effect via the 0x14219 calls @0x195de/0x195e7
+// - one more confirmed writer to add to that cell's "many unrelated callers"
+// list if not already covered.
 // 
 // F4AC itself = canister purge solenoid duty cycle target, an actuator
-// output. Not yet checked whether any MUT ID reads it indirectly.
+// output. STILL NOT resolved: F4AC has no confirmed physical-hardware
+// consumer -- checked 2026-07-26 whether software_pwm_output_scheduler
+// (0x158d7, the software bit-banged PWM driving WGDC/ISC/O2-heater/EGR
+// duties onto real port pins, see mut_verification_status.md "FIFTH SCI1
+// ACTUATOR-FORCE CHAIN" and the timer-sweep section) reads F4AC -- it does
+// NOT. xrefs to F4AC are self-references plus one init write only. The real
+// output path for canister purge duty remains untraced; note this ROM
+// ALSO has a separate simple on/off purge output already fully traced
+// (purge_f0e6_bit2_update -> F0E6 bit2 -> P4DR.7, SCI1-forceable via cmd
+// 0xD1) -- unclear whether F4AC's duty-cycle path and the F0E6 on/off path
+// drive the same physical purge solenoid (duty modulating an otherwise-on
+// valve) or two different valves/stages. Not yet checked.
 
 void canister_purge_duty_calc_f4ac(void)
 
@@ -11253,8 +11308,8 @@ void boot_sci1_receive_config_bytes(void)
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xf206) = uVar1;
   sci1_boot_tx_then_rx_transaction();
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xf207) = 0;
-  if ((((DAT_0002fefa != *(char *)((uint)bVar2 << 0x10 | 0xf201)) ||
-       (DAT_0002fefb != *(char *)((uint)bVar2 << 0x10 | 0xf202))) ||
+  if ((((BYTE_ARRAY_0002fefa[0] != *(byte *)((uint)bVar2 << 0x10 | 0xf201)) ||
+       (BYTE_ARRAY_0002fefa[1] != *(byte *)((uint)bVar2 << 0x10 | 0xf202))) ||
       (DAT_0002fefc != *(char *)((uint)bVar2 << 0x10 | 0xf203))) ||
      (((DAT_0002fefd != *(char *)((uint)bVar2 << 0x10 | 0xf204) ||
        (DAT_0002fefe != *(char *)((uint)bVar2 << 0x10 | 0xf205))) ||
@@ -13472,6 +13527,34 @@ void sensor_adc_update(void)
 
 
 
+void map_tps_axis_update(void)
+
+{
+  byte bVar1;
+  
+  bVar1 = 1;
+  if (DAT_00010f5c <= DAT_0001f108) {
+    if (DAT_0001f108 <= DAT_00010f5a) {
+      DAT_0001f1fe = DAT_0001f1fe & 0xfffe;
+      goto LAB_00021237;
+    }
+  }
+  DAT_0001f1fe = DAT_0001f1fe | 1;
+LAB_00021237:
+  (*tps_range_clamp_update)();
+  calc_f110_f10e_via_table();
+  (*axis_lookup_interp)();
+  (*axis_lookup_interp)();
+  (*axis_lookup_interp)();
+  if ((*(short *)((uint)bVar1 << 0x10 | 0xef90) == 0) &&
+     ((*(ushort *)((uint)bVar1 << 0x10 | 0xf224) & 0x400) != 0)) {
+    *(undefined2 *)((uint)bVar1 << 0x10 | 0xee8a) = *(undefined2 *)((uint)bVar1 << 0x10 | 0xf10e);
+  }
+  return;
+}
+
+
+
 void tps_range_clamp_update(void)
 
 {
@@ -14204,7 +14287,7 @@ LAB_00021bc6:
     }
     if ((g_status_flags_f216 & 0x100) != 0) goto LAB_00021ba9;
     if ((g_status_flags_f3f0 & 0x10) == 0) goto LAB_00021bc6;
-    DAT_0001f1b4 = DAT_0001080c;
+    DAT_0001f1b4 = BYTE_ARRAY_0001080c;
   }
   else {
 LAB_00021ba9:
@@ -14214,7 +14297,7 @@ LAB_00021ba9:
 LAB_00021bce:
   if (DAT_00010306 == '\0') {
     uVar1 = 0;
-    if (DAT_0001f1b4 <= DAT_00010958) {
+    if ((ushort)DAT_0001f1b4 <= (ushort)DAT_00010958) {
       uVar1 = 0x200;
     }
   }
@@ -14748,6 +14831,27 @@ ushort efa0_max_hold_and_recovered_check(void)
 
 
 // WARNING: Unknown calling convention -- yet parameter storage is locked
+// [RENAMED + DOCUMENTED 2026-07-26, was f226_bit7_update_from_f4c2_check]
+// Sets/clears status flag F226 bit7 (0x80) based on data arriving over the
+// TCU serial RX link (see tcu_rx_main_scheduler @ 0x2aa36 for the full frame
+// validator this depends on).
+// 
+// Clears F226 bit7 if: ROM config byte 0x102fd == 0, OR F4A4 bit7 is set
+// (the same flag that also gates canister_purge_duty_calc_f4ac -- likely a
+// general "purge/TCU-feature disabled" master flag), OR g_status_flags_f20e
+// bit3 is clear.
+// 
+// Otherwise, sets F226 bit7 (once, sticky -- only sets if not already set)
+// when tcu_rx_confirmed_byte3_f4c2 (F4C2, the checksum-confirmed 4th byte of
+// the TCU RX frame) has its bits 0x60 equal to 0x40 exactly (i.e. bit6 set,
+// bit5 clear, regardless of other bits).
+// 
+// Best working hypothesis: a "TCU link confirmed / handshake OK" status bit,
+// gated on the config byte that enables TCU communication at all and on the
+// same purge-feature-enable flag used elsewhere -- but not proven against
+// real hardware. F226's other bits not characterized in this project.
+// See tcu_rx_main_scheduler (0x2aa36) plate comment for the full serial
+// frame context.
 
 void tcu_link_confirmed_flag_f226_bit7_update(void)
 
@@ -14826,7 +14930,7 @@ undefined2 decel_fuel_cut_eval(void)
     DAT_0001f25e = DAT_0001f25e & 0xffef;
   }
   table_lookup_interp();
-  uStack_4 = extraout_R0 + (ushort)Decel_Fuel_Cut_Resume_RPM_Offset[0x14];
+  uStack_4 = extraout_R0 + (ushort)DAT_00011ce0;
   bVar6 = 0;
   sVar3 = (*check_flag_f0f8_bit2_clear)();
   if (sVar3 != 0) {
@@ -15143,7 +15247,7 @@ ushort closedloop_eligibility_check(void)
   }
   if ((((g_status_flags_f0f8 & 0x20) != 0) && (DAT_00010a46 < DAT_0001f10e)) &&
      (((DAT_0001eee2 & 1) == 0 && (((DAT_0001f1fe & 8) == 0 && (DAT_00010a42 <= DAT_0001f17a)))))) {
-    uVar2 = div_u32_u16_sat(0x1d,0x4c00,Speed_Limit._2_2_);
+    uVar2 = div_u32_u16_sat(0x1d,0x4c00,(ushort)BYTE_ARRAY_00010886);
     if (uVar2 + *(short *)((uint)bVar4 << 0x10 | 0xa44) * -8 <
         *(ushort *)((uint)bVar4 << 0x10 | 0xf170)) goto LAB_00022663;
     uVar2 = *(ushort *)((uint)bVar4 << 0x10 | 0xf18c);
@@ -15234,22 +15338,22 @@ bool closedloop_fuel_ready_check(undefined2 param_1,undefined2 param_2)
 undefined2 o2_temp_ready_check(void)
 
 {
-  ushort _unused_far_pad;
+  byte _unused_far_pad [2];
   short sVar1;
   undefined2 mode;
   
   if ((g_status_flags_f224 & 0x2000) == 0) {
-    if (DAT_00010888 < DAT_0001f1e8) {
+    if ((ushort)BYTE_ARRAY_00010888 < (ushort)DAT_0001f1e8) {
       g_status_flags_f224 = g_status_flags_f224 | 0x2000;
     }
   }
-  else if (DAT_0001f1e8 <= DAT_0001088a) {
+  else if ((ushort)DAT_0001f1e8 <= (ushort)DAT_0001088a) {
     g_status_flags_f224 = g_status_flags_f224 & 0xdfff;
   }
   if ((DAT_0001f1f2 & 0x40) != 0) {
     _unused_far_pad = DAT_0001f1e8;
     if (((g_status_flags_f224 & 0x2000) == 0) ||
-       (_unused_far_pad = DAT_0001f17a, DAT_0001f17a <= DAT_00010892)) {
+       (_unused_far_pad = DAT_0001f17a, (ushort)DAT_0001f17a <= (ushort)DAT_00010892)) {
       mode = 0;
     }
     else {
@@ -16045,8 +16149,8 @@ undefined2 f2f0_f2f8_ring_and_f27x_f2cc_periodic_init(void)
   DAT_0001f25a = 0x10;
   DAT_0000f278 = (ushort)DAT_000131e4 << 8;
   DAT_0000f276 = (ushort)DAT_000131e4 << 8;
-  DAT_0000f27c = (ushort)TABLE_2D_000131D4[4] << 8;
-  DAT_0000f27a = (ushort)TABLE_2D_000131D4[4] << 8;
+  DAT_0000f27c = (ushort)DAT_000131d8 << 8;
+  DAT_0000f27a = (ushort)DAT_000131d8 << 8;
   DAT_0000f2cc = (ushort)((uint)DAT_00011df0 * (uint)in_ram_00000800) >> 2;
   return (short)((uint)DAT_00011df0 * (uint)in_ram_00000800 >> 0x10);
 }
@@ -16069,6 +16173,30 @@ void engine_periodic_correction_master_dispatch(void)
   f31c_bit_toggle_pulse();
   f25a_f2xx_state_mirror_update();
   f856_f858_clamped_calc();
+  return;
+}
+
+
+
+void knock_octane_trim_master_dispatch(void)
+
+{
+  undefined2 uVar1;
+  byte bVar2;
+  
+  bVar2 = 1;
+  (*f25e_gate_chain_dispatch_b)();
+  f28e_f292_knock_lambda_composite_calc();
+  (*f2a0_f2c6_dual_timer_decay_and_f2c8_blend_dispatch)();
+  f2b6_knock_retard_state_select();
+  (*f2ca_table_override_from_f114_gate)();
+  o2_closed_loop_fuel_trim_compute();
+  f266_knock_octane_composite_trim_compute();
+  (*muldiv_s16_rounded)
+            ((short)((uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf2a4) *
+                     (uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf29c) >> 0x10));
+  uVar1 = (*clamp_u8)();
+  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf5be) = uVar1;
   return;
 }
 
@@ -16725,20 +16853,20 @@ void o2_closed_loop_fuel_trim_compute(void)
 // f224_bit11_hysteresis_timer_and_gate_check. Not renamed: exact physical meaning of the blend
 // inputs unconfirmed. Confidence: low-medium.
 
-ushort f0ba_f2b2_threshold_blend_calc(void)
+byte  [2] f0ba_f2b2_threshold_blend_calc(void)
 
 {
-  ushort uVar1;
-  ushort in_stack_00000004;
+  byte abVar1 [2];
+  byte in_stack_00000004 [2];
   
-  uVar1 = DAT_000109e6;
-  if (DAT_000109e4 <= DAT_0001f17a) {
+  abVar1 = BYTE_ARRAY_000109e6;
+  if ((ushort)BYTE_ARRAY_000109e4 <= (ushort)DAT_0001f17a) {
     DAT_0001f0ba = in_stack_00000004;
     (*axis_lookup_interp)();
-    uVar1 = (*(code *)0x14656)();
+    abVar1 = (byte  [2])(*(code *)0x14656)();
   }
-  if (uVar1 <= in_stack_00000004) {
-    in_stack_00000004 = (*weighted_blend_u8frac)();
+  if ((ushort)abVar1 <= (ushort)in_stack_00000004) {
+    in_stack_00000004 = (byte  [2])(*weighted_blend_u8frac)();
   }
   return in_stack_00000004;
 }
@@ -16884,13 +17012,13 @@ void octane_trim_f262_f264_table_select(undefined2 param_1,undefined2 param_2,un
   }
   if (((DAT_0001031d == '\0') && (DAT_0001f024 != 0)) ||
      ((DAT_0001031d != '\0' && ((g_status_flags_f226 & 0x2000) != 0)))) {
-    uStack_4 = (ushort)TABLE_2D_00011D4C[0x10];
-    uStack_6 = (ushort)TABLE_2D_00011D4C[0x11];
+    uStack_4 = (ushort)DAT_00011d5c;
+    uStack_6 = (ushort)DAT_00011d5d;
     bVar4 = 0;
   }
   else if (DAT_0001efb0 == 0) {
-    uStack_4 = (ushort)TABLE_2D_00011D4C[0x12];
-    uStack_6 = (ushort)TABLE_2D_00011D4C[0x13];
+    uStack_4 = (ushort)DAT_00011d5e;
+    uStack_6 = (ushort)DAT_00011d5f;
     if ((in_ram_0000031e != '\0') && (uVar2 = DAT_0000f10e, uVar2 < in_ram_00001422)) {
       uStack_4 = (ushort)DAT_0001321a;
       uStack_6 = (ushort)DAT_0001321b;
@@ -18031,9 +18159,9 @@ void tcu_slip_state_block_cold_init(void)
   
   DAT_0001f350 = 0xa0;
   DAT_0001efbe = DAT_00010b5e;
-  DAT_0000f380 = (ushort)TABLE_2D_00012808[4] << 4;
+  DAT_0000f380 = (ushort)DAT_0001280c << 4;
   bVar1 = 0;
-  DAT_0000f37e = (ushort)TABLE_2D_00012824[4];
+  DAT_0000f37e = (ushort)DAT_00012828;
   tcu_slip_control_init();
   *(undefined2 *)((uint)bVar1 << 0x10 | 0xf374) = 0x80;
   *(undefined2 *)((uint)bVar1 << 0x10 | 0xf3b2) = *(undefined2 *)((uint)bVar1 << 0x10 | 0xb1a);
@@ -18226,7 +18354,7 @@ ushort tcu_slip_duty_gain_condition_check(void)
 
 {
   if ((((g_status_flags_f20e & 0x11) == 0) && ((g_status_flags_f33e & 0x80) == 0)) &&
-     ((ushort)TCU_Slip_Duty_Gain._2_2_ <= DAT_0001f17a)) {
+     (DAT_00010b06 <= DAT_0001f17a)) {
     return 1;
   }
   return 0;
@@ -18329,9 +18457,9 @@ ushort f0ec_bit1_threshold_gate_check(void)
 {
   ushort uVar1;
   
-  uVar1 = BYTE_ARRAY_00010f86._2_2_;
+  uVar1 = DAT_00010f88;
   if ((DAT_0001f0ec & 2) != 0) {
-    uVar1 = BYTE_ARRAY_00010f86._0_2_;
+    uVar1 = DAT_00010f86;
   }
   if ((uVar1 <= DAT_0001f17a) && (DAT_00010f84 <= DAT_0001f186)) {
     return 1;
@@ -19419,7 +19547,7 @@ void isc_f3b2_select(undefined2 param_1,undefined2 param_2,undefined2 param_3)
   byte bVar3;
   
   bVar3 = 1;
-  sVar1 = (*o2_wideband_mode82_check)(param_1,param_2,DAT_00010b1a,param_3);
+  sVar1 = (*o2_wideband_mode82_check)(param_1,param_2,BYTE_ARRAY_00010b1a,param_3);
   uVar2 = extraout_R2;
   if (sVar1 != 0) {
     uVar2 = *(undefined2 *)((uint)bVar3 << 0x10 | 0xb1a);
@@ -23094,6 +23222,27 @@ ushort sci1_meta_cmd_dispatch_c0_ff
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort f00e_f520_f526_gate_condition_check(void)
+
+{
+  ushort uVar1;
+  
+  if (((((DAT_0001f00e == 0) || ((DAT_0001f520 & 0xc0) == 0)) || ((DAT_0001f526 & 0x80) == 0)) ||
+      (((DAT_0001f25a & 0x10) == 0 &&
+       (((DAT_0001f510 & 0x3ffe) != 0 || ((DAT_0001f512 & 0x1f) != 0)))))) ||
+     ((DAT_0001f1ec != 0 && ((DAT_0001f514 & 0x3f) != 0x3f)))) {
+    uVar1 = 1;
+  }
+  else {
+    uVar1 = 0;
+  }
+  return uVar1;
+}
+
+
+
 void f510_f512_f00e_f514_reset(void)
 
 {
@@ -24727,7 +24876,7 @@ void fuel_pw_and_airvol_compute(void)
     uStack_6 = DAT_0001f24e;
     goto LAB_0002a66f;
   }
-  if (DAT_0001f5ca < (ushort)Speed_Limit._2_2_) {
+  if ((ushort)DAT_0001f5ca < (ushort)BYTE_ARRAY_00010886) {
     DAT_0001f25a = DAT_0001f25a | 0x20;
   }
   else {
