@@ -450,6 +450,75 @@ def verify_xml_table(name, ttype, header_offset, data_offset):
                             "may use the header-record indirection convention "
                             "(review.md item 17), not necessarily a bad XML address")
 
+def axis_shape_ok(axis_offset):
+    """
+    Check whether the bytes at 'axis_offset' look like a genuine axis
+    record on this ROM, independent of what any XML claims.
+
+    Convention confirmed by direct byte read (2026-07-30 session, Air
+    Temperature Compensation's axis @0x2d4a6 cross-checked against the
+    Idle Stepper axis @0x2d4ba documented in item 17): a real axis record
+    is a 6-byte header -- two RAM pointers in the 0xF0xx-0xF7xx range
+    (MEM_ADDR_MIN-MEM_ADDR_MAX), then a 2-byte big-endian element count --
+    immediately followed by that many 16-bit breakpoint values. Some
+    trusted axes (e.g. Engine Temp @2d418, per the same session) have NO
+    such header at all and the XML address points straight at the first
+    breakpoint value -- this function only reports the header-prefixed
+    shape; a False result is not proof of a bad address, only that this
+    particular signature isn't present (matches header_shape_ok's own
+    caution above).
+
+    Returns (True, element_count, data_start_offset) if the header shape
+    is present and the element count looks sane (1-32), else
+    (False, None, None).
+    """
+    b = rom_bytes_at(ROM_BASE + axis_offset, 6)
+    if len(b) < 6:
+        return (False, None, None)
+    ptr1 = (b[0] << 8) | b[1]
+    ptr2 = (b[2] << 8) | b[3]
+    count = (b[4] << 8) | b[5]
+    if in_ram(ptr1) and in_ram(ptr2) and 1 <= count <= 32:
+        return (True, count, axis_offset + 6)
+    return (False, None, None)
+
+def verify_xml_axis(name, axis_offset, elements_claimed):
+    """
+    Cross-check a single XML-declared axis child against independent ROM
+    evidence, mirroring verify_xml_table()'s tiers but for axis records.
+
+    Two legitimate real-world shapes exist (see axis_shape_ok's docstring):
+    a 6-byte header-prefixed record, or a bare breakpoint array with no
+    header at all (Engine Temp @2d418 is the confirmed example of the
+    latter). Because the headerless shape can't be positively distinguished
+    from "wrong address that happens to contain plausible-looking word
+    values" by byte inspection alone, this check is deliberately limited to
+    the header-prefixed case for VERIFIED status -- a headerless axis
+    always returns SUSPECT (report-only), never blocks import.
+
+    Returns (status, detail, data_start_offset, data_len_bytes):
+      data_start_offset/data_len_bytes are the best-known real byte span
+      for overlap registration -- for a header-prefixed axis this is the
+      breakpoint array itself (post-header); for a headerless/SUSPECT axis
+      it's the claimed XML span (elements*2 bytes at axis_offset), since
+      that's the only span available to protect against a genuine
+      collision even though the shape itself is unconfirmed.
+    """
+    shape_ok, count_found, data_off = axis_shape_ok(axis_offset)
+    claimed_len = max(elements_claimed, 1) * 2
+    if shape_ok:
+        if count_found != elements_claimed:
+            return ("CHECK",
+                    "axis header found but element count mismatch: ROM says %d, XML claims %d" %
+                    (count_found, elements_claimed),
+                    data_off, count_found * 2)
+        return ("VERIFIED", "axis header shape OK, element count matches (%d)" % count_found,
+                data_off, count_found * 2)
+    return ("SUSPECT", "no axis header shape found at this address -- may be a headerless "
+                        "axis (real, e.g. Engine Temp @2d418) or a wrong address; byte "
+                        "inspection alone can't tell these apart, verify by hand",
+            axis_offset, claimed_len)
+
 def check_range_overlap(touched_ranges, start_offset, end_offset, header_offset=None):
     """
     Check whether [start_offset, end_offset] (inclusive, CPU-relative ROM
@@ -861,7 +930,8 @@ def clear_xml_labels(offsets, clear_scraped=False):
                                 "H8539F-TABLE-CODE-OVERLAP", "H8539F-TABLE-CODE-OVERLAP-CORRECTED",
                                 "H8539F-TABLE-NO-TABLE", "H8539F-TABLE-NO-TABLE-CORRECTED",
                                 "H8539F-TABLE-SUSPECT-CORRECTED", "H8539F-TABLE-DATA-OVERLAP-CORRECTED",
-                                "H8539F-TABLE-DATA-OVERLAP-SUSPECT-CORRECTED"):
+                                "H8539F-TABLE-DATA-OVERLAP-SUSPECT-CORRECTED",
+                                "H8539F-AXIS", "H8539F-AXIS-SUSPECT", "H8539F-AXIS-DATA-OVERLAP"):
                 status_bm = bookmarkMgr.getBookmark(a, BookmarkType.NOTE, status_cat)
                 if status_bm is not None:
                     bookmarkMgr.removeBookmark(status_bm)
@@ -1187,6 +1257,93 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
 
                 touched_ranges.append((span_start, span_end, name, header_addr))
 
+                # ── Axis children: verify + register in the same overlap
+                # tracker. Added 2026-07-30 -- previously axis <table
+                # type="X/Y Axis"> children were completely unchecked (the
+                # top-level findall('table') loop only sees direct children
+                # of <rom>, never nested axis elements, and axis labeling
+                # only ever came from the separate ROM-scraper pass finding
+                # its OWN byte patterns independently -- the XML's stated
+                # axis addresses were never read for verification at all).
+                # See review.md for the EcuFlash screenshot that surfaced
+                # this (garbled axis values, e.g. "Idle Post Start Step Incr
+                # vs Air Temp" showing -32,-8,7,13,20,27,34,41).
+                for axis_child in table.findall('table'):
+                    a_ttype = axis_child.get('type') or ""
+                    if 'Axis' not in a_ttype and 'axis' not in a_ttype:
+                        continue
+                    a_name = axis_child.get('name') or "(unnamed axis)"
+                    a_addr_str = axis_child.get('address')
+                    a_elements_str = axis_child.get('elements')
+                    if not a_addr_str:
+                        continue  # Static X/Y Axis -- no ROM address, nothing to check
+                    try:
+                        a_xml_addr_int = int(a_addr_str, 16)
+                        a_elements = int(a_elements_str) if a_elements_str else 1
+                    except ValueError:
+                        continue
+                    if a_elements <= 1:
+                        continue  # scalar dressed as axis, not a real multi-element grid
+                    if not in_rom(a_xml_addr_int):
+                        continue
+
+                    a_offset = a_xml_addr_int - ROM_BASE
+                    a_status, a_detail, a_data_off, a_data_len = verify_xml_axis(
+                        a_name, a_offset, a_elements)
+                    a_addr_ghidra = addr(a_xml_addr_int)
+
+                    if a_status == "CHECK":
+                        print("  [XML-VERIFY] AXIS CHECK: '%s' (child of '%s') at 0x%05X -- %s" %
+                              (a_name, name, a_xml_addr_int, a_detail))
+                        safe_bookmark(a_addr_ghidra, "H8539F-AXIS-SUSPECT",
+                                      "%s (axis of '%s') -- %s" % (a_name, name, a_detail))
+                    elif a_status == "SUSPECT":
+                        # Report-only, matches verify_xml_table's own SUSPECT
+                        # tier -- not enough evidence to flag loudly, but
+                        # still registers its span below so a genuine
+                        # collision is still caught even for headerless axes.
+                        pass
+
+                    a_span_start = a_data_off
+                    a_span_end = a_data_off + a_data_len - 1
+                    a_overlap = check_range_overlap(touched_ranges, a_span_start, a_span_end,
+                                                     header_offset=a_span_start)
+                    if a_overlap is not None:
+                        ao_start, ao_end, ao_name, ao_header_addr = a_overlap
+                        print("  [XML-VERIFY] AXIS OVERLAP: '%s' (axis of '%s') at 0x%05X "
+                              "(bytes 0x%05X-0x%05X) overlaps '%s' (already claimed "
+                              "0x%05X-0x%05X earlier in this same import)" %
+                              (a_name, name, a_xml_addr_int, ROM_BASE + a_span_start,
+                               ROM_BASE + a_span_end, ao_name, ROM_BASE + ao_start, ROM_BASE + ao_end))
+                        safe_bookmark(a_addr_ghidra, "H8539F-AXIS-DATA-OVERLAP",
+                                      "%s (axis of '%s') -- overlaps '%s' at 0x%05X, "
+                                      "XML addresses need manual review" %
+                                      (a_name, name, ao_name, ROM_BASE + ao_start))
+                        try:
+                            from ghidra.program.model.listing import CodeUnit as _CU_axis_overlap
+                            ao_cu = listing.getCodeUnitAt(ao_header_addr)
+                            if ao_cu is not None:
+                                ao_existing = ao_cu.getComment(_CU_axis_overlap.PLATE_COMMENT) or ""
+                                ao_note = ("OVERLAP: axis '%s' (of table '%s') at 0x%05X was found "
+                                           "to overlap this range (0x%05X-0x%05X) later in the same "
+                                           "import -- verify both addresses by hand." %
+                                           (a_name, name, a_xml_addr_int, ROM_BASE + ao_start, ROM_BASE + ao_end))
+                                if ao_note not in ao_existing:
+                                    ao_cu.setComment(_CU_axis_overlap.PLATE_COMMENT,
+                                                      (ao_existing + "\n" + ao_note) if ao_existing else ao_note)
+                        except Exception as e:
+                            print("  WARNING: could not amend earlier range's plate @ %s: %s" %
+                                  (ao_header_addr, e))
+                    else:
+                        touched_ranges.append((a_span_start, a_span_end,
+                                                "%s (axis of %s)" % (a_name, name), a_addr_ghidra))
+                        if a_status == "VERIFIED":
+                            safe_bookmark(a_addr_ghidra, "H8539F-AXIS",
+                                          "%s (axis of '%s', %d elements)" % (a_name, name, a_elements))
+
+                    if symTable.getPrimarySymbol(a_addr_ghidra) is None:
+                        safe_label(a_addr_ghidra, "AXIS_%s" % sanitise_name(a_name))
+
                 type_header_as_data(header_addr, hdr_size)
                 touched_offsets.append(header_int)
                 if hdr_convention == "header-at-xml-addr":
@@ -1303,6 +1460,37 @@ def run_rom_scraper():
     xml_skip_2d = 0
     written_addrs = set()
 
+    # Ranges already claimed by an earlier, independently-verified record
+    # (currently: Pass 2's scaling/axis tables). A later pass's positive
+    # header-shape match that lands inside one of these ranges is a false
+    # positive, not a real table -- see review2.md 2026-08-02: four phantom
+    # 2D "tables" (D3C0/D5EC/D668/D796) were all just the trailing data word
+    # of a preceding axis record coincidentally reading as 0x02 0x00 (mode
+    # byte + high byte of an in-range-looking pointer).
+    #
+    # This check is about PHYSICAL byte ownership, not logical reference
+    # count. Many 2D/3D value tables legitimately point their axis_ptr at
+    # the SAME scaling/axis table (that's normal and expected -- e.g.
+    # review2.md's shared RPM/TPS/load axes used by several tables each).
+    # That sharing is fine and this check does not affect it in any way --
+    # axis_ptr values are RAM addresses read out of a value table's own
+    # header, completely separate from where THIS scanner is currently
+    # looking in ROM. What this check actually prevents is a single ROM
+    # byte range being claimed twice by two DIFFERENT physical records
+    # (once correctly as scaling-table data, once incorrectly as a bogus
+    # value-table header that only looks plausible by coincidence).
+    #
+    # Each pass appends the ROM_BASE-relative (start, end_exclusive) byte
+    # range it claims; later passes must check this before accepting a
+    # header-shape match.
+    claimed_ranges = []
+
+    def in_claimed_range(offset):
+        for (lo, hi) in claimed_ranges:
+            if lo <= offset < hi:
+                return True
+        return False
+
     # ── Pass 1: MUT table ─────────────────────────────────────────
     print("[8a] MUT table at ROM offset 0x%05X (Ghidra 0x%08X)..." %
           (MUT_OFFSET, MUT_ADDR))
@@ -1350,6 +1538,7 @@ def run_rom_scraper():
                     in_ptr  = (b[2] << 8) | b[3]
                     count   = b[5]
                     lbl     = "SCALING_TABLE_%08X" % (ROM_BASE + i)
+                    claimed_ranges.append((i, i + 6 + count * 2))
                     if (ROM_BASE + i) in xml_touched:
                         xml_skip_scaling += 1
                     else:
@@ -1430,7 +1619,8 @@ def run_rom_scraper():
             b = [rom_byte(i + j) for j in range(7)]
 
             if (header_shape_ok(i, "3D") and
-                    not is_likely_code(i)):
+                    not is_likely_code(i) and
+                    not in_claimed_range(i)):
                 data_len = find_next_header_boundary(i + 7)
                 if data_len is None:
                     data_len = find_sentinel_data_len(i + 7)
@@ -1469,7 +1659,8 @@ def run_rom_scraper():
                         continue
 
             elif (header_shape_ok(i, "2D") and
-                  not is_likely_code(i)):
+                  not is_likely_code(i) and
+                  not in_claimed_range(i)):
                 data_len = find_next_header_boundary(i + 4)
                 if data_len is None:
                     data_len = find_sentinel_data_len(i + 4)
@@ -1534,7 +1725,8 @@ _ARTIFACT_CATEGORIES = ("H8539F-TABLE", "H8539F-SCRAPED-TABLE", "H8539F-TABLE-RE
                          "H8539F-TABLE-CODE-OVERLAP", "H8539F-TABLE-CODE-OVERLAP-CORRECTED",
                          "H8539F-TABLE-NO-TABLE", "H8539F-TABLE-NO-TABLE-CORRECTED",
                          "H8539F-TABLE-SUSPECT-CORRECTED", "H8539F-TABLE-DATA-OVERLAP-CORRECTED",
-                         "H8539F-TABLE-DATA-OVERLAP-SUSPECT-CORRECTED")
+                         "H8539F-TABLE-DATA-OVERLAP-SUSPECT-CORRECTED",
+                         "H8539F-AXIS", "H8539F-AXIS-SUSPECT", "H8539F-AXIS-DATA-OVERLAP")
 _found_artifact_offsets = []
 _it2 = bookmarkMgr.getBookmarksIterator(_BookmarkType2.NOTE)
 while _it2.hasNext():
