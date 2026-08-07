@@ -159,8 +159,45 @@ datasheets\h8539f\      -- Hitachi hardware/programming manuals
 source\ida-sdk-main\src\module\h8500\ana.cpp  -- ground-truth opcode reference (IDA SDK)
 ```
 
+## Xref-repair utility scripts
+
+This ROM addresses tables/axes/functions via literal 16-bit immediates pushed to the
+stack immediately before a far call (`mov #offset,@-SP` / `mov #bank,@-SP` / `pjsr`),
+never through an address-mode operand. Ghidra's static xref engine is structurally
+blind to that pattern -- `getReferencesTo()` returns zero hits for these call sites no
+matter how well-typed the calling function is. The following scripts (in
+`ghidra scripts\`) repair this by scanning raw instructions for the push pattern and
+writing real `DATA` references into Ghidra's reference manager, so the xref/call-tree
+views reflect the ROM's actual callers. All three use
+`ReferenceManager.addMemoryReference(...)` with `SourceType.USER_DEFINED`:
+
+- **`FixBankOffsetReferences_v2.java`** -- general-purpose. Targets are supplied by
+  function name (resolved at runtime via the symbol table, so it's ROM-agnostic) rather
+  than hardcoded addresses. For each named target, scans for the literal push pattern
+  before its call sites, computes the real bank-adjusted address, and adds a `DATA`
+  xref at the push site if one isn't already there.
+- **`ResolveTableReadIndexedArrays.java`** -- specific to `table_read_indexed`'s
+  array-base indirection. Adds an xref at the call site (to the array base) plus one at
+  each resolved array slot (to the actual target address), same
+  `array[index & 7]` / 4-byte `{pad,bank,hi,lo}` slot pattern as
+  `table_lookup_indexed`.
+- **`ResolveTable3AxisWrapperArrays.java`** -- same technique, retargeted at
+  `table_3axis_interp_triple_wrapper`.
+
+Run these from Ghidra's Script Manager after any pass that adds/renames functions
+whose callers you want reflected in the xref database. They only add references (never
+remove/overwrite existing ones with different source types), so re-running is safe.
+
+Related **read-only** investigation/reporting scripts (no xref writes, console output
+only): `FindAxisCallers.java`, `FindBatch2Callers.java`, `FindBatch2Axes.java`,
+`FindAllTableCallsVsXml.java` / `FindAllTableCallsVsXmlV2.java`, `DumpBatch2Headers.java`,
+`Find1DScalarCandidates.java` / `Find1DScalarCandidatesV2.java`. `AnnotateBankOffsetCallSites.java`
+writes human-readable EOL comments at call sites (bank-adjusted address) but does not
+touch the reference database.
+
 ## References
 
 - Hitachi H8/538-539 Hardware Manual (OMC942723072) -- `datasheets\h8539f\H8 538-539.pdf`
 - H8/500 Series Programming Manual -- `datasheets\h8539f\H8 500 programming.pdf`
 - EcuFlash ROM definitions: https://github.com/EcuFlash/OpenECU (community ROM XMLs)
+

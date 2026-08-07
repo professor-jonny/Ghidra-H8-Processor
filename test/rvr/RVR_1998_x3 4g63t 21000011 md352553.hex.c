@@ -11,16 +11,34 @@ typedef unsigned int    undefined3;
 typedef unsigned int    undefined4;
 typedef unsigned short    ushort;
 typedef unsigned short    word;
+typedef struct table_3axis_record table_3axis_record, *Ptable_3axis_record;
+
+struct table_3axis_record {
+    byte bMode;
+    byte bMode_hi;
+    ushort wX_ptr;
+    ushort wY_ptr;
+    byte bNrows;
+    ushort wData;
+};
+
 typedef unsigned short    wchar16;
+typedef struct table_2d_record table_2d_record, *Ptable_2d_record;
+
+struct table_2d_record {
+    byte bMode;
+    byte bMode_hi;
+    ushort wIndex_src;
+    byte bData;
+};
+
 typedef struct axis_lookup_record axis_lookup_record, *Paxis_lookup_record;
 
 struct axis_lookup_record {
-    undefined field0_0x0;
-    undefined field1_0x1;
-    undefined field2_0x2;
-    undefined field3_0x3;
-    ushort wAxis_count;
-    ushort wAxis_table;
+    ushort wValue_ptr;
+    ushort wAxis_ptr;
+    ushort wCount;
+    ushort wBreakpoints;
 };
 
 
@@ -617,32 +635,34 @@ undefined ign_advance_enable_flags_f440_update;
 undefined ign_advance_idle_correction_f44e;
 ushort DAT_0001f1e0;
 ushort DAT_00010e00;
-undefined DAT_00010dfe;
 ushort DAT_0001eec8;
 undefined DAT_00010dfa;
-undefined DAT_00010dfc;
 char DAT_000102f0;
-ushort DAT_00010e08;
-ushort DAT_00010e06;
-ushort DAT_00010e04;
-undefined DAT_00010e02;
+byte[2] DAT_0001f17a;
+byte[2] DAT_00010e08;
+byte[2] DAT_00010e06;
+byte[2] DAT_00010e04;
+byte[2] BYTE_ARRAY_00010e02;
 ushort DAT_0001f200;
 ushort DAT_00010df4;
 undefined2 DAT_00010df6;
 undefined2 DAT_0001f040;
-short DAT_0001f44a;
-undefined DAT_00010df0;
-short DAT_0001f05c;
+byte[2] Octane_Below_to_Disable_Boost_Control;
+byte[2] Octane_Above_to_Enable_Boost_Control;
+byte[2] DAT_0001f44a;
+byte[2] BYTE_ARRAY_00010df0;
+byte[2] DAT_0001f05c;
 ushort DAT_0001f196;
 short DAT_0001f44e;
-undefined DAT_00010e0a;
+byte[2] BYTE_ARRAY_00010e0a;
+short DAT_0001f44a;
 short DAT_0001f000;
 short DAT_00010df8;
 undefined2 DAT_00010dee;
 undefined2 DAT_0001f450;
 ushort DAT_00010d7c;
 ushort DAT_00010d80;
-ushort DAT_00010d7a;
+undefined DAT_00010d7a;
 ushort DAT_00010d7e;
 undefined2 DAT_0000f43e;
 undefined DAT_00010d78;
@@ -779,8 +799,7 @@ undefined2 DAT_0001f218;
 undefined DAT_0000fd00;
 undefined P1DDR;
 undefined P3DDR;
-char DAT_0002fefa;
-char DAT_0002fefb;
+undefined BYTE_ARRAY_0002fefa;
 char DAT_0002fefc;
 char DAT_0002fefd;
 char DAT_0002fefe;
@@ -1000,17 +1019,17 @@ undefined2 DAT_0000f014;
 undefined2 DAT_0000f224;
 ushort DAT_00010a60;
 ushort DAT_00010aa4;
-ushort DAT_00010da2;
+byte[2] DAT_00010da2;
 undefined2 g_status_flags_f226;
-ushort DAT_0001f1b4;
-undefined DAT_0001080c;
-ushort DAT_0001080e;
+byte[2] DAT_0001f1b4;
+byte[2] BYTE_ARRAY_0001080c;
+byte[2] DAT_0001080e;
 char DAT_00010306;
-ushort DAT_00010958;
+byte[2] DAT_00010958;
 undefined2 DAT_0000f1ca;
 undefined2 DAT_0001f1b6;
 undefined inc_if_signed_flag;
-undefined DAT_00010810;
+byte[2] BYTE_ARRAY_00010810;
 undefined2 DAT_0001f1e4;
 ushort DAT_0001089a;
 ushort DAT_0001089c;
@@ -1099,19 +1118,21 @@ undefined2 DAT_0001ef74;
 short DAT_0001f076;
 ushort DAT_00010a46;
 ushort DAT_00010a42;
-undefined DAT_00010886;
+byte[2] BYTE_ARRAY_00010886;
 ushort DAT_00010896;
 ushort DAT_0001f5ee;
 ushort DAT_0001f190;
-ushort DAT_0001088a;
-undefined DAT_00010888;
-ushort DAT_00010892;
+byte[2] DAT_0001f1e8;
+byte[2] DAT_0001088a;
+byte[2] BYTE_ARRAY_00010888;
+byte[2] DAT_00010892;
 char DAT_000102ca;
 ushort DAT_0001088c;
 short DAT_0001f018;
 short DAT_0001f01a;
 short DAT_00010890;
 short DAT_0001088e;
+ushort DAT_00010892;
 undefined2 DAT_000132b6;
 undefined2 DAT_0000f25a;
 undefined2 DAT_0000f212;
@@ -1130,8 +1151,8 @@ undefined f21c_bit12_update_dispatcher;
 undefined f224_bits01_update_and_efa8_edge_latch;
 undefined2 DAT_000108b0;
 undefined2 DAT_0001f07e;
-undefined2 DAT_000108b2;
-undefined2 DAT_0001f23e;
+ushort DAT_000108b2;
+ushort DAT_0001f23e;
 undefined2 DAT_0001f240;
 undefined2 DAT_0001f0b0;
 undefined2 DAT_0001f0ae;
@@ -1150,7 +1171,7 @@ undefined2 DAT_000108a0;
 short DAT_0001efa8;
 undefined2 DAT_000108e0;
 undefined2 DAT_000108e2;
-undefined DAT_000108a4;
+byte[2] BYTE_ARRAY_000108a4;
 undefined2 DAT_0001150e;
 short DAT_0001f022;
 char DAT_0001031d;
@@ -1244,9 +1265,9 @@ ushort DAT_000109d6;
 ushort DAT_000109d4;
 ushort DAT_000109d2;
 undefined2 DAT_0001f2a8;
-undefined DAT_000109e6;
-undefined DAT_000109e4;
-ushort DAT_0001f0ba;
+byte[2] BYTE_ARRAY_000109e6;
+byte[2] BYTE_ARRAY_000109e4;
+byte[2] DAT_0001f0ba;
 undefined2 DAT_0001f28e;
 undefined knock_octane_trim_ramp_update;
 short DAT_000108d2;
@@ -1290,7 +1311,7 @@ ushort DAT_0001090e;
 undefined2 DAT_0001eed6;
 undefined2 DAT_0001eeda;
 undefined muldiv_u16_shr8_sat;
-byte[28] SCALING_TABLE_0002D440;
+undefined DAT_0002d444;
 undefined f2b4_threshold_table_lookup;
 undefined2 DAT_0000f2d6;
 undefined2 DAT_0000f2d8;
@@ -1471,7 +1492,7 @@ ushort DAT_00010bd0;
 undefined2 DAT_0000f36e;
 undefined2 DAT_0000f370;
 undefined2 DAT_0001f342;
-undefined DAT_00010b1a;
+byte[2] BYTE_ARRAY_00010b1a;
 undefined o2_wideband_mode82_check;
 ushort DAT_0001f5ca;
 ushort DAT_00010adc;
@@ -1508,8 +1529,8 @@ ushort DAT_0001f3f4;
 ushort DAT_00010d68;
 ushort DAT_00010d62;
 ushort DAT_00010d66;
+undefined DAT_0002d460;
 undefined2 DAT_0001f41a;
-byte[22] SCALING_TABLE_0002D45C;
 undefined2 DAT_00010d64;
 char DAT_000102da;
 ushort DAT_0001ef76;
@@ -1529,6 +1550,7 @@ short DAT_0001f426;
 ushort DAT_00010d1a;
 ushort DAT_00010d18;
 ushort DAT_0001f180;
+ushort DAT_0001f0ba;
 undefined2 DAT_0001f4de;
 undefined2 DAT_00010c36;
 undefined update_max;
@@ -1780,7 +1802,7 @@ ushort DAT_0001f54c;
 undefined2 DAT_0001f54e;
 undefined2 DAT_0001f17a;
 undefined2 DAT_0001f550;
-undefined DAT_00010808;
+byte[2] BYTE_ARRAY_00010808;
 undefined2 DAT_0001f33c;
 undefined2 DAT_0001f33a;
 undefined2 DAT_0001f430;
@@ -1844,6 +1866,7 @@ undefined2 DAT_0001ff46;
 undefined2 DAT_0001f39e;
 undefined sci3_timeout_set_retry;
 undefined2 DAT_0001f37e;
+byte[2] DAT_0001f5ca;
 ushort DAT_0001f1da;
 undefined2 DAT_0000f2aa;
 short DAT_0001f2b0;
@@ -2218,19 +2241,18 @@ ushort __stdcall_far_allstack div_u32_u16_sat(ushort a_hi,ushort a_lo,ushort b)
 // WARNING: Unable to track spacebase fully for stack
 // WARNING: Restarted to delay deadcode elimination for space: register
 
-ushort div_u16_sat2(void)
+ushort __stdcall_far_allstack div_u16_sat2(ushort a_hi,ushort a_lo,ushort b)
 
 {
-  ushort in_stack_00000004;
-  ushort in_stack_00000008;
+  ushort uVar1;
   
-  if (in_stack_00000008 == 0) {
-    in_stack_00000004 = 0xffff;
+  if (b == 0) {
+    uVar1 = 0xffff;
   }
   else {
-    in_stack_00000004 = in_stack_00000004 / in_stack_00000008;
+    uVar1 = a_hi / b;
   }
-  return in_stack_00000004;
+  return uVar1;
 }
 
 
@@ -2461,7 +2483,22 @@ ushort __stdcall_far_allstack mul_u16_x2_sat(ushort a,ushort b)
 
 
 
-short mul_u16_dbl_sat(void)
+// 32-bit x 16-bit -> 16-bit saturating multiply (double-word variant of mul_u16_x2_sat family).
+// a_hi:a_lo form the 32-bit multiplicand, b is the 16-bit multiplier.
+// 
+// [PARAMS PARTIALLY FIXED 2026-08-03] a_hi and a_lo bind cleanly via CUSTOM_STORAGE at
+// Stack[0x4]/[0x6] (same fix pattern as table_lookup_interp, item 24-style). b does NOT bind
+// regardless of declared storage offset -- confirmed via disassembly: b is read directly as a
+// memory operand by `mulxu.w @(0xa:8,FP)` (never register-loaded first), unlike a_hi/a_lo and
+// unlike sibling function div_u16_sat2's third param (which IS register-loaded via mov:f.w
+// before use, and binds fine). Ghidra's parameter-substitution pass appears to only rewrite
+// register-loaded stack reads, not direct memory operands to mulxu/similar instructions. Tried:
+// multiple storage offsets (0x8, 0xa) -- decompiler always shows b as
+// *(ushort*)((int)&stack0xfffe + 10), never the named parameter. This is a genuine decompiler/
+// Sleigh-semantics limitation for this instruction shape, not a wrong-offset bug. b's real value
+// is at Stack[0xa]:2 if manually inspecting; left undocumented-but-correct in the signature.
+
+short __stdcall_far_allstack_32ret mul_u16_dbl_sat(ushort a_hi,ushort a_lo,ushort b)
 
 {
   ushort uVar1;
@@ -2471,11 +2508,9 @@ short mul_u16_dbl_sat(void)
   int iVar5;
   short sVar6;
   bool bVar7;
-  ushort in_stack_00000004;
-  ushort in_stack_00000006;
   
-  uVar4 = (uint)in_stack_00000006 * (uint)*(ushort *)((int)&stack0xfffe + 10);
-  iVar5 = (uint)in_stack_00000004 * (uint)*(ushort *)((int)&stack0xfffe + 10) + (uVar4 >> 0x10);
+  uVar4 = (uint)a_lo * (uint)*(ushort *)((int)&stack0xfffe + 10);
+  iVar5 = (uint)a_hi * (uint)*(ushort *)((int)&stack0xfffe + 10) + (uVar4 >> 0x10);
   uVar1 = (short)uVar4 << 1;
   sVar2 = (short)iVar5 * 2;
   sVar3 = (short)((uint)iVar5 >> 0x10) * 2;
@@ -2545,18 +2580,25 @@ ushort __stdcall_far_allstack mul_fixedpoint_8(ushort a,ushort b)
 
 
 
-short mul_u16_shr8_sat2(void)
+// 32-bit x 16-bit -> 16-bit, shift-right-8 saturating multiply (shr8 variant of mul_u16_x2 family).
+// a_hi:a_lo form the 32-bit multiplicand, b is the 16-bit multiplier.
+// 
+// [PARAMS PARTIALLY FIXED 2026-08-03] Same class of issue as sibling mul_u16_dbl_sat (0x1431f):
+// a_hi/a_lo bind cleanly via CUSTOM_STORAGE at Stack[0x4]/[0x6]; b does not bind at any declared
+// offset because it's read as a direct memory operand by `mulxu.w @(0xa:8,FP)` rather than
+// register-loaded first. See mul_u16_dbl_sat's plate comment for full detail -- identical root
+// cause, identical fix scope. b's real value is at Stack[0xa]:2.
+
+short __stdcall_far_allstack mul_u16_shr8_sat2(ushort a_hi,ushort a_lo,ushort b)
 
 {
   uint uVar1;
   int iVar2;
   short sVar3;
   bool bVar4;
-  ushort in_stack_00000004;
-  ushort in_stack_00000006;
   
-  uVar1 = (uint)in_stack_00000006 * (uint)*(ushort *)((int)&stack0xfffe + 10);
-  iVar2 = (uint)in_stack_00000004 * (uint)*(ushort *)((int)&stack0xfffe + 10) + (uVar1 >> 0x10);
+  uVar1 = (uint)a_lo * (uint)*(ushort *)((int)&stack0xfffe + 10);
+  iVar2 = (uint)a_hi * (uint)*(ushort *)((int)&stack0xfffe + 10) + (uVar1 >> 0x10);
   sVar3 = (short)((uint)iVar2 >> 8);
   if (((char)((uint)iVar2 >> 0x18) != '\0') ||
      (((uVar1 & 0x80) != 0 &&
@@ -2700,12 +2742,10 @@ short __stdcall_far_allstack inc_if_signed_flag(short value,ushort flags)
 
 
 
-undefined2 swap_bytes_u16(void)
+undefined2 __stdcall_far_allstack swap_bytes_u16(ushort a)
 
 {
-  undefined2 in_stack_00000004;
-  
-  return CONCAT11((char)in_stack_00000004,(char)((ushort)in_stack_00000004 >> 8));
+  return CONCAT11((char)a,(char)(a >> 8));
 }
 
 
@@ -2870,19 +2910,33 @@ undefined2 weighted_blend_2term_u8frac_div255(void)
 
 
 // WARNING: Restarted to delay deadcode elimination for space: stack
-// Shared axis-table lookup+interpolation dispatcher, 130 call sites -- HIGH VALUE, worth
-// revisiting. Traced via disassembly: takes an EP-bank byte (@0x7:FP) + a pointer to an
-// axis_lookup_record-style struct (@0x8:FP, same family as axis_lookup_interp's record but with an
-// extra mode-selector byte at offset 1 and a stride byte at offset 6). If record[0]==3 it does a 2D
-// bilinear-style interpolation (two calls into axis_interp_lerp_u8frac then a third combining
-// call); otherwise a simple 1D lookup (single call). Prototype attempts (byte+ptr,
-// byte+ushort-offset) all fail to bind cleanly -- Ghidra's local analysis keeps re-inferring a 3rd
-// stack param regardless of declared prototype, unlike the otherwise-analogous axis_lookup_interp
-// (single-param, no leading byte, which worked). Suspect the EP-bank byte plus multi-field struct
-// pointer combination confuses the H8 stack-frame model here. Left as void(void) with this trace
-// documented rather than force a prototype that doesn't actually bind -- next attempt should try
-// declaring the full record struct by value or investigate whether a different calling convention
-// variant resolves the 3rd-param ghost.
+// Shared axis-table lookup+interpolation dispatcher, 130 call sites -- HIGH VALUE.
+// Takes an EP-bank/interpolation-context word (ep_val, @Stack[0x4]) + a pointer to an
+// axis_lookup_record-style struct (table, @Stack[0x6], same family as axis_lookup_interp's
+// record but with an extra mode-selector byte at offset 1 and a stride byte at offset 6).
+// If table[0]==3 it does a 2D bilinear-style interpolation (two calls into
+// axis_interp_lerp_u8frac then a third combining call); otherwise a simple 1D lookup
+// (single call).
+// 
+// [PROTOTYPE FIXED 2026-08-03] Earlier attempts to declare (byte+ptr) or (byte+ushort-offset)
+// prototypes normally failed to bind -- Ghidra's local analysis kept re-inferring storage at
+// Stack[0x7]/[0x8] (a 2-byte slot at offset 7 colliding into offset 8's slot), leaving `table`
+// UNASSIGNED and the decompiler falling back to void(void) with raw in_stack_* reads. ROOT
+// CAUSE: same class of issue already solved for table_lookup_indexed/table_3axis_interp_triple
+// in review.md item 24 -- normal prototype-setting APIs can't override the local analysis'
+// storage inference on this function shape. FIX: applied via FixTableLookupInterpStorage.java
+// (ghidra scripts/), using updateFunction() with FunctionUpdateType.CUSTOM_STORAGE to force
+// explicit VariableStorage(program, 0x4, 2) for ep_val and VariableStorage(program, 0x6, 2)
+// for table, bypassing local-analysis inference entirely. Confirmed via force_decompile:
+// table now binds as a clean, consistently-used void* throughout (table+1, +2, +4, +6),
+// matching the struct trace above exactly, no split pointer, no ghost param. Return type
+// resolves to ushort, matching axis_interp_lerp_u8frac's actual return (matches its two
+// sibling functions above). Signature: ushort table_lookup_interp(ushort ep_val, void *table),
+// __stdcall_far_2arg, CUSTOM_STORAGE.
+// 
+// If this program is ever re-imported/re-analyzed from scratch, re-run
+// FixTableLookupInterpStorage.java (covers all three sibling functions) -- this is not part
+// of Ghidra's auto-analysis pipeline, same caveat as item 25's AnnotateBankOffsetCallSites.java.
 
 void __stdcall_far_2arg table_lookup_interp(ushort ep_val,void *table)
 
@@ -7768,7 +7822,7 @@ ushort isc_stepper_secondary_position_calc(void)
 
 
 
-undefined2 isc_openloop_target_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+ushort isc_openloop_target_calc(void)
 
 {
   undefined2 uVar1;
@@ -7796,7 +7850,7 @@ undefined2 isc_openloop_target_calc(undefined2 param_1,undefined2 param_2,undefi
   (*axis_lookup_interp)();
   uVar1 = (*(code *)0x14656)();
   if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf45a) & 0x100) == 0) {
-    (*axis_lookup_interp)(uVar1,extraout_R1,uVar1,2,0xd784,param_3);
+    (*axis_lookup_interp)(uVar1,extraout_R1,uVar1,2,0xd784);
     (*axis_lookup_interp)();
   }
   else {
@@ -7824,12 +7878,12 @@ undefined2 isc_openloop_target_calc(undefined2 param_1,undefined2 param_2,undefi
        (*(char *)((uint)bVar4 << 0x10 | 0x31b) == '\0')) ||
       (((*(ushort *)((uint)bVar4 << 0x10 | 0xf25e) & 0x40) == 0 &&
        (*(short *)((uint)bVar4 << 0x10 | 0xefa6) == 0)))))) {
-    uVar1 = (*muldiv_s16_rounded)();
+    uVar3 = (*muldiv_s16_rounded)();
   }
   else {
-    uVar1 = 0;
+    uVar3 = 0;
   }
-  return uVar1;
+  return uVar3;
 }
 
 
@@ -8509,10 +8563,10 @@ bool egr_coolant_rpm_enable_check(void)
 // for the actuator-driver shape (see also canister_purge_duty_calc_f4ac,
 // isc_f402_stepper_target_calc).
 
-undefined2 egr_duty_target_calc(void)
+ushort egr_duty_target_calc(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   byte bVar2;
   undefined2 uStack_6;
   undefined2 uStack_4;
@@ -8920,19 +8974,17 @@ LAB_00018bb0:
 // project). See mut_verification_status.md "PHYSICAL OUTPUT PIN TRACE" and
 // the new EGR-PWM section for full context and next steps.
 
-void egr_position_target_f494_calc(void)
+void egr_position_target_f494_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
   ushort *puVar1;
-  undefined2 uVar2;
-  short sVar3;
-  ushort uVar4;
-  undefined2 extraout_R1;
+  short sVar2;
+  ushort uVar3;
   ushort extraout_R2;
-  ushort uVar5;
-  byte bVar6;
+  ushort uVar4;
+  byte bVar5;
   
-  bVar6 = 1;
+  bVar5 = 1;
   if ((DAT_0001f492 & 1) == 0) {
     if (DAT_00010e8c < DAT_0001f1e8) {
       DAT_0001f492 = DAT_0001f492 | 1;
@@ -8965,44 +9017,44 @@ void egr_position_target_f494_calc(void)
   else if (DAT_0001f1e8 <= DAT_00010e96) {
     DAT_0001f492 = DAT_0001f492 & 0xfff7;
   }
-  uVar2 = egr_table_row_lookup_f496();
-  sVar3 = (*(code *)0x18a55)(uVar2,extraout_R1,uVar2);
-  uVar5 = extraout_R2;
-  if (sVar3 != 0) {
-    uVar5 = *(ushort *)((uint)bVar6 << 0x10 | 0xe88);
+  egr_table_row_lookup_f496(DAT_0001f1e8,param_2,param_3);
+  sVar2 = (*(code *)0x18a55)();
+  uVar4 = extraout_R2;
+  if (sVar2 != 0) {
+    uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xe88);
   }
-  if ((*(ushort *)((uint)bVar6 << 0x10 | 0xf1fe) & 0x11) != 0) {
-    uVar5 = *(ushort *)((uint)bVar6 << 0x10 | 0xe7c);
+  if ((*(ushort *)((uint)bVar5 << 0x10 | 0xf1fe) & 0x11) != 0) {
+    uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xe7c);
   }
-  uVar4 = *(ushort *)((uint)bVar6 << 0x10 | 0xf20e) & 0x11;
-  if ((uVar4 == 0) &&
-     (uVar4 = *(ushort *)((uint)bVar6 << 0x10 | 0xef6a),
-     *(ushort *)((uint)bVar6 << 0x10 | 0xe9a) <= uVar4)) {
-    if (((*(short *)((uint)bVar6 << 0x10 | 0xf494) == 0) && (uVar5 != 0)) ||
-       ((*(short *)((uint)bVar6 << 0x10 | 0xf494) != 0 && (uVar5 == 0)))) {
-      puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xf490);
+  uVar3 = *(ushort *)((uint)bVar5 << 0x10 | 0xf20e) & 0x11;
+  if ((uVar3 == 0) &&
+     (uVar3 = *(ushort *)((uint)bVar5 << 0x10 | 0xef6a),
+     *(ushort *)((uint)bVar5 << 0x10 | 0xe9a) <= uVar3)) {
+    if (((*(short *)((uint)bVar5 << 0x10 | 0xf494) == 0) && (uVar4 != 0)) ||
+       ((*(short *)((uint)bVar5 << 0x10 | 0xf494) != 0 && (uVar4 == 0)))) {
+      puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xf490);
       *puVar1 = *puVar1 | 4;
       goto LAB_00018cb8;
     }
   }
   else {
-    sVar3 = (*check_mode_gate_f510)(uVar4);
-    if (sVar3 == 0) {
-      uVar5 = 0;
+    sVar2 = (*check_mode_gate_f510)(uVar3);
+    if (sVar2 == 0) {
+      uVar4 = 0;
     }
     else {
-      uVar5 = *(ushort *)((uint)bVar6 << 0x10 | 0xe6e);
+      uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xe6e);
     }
   }
-  puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xf490);
+  puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xf490);
   *puVar1 = *puVar1 & 0xfffb;
 LAB_00018cb8:
-  puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xe9c);
-  if ((*puVar1 <= uVar5 && uVar5 != *puVar1) && (uVar5 < *(ushort *)((uint)bVar6 << 0x10 | 0xe9e)))
+  puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xe9c);
+  if ((*puVar1 <= uVar4 && uVar4 != *puVar1) && (uVar4 < *(ushort *)((uint)bVar5 << 0x10 | 0xe9e)))
   {
-    uVar5 = *(ushort *)((uint)bVar6 << 0x10 | 0xe9c);
+    uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xe9c);
   }
-  *(ushort *)((uint)bVar6 << 0x10 | 0xf494) = uVar5;
+  *(ushort *)((uint)bVar5 << 0x10 | 0xf494) = uVar4;
   return;
 }
 
@@ -9193,7 +9245,7 @@ void ign_advance_enable_flags_f440_update(void)
 
 {
   if ((DAT_0001f440 & 4) == 0) {
-    if (_DAT_00010dfe < DAT_0001f1e0 >> 8) {
+    if (ram0x00010dfe < DAT_0001f1e0 >> 8) {
       DAT_0001f440 = DAT_0001f440 | 4;
     }
   }
@@ -9201,7 +9253,7 @@ void ign_advance_enable_flags_f440_update(void)
     DAT_0001f440 = DAT_0001f440 & 0xfffb;
   }
   if ((DAT_0001f440 & 8) == 0) {
-    if (_DAT_00010dfc < DAT_0001eec8) {
+    if (ram0x00010dfc < DAT_0001eec8) {
       DAT_0001f440 = DAT_0001f440 | 8;
     }
   }
@@ -9213,20 +9265,20 @@ void ign_advance_enable_flags_f440_update(void)
   }
   else {
     if ((DAT_0001f440 & 2) == 0) {
-      if (DAT_00010e06 < DAT_0001f17a) {
+      if ((ushort)DAT_00010e06 < (ushort)DAT_0001f17a) {
         DAT_0001f440 = DAT_0001f440 | 2;
       }
     }
-    else if (DAT_0001f17a <= DAT_00010e08) {
+    else if ((ushort)DAT_0001f17a <= (ushort)DAT_00010e08) {
       DAT_0001f440 = DAT_0001f440 & 0xfffd;
     }
     if ((DAT_0001f440 & 1) != 0) {
-      if (DAT_0001f17a <= DAT_00010e04) {
+      if ((ushort)DAT_0001f17a <= (ushort)DAT_00010e04) {
         DAT_0001f440 = DAT_0001f440 & 0xfffe;
       }
       goto LAB_00018f38;
     }
-    if (DAT_0001f17a <= _DAT_00010e02) goto LAB_00018f38;
+    if ((ushort)DAT_0001f17a <= (ushort)BYTE_ARRAY_00010e02) goto LAB_00018f38;
   }
   DAT_0001f440 = DAT_0001f440 | 1;
 LAB_00018f38:
@@ -9251,16 +9303,16 @@ LAB_00018f38:
 
 
 
-undefined2 ign_advance_base_calc_f860(void)
+ushort ign_advance_base_calc_f860(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
   (*axis_lookup_interp)();
   uVar1 = (*(code *)0x14656)();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf860) = uVar1;
+  *(ushort *)((uint)bVar2 << 0x10 | 0xf860) = uVar1;
   if ((*(ushort *)((uint)bVar2 << 0x10 | 0xf20e) & 0x10) == 0) {
     if ((*(ushort *)((uint)bVar2 << 0x10 | 0xf20e) & 1) != 0) {
       uVar1 = 0;
@@ -9277,58 +9329,61 @@ undefined2 ign_advance_base_calc_f860(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
 // wgdc_correction_integrator_update: reads Boost Control Load Offset-adjacent RAM (0xE0A
 // region) and WGDC correction tables (0x2a80/0x2a72 region, matches logging.txt claim of
 // Turbo Boost Error Correction / Max Total Upward WGDC Correction tables), reads/writes
 // 0xF44A. Feeds wgdc_output_clamp_f44c (0x19110). VERIFIED - matches logging.txt structure.
 
-ushort wgdc_correction_integrator_update(void)
+byte  [2] wgdc_correction_integrator_update(void)
 
 {
   undefined2 uVar1;
   short sVar2;
   ushort uVar3;
   ushort uVar4;
+  byte abVar5 [2];
   short extraout_R2;
-  byte bVar5;
+  byte abVar6 [2];
+  byte bVar7;
   ushort in_stack_00000004;
   ushort lo;
   
-  bVar5 = 1;
+  bVar7 = 1;
   if (((g_status_flags_f20e & 0x11) == 0) && ((DAT_0001f440 & 0x20) == 0)) {
-    uVar3 = DAT_0001f44a;
+    abVar6 = DAT_0001f44a;
     if ((DAT_0001f440 & 0x10) == 0) {
-      uVar4 = 0;
-      if (DAT_0001f05c == 0) {
-        DAT_0001f05c = _DAT_00010df0;
-        sat_sub_u16((DAT_0001f196 >> 1) + 0x20,DAT_0001f44e + _DAT_00010e0a);
+      abVar5[0] = 0;
+      abVar5[1] = 0;
+      if (DAT_0001f05c == (byte  [2])0x0) {
+        DAT_0001f05c = BYTE_ARRAY_00010df0;
+        sat_sub_u16((DAT_0001f196 >> 1) + 0x20,DAT_0001f44e + (short)BYTE_ARRAY_00010e0a);
         uVar1 = (*clamp_u8)();
-        *(undefined2 *)((uint)bVar5 << 0x10 | 0xf0ba) = uVar1;
+        *(undefined2 *)((uint)bVar7 << 0x10 | 0xf0ba) = uVar1;
         (*axis_lookup_interp)();
         sVar2 = (*(code *)0x14656)();
         uVar3 = sat_sub_u16(extraout_R2 + sVar2,0x80);
         (*axis_lookup_interp)();
         uVar4 = (*(code *)0x14656)();
-        uVar4 = clamp_u16(uVar3,*(ushort *)((uint)bVar5 << 0x10 | 0xdf2),uVar4);
+        uVar4 = clamp_u16(uVar3,*(ushort *)((uint)bVar7 << 0x10 | 0xdf2),uVar4);
         lo = 200;
         uVar4 = sat_sub_u16(in_stack_00000004 + uVar4,0x80);
         uVar3 = clamp_u16(uVar4,lo,uVar3);
-        uVar4 = sat_sub_u16(uVar3 + 0x80,in_stack_00000004);
-        uVar3 = uVar4;
+        abVar5 = (byte  [2])sat_sub_u16(uVar3 + 0x80,in_stack_00000004);
+        abVar6 = abVar5;
       }
       goto LAB_000190d6;
     }
   }
   else {
-    uVar3 = 0x80;
+    abVar6[0] = 0;
+    abVar6[1] = 0x80;
   }
-  DAT_0001f05c = _DAT_00010df0;
-  uVar4 = _DAT_00010df0;
+  DAT_0001f05c = BYTE_ARRAY_00010df0;
+  abVar5 = BYTE_ARRAY_00010df0;
 LAB_000190d6:
-  *(ushort *)((uint)bVar5 << 0x10 | 0xf44a) = uVar3;
-  return uVar4;
+  *(byte (*) [2])((uint)bVar7 << 0x10 | 0xf44a) = abVar6;
+  return abVar5;
 }
 
 
@@ -9418,6 +9473,8 @@ void ign_advance_load_correction_f450(void)
 
 
 
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+
 void rpm_map_zone_flags_f43e_update(void)
 
 {
@@ -9430,7 +9487,7 @@ void rpm_map_zone_flags_f43e_update(void)
         usZoneBits = 0x200;
       }
     }
-    if (DAT_00010d7a <= DAT_0001f118) {
+    if (_DAT_00010d7a <= DAT_0001f118) {
       if (DAT_00010d7e <= DAT_0001f10e) {
         usZoneBits = usZoneBits | 0x100;
       }
@@ -9897,7 +9954,7 @@ void diagnostic_status_f4b4_build(void)
 void o2_sensor_control_dispatch(void)
 
 {
-  short sVar1;
+  ushort uVar1;
   ushort uVar2;
   ushort extraout_R2;
   ushort extraout_R2_00;
@@ -9905,7 +9962,7 @@ void o2_sensor_control_dispatch(void)
   undefined2 uVar4;
   byte bVar5;
   undefined1 uVar6;
-  short sStack_8;
+  ushort uStack_8;
   undefined2 uStack_6;
   undefined2 uStack_4;
   
@@ -9918,8 +9975,8 @@ void o2_sensor_control_dispatch(void)
   *(undefined2 *)((int)&stack0xfffe + -2) = 0;
   if ((DAT_0001f1f2 & 0x4000) != 0) {
     if ((DAT_000102e9 == '\x03') || (DAT_000102e9 == '\x04')) {
-      sStack_8 = calc_load_correction_f10e();
-      if (sStack_8 == 1) {
+      uStack_8 = calc_load_correction_f10e();
+      if (uStack_8 == 1) {
         uVar4 = 0x80;
       }
       else if (*(short *)((int)&stack0xfffe + -6) == 2) {
@@ -9927,15 +9984,15 @@ void o2_sensor_control_dispatch(void)
       }
     }
     else {
-      sVar1 = o2_upstream_enable_check();
-      if (sVar1 != 0) {
+      uVar2 = o2_upstream_enable_check();
+      if (uVar2 != 0) {
         *(undefined2 *)((int)&stack0xfffe + -4) = 0x80;
         uVar4 = 0x80;
       }
     }
     if (*(char *)((uint)bVar5 << 0x10 | 0x2e9) == '\x03') {
-      sVar1 = calc_load_correction_f10e();
-      if (sVar1 == 1) {
+      uVar2 = calc_load_correction_f10e();
+      if (uVar2 == 1) {
         uVar3 = 0x80;
       }
       else if (*(short *)((int)&stack0xfffe + -6) == 2) {
@@ -9947,9 +10004,9 @@ void o2_sensor_control_dispatch(void)
       }
     }
     else {
-      sVar1 = o2_downstream_enable_check();
+      uVar1 = o2_downstream_enable_check();
       uVar2 = extraout_R2;
-      if (sVar1 != 0) {
+      if (uVar1 != 0) {
         uVar2 = extraout_R2 | 0xc00;
         *(undefined2 *)((int)&stack0xfffe + -2) = 0x80;
         uVar3 = 0x80;
@@ -9967,7 +10024,7 @@ void o2_sensor_control_dispatch(void)
 
 
 
-undefined2 o2_upstream_enable_check(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+ushort o2_upstream_enable_check(void)
 
 {
   ushort *puVar1;
@@ -10009,7 +10066,7 @@ undefined2 o2_upstream_enable_check(undefined2 param_1,undefined2 param_2,undefi
       }
     }
     else {
-      (*axis_lookup_interp)(param_1,param_2,param_3,2,0xd09a,param_3);
+      (*axis_lookup_interp)();
       uVar2 = (*(code *)0x14656)();
       if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0e6) & 0x300) == 0) {
         uVar2 = sat_sub_u16(uVar2,*(ushort *)((uint)bVar4 << 0x10 | 0xea6));
@@ -10039,7 +10096,9 @@ undefined2 o2_upstream_enable_check(undefined2 param_1,undefined2 param_2,undefi
 
 
 
-undefined2 o2_downstream_enable_check(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort o2_downstream_enable_check(void)
 
 {
   ushort *puVar1;
@@ -10081,7 +10140,7 @@ undefined2 o2_downstream_enable_check(undefined2 param_1,undefined2 param_2,unde
       }
     }
     else {
-      (*axis_lookup_interp)(param_1,param_2,param_3,2,0xd09a,param_3);
+      (*axis_lookup_interp)();
       uVar2 = (*(code *)0x14656)();
       if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0e6) & 0xc00) == 0) {
         uVar2 = sat_sub_u16(uVar2,*(ushort *)((uint)bVar4 << 0x10 | 0xea6));
@@ -10111,7 +10170,9 @@ undefined2 o2_downstream_enable_check(undefined2 param_1,undefined2 param_2,unde
 
 
 
-undefined2 calc_load_correction_f10e(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort calc_load_correction_f10e(void)
 
 {
   ushort *puVar1;
@@ -10163,16 +10224,16 @@ undefined2 calc_load_correction_f10e(void)
           (*(ushort *)((uint)bVar4 << 0x10 | 0xf114) < *(ushort *)((uint)bVar4 << 0x10 | 0x13ea)))))
       goto LAB_00019a50;
     }
-    uVar3 = 2;
+    uVar2 = 2;
   }
   else {
     if ((DAT_0001f510 & 0x2000) == 0) {
       return 0;
     }
 LAB_00019a50:
-    uVar3 = 1;
+    uVar2 = 1;
   }
-  return uVar3;
+  return uVar2;
 }
 
 
@@ -11301,8 +11362,8 @@ void boot_sci1_receive_config_bytes(void)
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xf206) = uVar1;
   sci1_boot_tx_then_rx_transaction();
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xf207) = 0;
-  if ((((DAT_0002fefa != *(char *)((uint)bVar2 << 0x10 | 0xf201)) ||
-       (DAT_0002fefb != *(char *)((uint)bVar2 << 0x10 | 0xf202))) ||
+  if ((((BYTE_ARRAY_0002fefa[0] != *(byte *)((uint)bVar2 << 0x10 | 0xf201)) ||
+       (BYTE_ARRAY_0002fefa[1] != *(byte *)((uint)bVar2 << 0x10 | 0xf202))) ||
       (DAT_0002fefc != *(char *)((uint)bVar2 << 0x10 | 0xf203))) ||
      (((DAT_0002fefd != *(char *)((uint)bVar2 << 0x10 | 0xf204) ||
        (DAT_0002fefe != *(char *)((uint)bVar2 << 0x10 | 0xf205))) ||
@@ -14266,7 +14327,6 @@ void fueling_throttle_zone_flags_update(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // WARNING: Unknown calling convention -- yet parameter storage is locked
 
 void fueling_inj_target_select(void)
@@ -14283,7 +14343,7 @@ LAB_00021bc6:
     }
     if ((g_status_flags_f216 & 0x100) != 0) goto LAB_00021ba9;
     if ((g_status_flags_f3f0 & 0x10) == 0) goto LAB_00021bc6;
-    DAT_0001f1b4 = _DAT_0001080c;
+    DAT_0001f1b4 = BYTE_ARRAY_0001080c;
   }
   else {
 LAB_00021ba9:
@@ -14293,7 +14353,7 @@ LAB_00021ba9:
 LAB_00021bce:
   if (DAT_00010306 == '\0') {
     uVar1 = 0;
-    if (DAT_0001f1b4 <= DAT_00010958) {
+    if ((ushort)DAT_0001f1b4 <= (ushort)DAT_00010958) {
       uVar1 = 0x200;
     }
   }
@@ -14321,8 +14381,6 @@ void fueling_inj_accum_clamp_drain(void)
 }
 
 
-
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void fueling_inj_pw_calc(void)
 
@@ -14888,11 +14946,11 @@ void f25e_bit6_update_from_decel_fuel_cut(void)
 
 {
   ushort *puVar1;
-  short sVar2;
+  ushort uVar2;
   byte bVar3;
   
   bVar3 = 1;
-  if ((DAT_000102cb != '\0') && (sVar2 = decel_fuel_cut_eval(), sVar2 != 0)) {
+  if ((DAT_000102cb != '\0') && (uVar2 = decel_fuel_cut_eval(), uVar2 != 0)) {
     puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf25e);
     *puVar1 = *puVar1 | 0x40;
     *(undefined2 *)((uint)bVar3 << 0x10 | 0xefa6) = *(undefined2 *)((uint)bVar3 << 0x10 | 0xa5a);
@@ -14905,14 +14963,16 @@ void f25e_bit6_update_from_decel_fuel_cut(void)
 
 
 
-undefined2 decel_fuel_cut_eval(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort decel_fuel_cut_eval(void)
 
 {
   ushort *puVar1;
   ushort uVar2;
   short sVar3;
   ushort uVar4;
-  undefined2 uVar5;
+  ushort uVar5;
   byte bVar6;
   undefined1 uVar7;
   ushort uStack_4;
@@ -15216,8 +15276,6 @@ void warmup_mode_state_machine(undefined2 param_1,undefined2 param_2,undefined2 
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 ushort closedloop_eligibility_check(void)
 
 {
@@ -15246,7 +15304,7 @@ ushort closedloop_eligibility_check(void)
   }
   if ((((g_status_flags_f0f8 & 0x20) != 0) && (DAT_00010a46 < DAT_0001f10e)) &&
      (((DAT_0001eee2 & 1) == 0 && (((DAT_0001f1fe & 8) == 0 && (DAT_00010a42 <= DAT_0001f17a)))))) {
-    uVar2 = div_u32_u16_sat(0x1d,0x4c00,_DAT_00010886);
+    uVar2 = div_u32_u16_sat(0x1d,0x4c00,(ushort)BYTE_ARRAY_00010886);
     if (uVar2 + *(short *)((uint)bVar4 << 0x10 | 0xa44) * -8 <
         *(ushort *)((uint)bVar4 << 0x10 | 0xf170)) goto LAB_00022663;
     uVar2 = *(ushort *)((uint)bVar4 << 0x10 | 0xf18c);
@@ -15329,27 +15387,25 @@ bool closedloop_fuel_ready_check(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 undefined2 o2_temp_ready_check(void)
 
 {
-  ushort _unused_far_pad;
+  byte _unused_far_pad [2];
   short sVar1;
   undefined2 mode;
   
   if ((g_status_flags_f224 & 0x2000) == 0) {
-    if (_DAT_00010888 < DAT_0001f1e8) {
+    if ((ushort)BYTE_ARRAY_00010888 < (ushort)DAT_0001f1e8) {
       g_status_flags_f224 = g_status_flags_f224 | 0x2000;
     }
   }
-  else if (DAT_0001f1e8 <= DAT_0001088a) {
+  else if ((ushort)DAT_0001f1e8 <= (ushort)DAT_0001088a) {
     g_status_flags_f224 = g_status_flags_f224 & 0xdfff;
   }
   if ((DAT_0001f1f2 & 0x40) != 0) {
     _unused_far_pad = DAT_0001f1e8;
     if (((g_status_flags_f224 & 0x2000) == 0) ||
-       (_unused_far_pad = DAT_0001f17a, DAT_0001f17a <= DAT_00010892)) {
+       (_unused_far_pad = DAT_0001f17a, (ushort)DAT_0001f17a <= (ushort)DAT_00010892)) {
       mode = 0;
     }
     else {
@@ -15590,10 +15646,12 @@ void engine_mode_dispatch_and_f240_edge_counter(void)
 
 
 
-undefined2 f240_counter_reset_and_f074_table_load(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort f240_counter_reset_and_f074_table_load(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
@@ -15608,7 +15666,7 @@ undefined2 f240_counter_reset_and_f074_table_load(void)
     DAT_0001f0b0 = 0;
     DAT_0001f0ae = 0;
     uVar1 = table_lookup_interp(1,(void *)0x1d4c);
-    *(undefined2 *)((uint)bVar2 << 0x10 | 0xf074) = uVar1;
+    *(ushort *)((uint)bVar2 << 0x10 | 0xf074) = uVar1;
   }
   return uVar1;
 }
@@ -15978,8 +16036,6 @@ void struct_bit11_toggle_from_gate_check(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 undefined2 f21c_bit1_and_struct_bit5_gate_check(void)
 
 {
@@ -16305,12 +16361,12 @@ void f25e_bit11_update_from_f224_gate(void)
 
 {
   ushort *puVar1;
-  short sVar2;
+  ushort uVar2;
   byte bVar3;
   
   bVar3 = 1;
   if (((DAT_0001f1f4 & 1) != 0) &&
-     (sVar2 = f224_bit11_hysteresis_timer_and_gate_check(), sVar2 != 0)) {
+     (uVar2 = f224_bit11_hysteresis_timer_and_gate_check(), uVar2 != 0)) {
     puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf25e);
     *puVar1 = *puVar1 | 0x800;
     return;
@@ -16322,6 +16378,7 @@ void f25e_bit11_update_from_f224_gate(void)
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // Uses axis_lookup_interp/table_lookup_interp(0x14656) against DAT_0001f2b2, compares result to
 // f18c/f10e, runs a saturating bank1 counter at 0xefb4 (capped 0..0xff) gated by f224 bit11 (0x800)
 // and 0x09e8. Sets/clears f224 bit11 on threshold crossing. Returns 1 only when f10e>=0x09e2, f20e
@@ -16329,21 +16386,22 @@ void f25e_bit11_update_from_f224_gate(void)
 // given proximity to isc_/egr_ functions. Confidence: medium (semantics of table 0x1f64 axis not
 // confirmed).
 
-undefined2
-f224_bit11_hysteresis_timer_and_gate_check(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+ushort f224_bit11_hysteresis_timer_and_gate_check(void)
 
 {
   ushort *puVar1;
+  undefined2 in_R0;
   ushort uVar2;
   undefined2 uVar3;
   ushort uVar4;
   undefined2 uVar5;
+  undefined2 in_R1;
   ushort extraout_R2;
   ushort extraout_R2_00;
   byte bVar6;
   
   bVar6 = 1;
-  (*axis_lookup_interp)(param_1,param_2,DAT_0001f2b2,2,0xd2aa,param_3);
+  (*axis_lookup_interp)(in_R0,in_R1,DAT_0001f2b2,2,0xd2aa);
   uVar2 = (*(code *)0x14656)();
   uVar3 = (*(code *)0x14656)();
   uVar4 = sat_sub_u16(uVar2,*(ushort *)((uint)bVar6 << 0x10 | 0x9e0));
@@ -16380,12 +16438,12 @@ LAB_0002329d:
   if (((*(ushort *)((uint)bVar6 << 0x10 | 0xf10e) < *(ushort *)((uint)bVar6 << 0x10 | 0x9e2)) ||
       ((*(ushort *)((uint)bVar6 << 0x10 | 0xf20e) & 2) != 0)) ||
      ((*(ushort *)((uint)bVar6 << 0x10 | 0xf224) & 0x800) == 0)) {
-    uVar3 = 0;
+    uVar2 = 0;
   }
   else {
-    uVar3 = 1;
+    uVar2 = 1;
   }
-  return uVar3;
+  return uVar2;
 }
 
 
@@ -16855,27 +16913,26 @@ void o2_closed_loop_fuel_trim_compute(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // TRIAGE NOTE: if 0000109e4<=f17a, writes f0ba from param +
 // axis_lookup_interp/table_lookup(0x14656); then if result <= param, blends via
 // weighted_blend_u8frac using f2b2. Part of the same f0ba/f2b2 correction-blend family as
 // f224_bit11_hysteresis_timer_and_gate_check. Not renamed: exact physical meaning of the blend
 // inputs unconfirmed. Confidence: low-medium.
 
-ushort f0ba_f2b2_threshold_blend_calc(void)
+byte  [2] f0ba_f2b2_threshold_blend_calc(void)
 
 {
-  ushort uVar1;
-  ushort in_stack_00000004;
+  byte abVar1 [2];
+  byte in_stack_00000004 [2];
   
-  uVar1 = _DAT_000109e6;
-  if (_DAT_000109e4 <= DAT_0001f17a) {
+  abVar1 = BYTE_ARRAY_000109e6;
+  if ((ushort)BYTE_ARRAY_000109e4 <= (ushort)DAT_0001f17a) {
     DAT_0001f0ba = in_stack_00000004;
     (*axis_lookup_interp)();
-    uVar1 = (*(code *)0x14656)();
+    abVar1 = (byte  [2])(*(code *)0x14656)();
   }
-  if (uVar1 <= in_stack_00000004) {
-    in_stack_00000004 = (*weighted_blend_u8frac)();
+  if ((ushort)abVar1 <= (ushort)in_stack_00000004) {
+    in_stack_00000004 = (byte  [2])(*weighted_blend_u8frac)();
   }
   return in_stack_00000004;
 }
@@ -17257,7 +17314,6 @@ LAB_00023fb9:
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // Table-driven mode selector: entry+2(f20e) bit11 -> return 1 (closed-loop override); else checks
 // f10e range vs entry+6(f21c) bit0x8000, entry+0x56 bits 0xf0, f43e bit3, f0f8 bit5-selected
 // threshold; then f216 bits 0x80/0x8000 disambiguate. Returns enum code 1/2/4/8/0x10 consumed as a
@@ -17535,6 +17591,7 @@ void f0ba_f2d0_o2_mode7_8_correction_calc(void)
 
 
 
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // WARNING: Restarted to delay deadcode elimination for space: stack
 
 void f2d2_composite_correction_calc(void)
@@ -17553,7 +17610,7 @@ void f2d2_composite_correction_calc(void)
   undefined1 uVar6;
   bool bVar7;
   ushort uStack_12;
-  short sStack_10;
+  ushort uStack_10;
   ushort uStack_e;
   ushort uStack_c;
   ushort uStack_a;
@@ -17562,7 +17619,7 @@ void f2d2_composite_correction_calc(void)
   ushort uStack_4;
   
   uVar6 = 0;
-  sStack_10 = table_1e4a_lookup_with_f2d6_d8_reset();
+  uStack_10 = table_1e4a_lookup_with_f2d6_d8_reset();
   uStack_12 = f07a_default_reset_return_0x80();
   c = (*f2b4_threshold_table_lookup)();
   (*axis_lookup_interp)();
@@ -17571,7 +17628,7 @@ void f2d2_composite_correction_calc(void)
   bVar5 = 0;
   uStack_a = (*identity_passthrough_arg1)();
   uStack_8 = extraout_R1;
-  uVar2 = muldiv_u16_scaled(uVar2,b,sStack_10 * *(short *)((int)&stack0xfffe + -0x10),0x4000);
+  uVar2 = muldiv_u16_scaled(uVar2,b,uStack_10 * *(short *)((int)&stack0xfffe + -0x10),0x4000);
   sVar4 = 6;
   do {
     c = c << 1;
@@ -17637,16 +17694,18 @@ void f2d2_composite_correction_calc(void)
 
 
 
-void table_1e4a_lookup_with_f2d6_d8_reset(void)
+ushort table_1e4a_lookup_with_f2d6_d8_reset(void)
 
 {
+  ushort uVar1;
+  
   if ((g_status_flags_f20e & 0x10) != 0) {
     DAT_0000f2d6 = 0;
     DAT_0000f2d8 = 0;
   }
   (*axis_lookup_interp)();
-  (*(code *)0x14656)();
-  return;
+  uVar1 = (*(code *)0x14656)();
+  return uVar1;
 }
 
 
@@ -18386,19 +18445,18 @@ void per_cyl_knock_flag_update_cyl_b(void)
 {
   ushort *puVar1;
   ushort uVar2;
-  short sVar3;
-  byte bVar4;
+  byte bVar3;
   
-  bVar4 = 1;
-  sVar3 = f3a4_bit12_13_update_and_check();
-  if (sVar3 == 0) {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3a4);
+  bVar3 = 1;
+  uVar2 = f3a4_bit12_13_update_and_check();
+  if (uVar2 == 0) {
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3a4);
     *puVar1 = *puVar1 & 0xff7f;
     uVar2 = DAT_0000ef88;
     DAT_0000ef88 = uVar2 & 3;
   }
   else {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3a4);
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3a4);
     *puVar1 = *puVar1 | 0x80;
   }
   return;
@@ -18406,43 +18464,44 @@ void per_cyl_knock_flag_update_cyl_b(void)
 
 
 
-undefined2 f3a4_bit12_13_update_and_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort f3a4_bit12_13_update_and_check(void)
 
 {
   ushort *puVar1;
   ushort uVar2;
-  undefined2 uVar3;
-  byte bVar4;
+  byte bVar3;
   
-  bVar4 = 1;
+  bVar3 = 1;
   uVar2 = table_lookup_interp(1,(void *)0x2832);
-  puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf186);
+  puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf186);
   if (uVar2 < *puVar1 || uVar2 == *puVar1) {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3a4);
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3a4);
     *puVar1 = *puVar1 | 0x1000;
   }
   else {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3a4);
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3a4);
     *puVar1 = *puVar1 & 0xefff;
   }
-  if ((((*(ushort *)((uint)bVar4 << 0x10 | 0xf1fe) & 8) == 0) &&
-      ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0f8) & 0x80) == 0)) &&
-     ((*(ushort *)((uint)bVar4 << 0x10 | 0xf3a4) & 0x1000) != 0)) {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3a4);
+  if ((((*(ushort *)((uint)bVar3 << 0x10 | 0xf1fe) & 8) == 0) &&
+      ((*(ushort *)((uint)bVar3 << 0x10 | 0xf0f8) & 0x80) == 0)) &&
+     ((*(ushort *)((uint)bVar3 << 0x10 | 0xf3a4) & 0x1000) != 0)) {
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3a4);
     *puVar1 = *puVar1 | 0x2000;
   }
   else {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3a4);
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3a4);
     *puVar1 = *puVar1 & 0xdfff;
   }
-  if (((*(ushort *)((uint)bVar4 << 0x10 | 0xf1fe) & 8) == 0) &&
-     ((*(ushort *)((uint)bVar4 << 0x10 | 0xf3a4) & 0x1000) == 0)) {
-    uVar3 = 0;
+  if (((*(ushort *)((uint)bVar3 << 0x10 | 0xf1fe) & 8) == 0) &&
+     ((*(ushort *)((uint)bVar3 << 0x10 | 0xf3a4) & 0x1000) == 0)) {
+    uVar2 = 0;
   }
   else {
-    uVar3 = 1;
+    uVar2 = 1;
   }
-  return uVar3;
+  return uVar2;
 }
 
 
@@ -18549,23 +18608,23 @@ void knock_event_counter_update_eec6(void)
 {
   ushort *puVar1;
   short *psVar2;
-  short sVar3;
-  ushort uVar4;
+  ushort uVar3;
+  short sVar4;
   byte bVar5;
   bool bVar6;
   
   bVar5 = 1;
-  sVar3 = f3a4_bit6_gate_condition_check();
-  if (sVar3 != 0) {
-    uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xf3a2);
+  uVar3 = f3a4_bit6_gate_condition_check();
+  if (uVar3 != 0) {
+    uVar3 = *(ushort *)((uint)bVar5 << 0x10 | 0xf3a2);
     bVar6 = *(ushort *)((uint)bVar5 << 0x10 | 0xf3a2) < *(ushort *)((uint)bVar5 << 0x10 | 0xb3e);
     if (((bVar6) ||
-        (puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xb40), *puVar1 <= uVar4 && uVar4 != *puVar1)) &&
+        (puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xb40), *puVar1 <= uVar3 && uVar3 != *puVar1)) &&
        (*(short *)((uint)bVar5 << 0x10 | 0xefc0) == 0)) {
       if (bVar6) {
-        sVar3 = *(short *)((uint)bVar5 << 0x10 | 0xeec6) + 1;
-        *(short *)((uint)bVar5 << 0x10 | 0xeec6) = sVar3;
-        if (sVar3 == 0) {
+        sVar4 = *(short *)((uint)bVar5 << 0x10 | 0xeec6) + 1;
+        *(short *)((uint)bVar5 << 0x10 | 0xeec6) = sVar4;
+        if (sVar4 == 0) {
           psVar2 = (short *)((uint)bVar5 << 0x10 | 0xeec6);
           *psVar2 = *psVar2 + -1;
         }
@@ -18580,8 +18639,8 @@ void knock_event_counter_update_eec6(void)
         *(undefined2 *)((uint)bVar5 << 0x10 | 0xefc0) = *(undefined2 *)((uint)bVar5 << 0x10 | 0xb44)
         ;
       }
-      uVar4 = clamp_u16(*(ushort *)((uint)bVar5 << 0x10 | 0xeec6),0,0xff);
-      *(ushort *)((uint)bVar5 << 0x10 | 0xeec6) = uVar4;
+      uVar3 = clamp_u16(*(ushort *)((uint)bVar5 << 0x10 | 0xeec6),0,0xff);
+      *(ushort *)((uint)bVar5 << 0x10 | 0xeec6) = uVar3;
     }
   }
   return;
@@ -18589,7 +18648,9 @@ void knock_event_counter_update_eec6(void)
 
 
 
-undefined2 f3a4_bit6_gate_condition_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort f3a4_bit6_gate_condition_check(void)
 
 {
   ushort *puVar1;
@@ -18780,11 +18841,11 @@ void f33e_bit3_update_dispatch(void)
 
 {
   ushort *puVar1;
-  short sVar2;
+  ushort uVar2;
   byte bVar3;
   
   bVar3 = 1;
-  if ((DAT_000102d1 != '\0') && (sVar2 = f33e_bit5_update_and_condition_check(), sVar2 != 0)) {
+  if ((DAT_000102d1 != '\0') && (uVar2 = f33e_bit5_update_and_condition_check(), uVar2 != 0)) {
     puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf33e);
     *puVar1 = *puVar1 | 8;
     return;
@@ -18796,7 +18857,9 @@ void f33e_bit3_update_dispatch(void)
 
 
 
-undefined2 f33e_bit5_update_and_condition_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort f33e_bit5_update_and_condition_check(void)
 
 {
   ushort uVar1;
@@ -19029,7 +19092,7 @@ void isc_f344_correction_calc(void)
 
 
 
-undefined2 isc_f34e_f34a_correction_calc(void)
+ushort isc_f34e_f34a_correction_calc(void)
 
 {
   undefined2 uVar1;
@@ -19087,7 +19150,7 @@ undefined2 isc_f34e_f34a_correction_calc(void)
   sat_sub_u16(sVar2 + *(short *)((int)&stack0xfffe + -2),0x80);
   uVar1 = (*clamp_u8)();
   *(undefined2 *)((uint)bVar3 << 0x10 | 0xf34a) = uVar1;
-  return *(undefined2 *)((uint)bVar3 << 0x10 | 0xf34e);
+  return *(ushort *)((uint)bVar3 << 0x10 | 0xf34e);
 }
 
 
@@ -19324,10 +19387,10 @@ undefined2 isc_f352_table_lookup(void)
 
 
 
-undefined2 isc_f354_table_lookup_conditional(void)
+ushort isc_f354_table_lookup_conditional(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
@@ -19336,7 +19399,7 @@ undefined2 isc_f354_table_lookup_conditional(void)
     (*axis_lookup_interp)();
     uVar1 = (*(code *)0x14656)();
   }
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf354) = uVar1;
+  *(ushort *)((uint)bVar2 << 0x10 | 0xf354) = uVar1;
   return uVar1;
 }
 
@@ -19558,8 +19621,6 @@ void isc_f350_correction_calc(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 void isc_f3b2_select(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
@@ -19569,7 +19630,7 @@ void isc_f3b2_select(undefined2 param_1,undefined2 param_2,undefined2 param_3)
   byte bVar3;
   
   bVar3 = 1;
-  sVar1 = (*o2_wideband_mode82_check)(param_1,param_2,_DAT_00010b1a,param_3);
+  sVar1 = (*o2_wideband_mode82_check)(param_1,param_2,BYTE_ARRAY_00010b1a,param_3);
   uVar2 = extraout_R2;
   if (sVar1 != 0) {
     uVar2 = *(undefined2 *)((uint)bVar3 << 0x10 | 0xb1a);
@@ -19683,25 +19744,24 @@ void isc_stepper_position_dispatch(void)
 
 {
   short sVar1;
-  undefined2 uVar2;
-  ushort uVar3;
-  byte bVar4;
+  ushort uVar2;
+  byte bVar3;
   
-  bVar4 = 1;
+  bVar3 = 1;
   isc_periodic_update_dispatch();
   isc_stepper_state_dispatch();
   isc_stepper_target_dispatch();
   sVar1 = (*o2_downstream_mode17_check)();
-  uVar3 = 0;
-  if ((sVar1 != 0) && (uVar3 = *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0xb0, uVar3 == 0)) {
-    *(undefined2 *)((uint)bVar4 << 0x10 | 0xf408) = *(undefined2 *)((uint)bVar4 << 0x10 | 0xf5b8);
+  uVar2 = 0;
+  if ((sVar1 != 0) && (uVar2 = *(ushort *)((uint)bVar3 << 0x10 | 0xeed0) & 0xb0, uVar2 == 0)) {
+    *(undefined2 *)((uint)bVar3 << 0x10 | 0xf408) = *(undefined2 *)((uint)bVar3 << 0x10 | 0xf5b8);
     uVar2 = idle_stepper_table_lookup_wrapper();
-    *(undefined2 *)((uint)bVar4 << 0x10 | 0xf406) = uVar2;
-    *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) = *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0xffc0;
-    uVar3 = *(ushort *)((uint)bVar4 << 0x10 | 0xf3f0) & 0xff4a;
-    *(ushort *)((uint)bVar4 << 0x10 | 0xf3f0) = uVar3;
+    *(ushort *)((uint)bVar3 << 0x10 | 0xf406) = uVar2;
+    *(ushort *)((uint)bVar3 << 0x10 | 0xeed0) = *(ushort *)((uint)bVar3 << 0x10 | 0xeed0) & 0xffc0;
+    uVar2 = *(ushort *)((uint)bVar3 << 0x10 | 0xf3f0) & 0xff4a;
+    *(ushort *)((uint)bVar3 << 0x10 | 0xf3f0) = uVar2;
   }
-  (*isc_f406_clamp_dispatch)(uVar3);
+  (*isc_f406_clamp_dispatch)(uVar2);
   (*mirror_f406_f408_to_f40a_f40c)();
   return;
 }
@@ -19822,6 +19882,7 @@ void idle_target_rpm_compute_f400(void)
 
 
 
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // WARNING: Restarted to delay deadcode elimination for space: ram
 
 void isc_f41a_correction_calc(ushort param_1)
@@ -20228,26 +20289,29 @@ void calc_f40e_threshold_select(void)
 
 
 
-void idle_stepper_table_lookup_wrapper(void)
+ushort idle_stepper_table_lookup_wrapper(void)
 
 {
-  byte bVar1;
+  ushort uVar1;
+  byte bVar2;
   undefined2 in_stack_00000004;
   
-  bVar1 = 1;
+  bVar2 = 1;
   (*axis_lookup_interp)();
-  *(undefined2 *)((uint)bVar1 << 0x10 | 0xf0ba) = in_stack_00000004;
+  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf0ba) = in_stack_00000004;
   (*axis_lookup_interp)();
-  (*(code *)0x14656)();
-  return;
+  uVar1 = (*(code *)0x14656)();
+  return uVar1;
 }
 
 
 
-undefined2 isc_f036_f424_ramp_calc(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort isc_f036_f424_ramp_calc(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
@@ -20256,12 +20320,12 @@ undefined2 isc_f036_f424_ramp_calc(void)
     if ((DAT_0001f424 != 0) && (DAT_0001f036 == 0)) {
       DAT_0001f424 = DAT_0001f424 + -1;
       uVar1 = table_lookup_interp(1,(void *)0x2944);
-      *(undefined2 *)((uint)bVar2 << 0x10 | 0xf036) = uVar1;
+      *(ushort *)((uint)bVar2 << 0x10 | 0xf036) = uVar1;
     }
   }
   else {
     uVar1 = table_lookup_interp(1,(void *)0x2938);
-    *(undefined2 *)((uint)bVar2 << 0x10 | 0xf424) = uVar1;
+    *(ushort *)((uint)bVar2 << 0x10 | 0xf424) = uVar1;
   }
   if ((*(ushort *)((uint)bVar2 << 0x10 | 0xf594) & 0x80) != 0) {
     *(undefined2 *)((uint)bVar2 << 0x10 | 0xf424) = 0;
@@ -20986,7 +21050,7 @@ void isc_stepper_mode_state_reload_c(void)
 void isc_stepper_mode_state_reload_d(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
@@ -20994,7 +21058,7 @@ void isc_stepper_mode_state_reload_d(void)
   f3f0_target_state_reset_and_reload();
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf408) = *(undefined2 *)((uint)bVar2 << 0x10 | 0xd42);
   uVar1 = idle_stepper_table_lookup_wrapper();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf406) = uVar1;
+  *(ushort *)((uint)bVar2 << 0x10 | 0xf406) = uVar1;
   return;
 }
 
@@ -21018,16 +21082,17 @@ void isc_f408_f406_stepper_target_calc(void)
 
 {
   undefined2 uVar1;
-  byte bVar2;
+  ushort uVar2;
+  byte bVar3;
   
-  bVar2 = 1;
+  bVar3 = 1;
   DAT_0001eed0 = DAT_0001eed0 | 4;
   f3f0_target_state_reset_and_reload();
   table_lookup_indexed(2,(void *)0xd92c);
   uVar1 = (*clamp_u8)();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf408) = uVar1;
-  uVar1 = idle_stepper_table_lookup_wrapper();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf406) = uVar1;
+  *(undefined2 *)((uint)bVar3 << 0x10 | 0xf408) = uVar1;
+  uVar2 = idle_stepper_table_lookup_wrapper();
+  *(ushort *)((uint)bVar3 << 0x10 | 0xf406) = uVar2;
   return;
 }
 
@@ -21038,25 +21103,24 @@ void isc_stepper_target_dispatch(void)
 {
   ushort *puVar1;
   ushort uVar2;
-  undefined2 uVar3;
-  byte bVar4;
+  byte bVar3;
   
-  bVar4 = 1;
+  bVar3 = 1;
   if ((DAT_0001eed0 & 0xbc) == 0) {
     f3f0_bit0_update();
     uVar2 = f3f4_bit0_update_and_check();
     if (uVar2 == 0) {
-      if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 0x11) == 0) {
+      if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf20e) & 0x11) == 0) {
         uVar2 = isc_efd4_gate_condition_check();
         if (uVar2 == 0) {
-          puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3f0);
+          puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3f0);
           *puVar1 = *puVar1 & 0xffef;
-          *(undefined2 *)((uint)bVar4 << 0x10 | 0xefca) =
-               *(undefined2 *)((uint)bVar4 << 0x10 | 0xc6c);
+          *(undefined2 *)((uint)bVar3 << 0x10 | 0xefca) =
+               *(undefined2 *)((uint)bVar3 << 0x10 | 0xc6c);
           (*isc_f408_composite_dispatch)();
         }
         else {
-          puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf3f0);
+          puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf3f0);
           *puVar1 = *puVar1 | 0x10;
           (*isc_stepper_correction_dispatch_b)();
         }
@@ -21068,8 +21132,8 @@ void isc_stepper_target_dispatch(void)
     else {
       (*isc_stepper_trim_dispatch)();
     }
-    uVar3 = idle_stepper_table_lookup_wrapper();
-    *(undefined2 *)((uint)bVar4 << 0x10 | 0xf406) = uVar3;
+    uVar2 = idle_stepper_table_lookup_wrapper();
+    *(ushort *)((uint)bVar3 << 0x10 | 0xf406) = uVar2;
   }
   return;
 }
@@ -21398,7 +21462,7 @@ LAB_00027505:
 
 
 
-undefined2 isc_f41c_table_lookup(void)
+ushort isc_f41c_table_lookup(void)
 
 {
   short sVar1;
@@ -21414,7 +21478,7 @@ undefined2 isc_f41c_table_lookup(void)
   }
   sVar1 = table_lookup_indexed(2,table);
   *(short *)((uint)bVar2 << 0x10 | 0xf41c) = sVar1 + *(short *)((uint)bVar2 << 0x10 | 0xf43a);
-  return *(undefined2 *)((uint)bVar2 << 0x10 | 0xf41c);
+  return *(ushort *)((uint)bVar2 << 0x10 | 0xf41c);
 }
 
 
@@ -21521,10 +21585,13 @@ undefined2 f0f8_gated_constant_select_f3f4_neighbor(void)
 
 
 
-undefined2 isc_f420_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+
+ushort isc_f420_correction_calc(void)
 
 {
   undefined2 uVar1;
+  undefined2 in_R2;
   byte bVar2;
   
   bVar2 = 1;
@@ -21539,12 +21606,12 @@ undefined2 isc_f420_correction_calc(undefined2 param_1,undefined2 param_2,undefi
     }
     else {
       bVar2 = 0;
-      table_read_indexed(0xd9,(void *)(CONCAT22(0xd92c,param_3) >> 8));
+      table_read_indexed(0xd9,(void *)(CONCAT22(0xd92c,in_R2) >> 8));
     }
     uVar1 = (*clamp_u8)();
     *(undefined2 *)((uint)bVar2 << 0x10 | 0xf420) = uVar1;
   }
-  return *(undefined2 *)((uint)bVar2 << 0x10 | 0xf420);
+  return *(ushort *)((uint)bVar2 << 0x10 | 0xf420);
 }
 
 
@@ -23673,8 +23740,6 @@ LAB_00028d4e:
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 void diagnostic_snapshot_f54a_f566_build(void)
 
 {
@@ -24864,7 +24929,6 @@ void tcu_f382_correction_calc(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
 // fuel_pw_and_airvol_compute: large fuel/air computation function. Confirmed writes:
 //   - 0xF970 (@0x2a6c1) = InjPulseWidth, MUT RequestID 0x29 -> table entry 0xF970. VERIFIED.
@@ -24922,7 +24986,7 @@ void fuel_pw_and_airvol_compute(void)
     uStack_6 = DAT_0001f24e;
     goto LAB_0002a66f;
   }
-  if (DAT_0001f5ca < _DAT_00010886) {
+  if ((ushort)DAT_0001f5ca < (ushort)BYTE_ARRAY_00010886) {
     DAT_0001f25a = DAT_0001f25a | 0x20;
   }
   else {
@@ -27063,12 +27127,11 @@ void tcu_torque_converter_slip_calc(void)
 
 
 
-undefined2
-tiered_threshold_table_select
-          (undefined2 param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4)
+ushort tiered_threshold_table_select
+                 (undefined2 param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   ushort extraout_R2;
   byte bVar2;
   

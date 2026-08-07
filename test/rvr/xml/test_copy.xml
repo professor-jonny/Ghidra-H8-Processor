@@ -1,21 +1,4 @@
 <rom>
-<!-- BULK FIX 2026-08-06 [Claude]: 119 2D/3D table addresses corrected in this pass.
-     Root cause: h8539_import_tables_xml1.py's resolve_header_address() correctly
-     detects when a table's XML address points AT its own table_2d_record/
-     table_3axis_record header (mode+pointer bytes) rather than past it, but the
-     corrected data offset was never actually used anywhere downstream (verify,
-     overlap-check, typing); only surfaced in an unused metadata comment. Fixed
-     in the script itself (see script's own changelog), then re-ran import+export
-     and diffed every table address against this file; every one of the 119
-     mismatches found was independently confirmed to differ by EXACTLY the header
-     size (4 bytes for 2D's "02 00 <ptr>" header, 7 bytes     "03 00 <x_ptr> <y_ptr> <nrows>" header); spot-checked several directlyal directly
-     against live ROM bytes via Ghidra read_memory before applying in bulk
-     (Air Temperature Compensation @11D7A: 02 00 F0 D0 -> data at 11D7E;
-     Knock Sensor Filter Map 1 @12F22: 03 00 F0C0 F0C2 0A -> data at 12F29).
-     Full before/after list preserved in git history for this commit. This does
-     NOT touch axis addresses (already individually verified/fixed in earlier
-     sessions, see inline comments throughout) or old/RVR_base.xml (frozen
-     backup, out of scope per existing project convention). -->
 	<romid>
 		<xmlid>21000011</xmlid>
 		<internalidaddress>1021a</internalidaddress>
@@ -860,6 +843,47 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- when unverified scraped addresses are added without this check.               -->
 
 	<!--  2D / 3D candidate tables  -->
+	<table name="TABLE_3D_00010D73" category="Unknown" address="10D7A" type="3D" scaling="uint8">
+		<!-- UNVERIFIED (investigated 2026-08-05, multiple hypotheses tested and ruled out): -->
+		<!-- Header reads 03 00 F0 00 F0 00  mode byte 3 matches 3D shape, but the F000/F000 -->
+		<!-- pointer fields do not match the F0Cx/F1xx/F2xx/F3xx-style RAM tag convention every -->
+		<!-- other confirmed table in this file uses. get_xrefs_to(0x10d73) returns ZERO -->
+		<!-- references anywhere in the ROM (re-checked multiple times). -->
+		<!--                                                                                -->
+		<!-- Hypotheses tested and eliminated this session, each with real evidence: -->
+		<!--  - Pointer/redirect to RAM 0xF000: get_xrefs_to(0xf000) returns 3 hits, but all -->
+		<!--    three are false positives  byte-pattern collisions with unrelated constants -->
+		<!--    (0xF3A0 etc.) inside tcu_shift_torque_and_knock_mgmt, not real refs to 0xF000. -->
+		<!--  - Incrementing/decrementing counter: reading the region as a 16-bit stream -->
+		<!--    (0003, F000, F000, 0003, 005A, 005A, 0075...) is non-monotonic and irregular  -->
+		<!--    not a counter shape, and F000/F000 repeats exactly rather than varying. -->
+		<!--  - Switch/jump table: no function covers or borders 0x10d73 (get_function_by_address -->
+		<!--    returns nothing on either side), so there is no dispatching jmp/bsr-indexed -->
+		<!--    instruction that could drive a jump table here. Values also don't fit a jump- -->
+		<!--    table shape (0x8D10/0xD10A/0x8B07 don't correspond to any known code address). -->
+		<!--  - Part of a mis-defined neighboring table: traced the real xrefs into this region -->
+		<!--    instead  0x10d00 is read by isc_f3f2_bit6_hysteresis_gate_check as a single -->
+		<!--    NAMED SCALAR constant (DAT_00010d00), one of a small cluster of individually- -->
+		<!--    addressed scalars (10cf8/10cfa/10cfc/10cfe/10d00) with their own distinct -->
+		<!--    real caller. This is a cluster of loose scalar constants, not one contiguous -->
+		<!--    table  so 10d73 landing nearby is not "part of" a bigger table gone wrong. -->
+		<!--  - ISCV target values: the gate-check above compares against RAM f188, which is -->
+		<!--    written by fueling_inj_pw_calc (injector pulse-width calc)  a fueling-side -->
+		<!--    value, not an ISC/idle-side one. Confirmed via decompile, not ISCV-related. -->
+		<!--  - Injector voltage/latency table: the real "Injector Battery Voltage Latency -->
+		<!--    Compensation" name/address (128a2/128a7 region) is a separate, already-resolved -->
+		<!--    ghost-table item ~0x1E000 bytes away in a different part of the ROM  no -->
+		<!--    connection to 10d73 in any note or xref found. -->
+		<!--                                                                                -->
+		<!-- Net: isolated, unreferenced byte sequence with no structural match to any -->
+		<!-- pattern confirmed elsewhere in this ROM. Does not meet the bar (real F0xx RAM -->
+		<!-- tag + confirmed caller) for the "verified header, placeholder axis" treatment -->
+		<!-- used on ~25 other tables in this file. Do not treat as confirmed. Both axes -->
+		<!-- below are raw scraper duplicates, not real. Revisit only if a future indirect- -->
+		<!-- array pass or fresh xref surfaces a genuine caller. -->
+		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
 	<table name="TABLE_2D_00011834_Knock (possible: Knock/Lambda Composite Correction)" category="Unknown" address="11838" type="2D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
 		<!-- Axis corrected 2026-08-03 (item 24 follow-up, 3-events-back extension):
@@ -1026,6 +1050,30 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- address bug fix 2026-08-04: real breakpoints start at 2d0c0+6=2d0c6. -->
 		<table name="RPM" address="2d0c6" type="Y Axis" elements="6" scaling="RPM"/>
 	</table>
+	<!-- Table base address fix 2026-08-06 [Claude, byte-verified via Ghidra read_memory]:
+	     table's own address was pointing AT its table_3axis_record header (03 00 F0C0 F0C2 04)
+	     instead of header+7 (data start). Confirmed bytes: 03 00 F0 C0 F0 C2 04 -> mode=3,
+	     x_ptr=F0C0(RPM), y_ptr=F0C2(Load/MAP), nrows=4. Note: byte immediately after header
+	     (offset 7) is 0xFF, a probable sentinel  data may start at 12B0D... err 127AF, worth
+	     re-checking if row count still looks off after this fix. Address corrected 127A8 -> 127AF. -->
+	<table name="TABLE_3D_000127A8_ISC" category="Unknown" address="127AF" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<!-- X-axis corrected 2026-08-03 (item 17 follow-up, address bug fix
+		     2026-08-04): axis_lookup_interp record is at 0xd74c (bank=2), found via
+		     the SECOND event back in isc_f34e_f34a_correction_calc, BUT the record's
+		     first 6 bytes (F0C0 F170 0004) are the value_ptr/axis_ptr/count HEADER,
+		     not breakpoint data (confirmed via axis_lookup_interp's decompilation
+		     record layout: value_ptr@0, axis_ptr@2, count@4, breakpoints@6+). Real
+		     breakpoint array starts at 2d74c+6=2d752 (byte-verified real ramp data:
+		     0000 0080 00C0 0100...). Physical axis identity not independently
+		     confirmed  name left as placeholder. -->
+		<table name="RPM" address="2d752" type="X Axis" elements="4" scaling="RPM"/>
+		<!-- Y-axis corrected 2026-08-02 (item 17), address bug fix 2026-08-04: same
+		     header-vs-data-start issue as the X-axis above. Record at 0xd75a
+		     (bank=2), real breakpoints start at 2d75a+6=2d760. Physical axis identity
+		     not independently confirmed  name left as placeholder. -->
+		<table name="RPM" address="2d760" type="Y Axis" elements="7" scaling="RPM"/>
+	</table>
 	<table name="TABLE_2D_000127D8_ISC" category="Unknown" address="127DC" type="2D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
@@ -1142,54 +1190,27 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     table's own address was pointing AT its table_3axis_record header (03 00 F0C0 F0C2 0F)
 	     instead of header+7 (data start). Same class of bug as the axis header-offset issue,
 	     just at the table level. Confirmed bytes: 03 00 F0 C0 F0 C2 0F -> mode=3, x_ptr=F0C0(RPM),
-	     y_ptr=F0C2(Load/MAP), nrows=15. Addres-->
-	 	<!-- NAME FLAGGED 2026-08-07 [Claude]: "RPM" here is confirmed WRONG. Real caller
-		     traced directly (canister_purge_duty_calc_f4ac @0x19560): this axis's axis_ptr
-		     field (offset+2 of header @0x2d530 = 0xF0BA) is read, NOT F0C0/RPM. F0BA is the
-		     shared "MUT_E1" scratch cell (see review.md item 7), NOT a RAM sensor register.
-		     The value in F0BA is computed on the fly just before this axis's lookup, from
-		     table_lookup_interp(0x2ce8) blended with RAM cells F130/F298 and TCU-confirmed
-		     byte F4BC via two muldiv_s16_rounded stages (see disasm 0x195ab-0x195ee). So this
-		     is a dynamically-computed interpolation index, not a stored physical-sensor axis
-		      ruled out as RPM, Load, and Octane (no octane-chain link found; confirmed
-		     Octane Level lives at EEC8/EEC9 via a separate, unrelated call chain). F130/F298's
-		     own physical meaning not yet traced. Per this file's "never guess" discipline,
-		     NAME LEFT AS-IS pending further trace  flagging only, no rename applied.
-		<table name="RPM" address="2d536" type="X Axis" elements="9" scaling="RPM"/>" category="Unknown" address="12B0D" type="3D" scaling="uint8">-->
+	     y_ptr=F0C2(Load/MAP), nrows=15. Address corrected 12B06 -> 12B0D. -->
+	<table name="TABLE_3D_00012B06_CanisterPurge" category="Unknown" address="12B0D" type="3D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
 		<!-- X-axis corrected 2026-08-03 (item 17 follow-up), address bug fix
 		     2026-08-04: record at 0xd530 (bank=2), real breakpoints start at
 		     2d530+6=2d536. NOTE 2026-08-06 [Claude]: the 2026-08-04 comment
 		     below previously claimed this cross-validated against the
 		     Idle Error Correction tables' "Error" axis  that is WRONG and
-		     has been corrected. Idle Error Correction's real caller-->
-		    	<!-- elements reverted 15->9 2026-08-07 (user request): true calibrated count per
-		     header at 0x2d530 (F0C2 F0BA 0009) is 9. NOTE: the 2026-08-07 fix above set this
-		     to 15 specifically to avoid EcuFlash reading past the real 9-element axis array
-		     into adjacent RAM-pointer bytes (0xF0D4...), which rendered as garbage column
-		     values (e.g. "240828240742"). Reverting to 9 will likely reintroduce that same
-		     rendering corruption past column 9  flagging here in case it resurfaces.
-		<table name="RPM" address="2d536" type="X Axis" elements="9" scaling="RPM"/>2d146), a completely different address, not 0x2d536.
+		     has been corrected. Idle Error Correction's real caller
+		     (@0x272c6) was traced directly and pushes axis 0xD146
+		     (real 0x2d146), a completely different address, not 0x2d536.
 		     This 0x2d536 "RPM" axis here on Canister Purge remains
 		     correct on its own evidence (real caller @0x1960e traced,
 		     pushes 0xD530 directly into axis_lookup_interp), it just no
 		     longer cross-validates against Idle Error Correction  that
-		     was a coincidence of matching data, not a shared record.
-		     NOTE 2026-08-07 [user, EcuFlash Edit Table Metadata]: elements
-		     corrected 9 -> 15. The table's real ROM row-width (header nrows
-		     byte = 0x0F = 15) requires 15 columns to render without reading
-		     past the axis array into adjacent RAM-pointer bytes (0xF0D4...),
-		     which previously showed as garbage values (e.g. "24082284074")
-		     past the 9th column. Only the first 9 of these 15 breakpoints
-		     are genuine calibrated values from the ROM axis array at
-		     0x2d536; elements 10-15 are EcuFlash-side padding to match the
-		     true data width and are NOT real calibrated RPM breakpoints -
-		     do not treat the top-row labels past column 9 as meaningful.
-		<table name="RPM" address="2d536" type="X Axis" elements="15" scaling="RPM"/>
-		Y-axis corrected 2026-08-02 (item 17), address bug fix 2026-08-04: record
-		     at 0xd50c (bank=2), real breakpoints start at 2d50c+6=2d512.
+		     was a coincidence of matching data, not a shared record. -->
+		<table name="RPM" address="2d536" type="X Axis" elements="9" scaling="RPM"/>
+		<!-- Y-axis corrected 2026-08-02 (item 17), address bug fix 2026-08-04: record
+		     at 0xd50c (bank=2), real breakpoints start at 2d50c+6=2d512. -->
 		<table name="RPM" address="2d512" type="Y Axis" elements="15" scaling="RPM"/>
-	</table>-->
+	</table>
 	<!-- Table base address fix 2026-08-06 [Claude, byte-verified via Ghidra read_memory]:
 	     table's own address was pointing AT its table_3axis_record header (03 00 F0C0 F0C2 12)
 	     instead of header+7 (data start). Confirmed bytes: 03 00 F0 C0 F0 C2 12 -> mode=3,
@@ -1462,7 +1483,23 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- address bug fix 2026-08-04: real breakpoints start at 2d7b0+6=2d7b6. -->
 		<table name="RPM" address="2d7b6" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
-
+	<table name="TABLE_3D_000131B0_ISC" category="Unknown" address="131B7" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<!-- X-axis corrected 2026-08-03 (item 17 follow-up): confirmed via
+		     axis_lookup_interp(0xd856, bank=2), the SECOND event back (two
+		     axis_lookup_interp calls occur back-to-back immediately before this
+		     table's call in isc_integrator_update). Header byte-verified
+		     (F0C0 F170 000A). Physical axis identity not independently confirmed
+		     name left as placeholder. -->
+		<!-- address bug fix 2026-08-04: real breakpoints start at 2d856+6=2d85c. -->
+		<table name="RPM" address="2d85c" type="X Axis" elements="10" scaling="RPM"/>
+		<!-- Y-axis corrected 2026-08-02 (item 17): confirmed via axis_lookup_interp(0xd7b0,
+		     bank=2) immediately preceding this table's call in isc_integrator_update.
+		     Header byte-verified (F0C2 F190 000A). Same axis as 131A0/131A8
+		     (see note there). -->
+		<!-- address bug fix 2026-08-04: real breakpoints start at 2d7b0+6=2d7b6. -->
+		<table name="RPM" address="2d7b6" type="Y Axis" elements="10" scaling="RPM"/>
+	</table>
 	<table name="TABLE_2D_000131B8" category="Unknown" address="131BC" type="2D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
@@ -1486,7 +1523,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     ptr tags (F0C0/F0C2) are recorded above for reference if a future ROM
 		     variant has real data here. -->
 	</table>
-
+	<table name="TABLE_3D_000131CC" category="Unknown" address="131D3" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
 	<table name="TABLE_2D_000131D4_DualChannel" category="Unknown" address="131D8" type="2D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
@@ -1516,7 +1557,16 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     initial literal-push script only caught this function's LAST table call
 		     (0001313E) and missed the other 12 calls earlier in the same function body. -->
 	</table>
-
+	<table name="TABLE_3D_00013202" category="Unknown" address="13209" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="TABLE_3D_0001320A" category="Unknown" address="13211" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
 	<table name="TABLE_2D_00013212_TCU" category="Unknown" address="13216" type="2D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
 		<!-- Axis corrected 2026-08-03 (bulk item 17 follow-up rerun): confirmed via
@@ -1527,6 +1577,28 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Physical axis identity not independently confirmed. -->
 		<!-- address bug fix 2026-08-04: real breakpoints start at 2d636+6=2d63c. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
+	</table>
+	<table name="TABLE_3D_0001321C" category="Unknown" address="13223" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="TABLE_3D_00013236" category="Unknown" address="1323D" type="3D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="TABLE_2D_00013250" category="Unknown" address="13254" type="2D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="TABLE_2D_0001325E" category="Unknown" address="13262" type="2D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	</table>
+	<table name="TABLE_2D_0001326C" category="Unknown" address="13270" type="2D" scaling="uint8">
+		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
 	</table>
 	<table name="TABLE_2D_0001327A" category="Unknown" address="1327E" type="2D" scaling="uint8">
 		<!-- scraper-derived: no EcuFlash category/scaling metadata available -->
