@@ -468,32 +468,109 @@ def axis_shape_ok(axis_offset):
     particular signature isn't present (matches header_shape_ok's own
     caution above).
 
-    Returns (True, element_count, data_start_offset) if the header shape
-    is present and the element count looks sane (1-32), else
-    (False, None, None).
+    Returns (True, element_count, data_start_offset, shape_name) if any
+    known header shape is present and the element count looks sane
+    (1-32), else (False, None, None, None).
+
+    Tries all three documented header shapes (CHANGELOG.md Step 8b/8c),
+    not just the scaling-table shape -- review2.md's ROOT CAUSE writeup
+    (Pass 2 vs Pass 3 collisions) showed a real record's own trailing
+    bytes can coincidentally satisfy a DIFFERENT header gate, so checking
+    only one shape risks a false SUSPECT when a different header type is
+    actually what's sitting there:
+      - scaling (6b):  [F0-F7] xx [E0-FE] xx 00 [elem_count]
+      - 3D value (7b): 0x03 00 X-ptr(word) Y-ptr(word) nrows
+      - 2D value (4b): 0x02 00 axis-ptr(word)  -- no element count in the
+        header itself, so this shape can confirm "a header sits here" but
+        cannot confirm the claimed element count; treated as a distinct,
+        weaker positive (see verify_xml_axis).
+    Shapes are tried in this order (most to least specific) and the first
+    match wins.
     """
-    b = rom_bytes_at(ROM_BASE + axis_offset, 6)
-    if len(b) < 6:
-        return (False, None, None)
-    ptr1 = (b[0] << 8) | b[1]
-    ptr2 = (b[2] << 8) | b[3]
-    count = (b[4] << 8) | b[5]
-    if in_ram(ptr1) and in_ram(ptr2) and 1 <= count <= 32:
-        return (True, count, axis_offset + 6)
-    return (False, None, None)
+    b6 = rom_bytes_at(ROM_BASE + axis_offset, 6)
+    if len(b6) == 6:
+        ptr1 = (b6[0] << 8) | b6[1]
+        ptr2 = (b6[2] << 8) | b6[3]
+        count = (b6[4] << 8) | b6[5]
+        if in_ram(ptr1) and in_ram(ptr2) and 1 <= count <= 32:
+            return (True, count, axis_offset + 6, "scaling-6b")
+    b7 = rom_bytes_at(ROM_BASE + axis_offset, 7)
+    if len(b7) == 7 and b7[0] == 0x03 and b7[1] == 0x00:
+        x_ptr = (b7[2] << 8) | b7[3]
+        y_ptr = (b7[4] << 8) | b7[5]
+        nrows = b7[6]
+        if in_ram(x_ptr) and in_ram(y_ptr) and x_ptr != y_ptr and 1 <= nrows <= 32:
+            return (True, nrows, axis_offset + 7, "3d-value-7b")
+    b4 = rom_bytes_at(ROM_BASE + axis_offset, 4)
+    if len(b4) == 4 and b4[0] == 0x02 and b4[1] == 0x00:
+        ptr = (b4[2] << 8) | b4[3]
+        if in_ram(ptr):
+            return (True, None, axis_offset + 4, "2d-value-4b")
+    return (False, None, None, None)
+
+def find_header_behind(axis_offset):
+    """
+    Check whether a known header shape sits immediately BEHIND axis_offset
+    (at axis_offset - header_size, for each known header size). This is
+    the *expected, correct* axis convention confirmed elsewhere in this
+    ROM (e.g. the Load axis @2d308, header @2d302) -- the header precedes
+    the breakpoint array, and the XML address already correctly points at
+    the first real data value. axis_shape_ok() alone can't see this,
+    because it only ever looks AT axis_offset, never behind it.
+
+    Returns (size, header_offset, count, shape_name) for the first header
+    size that matches (6, then 7, then 4), or None if nothing is there.
+    """
+    for size in (6, 7, 4):
+        header_candidate = axis_offset - size
+        if header_candidate < 0:
+            continue
+        ok, count, data_off, shape_name = axis_shape_ok(header_candidate)
+        if ok and data_off == axis_offset:
+            return (size, header_candidate, count, shape_name)
+    return None
+
+def find_header_ahead(axis_offset):
+    """
+    Check whether a known header shape sits AHEAD of axis_offset (at
+    axis_offset + header_size). Unlike find_header_behind, this is a
+    genuine problem: it means the claimed XML address falls short of the
+    real record entirely (e.g. lands on the tail of the previous table,
+    or on empty/padding bytes), and the true header -- and true axis data
+    -- starts further along than the XML says.
+
+    Returns (size, header_offset, count, data_off, shape_name) for the
+    first header size that matches (6, then 7, then 4), or None.
+    """
+    for size in (6, 7, 4):
+        header_candidate = axis_offset + size
+        ok, count, data_off, shape_name = axis_shape_ok(header_candidate)
+        if ok:
+            return (size, header_candidate, count, data_off, shape_name)
+    return None
 
 def verify_xml_axis(name, axis_offset, elements_claimed):
     """
     Cross-check a single XML-declared axis child against independent ROM
     evidence, mirroring verify_xml_table()'s tiers but for axis records.
 
-    Two legitimate real-world shapes exist (see axis_shape_ok's docstring):
-    a 6-byte header-prefixed record, or a bare breakpoint array with no
-    header at all (Engine Temp @2d418 is the confirmed example of the
-    latter). Because the headerless shape can't be positively distinguished
-    from "wrong address that happens to contain plausible-looking word
-    values" by byte inspection alone, this check is deliberately limited to
-    the header-prefixed case for VERIFIED status -- a headerless axis
+    Three legitimate real-world shapes exist (see axis_shape_ok's
+    docstring): a scaling-table 6-byte header-prefixed record, a 3D-value
+    7-byte header (nrows read straight from the header, same confidence as
+    the scaling shape), a 2D-value 4-byte header (no element count in the
+    header itself, so it can only confirm "a header sits here", not the
+    claimed count), a header-prefixed record where the header sits BEHIND the
+    claimed address instead of at it (Engine Temp @2d418 turned out to be
+    this case, not headerless as previously assumed -- header @2d412,
+    confirmed via find_header_behind), or a genuine bare breakpoint array
+    with no header anywhere nearby at all.
+    Because the headerless shape can't be positively distinguished from
+    "wrong address that happens to contain plausible-looking word values"
+    by byte inspection alone, this check is deliberately limited to the
+    count-bearing header shapes (scaling-6b, 3d-value-7b) for VERIFIED
+    status. The count-less 2D-4b shape gets its own CHECK-tier status
+    (positive header evidence, but count unconfirmed) rather than being
+    silently folded into either VERIFIED or SUSPECT. A headerless axis
     always returns SUSPECT (report-only), never blocks import.
 
     Returns (status, detail, data_start_offset, data_len_bytes):
@@ -504,19 +581,73 @@ def verify_xml_axis(name, axis_offset, elements_claimed):
       that's the only span available to protect against a genuine
       collision even though the shape itself is unconfirmed.
     """
-    shape_ok, count_found, data_off = axis_shape_ok(axis_offset)
+    shape_ok, count_found, data_off, shape_name = axis_shape_ok(axis_offset)
     claimed_len = max(elements_claimed, 1) * 2
+    if shape_ok and shape_name == "2d-value-4b":
+        # No element count in this header shape -- can't confirm/deny the
+        # XML's claimed count, so this can never reach VERIFIED. Still
+        # report data_off (header+4) as the best-known real span rather
+        # than the claimed XML span, since we DO know a header sits here.
+        return ("CHECK",
+                "2D-value-style 4-byte header found at this address (mode 0x02, no element "
+                "count field) -- confirms a header exists but can't confirm the claimed %d "
+                "elements; likely a Pass2/Pass3 header-shape collision (review2.md ROOT "
+                "CAUSE), verify by hand" % elements_claimed,
+                data_off, claimed_len)
     if shape_ok:
         if count_found != elements_claimed:
-            return ("CHECK",
-                    "axis header found but element count mismatch: ROM says %d, XML claims %d" %
-                    (count_found, elements_claimed),
+            # Start is right (a real header sits exactly at the claimed
+            # address) but the record's own element count disagrees with
+            # what the XML claims -- the END of the axis is wrong, not
+            # the start.
+            return ("DATA-OFFSET",
+                    "axis header found (%s) at the claimed address, but element count "
+                    "disagrees: ROM says %d, XML claims %d -- start is right, the claimed "
+                    "END of the axis data is wrong" %
+                    (shape_name, count_found, elements_claimed),
                     data_off, count_found * 2)
-        return ("VERIFIED", "axis header shape OK, element count matches (%d)" % count_found,
+        return ("VERIFIED", "axis header shape OK (%s), element count matches (%d)" %
+                (shape_name, count_found),
                 data_off, count_found * 2)
-    return ("SUSPECT", "no axis header shape found at this address -- may be a headerless "
-                        "axis (real, e.g. Engine Temp @2d418) or a wrong address; byte "
-                        "inspection alone can't tell these apart, verify by hand",
+    # Nothing at the claimed address itself. First check BEHIND: a header
+    # immediately preceding axis_offset, with its data starting exactly at
+    # axis_offset, is the CORRECT convention confirmed elsewhere in this
+    # ROM (Load @2d308, header @2d302) -- this is a real VERIFIED axis
+    # that just happens to have its header a few bytes earlier, not a
+    # bug. Only check AHEAD (the genuine "start is wrong, real record is
+    # further along") if nothing sane sits behind.
+    behind = find_header_behind(axis_offset)
+    if behind is not None:
+        b_size, b_header_off, b_count, b_shape_name = behind
+        if b_count is not None and b_count != elements_claimed:
+            return ("DATA-OFFSET",
+                    "%s header found %d bytes behind this address (ROM offset 0x%05X) with data "
+                    "correctly starting here, but element count disagrees: ROM says %d, XML "
+                    "claims %d -- start is right, the claimed END of the axis data is wrong" %
+                    (b_shape_name, b_size, ROM_BASE + b_header_off, b_count, elements_claimed),
+                    axis_offset, (b_count * 2) if b_count is not None else claimed_len)
+        return ("VERIFIED",
+                "%s header found %d bytes behind this address (ROM offset 0x%05X), data starts "
+                "exactly where the XML claims -- same header-precedes-data convention as other "
+                "confirmed-good axes (e.g. Load @2d308)" % (b_shape_name, b_size, ROM_BASE + b_header_off),
+                axis_offset, claimed_len)
+    # Nothing behind either -- last check is a real header sitting AHEAD
+    # instead. If so, the XML address falls short of the true record
+    # entirely -- this genuinely is a START problem, not just a length one.
+    ahead = find_header_ahead(axis_offset)
+    if ahead is not None:
+        a_size, a_header_off, a_count, a_data_off, a_shape_name = ahead
+        a_count_str = ("%d elements" % a_count) if a_count is not None else "count unknown (2D-style header)"
+        return ("AXIS-OFFSET",
+                "no header at the claimed address or behind it, but a %s header found %d "
+                "bytes AHEAD (ROM offset 0x%05X, %s) -- the XML START address falls short of "
+                "the real record by %d bytes" %
+                (a_shape_name, a_size, ROM_BASE + a_header_off, a_count_str, a_size),
+                a_data_off, (a_count * 2) if a_count is not None else claimed_len)
+    return ("SUSPECT", "no known header shape (scaling-6b/3d-value-7b/2d-value-4b) found at, "
+                        "behind, or ahead of this address -- may be a genuine headerless axis "
+                        "or a wrong address further away than the +/-4/6/7 byte search radius; "
+                        "byte inspection alone can't tell these apart, verify by hand",
             axis_offset, claimed_len)
 
 def check_range_overlap(touched_ranges, start_offset, end_offset, header_offset=None):
@@ -876,6 +1007,63 @@ def set_last_xml_touched_addrs(offsets):
     opts = currentProgram.getOptions(PROGRAM_INFO_CATEGORY)
     opts.setString(XML_TOUCHED_ADDRS_KEY, ",".join("%X" % o for o in sorted(set(offsets))))
 
+def clear_degenerate_bookmarks():
+    """
+    Sweep the ENTIRE program (not just a tracked offsets list) and remove
+    every H8539F-TABLE-DEGENERATE bookmark, plus its associated label and
+    plate comment.
+
+    Unlike clear_xml_labels(), this is not scoped to _prev_offsets -- most
+    degenerate/same-axis findings are pure ROM-scraper artifacts at
+    addresses the XML step never touched (e.g. 0x131A0's empty header),
+    so they can't be found via the XML-touched-address list at all. This
+    also catches stale bookmarks from checks that have since been removed
+    from the script (e.g. the old FLATFILL sub-category), since it matches
+    on category rather than on which check is currently implemented.
+
+    Call this before rerunning Pass 3/4 if you want a clean slate rather
+    than accumulating bookmarks across repeated runs.
+    """
+    from ghidra.program.model.listing import CodeUnit
+    from ghidra.program.model.listing import BookmarkType
+    removed_labels    = 0
+    removed_plates    = 0
+    removed_bookmarks = 0
+    errors            = 0
+    SCRAPER_PREFIXES = ("TABLE_2D_", "TABLE_3D_")
+    all_bookmarks = []
+    _it = bookmarkMgr.getBookmarksIterator(BookmarkType.NOTE)
+    while _it.hasNext():
+        _bm = _it.next()
+        if _bm.getCategory() == "H8539F-TABLE-DEGENERATE":
+            all_bookmarks.append(_bm)
+    for bm in all_bookmarks:
+        try:
+            a = bm.getAddress()
+            bookmarkMgr.removeBookmark(bm)
+            removed_bookmarks += 1
+
+            for sym in list(symTable.getSymbols(a)):
+                nm = sym.getName()
+                if any(nm.startswith(p) for p in SCRAPER_PREFIXES) and \
+                        ("_EMPTY" in nm or "_SAMEAXIS" in nm or "_FLATFILL" in nm):
+                    symTable.removeSymbolSpecial(sym)
+                    removed_labels += 1
+
+            if listing.getComment(CodeUnit.PLATE_COMMENT, a) is not None:
+                plate = listing.getComment(CodeUnit.PLATE_COMMENT, a)
+                if "ROM SCRAPER" in plate and ("DEGENERATE" in plate or "FLAT-FILL" in plate
+                                                or "SAME AXIS" in plate):
+                    listing.setComment(a, CodeUnit.PLATE_COMMENT, None)
+                    removed_plates += 1
+        except Exception as e:
+            errors += 1
+            print("  WARNING: could not clear degenerate bookmark @ %s: %s" % (bm.getAddress(), e))
+    print("  [clear-degenerate] removed bookmarks: %d  removed labels: %d  "
+          "removed plates: %d  errors: %d" %
+          (removed_bookmarks, removed_labels, removed_plates, errors))
+
+
 def clear_xml_labels(offsets, clear_scraped=False):
     """
     Undo what apply_xml did at each of the given CPU-offset addresses:
@@ -937,6 +1125,17 @@ def clear_xml_labels(offsets, clear_scraped=False):
                     bookmarkMgr.removeBookmark(status_bm)
                     removed_bookmarks += 1
 
+            # H8539F-AXIS-OFFSET / H8539F-AXIS-DATA-OFFSET now get a per-parent-table
+            # suffix (e.g. "H8539F-AXIS-OFFSET-Knock_Sensor_Filter_Map_5") so that
+            # multiple tables sharing one axis address each keep their own bookmark
+            # instead of overwriting each other. Category is no longer an exact
+            # match, so sweep every bookmark at this address by prefix instead.
+            for bm in list(bookmarkMgr.getBookmarks(a)):
+                bm_cat = bm.getCategory()
+                if bm_cat.startswith("H8539F-AXIS-OFFSET") or bm_cat.startswith("H8539F-AXIS-DATA-OFFSET"):
+                    bookmarkMgr.removeBookmark(bm)
+                    removed_bookmarks += 1
+
             if clear_scraped:
                 scraped_bm = bookmarkMgr.getBookmark(a, BookmarkType.NOTE, "H8539F-SCRAPED-TABLE")
                 if scraped_bm is not None:
@@ -946,6 +1145,19 @@ def clear_xml_labels(offsets, clear_scraped=False):
                 rescued_bm = bookmarkMgr.getBookmark(a, BookmarkType.NOTE, "H8539F-TABLE-RESCUED")
                 if rescued_bm is not None:
                     bookmarkMgr.removeBookmark(rescued_bm)
+                    removed_bookmarks += 1
+
+                # H8539F-TABLE-DEGENERATE covers EMPTY and SAMEAXIS findings
+                # from the ROM scraper's Pass 3/4 -- these are scraper-only
+                # artifacts (never written by the XML step) so they belong
+                # in the clear_scraped branch alongside SCRAPED-TABLE/RESCUED,
+                # not the unconditional sweep above. Without this, degenerate
+                # bookmarks from a previous run (including ones for checks
+                # since removed, e.g. the old FLATFILL category) persist
+                # indefinitely across reruns.
+                degenerate_bm = bookmarkMgr.getBookmark(a, BookmarkType.NOTE, "H8539F-TABLE-DEGENERATE")
+                if degenerate_bm is not None:
+                    bookmarkMgr.removeBookmark(degenerate_bm)
                     removed_bookmarks += 1
 
             cu = listing.getCodeUnitAt(a)
@@ -1126,9 +1338,29 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
             header_int, hdr_convention = resolve_header_address(xml_addr_int, ttype, hdr_size)
             header_addr = addr(header_int)
 
+            # 2026-08-06 [Claude, fixing script per user report: CanisterPurge/ISC
+            # tables were showing raw header bytes (03 00 F0C0 F0C2 ...) in row 0
+            # of EcuFlash]: resolve_header_address() already correctly determines
+            # whether xml_addr_int IS the header ("header-at-xml-addr") or the
+            # header sits hdr_size bytes BEFORE it ("header-before-xml-addr") --
+            # but every downstream use below was silently discarding that answer
+            # and using the raw, unresolved xml_addr_int as the data offset
+            # regardless of which convention was found. That let tables whose XML
+            # address points AT the header (convention A) get verified/typed/
+            # labeled at the header itself, with the real data start (header +
+            # hdr_size) never computed until a metadata comment string built much
+            # later (which nothing else reads). Compute the corrected data
+            # address ONCE, right here, and use it for every check below instead
+            # of re-deriving (and re-breaking) the same wrong assumption.
+            if hdr_convention == "header-at-xml-addr":
+                real_data_int = header_int + hdr_size
+            else:
+                real_data_int = xml_addr_int
+
             if not in_rom(header_int):
                 header_int  = xml_addr_int
                 header_addr = addr(header_int)
+                real_data_int = xml_addr_int
                 meta.append("NOTE: header offset (-%d) outside ROM; "
                              "labeled at data address." % hdr_size)
                 verify_status, verify_detail = "SUSPECT", "computed header address fell outside ROM"
@@ -1136,7 +1368,7 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                 if hdr_convention != "unresolved":
                     meta.append("Header convention : %s" % hdr_convention)
                 verify_status, verify_detail = verify_xml_table(
-                    name, ttype, header_int - ROM_BASE, xml_addr_int - ROM_BASE)
+                    name, ttype, header_int - ROM_BASE, real_data_int - ROM_BASE)
 
             meta.append("Verify status  : %s (%s)" % (verify_status, verify_detail))
 
@@ -1189,7 +1421,12 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                 # the sentinel/next-header scan the same way verify_xml_table
                 # did, falling back to just the header bytes if neither finds
                 # a length (still enough to catch a header-into-header collision).
-                data_offset = xml_addr_int - ROM_BASE
+                # 2026-08-06: use the CORRECTED data offset (real_data_int),
+                # not the raw xml_addr_int -- see fix note above verify_xml_table's
+                # call site. Using the unresolved address here made the overlap
+                # scan look at header bytes instead of real data for any table
+                # on the "header-at-xml-addr" convention.
+                data_offset = real_data_int - ROM_BASE
                 span_len = find_next_header_boundary(data_offset)
                 if span_len is None:
                     span_len = find_sentinel_data_len(data_offset)
@@ -1292,7 +1529,18 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                         a_name, a_offset, a_elements)
                     a_addr_ghidra = addr(a_xml_addr_int)
 
-                    if a_status == "CHECK":
+
+                    if a_status == "AXIS-OFFSET":
+                        print("  [XML-VERIFY] AXIS OFFSET (START WRONG): '%s' (child of '%s') at 0x%05X -- %s" %
+                              (a_name, name, a_xml_addr_int, a_detail))
+                        safe_bookmark(a_addr_ghidra, "H8539F-AXIS-OFFSET-%s" % sanitise_name(name),
+                                      "%s (axis of '%s') -- %s" % (a_name, name, a_detail))
+                    elif a_status == "DATA-OFFSET":
+                        print("  [XML-VERIFY] AXIS DATA OFFSET (END WRONG): '%s' (child of '%s') at 0x%05X -- %s" %
+                              (a_name, name, a_xml_addr_int, a_detail))
+                        safe_bookmark(a_addr_ghidra, "H8539F-AXIS-DATA-OFFSET-%s" % sanitise_name(name),
+                                      "%s (axis of '%s') -- %s" % (a_name, name, a_detail))
+                    elif a_status == "CHECK":
                         print("  [XML-VERIFY] AXIS CHECK: '%s' (child of '%s') at 0x%05X -- %s" %
                               (a_name, name, a_xml_addr_int, a_detail))
                         safe_bookmark(a_addr_ghidra, "H8539F-AXIS-SUSPECT",
@@ -1346,10 +1594,12 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
 
                 type_header_as_data(header_addr, hdr_size)
                 touched_offsets.append(header_int)
-                if hdr_convention == "header-at-xml-addr":
-                    real_data_int = xml_addr_int + hdr_size
-                else:
-                    real_data_int = xml_addr_int
+                # 2026-08-06: real_data_int already computed once, correctly,
+                # right after resolve_header_address() above -- no need to
+                # re-derive it here (the old re-derivation was harmless since
+                # it used the same formula, but kept two copies of the same
+                # logic in sync by hand, which is exactly how this class of
+                # bug slips in). Reuse the single source of truth.
                 meta.append("Header address : 0x%05X  (code xrefs point here)" % header_int)
                 meta.append("Data address   : 0x%05X  (%d bytes after header)" %
                              (real_data_int, hdr_size))
@@ -1626,11 +1876,104 @@ def run_rom_scraper():
                     data_len = find_sentinel_data_len(i + 7)
                 if data_len is not None:
                     table_height = b[6] - 1
+                    # SAME-AXIS CHECK: a real 3D table needs two DISTINCT
+                    # RAM addresses for its X and Y axis redirection
+                    # pointers -- that's structurally required for a real
+                    # 2-axis (e.g. RPM x Load) grid. If X == Y, this is not
+                    # a genuine axis-driven table; confirmed live at
+                    # 0x10D73 ("03 00 F000 F000 03..."), which decompiles
+                    # to rpm_zone_enable_check() reading the HEADER BYTES
+                    # THEMSELVES as 3 packed big-endian u16 RPM thresholds
+                    # (offsets [1],[3],[5]) -- it never dereferences the
+                    # F000 pointer at all. Every genuine 3D table checked
+                    # on this ROM (Fuel Maps, Ignition Maps, Knock Filter
+                    # Maps, CanisterPurge, ISC) has distinct X/Y pointers;
+                    # this is the only header seen with X==Y. This check
+                    # is purely a raw-byte comparison (no reliance on any
+                    # Ghidra symbol/axis label you may have manually set),
+                    # so it should generalize safely to an unknown ROM.
+                    x_ptr_raw = (b[2] << 8) | b[3]
+                    y_ptr_raw = (b[4] << 8) | b[5]
+                    is_same_axis = x_ptr_raw == y_ptr_raw
+                    if is_same_axis:
+                        lbl      = "TABLE_3D_%08X_SAMEAXIS" % (ROM_BASE + i + 7)
+                        ghidra_a = addr(ROM_BASE + i + 7)
+                        sameaxis_text = (
+                            "ROM Scraper: 3D Value Table - INVALID (SAME AXIS)\n"
+                            "Header  : 7 bytes (mode=03, X ptr == Y ptr)\n"
+                            "X axis  : RAM:0x%04X\n"
+                            "Y axis  : RAM:0x%04X  (identical to X -- invalid)\n"
+                            "Header @: 0x%08X\n"
+                            "NOTE: a real 2-axis 3D table cannot have identical\n"
+                            "X and Y redirection pointers. This header shape\n"
+                            "matches the generic 3D-table convention but is NOT\n"
+                            "consumed as a real axis-driven grid anywhere in this\n"
+                            "binary -- confirmed (see 0x10D73 case) to instead be\n"
+                            "read as packed scalar fields at fixed byte offsets\n"
+                            "within the header itself, or possibly a flat scalar\n"
+                            "array following it, by unrelated code. Do NOT render\n"
+                            "as a populated EcuFlash table; needs manual typing." %
+                            (x_ptr_raw, y_ptr_raw, ROM_BASE + i))
+                        if (ROM_BASE + i) not in xml_touched:
+                            if symTable.getPrimarySymbol(ghidra_a) is None:
+                                safe_label_offset(i, lbl)
+                            safe_plate_offset(i, sameaxis_text, written_addrs)
+                            safe_bookmark(addr(ROM_BASE + i), "H8539F-TABLE-DEGENERATE",
+                                          "%s (3D, same-axis X=Y=0x%04X)" % (lbl, x_ptr_raw))
+                        i += 7 + data_len
+                        continue
+                    # DEGENERATE-TABLE CHECK: a real header (mode=03, valid
+                    # RAM x_ptr/y_ptr) can still have ZERO actual data rows
+                    # behind it if the 0xFF sentinel appears immediately at
+                    # i+7, i.e. data_len == 1. Confirmed live on this ROM at
+                    # 0x131A0/0x131A8/0x131B0/0x131C4_TCU (see review5.md
+                    # SEED #9): each reads "03 00 F0C0 F0C2 <nrows> FF" with
+                    # nrows nonzero but nothing but the sentinel behind it.
+                    # table_height alone can't catch this (nrows is real,
+                    # >=1), so cross-check data_len against the minimum
+                    # bytes a populated table of this height could occupy
+                    # (>=1 byte/row at an absolute floor). Anything at or
+                    # below that floor is a header-only/empty record, not a
+                    # populated table, and must not be scraped as one --
+                    # doing so previously caused EcuFlash to read straight
+                    # through the sentinel into the NEXT record's header
+                    # bytes and render them as bogus "cell values".
+                    is_degenerate = data_len <= 1 or data_len < table_height
+                    if is_degenerate:
+                        x_ptr = (b[2] << 8) | b[3]
+                        y_ptr = (b[4] << 8) | b[5]
+                        lbl   = "TABLE_3D_%08X_EMPTY" % (ROM_BASE + i + 7)
+                        ghidra_a = addr(ROM_BASE + i + 7)
+                        degenerate_text = (
+                            "ROM Scraper: 3D Value Table - DEGENERATE/EMPTY\n"
+                            "Header  : 7 bytes (mode=03, real X/Y RAM ptrs)\n"
+                            "Height  : %d rows claimed by header, but 0xFF\n"
+                            "          sentinel sits immediately behind it\n"
+                            "          (data_len=%d) -- ZERO real data rows.\n"
+                            "X axis  : RAM:0x%04X (redirection ptr, real)\n"
+                            "Y axis  : RAM:0x%04X (redirection ptr, real)\n"
+                            "Header @: 0x%08X\n"
+                            "NOTE: header/axis pointers are genuine and may\n"
+                            "still be referenced by live code (redirection\n"
+                            "to runtime sensor values) -- only the VALUE\n"
+                            "grid is absent. Do NOT render as a populated\n"
+                            "EcuFlash table; see review5.md SEED #9." %
+                            (table_height, data_len, x_ptr, y_ptr, ROM_BASE + i))
+                        if (ROM_BASE + i) not in xml_touched:
+                            if symTable.getPrimarySymbol(ghidra_a) is None:
+                                safe_label_offset(i, lbl)
+                            safe_plate_offset(i, degenerate_text, written_addrs)
+                            safe_bookmark(addr(ROM_BASE + i), "H8539F-TABLE-DEGENERATE",
+                                          "%s (3D, empty)" % lbl)
+                        safe_label_ram(x_ptr, "AXIS_X_%04X" % x_ptr)
+                        safe_label_ram(y_ptr, "AXIS_Y_%04X" % y_ptr)
+                        i += 7 + data_len
+                        continue
                     if table_height >= 1:
                         x_ptr = (b[2] << 8) | b[3]
                         y_ptr = (b[4] << 8) | b[5]
-                        lbl   = "TABLE_3D_%08X" % (ROM_BASE + i)
-                        ghidra_a = addr(ROM_BASE + i)
+                        lbl   = "TABLE_3D_%08X" % (ROM_BASE + i + 7)
+                        ghidra_a = addr(ROM_BASE + i + 7)
                         correction_text = (
                             "Corrected 3D Value Table\n"
                             "Header  : 7 bytes\n"
@@ -1665,9 +2008,44 @@ def run_rom_scraper():
                 if data_len is None:
                     data_len = find_sentinel_data_len(i + 4)
                 if data_len is not None:
+                    # DEGENERATE-TABLE CHECK (2D analog of the 3D check
+                    # above): a real header (mode byte, real RAM axis
+                    # ptr) can still have ZERO actual data behind it if
+                    # the 0xFF sentinel appears immediately at i+4, i.e.
+                    # data_len <= 1. Unlike the 3D header, the 2D header
+                    # carries no explicit row/column count field to
+                    # cross-check against, so the sentinel-adjacency
+                    # floor is the only signal available here.
+                    is_degenerate = data_len <= 1
+                    if is_degenerate:
+                        axis_ptr = (b[2] << 8) | b[3]
+                        lbl      = "TABLE_2D_%08X_EMPTY" % (ROM_BASE + i + 4)
+                        ghidra_a = addr(ROM_BASE + i + 4)
+                        degenerate_text = (
+                            "ROM Scraper: 2D Value Table - DEGENERATE/EMPTY\n"
+                            "Header  : 4 bytes (mode byte, real axis RAM ptr)\n"
+                            "0xFF sentinel sits immediately behind header\n"
+                            "(data_len=%d) -- ZERO real data values.\n"
+                            "Axis    : RAM:0x%04X (redirection ptr, real)\n"
+                            "Header @: 0x%08X\n"
+                            "NOTE: header/axis pointer are genuine and may\n"
+                            "still be referenced by live code (redirection\n"
+                            "to runtime sensor values) -- only the VALUE\n"
+                            "row is absent. Do NOT render as a populated\n"
+                            "EcuFlash table." %
+                            (data_len, axis_ptr, ROM_BASE + i))
+                        if (ROM_BASE + i) not in xml_touched:
+                            if symTable.getPrimarySymbol(ghidra_a) is None:
+                                safe_label_offset(i, lbl)
+                            safe_plate_offset(i, degenerate_text, written_addrs)
+                            safe_bookmark(addr(ROM_BASE + i), "H8539F-TABLE-DEGENERATE",
+                                          "%s (2D, empty)" % lbl)
+                        safe_label_ram(axis_ptr, "AXIS_%04X" % axis_ptr)
+                        i += 4 + data_len
+                        continue
                     axis_ptr = (b[2] << 8) | b[3]
-                    lbl      = "TABLE_2D_%08X" % (ROM_BASE + i)
-                    ghidra_a = addr(ROM_BASE + i)
+                    lbl      = "TABLE_2D_%08X" % (ROM_BASE + i + 4)
+                    ghidra_a = addr(ROM_BASE + i + 4)
                     correction_text = (
                         "Corrected 2D Value Table\n"
                         "Header  : 4 bytes\n"
@@ -1721,12 +2099,14 @@ _prev_path, _prev_ok = get_last_xml_applied()
 
 from ghidra.program.model.listing import BookmarkType as _BookmarkType2
 _ARTIFACT_CATEGORIES = ("H8539F-TABLE", "H8539F-SCRAPED-TABLE", "H8539F-TABLE-RESCUED",
+                         "H8539F-TABLE-DEGENERATE",
                          "H8539F-TABLE-SUSPECT", "H8539F-TABLE-DATA-OVERLAP", "H8539F-TABLE-DATA-OVERLAP-SUSPECT",
                          "H8539F-TABLE-CODE-OVERLAP", "H8539F-TABLE-CODE-OVERLAP-CORRECTED",
                          "H8539F-TABLE-NO-TABLE", "H8539F-TABLE-NO-TABLE-CORRECTED",
                          "H8539F-TABLE-SUSPECT-CORRECTED", "H8539F-TABLE-DATA-OVERLAP-CORRECTED",
                          "H8539F-TABLE-DATA-OVERLAP-SUSPECT-CORRECTED",
-                         "H8539F-AXIS", "H8539F-AXIS-SUSPECT", "H8539F-AXIS-DATA-OVERLAP")
+                         "H8539F-AXIS", "H8539F-AXIS-SUSPECT", "H8539F-AXIS-DATA-OVERLAP",
+                         "H8539F-AXIS-OFFSET", "H8539F-AXIS-DATA-OFFSET")
 _found_artifact_offsets = []
 _it2 = bookmarkMgr.getBookmarksIterator(_BookmarkType2.NOTE)
 while _it2.hasNext():
@@ -1766,6 +2146,16 @@ if _prev_path or _found_artifact_offsets:
             tx_clear = currentProgram.startTransaction("Clear previous XML labels")
             try:
                 clear_xml_labels(_prev_offsets, clear_scraped=do_clear_scraped)
+                if do_clear_scraped:
+                    # H8539F-TABLE-DEGENERATE (EMPTY/SAMEAXIS, and any
+                    # retired sub-category like the old FLATFILL) is a
+                    # pure ROM-scraper artifact, same bucket as
+                    # SCRAPED-TABLE/RESCUED -- clear it under the same
+                    # "also clear ROM-scraper bookmarks?" opt-in. Uses a
+                    # full-program sweep rather than _prev_offsets since
+                    # most degenerate finds sit at addresses the XML
+                    # never touched (e.g. 0x131A0's empty header).
+                    clear_degenerate_bookmarks()
             finally:
                 currentProgram.endTransaction(tx_clear, True)
             set_last_xml_touched_addrs([])

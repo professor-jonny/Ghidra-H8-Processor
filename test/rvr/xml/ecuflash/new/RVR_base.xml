@@ -180,8 +180,21 @@
 		<table name="Load (MAF Hz raw)" address="2d21e" type="Y Axis" elements="21" scaling="uint16"/>
 	</table>
 
-	<table name="Air Temperature Compensation" category="Air" address="2af78" type="2D" level="3" flipy="true" scaling="uint8">
-		<table name="Degrees" address="2d3ca" type="Y Axis" elements="8" scaling="Temp"/>
+	<table name="Air Temperature Compensation" category="Air" address="11d7a" type="2D" level="3" flipy="true" scaling="uint8">
+		<!-- Axis CORRECTED 2026-08-06: earlier pass this session wrongly concluded this table was
+		     "self-contained" with no real separate axis  that was based on reading only the SECOND
+		     of two pushes before the table_lookup_interp call (missed the axis-record push entirely).
+		     Full disassembly of iat_axis_update (0x213c6, sole caller via get_xrefs_to on 0x11d7a)
+		     shows TWO pushes: #0xD4A6 (bank=2) into axis_lookup_interp via pjsr @0x14735 BEFORE the
+		     #0x1D7A (bank=1) table push into table_lookup_interp  0xD4A6 is the real axis record,
+		     0x1D7A is just the value-table address. Header at 0x2d4a6 = F0D0 F118 0007 (ptr1=F0D0=
+		     IAT_raw per review5.md's own pointer map  textbook match for "Air Temp"), count=7.
+		     Breakpoints start 2d4a6+6=2d4ac (8,33,49,63,78,96,125  clean monotonic curve),
+		     immediately followed by the next table's clean header. Old "Degrees"/2d3ca/8-elem entry
+		     was wrong on all three counts (address, name, and element count)  was actually 2 bytes
+		     into an unrelated TPS array (see Max Total Upward WGDC Correction vs TPS, 2d3c8) with no
+		     real caller of its own. -->
+		<table name="Air Temp" address="2d4ac" type="Y Axis" elements="7" scaling="Temp"/>
 	</table>
 
 	<table name="Barometric Pressure Compensation" category="Air" address="11847" type="3D" level="3" swapxy="true" scaling="BoostBar">
@@ -236,12 +249,16 @@
 		<table name="RPM" address="2d0a0" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Accel Enrichment" category="Fuel" address="11cb5" type="2D" level="2" scaling="EnrichmentAdj">
-		<table name="RPM" address="2d68a" type="Y Axis" elements="10" scaling="RPM"/>
-	</table>
-
 	<table name="Post Start Enrich Trim vs Load" category="Fuel" address="11d86" type="2D" level="2" scaling="Percent (128)">
-		<table name="Load" address="2d35e" type="X Axis" elements="14" scaling="Load"/>
+		<!-- Axis CORRECTED 2026-08-06: confirmed via full disassembly of BOTH real callers
+		     (throttle_target_ramp_update @0x21771 and f2ca_table_override_from_f114_gate @0x2377a,
+		     get_xrefs_to on the table address). Both independently push literal record pointer
+		     0xD192 (bank=2) into axis_lookup_interp/table_lookup_interp before
+		     table_lookup_interp(0x11D86). Old "Load"/2d35e axis was wrong on two counts: address
+		     (real record is @2d192, not 2d35e) and name (header ptr1=F0C0=RPM, not Load; data
+		     0,32,64,96,128,160,192... is a clean RPM curve). Record @2d192: header F0C0 F190 000E
+		     (count=14), breakpoints start 2d192+6=2d198. -->
+		<table name="RPM" address="2d198" type="X Axis" elements="14" scaling="RPM"/>
 	</table>
 
 	<table name="Post Start Enrich Decay Multiplier" category="Fuel" address="11d98" type="2D" level="2" scaling="EnrichmentAdj">
@@ -268,20 +285,53 @@
 		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
 	</table>
 
+	<!-- 2026-08-06 Claude: NEW TABLE FOUND at 0x11ef0, previously unclaimed by any XML entry.
+	     This is what the old "Decel Fuel Cut Resume Enrich @ 11f04" bookmark was actually landing
+	     inside  NOT a real overlap with TABLE_2D_00011EE2_CompositeCalc (confirmed separately;
+	     that table's real data only spans 11ee2-11eef). Real caller: f250_f252_channel_snapshot_update
+	     (@0x24a38, pjsr @0x148a2 disassembled directly, not decompiler-inferred) calls
+	     table_3axis_interp_triple(bank=1, offset=0x1ef0). NOTE: Ghidra's auto-analysis has also
+	     labeled this address "PTR_flash_boot_init_00011ef0" (type addr) because the first 4 bytes
+	     (00 02 00 00) happen to equal the real function flash_boot_init's address (0x20000)
+	     CONFIRMED this is a false positive: get_xrefs_from(0x11ef0) shows only a DATA-type xref,
+	     nothing calls through it, and it is never used as code. The real usage is proven by
+	     disassembling table_3axis_interp_triple itself (@0x148a2): `cmp:g.b #0x3,@R4` at 0x148bf
+	     tests the mode byte; 0x11ef0's mode byte is 0x00 (not 3), so it takes the ELSE branch
+	     (0x148c4 onward)  a simpler, NOT YET DOCUMENTED record shape, distinct from
+	     table_2d_record/table_3axis_record. Traced byte-for-byte: R0 = mode_byte (0, here), shifted
+	     and added to the record pointer (no-op when mode_byte=0); the two interpolation endpoints
+	     are then read as fixed 16-bit fields at offset+6 (0x11ef6=0x02C0) and offset+8
+	     (0x11ef8=0x02C0), each added to a bias value (R3) supplied by the OUTER caller's own record
+	     (not part of this table itself). Both endpoints are equal here, so this call effectively
+	     returns a constant. Structure and meaning of the remaining bytes through 11f15 (repeating
+	     02C0 pairs, then 80-flat filler, then 00 01 00 01 FF) NOT YET DETERMINED  per this file's
+	     "never guess" discipline, left OUT of the XML rather than added with fabricated element
+	     counts or scaling. NEXT STEP: trace what RAM/record field the caller's own R3 bias comes
+	     from, and whether mode_byte ever varies at other call sites of this same primitive (only one
+	     real caller found so far). Table occupies at least 11ef0-11f15 (immediately followed by a
+	     confirmed table_2d_record header at 11f16, so upper bound is firm; lower bound/count open). -->
+
 	<!-- NOTE: address 128fa is the base; MT-specific file overrides to 128f6 (differs by 4 bytes) -->
+	<!-- 2026-08-06 [Claude, user-reported +4 offset confirmed by direct byte read]: this cluster of
+	     4 tables shares one table_2d_record header format (02 00 F0 C0) every 12 bytes, at 128f6,
+	     12902, 1290e, 1291a. Data starts 4 bytes after each header. "Neutral A/C Off" below already
+	     pointed at header+4 (128fa) and was correct. The other three were pointing AT the header
+	     itself (reading the header's own 02 00 F0 C0 bytes as if they were table data), corrupting
+	     the first row. Fixed to header+4 in all three. User independently found and verified the
+	     same +4 correction by hand in EcuFlash before this fix was made. -->
 	<table name="Decel Fuel Cut Delay - Neutral A/C Off" category="Fuel" address="128fa" type="2D" level="2" scaling="uint8">
 		<table name="Engine Load" address="2d3fe" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
-	<table name="Decel Fuel Cut Delay - In Gear A/C Off" category="Fuel" address="12902" type="2D" level="2" scaling="uint8">
+	<table name="Decel Fuel Cut Delay - In Gear A/C Off" category="Fuel" address="12906" type="2D" level="2" scaling="uint8">
 		<table name="Engine Load" address="2d3fe" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
-	<table name="Decel Fuel Cut Delay - Neutral A/C On" category="Fuel" address="1290e" type="2D" level="2" scaling="uint8">
+	<table name="Decel Fuel Cut Delay - Neutral A/C On" category="Fuel" address="12912" type="2D" level="2" scaling="uint8">
 		<table name="Engine Load" address="2d3fe" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
-	<table name="Decel Fuel Cut Delay - In Gear A/C On" category="Fuel" address="1291a" type="2D" level="2" scaling="uint8">
+	<table name="Decel Fuel Cut Delay - In Gear A/C On" category="Fuel" address="1291e" type="2D" level="2" scaling="uint8">
 		<table name="Engine Load" address="2d3fe" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
@@ -289,18 +339,45 @@
 		<table name="Engine Speed" address="2d11c" type="X Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Limp Home - TPS Table" category="Fuel" address="11dc9" type="3D" level="2" swapxy="true" scaling="uint8">
-		<table name="TPS" address="2d3f8" type="X Axis" elements="5" scaling="Volts16"/>
-		<table name="RPM" address="2d3ee" type="Y Axis" elements="5" scaling="RPM"/>
+	<!-- RENAMED and axes FIXED 2026-08-04, matching ROM-specific override in
+	     new/21000011_1997-2001_RVR_X3_Mt__4g63t_.xml. This is NOT a limp home /
+	     TPS table - it belongs to f0ba_f2d0_o2_mode7_8_correction_calc (0x242f5),
+	     confirmed by direct xref and disassembly. Table DATA address 11dc9 was
+	     already correct; only the axes and name were wrong. Name kept identical
+	     to the override entry so ECUFlash's name-based override matching works
+	     correctly (previously the override renamed this table while the base
+	     kept the old name, so ECUFlash showed the old broken base entry as a
+	     separate, still-active table instead of replacing it). -->
+	<table name="TABLE_3D_00011DC9_O2Mode7_8Correction (possible: Lean Spool Load)" category="Fuel" address="11dc9" type="3D" level="2" swapxy="true" scaling="uint8">
+		<!-- scaling fixed 2026-08-07 (review5.md SEED #4 follow-up): raw placeholder
+		     replaced with RPM scaling (x*1000/256). Verified against real caller
+		     f0ba_f2d0_o2_mode7_8_correction_calc @0x24319 (confirmed real axis, sole
+		     caller). Raw values 128,256,512,768,1024 -> 500/1000/2000/3000/4000 RPM,
+		     a clean idle-to-low-RPM curve consistent with the same formula used on
+		     the confirmed-good RPM axis at 2d2e6. -->
+		<table name="Axis1 (possible: RPM)" address="2d3ee" type="X Axis" elements="5" scaling="RPM"/>
+		<!-- scaling fixed 2026-08-07 (review5.md SEED #4 follow-up): raw placeholder
+		     replaced with Load scaling (x*10/32). Raw values 0,33,65,97,129,161,193
+		     -> 0/10.3/20.3/30.3/40.3/50.3/60.3%, a clean ~10%-step Load curve. -->
+		<table name="Axis2 (possible: Load)" address="2d3fe" type="Y Axis" elements="7" scaling="Load"/>
 	</table>
 
 	<table name="Min Coolant Temp for Closed Loop" category="Fuel" address="108a4" type="1D" level="2" scaling="Temp"/>
 
 	<table name="Injector Scaling" category="Fuel" address="10808" type="1D" level="2" scaling="InjectorScaling"/>
 
+<!-- 2026-08-06 Claude: "Injector Battery Voltage Latency Compensation" (address=128a7) REMOVED.
+	     Zero xrefs at 128a7 (get_xrefs_to). The claimed byte range sits entirely inside the real
+	     "Desired ISCV intial step position with AC off-Neutral" table's confirmed data (header at
+	     0x128a2, verified via the same 8-DATA-xref pointer-table signature as other confirmed
+	     tables in this file, e.g. 124ec/1264a). No real table backs this entry  matches the
+	     independent resolution already applied in the duplicate XML (21000011_...Mt_4g63t_.xml,
+	     2026-07-30, review.md item 19). Not re-added pending a replacement address; none found.
 	<table name="Injector Battery Voltage Latency Compensation" category="Fuel" address="128a7" type="2D" level="2" scaling="InjectorLatency">
 		<table name="Battery Voltage" address="2d260" type="Y Axis" elements="7" scaling="BatteryVoltage"/>
 	</table>
+	-->
+
 
 	<!-- ===== LEAN SPOOL ===== -->
 
@@ -334,9 +411,18 @@
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
 	</table>
 
-	<table name="Warmup Retard" category="Timing" address="12500" type="3D" level="1" scaling="Enrich">
+<!-- 2026-08-06 Claude: "Warmup Retard" address CORRECTED 12500 -> 12651. Original address (record
+     pointer 124f9) had zero xrefs and sat 13 bytes into Boost Enhancement Enrich/Enlean's own
+     confirmed data (header at 124ec, verified live caller isc_f34e_f34a_correction_calc via
+     table_lookup_indexed's pointer-slot dispatch)  not a separate table. The duplicate XML
+     (21000011_...Mt_4g63t_.xml) already carried this fix from an earlier session (2026-07-30,
+     review.md item 19): real record found at 1264a, immediately after Boost Enhancement's 0xFF
+     sentinel, matching header shape exactly (03 14 F0C0 F0C2 12) and confirmed via the same
+     8-DATA-xref pointer-table signature as 124ec (0x2da0c-0x2da28). Independently re-verified
+     here 2026-08-06 before applying to this file  xrefs and header bytes match exactly. -->
+	<table name="Warmup Retard" category="Timing" address="12651" type="3D" level="1" scaling="Enrich">
 		<table name="Load" address="2d382" type="X Axis" elements="19" scaling="Load"/>
-		<table name="RPM" address="2d332" type="Y Axis" elements="17" scaling="RPM"/>
+		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
 	</table>
 
 	<table name="Ignition Trim vs Eng Temp" category="Timing" address="127b0" type="2D" level="3" scaling="Enrich">
@@ -344,7 +430,10 @@
 	</table>
 
 	<table name="Ignition Trim vs Air Temp" category="Timing" address="127be" type="2D" level="3" scaling="Enrich">
-		<table name="Air Temp" address="2d418" type="X Axis" elements="8" scaling="Temp"/>
+		<!-- fixed 2026-08-05 (review5.md SEED #1): was "Air Temp". 9 of 10 uses of 2d418
+		     elsewhere in this file (incl. Ghidra bookmark cross-check on "Desired Idle
+		     RPM-Drive") agree this address is Engine Temp; this was the lone outlier. -->
+		<table name="Engine Temp" address="2d418" type="X Axis" elements="8" scaling="Temp"/>
 	</table>
 
 	<table name="Ignition Trim - Baro" category="Timing" address="127e4" type="2D" level="2" scaling="Enrich">
@@ -395,36 +484,63 @@
 	<!-- ===== KNOCK CONTROL ===== -->
 
 	<table name="Knock Control Above Load" category="Knock Control" address="12832" type="2D" level="2" scaling="Load8">
-		<table name="Engine Load" address="2d2e6" type="X Axis" elements="10" scaling="RPM"/>
+		<!-- fixed 2026-08-05 (review5.md SEED #2): was "Engine Load"/RPM-scaled, 10 elements.
+		     Header 6 bytes behind 2d2e6 (2d2e0: F0C0 F170 000E, ptr1=F0C0=RPM, count=14) proves
+		     the real record is 14-element RPM, matching the confirmed-good axis used on
+		     Lean Spool Trailing Time - Rich Side at the same address. -->
+		<table name="RPM" address="2d2e6" type="X Axis" elements="14" scaling="RPM"/>
 	</table>
 
 	<table name="Octane Control Above Load" category="Knock Control" address="12840" type="2D" level="2" scaling="Load8">
-		<table name="Engine Load" address="2d2e6" type="X Axis" elements="10" scaling="RPM"/>
+		<!-- fixed 2026-08-05 (review5.md SEED #2): was "Engine Load"/RPM-scaled, 10 elements.
+		     Same fix as Knock Control Above Load above real record at 2d2e6 is
+		     14-element RPM, not 10-element Engine Load. -->
+		<table name="RPM" address="2d2e6" type="X Axis" elements="14" scaling="RPM"/>
 	</table>
 
 	<table name="Knock Sensor Filter Map 1" category="Knock Control" address="12f22" type="3D" level="1" swapxy="true" scaling="uint8">
-		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
-		<table name="RPM" address="2d24e" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- Axes CORRECTED 2026-08-06: confirmed via full disassembly of tcu_shift_solenoid_table_init
+		     (0x2b9f4), the real (and only) caller of all 5 Knock Sensor Filter Map tables (get_bulk_xrefs
+		     confirmed no other xrefs exist). Two axis_lookup_interp calls immediately precede the first
+		     table_lookup_interp call, pushing record pointers 0xD636 and 0xD650 (bank=2); these are
+		     shared across all 5 tables. Old "TAR"/2d24e assignment had NO caller support at all; it was
+		     a placeholder used solely to make the table render in EcuFlash (per user). 0x2D24E's only
+		     real caller is the unrelated f28e_f292_knock_lambda_composite_calc chain.
+		     Record @2d636: header F0C0 F170 000A (ptr1=F0C0=RPM, count=10), breakpoints start 2d636+6=2d63c.
+		     Record @2d650: header F0C2 F196 000A (ptr1=F0C2=Load/MAP, count=10), breakpoints start 2d650+6=2d656.
+		     NOTE: caller is tcu_shift_solenoid_table_init, not any knock-control routine; the
+		     "Knock Sensor Filter Map"/"Knock Control" table name and category are themselves suspect
+		     and not addressed by this fix; flagged for separate follow-up. -->
+		<table name="RPM" address="2d63c" type="X Axis" elements="10" scaling="RPM"/>
+		<table name="Load" address="2d656" type="Y Axis" elements="10" scaling="Load"/>
 	</table>
 
 	<table name="Knock Sensor Filter Map 2" category="Knock Control" address="12f8e" type="3D" level="1" swapxy="true" scaling="uint8">
-		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
-		<table name="RPM" address="2d24e" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- Axes CORRECTED 2026-08-06: see Knock Sensor Filter Map 1 above for full trace. Same shared
+		     axis pair (tcu_shift_solenoid_table_init, record pointers 0xD636/0xD650). -->
+		<table name="RPM" address="2d63c" type="X Axis" elements="10" scaling="RPM"/>
+		<table name="Load" address="2d656" type="Y Axis" elements="10" scaling="Load"/>
 	</table>
 
 	<table name="Knock Sensor Filter Map 3" category="Knock Control" address="12ffa" type="3D" level="1" swapxy="true" scaling="uint8">
-		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
-		<table name="RPM" address="2d24e" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- Axes CORRECTED 2026-08-06: see Knock Sensor Filter Map 1 above for full trace. Same shared
+		     axis pair (tcu_shift_solenoid_table_init, record pointers 0xD636/0xD650). -->
+		<table name="RPM" address="2d63c" type="X Axis" elements="10" scaling="RPM"/>
+		<table name="Load" address="2d656" type="Y Axis" elements="10" scaling="Load"/>
 	</table>
 
 	<table name="Knock Sensor Filter Map 4" category="Knock Control" address="13066" type="3D" level="1" swapxy="true" scaling="uint8">
-		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
-		<table name="RPM" address="2d24e" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- Axes CORRECTED 2026-08-06: see Knock Sensor Filter Map 1 above for full trace. Same shared
+		     axis pair (tcu_shift_solenoid_table_init, record pointers 0xD636/0xD650). -->
+		<table name="RPM" address="2d63c" type="X Axis" elements="10" scaling="RPM"/>
+		<table name="Load" address="2d656" type="Y Axis" elements="10" scaling="Load"/>
 	</table>
 
 	<table name="Knock Sensor Filter Map 5" category="Knock Control" address="130d2" type="3D" level="1" swapxy="true" scaling="uint8">
-		<table name="TAR" type="X Axis" elements="10" scaling="Load16"/>
-		<table name="RPM" address="2d24e" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- Axes CORRECTED 2026-08-06: see Knock Sensor Filter Map 1 above for full trace. Same shared
+		     axis pair (tcu_shift_solenoid_table_init, record pointers 0xD636/0xD650). -->
+		<table name="RPM" address="2d63c" type="X Axis" elements="10" scaling="RPM"/>
+		<table name="Load" address="2d656" type="Y Axis" elements="10" scaling="Load"/>
 	</table>
 
 	<!-- ===== ISCV CONTROL ===== -->
@@ -485,11 +601,11 @@
 	</table>
 
 	<table name="Idle Error Correction - Neutral" category="Idle" address="1295e" type="2D" level="3" scaling="ISCVSteps">
-		<table name="Error" address="2d536" type="X Axis" elements="9" scaling="RPM"/>
+		<table name="Error" address="2d146" type="X Axis" elements="9" scaling="RPM"/><!-- 2026-08-06 Claude: address corrected 2d536->2d146, real caller @0x272c6 traced directly, pushes axis 0xD146 (not 0xD536) before dispatching to this table via bit test @0xf0f8. Header F0C0/RPM/count=9 matches. Name "Error"/scaling "RPM" left AS-IS pending further trace breakpoint values (0,8,16,24,32,40,48,56,64) are anomalously small for an RPM axis compared to every other confirmed RPM axis in this file, see review5.md SEED #3 update. -->
 	</table>
 
 	<table name="Idle Error Correction - Drive AC On" category="Idle" address="1296c" type="2D" level="3" scaling="uint8">
-		<table name="Error" address="2d536" type="X Axis" elements="9" scaling="RPM"/>
+		<table name="Error" address="2d146" type="X Axis" elements="9" scaling="RPM"/><!-- 2026-08-06 Claude: same fix as Idle Error Correction - Neutral above, same real caller @0x272c6 (dispatches to this table via the same bit test, opposite branch) -->
 	</table>
 
 	<!-- ===== TURBO ===== -->
@@ -538,7 +654,7 @@
 	</table>
 
 	<table name="Turbo Boost Error Correction" category="Turbo" address="12a80" type="2D" level="1" scaling="DynamicBoost">
-		<table name="Boost Error" address="2d59c" type="Y Axis" elements="16" scaling="BoostError"/>
+		<table name="Boost Error" address="2d59c" type="Y Axis" elements="17" scaling="BoostError"/><!-- 2026-08-06 Claude: elements 16->17, confirmed via raw ROM bytes (header at 2d596 declares count=17; 17 clean values precede a clean next-table header) -->
 	</table>
 
 	<table name="Max Total Upward WGDC Correction vs TPS" category="Turbo" address="12a72" type="2D" level="2" scaling="DynamicBoost">
@@ -546,23 +662,48 @@
 	</table>
 
 	<table name="Max Wastegate Duty # 1" category="Turbo" address="12a96" type="2D" level="2" scaling="WGDuty">
-		<table name="RPM" address="2d334" type="Y Axis" elements="16" scaling="RPM"/>
+		<!-- Axis CORRECTED 2026-08-06: confirmed via full disassembly of ign_advance_base_calc_f860
+		     (0x18f8a), the real caller (get_xrefs_to on the table address). Function pushes literal
+		     record pointer 0xD570 (bank=2) into axis_lookup_interp immediately before selecting between
+		     table_lookup_interp(0x12A96) and table_lookup_interp(0x12AAA) via F0F8 bit5 (this table =
+		     bit5 set). Old "RPM"/2d334 axis had ZERO xrefs (get_xrefs_to confirmed); unverified
+		     placeholder, not a real caller-confirmed axis, same failure mode as the Knock Sensor Filter
+		     Map TAR placeholder fixed earlier this session.
+		     Record @2d570: header F0C0 F170 0010 (ptr1=F0C0=RPM, count=16), breakpoints start
+		     2d570+6=2d576. Shared identically with Max Wastegate Duty #2 (same function, other branch). -->
+		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
 	<table name="Max Wastegate Duty # 2" category="Turbo" address="12aaa" type="2D" level="2" scaling="WGDuty">
-		<table name="RPM" address="2d334" type="Y Axis" elements="16" scaling="RPM"/>
+		<!-- Axis CORRECTED 2026-08-06: see Max Wastegate Duty #1 above for full trace. Same caller
+		     (ign_advance_base_calc_f860), F0F8 bit5 clear branch, same shared axis record @2d570. -->
+		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
 	<table name="Max Wastegate Duty # 3" category="Turbo" address="12abe" type="2D" level="2" scaling="WGDuty">
-		<table name="RPM" address="2d334" type="Y Axis" elements="16" scaling="RPM"/>
+		<!-- Axis CORRECTED 2026-08-06: confirmed via full disassembly of ign_advance_idle_correction_f44e
+		     (0x190df), the real caller (get_xrefs_to on the table address). Same pattern as Max Wastegate
+		     Duty #1/#2: record pointer 0xD570 pushed into axis_lookup_interp before selecting between
+		     table_lookup_interp(0x12ABE) and table_lookup_interp(0x12AD2) via the same F0F8 bit5 test
+		     (this table = bit5 set). Old "RPM"/2d334 axis had ZERO xrefs; unverified placeholder. -->
+		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
 	<table name="Max Wastegate Duty # 4" category="Turbo" address="12ad2" type="2D" level="2" scaling="WGDuty">
-		<table name="RPM" address="2d334" type="Y Axis" elements="16" scaling="RPM"/>
+		<!-- Axis CORRECTED 2026-08-06: see Max Wastegate Duty #3 above for full trace. Same caller
+		     (ign_advance_idle_correction_f44e), F0F8 bit5 clear branch, same shared axis record @2d570. -->
+		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
 	<table name="Boost Desired Engine Load # 1" category="Turbo" address="12af8" type="2D" level="2" scaling="Load8">
-		<table name="RPM" address="2d334" type="Y Axis" elements="9" scaling="RPM"/>
+		<!-- Axis CORRECTED 2026-08-06: confirmed via full disassembly of ign_advance_load_correction_f450
+		     (0x191ca), the real caller (get_xrefs_to on the table address). Function pushes literal
+		     record pointer 0xD5D6 (bank=2) into axis_lookup_interp/table_lookup_interp before the
+		     table_lookup_interp(0x12AF8) call - same pattern as the Max Wastegate Duty #1-4 fixes.		     Old "RPM"/2d334 axis had ZERO xrefs (get_xrefs_to confirmed), same unverified-placeholder
+		     failure mode. Record @2d5d6: header F0C0 F190 0009 (ptr1=F0C0=RPM, count=9), breakpoints
+		     start 2d5d6+6=2d5dc (0,64,128,192,256,320,384,448,512  clean RPM curve). Name "RPM" was
+		     already correct by coincidence; address/element-count were wrong (2d334/9 -> 2d5dc/9). -->
+		<table name="RPM" address="2d5dc" type="Y Axis" elements="9" scaling="RPM"/>
 	</table>
 
 	<table name="WGDC Correction update delay #1" category="Turbo" address="10df0" type="1D" level="1" scaling="uint16"/>
@@ -570,6 +711,176 @@
 	<table name="WGDC Correction update delay #2" category="Turbo" address="10df2" type="1D" level="1" scaling="uint16"/>
 
 	<table name="Boost Control RPM/MPH Crossover" category="Turbo Boost non-JDM" address="12f84" type="1D" level="3" scaling="RPMPerMPH"/>
+
+	<!-- ===== SCALING TABLES (unresolved) ===== -->
+	<!-- 2026-08 [Ghidra RE]: raw H8539F-SCRAPED-TABLE (Scaling) records from the ROM scraper,
+	     exposed here as plain 1D byte arrays (scaling="uint8", no header bytes  confirmed via
+	     live ROM read at 0x12065) so the numbers can be eyeballed and a real scaling/purpose
+	     assigned once identified. Not yet wired to any caller/table category is a holding pen. -->
+
+	<table name="Scaling 12065" category="Scaling Tables" address="12065" type="1D" elements="18" scaling="uint8"/>
+
+	<table name="Scaling 1208B" category="Scaling Tables" address="1208b" type="1D" elements="12" scaling="uint8"/>
+
+	<table name="Scaling 1209E" category="Scaling Tables" address="1209e" type="1D" elements="12" scaling="uint8"/>
+
+	<table name="Scaling 121C3" category="Scaling Tables" address="121c3" type="1D" elements="12" scaling="uint8"/>
+
+	<table name="Scaling 121D6" category="Scaling Tables" address="121d6" type="1D" elements="10" scaling="uint8"/>
+
+	<table name="Scaling 12222" category="Scaling Tables" address="12222" type="1D" elements="10" scaling="uint8"/>
+
+	<table name="Scaling 1246F" category="Scaling Tables" address="1246f" type="1D" elements="10" scaling="uint8"/>
+
+	<table name="Scaling 13576" category="Scaling Tables" address="13576" type="1D" elements="284" scaling="uint8"/>
+
+	<table name="Scaling 23CEA" category="Scaling Tables" address="23cea" type="1D" elements="174" scaling="uint8"/>
+
+	<table name="Scaling 2D080" category="Scaling Tables" address="2d080" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D09A" category="Scaling Tables" address="2d09a" type="1D" elements="38" scaling="uint8"/>
+
+	<table name="Scaling 2D0C0" category="Scaling Tables" address="2d0c0" type="1D" elements="18" scaling="uint8"/>
+
+	<table name="Scaling 2D0D2" category="Scaling Tables" address="2d0d2" type="1D" elements="30" scaling="uint8"/>
+
+	<table name="Scaling 2D0F0" category="Scaling Tables" address="2d0f0" type="1D" elements="38" scaling="uint8"/>
+
+	<table name="Scaling 2D116" category="Scaling Tables" address="2d116" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D130" category="Scaling Tables" address="2d130" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D146" category="Scaling Tables" address="2d146" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D15E" category="Scaling Tables" address="2d15e" type="1D" elements="34" scaling="uint8"/>
+
+	<table name="Scaling 2D180" category="Scaling Tables" address="2d180" type="1D" elements="18" scaling="uint8"/>
+
+	<table name="Scaling 2D192" category="Scaling Tables" address="2d192" type="1D" elements="34" scaling="uint8"/>
+
+	<table name="Scaling 2D1B4" category="Scaling Tables" address="2d1b4" type="1D" elements="70" scaling="uint8"/>
+
+	<table name="Scaling 2D1FA" category="Scaling Tables" address="2d1fa" type="1D" elements="16" scaling="uint8"/>
+
+	<table name="Scaling 2D20A" category="Scaling Tables" address="2d20a" type="1D" elements="14" scaling="uint8"/>
+
+	<table name="Scaling 2D218" category="Scaling Tables" address="2d218" type="1D" elements="48" scaling="uint8"/>
+
+	<table name="Scaling 2D242" category="Scaling Tables" address="2d248" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D274" category="Scaling Tables" address="2d274" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D29C" category="Scaling Tables" address="2d29c" type="1D" elements="14" scaling="uint8"/>
+
+	<table name="Scaling 2D2AA" category="Scaling Tables" address="2d2aa" type="1D" elements="34" scaling="uint8"/>
+
+	<table name="Scaling 2D2CC" category="Scaling Tables" address="2d2cc" type="1D" elements="20" scaling="uint8"/>
+
+	<table name="Scaling 2D2E0" category="Scaling Tables" address="2d2e0" type="1D" elements="34" scaling="uint8"/>
+
+	<table name="Scaling 2D302" category="Scaling Tables" address="2d302" type="1D" elements="42" scaling="uint8"/>
+
+	<table name="Scaling 2D32C" category="Scaling Tables" address="2d32c" type="1D" elements="42" scaling="uint8"/>
+
+	<table name="Scaling 2D356" category="Scaling Tables" address="2d356" type="1D" elements="38" scaling="uint8"/>
+
+	<table name="Scaling 2D37C" category="Scaling Tables" address="2d37c" type="1D" elements="44" scaling="uint8"/>
+
+	<table name="Scaling 2D3A8" category="Scaling Tables" address="2d3a8" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D3C2" category="Scaling Tables" address="2d3c2" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D3DA" category="Scaling Tables" address="2d3da" type="1D" elements="20" scaling="uint8"/>
+
+	<table name="Scaling 2D412" category="Scaling Tables" address="2d412" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D428" category="Scaling Tables" address="2d428" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D440" category="Scaling Tables" address="2d440" type="1D" elements="28" scaling="uint8"/>
+
+	<table name="Scaling 2D45C" category="Scaling Tables" address="2d45c" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D472" category="Scaling Tables" address="2d472" type="1D" elements="30" scaling="uint8"/>
+
+	<table name="Scaling 2D4A6" category="Scaling Tables" address="2d4a6" type="1D" elements="20" scaling="uint8"/>
+
+	<table name="Scaling 2D4BA" category="Scaling Tables" address="2d4ba" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D4D0" category="Scaling Tables" address="2d4d0" type="1D" elements="60" scaling="uint8"/>
+
+	<table name="Scaling 2D50C" category="Scaling Tables" address="2d50c" type="1D" elements="36" scaling="uint8"/>
+
+	<table name="Scaling 2D530" category="Scaling Tables" address="2d530" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D548" category="Scaling Tables" address="2d548" type="1D" elements="40" scaling="uint8"/>
+
+	<table name="Scaling 2D570" category="Scaling Tables" address="2d570" type="1D" elements="38" scaling="uint8"/>
+
+	<table name="Scaling 2D596" category="Scaling Tables" address="2d596" type="1D" elements="40" scaling="uint8"/>
+
+	<table name="Scaling 2D5BE" category="Scaling Tables" address="2d5be" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D5D6" category="Scaling Tables" address="2d5d6" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D5EE" category="Scaling Tables" address="2d5ee" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D606" category="Scaling Tables" address="2d606" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D620" category="Scaling Tables" address="2d620" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D636" category="Scaling Tables" address="2d636" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D650" category="Scaling Tables" address="2d650" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D66A" category="Scaling Tables" address="2d66a" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D684" category="Scaling Tables" address="2d684" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D69E" category="Scaling Tables" address="2d69e" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D6B4" category="Scaling Tables" address="2d6b4" type="1D" elements="38" scaling="uint8"/>
+
+	<table name="Scaling 2D6DA" category="Scaling Tables" address="2d6da" type="1D" elements="40" scaling="uint8"/>
+
+	<table name="Scaling 2D702" category="Scaling Tables" address="2d702" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D71A" category="Scaling Tables" address="2d71a" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D730" category="Scaling Tables" address="2d730" type="1D" elements="28" scaling="uint8"/>
+
+	<table name="Scaling 2D74C" category="Scaling Tables" address="2d74c" type="1D" elements="14" scaling="uint8"/>
+
+	<table name="Scaling 2D75A" category="Scaling Tables" address="2d75a" type="1D" elements="20" scaling="uint8"/>
+
+	<table name="Scaling 2D76E" category="Scaling Tables" address="2d76e" type="1D" elements="22" scaling="uint8"/>
+
+	<table name="Scaling 2D784" category="Scaling Tables" address="2d784" type="1D" elements="20" scaling="uint8"/>
+
+	<table name="Scaling 2D798" category="Scaling Tables" address="2d798" type="1D" elements="24" scaling="uint8"/>
+
+	<table name="Scaling 2D7B0" category="Scaling Tables" address="2d7b0" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D7DA" category="Scaling Tables" address="2d7da" type="1D" elements="44" scaling="uint8"/>
+
+	<table name="Scaling 2D806" category="Scaling Tables" address="2d806" type="1D" elements="28" scaling="uint8"/>
+
+	<table name="Scaling 2D822" category="Scaling Tables" address="2d822" type="1D" elements="36" scaling="uint8"/>
+
+	<table name="Scaling 2D846" category="Scaling Tables" address="2d846" type="1D" elements="16" scaling="uint8"/>
+
+	<table name="Scaling 2D856" category="Scaling Tables" address="2d856" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D870" category="Scaling Tables" address="2d870" type="1D" elements="28" scaling="uint8"/>
+
+	<table name="Scaling 2D88C" category="Scaling Tables" address="2d88c" type="1D" elements="18" scaling="uint8"/>
+
+	<table name="Scaling 2D89E" category="Scaling Tables" address="2d89e" type="1D" elements="18" scaling="uint8"/>
+
+	<table name="Scaling 2D8B0" category="Scaling Tables" address="2d8b0" type="1D" elements="12" scaling="uint8"/>
+
+	<table name="Scaling 2D8BC" category="Scaling Tables" address="2d8bc" type="1D" elements="26" scaling="uint8"/>
+
+	<table name="Scaling 2D8D6" category="Scaling Tables" address="2d8d6" type="1D" elements="22" scaling="uint8"/>
 
 	<!-- ===== IDENTIFICATION ===== -->
 
