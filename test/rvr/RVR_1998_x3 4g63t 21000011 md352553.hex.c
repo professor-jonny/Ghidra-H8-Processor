@@ -44,8 +44,9 @@ struct axis_lookup_record {
 
 
 ushort DAT_0001f1fc;
-undefined DAT_0000f7e0;
+undefined UNK_00003898;
 undefined DAT_0000f814;
+undefined mut_snapshot_ringbuf_base;
 undefined DAT_0000f862;
 undefined DAT_0000f815;
 short DAT_0001ff46;
@@ -117,7 +118,7 @@ short DAT_0001f456;
 short DAT_0001f454;
 short DAT_0001f458;
 ushort DAT_0001f44c;
-undefined2 DAT_0001f494;
+undefined2 radfan_pwm_duty_target_f494;
 undefined ff88_set_scaled_clamped;
 undefined2 DAT_0001f9aa;
 undefined2 DAT_0001f9ac;
@@ -452,7 +453,6 @@ ushort DAT_0001f43e;
 ushort DAT_0001f13c;
 short DAT_00010dbc;
 short DAT_0001efe4;
-ushort DAT_0001f17a;
 ushort DAT_00010dc2;
 short DAT_00010dbe;
 short DAT_0001efe6;
@@ -462,11 +462,12 @@ ushort DAT_00010dd0;
 ushort DAT_00010dce;
 ushort DAT_00010dcc;
 byte DAT_000102ef;
-undefined2 g_status_flags_f0f8;
 ushort DAT_0001f118;
 ushort DAT_00010dd6;
-undefined2 g_status_flags_f0fa;
+undefined2 g_status_flags_f0f8;
 short DAT_00010dd4;
+undefined2 g_status_flags_f0fa;
+undefined2 engine_torque_pct_f17a;
 short DAT_0001f044;
 ushort DAT_00010dc6;
 ushort DAT_00010dc4;
@@ -484,25 +485,26 @@ ushort DAT_00010dae;
 ushort DAT_00010dac;
 undefined axis_lookup_interp;
 undefined isc_decel_fuel_cut_check;
-ushort DAT_00011118;
-short DAT_0001111a;
-short DAT_0001111c;
+undefined2 DAT_0001f114;
+undefined2 DAT_00011118;
+undefined2 DAT_0001111a;
+undefined2 DAT_0001111c;
 ushort DAT_0001110a;
 ushort DAT_0001110c;
-ushort DAT_0001111e;
 char DAT_000102df;
 short DAT_0001effe;
 ushort DAT_0001ef6a;
 ushort DAT_00010daa;
 ushort DAT_00010da4;
-undefined2 g_status_flags_f216;
 char DAT_000102e1;
 char DAT_000102e0;
+undefined2 g_status_flags_f216;
+ushort DAT_0001111e;
 char DAT_0001030a;
-ushort DAT_0001f130;
 ushort DAT_00010900;
 ushort DAT_000108fc;
 ushort DAT_0001f75a;
+undefined2 coolant_temp_scaled_f130;
 short DAT_0001f03e;
 ushort DAT_00010da6;
 ushort DAT_00010da8;
@@ -638,7 +640,6 @@ ushort DAT_00010e00;
 ushort DAT_0001eec8;
 undefined DAT_00010dfa;
 char DAT_000102f0;
-byte[2] DAT_0001f17a;
 byte[2] DAT_00010e08;
 byte[2] DAT_00010e06;
 byte[2] DAT_00010e04;
@@ -662,12 +663,12 @@ undefined2 DAT_00010dee;
 undefined2 DAT_0001f450;
 ushort DAT_00010d7c;
 ushort DAT_00010d80;
-undefined DAT_00010d7a;
+ushort DAT_00010d7a;
 ushort DAT_00010d7e;
 undefined2 DAT_0000f43e;
-undefined DAT_00010d78;
-undefined DAT_00010d74;
-undefined DAT_00010d76;
+short DAT_00010d78;
+short DAT_00010d74;
+short DAT_00010d76;
 undefined2 g_status_flags_f21c;
 ushort DAT_0001f26e;
 ushort DAT_00010dda;
@@ -684,6 +685,7 @@ ushort DAT_00010e4a;
 ushort DAT_00010e4c;
 undefined2 tcu_rx_confirmed_byte2_f4c0;
 ushort DAT_0001f4a2;
+undefined2 DAT_0001f510;
 ushort DAT_0001f4ac;
 undefined2 tcu_rx_confirmed_byte1_f4be;
 short DAT_0001eff0;
@@ -757,8 +759,8 @@ undefined2 DAT_0000f5c4;
 undefined2 DAT_0000f5c6;
 undefined2 DAT_0000f84a;
 undefined eeprom_backup_table_write_dispatch;
-undefined adc_5channel_backup_snapshot_write;
-undefined channel_periodic_update_ringbuf_snapshot;
+undefined mut_configurable_reqid_backup_snapshot_5word;
+undefined mut_configurable_reqid_periodic_snapshot_8word;
 undefined channel_validity_gated_handler_dispatch;
 ushort DAT_0001f84a;
 char DAT_00010201;
@@ -768,11 +770,12 @@ undefined2 DAT_0001f5b8;
 undefined div_u16_rounded;
 ushort DAT_0001f5b8;
 ushort DAT_0001f5e8;
+ushort DAT_0001f5b4;
 undefined mul_fixedpoint_8;
 char DAT_00010202;
-undefined2 DAT_0001f5b6;
-char DAT_00010204;
 ushort DAT_0001f5b6;
+char DAT_00010204;
+undefined2 DAT_0001f5b6;
 undefined dtc_status_flags_f204_f206_build;
 undefined tcu_shift_flags_dispatch;
 ushort DAT_0001f25a;
@@ -816,7 +819,7 @@ undefined2 DAT_0001f270;
 uchar DAT_0001fecb;
 short DAT_0001f218;
 uchar *DAT_0001f218;
-undefined1 DAT_0001f26c;
+char DAT_0001f26c;
 undefined2 DAT_0001f268;
 undefined1 DAT_0001f26d;
 undefined2 DAT_0001f26a;
@@ -825,7 +828,7 @@ undefined1 DAT_0000f8c1;
 char DAT_0001f8a5;
 undefined1 DAT_0000f8a0;
 undefined DAT_0000f8bb;
-undefined1 DAT_0001f27c;
+byte DAT_0001f27c;
 undefined1 DAT_0001f27d;
 undefined1 DAT_0001f281;
 undefined2 DAT_0001f276;
@@ -898,7 +901,6 @@ undefined2 DAT_0000f1f8;
 undefined2 DAT_0000f1fc;
 undefined2 DAT_0001ef70;
 undefined2 DAT_0001f10e;
-undefined2 DAT_0001f114;
 undefined compose_status_words_f0f6_fc;
 undefined fuel_cut_rpm_offset_select;
 char DAT_000102c6;
@@ -935,13 +937,13 @@ ushort DAT_0001f116;
 ushort DAT_00010f6c;
 ushort DAT_00010f6a;
 undefined coolant_temp_range_check;
-ushort DAT_0001f13a;
 ushort DAT_000109c6;
 short DAT_000109c8;
 short DAT_0001ef92;
 ushort DAT_0001f12e;
 ushort DAT_000109c4;
 ushort DAT_000109c2;
+undefined2 mut_battery_voltage_f13a;
 ushort DAT_00010abc;
 ushort DAT_00010abe;
 short DAT_0001f068;
@@ -1015,9 +1017,9 @@ ushort DAT_00010a5e;
 undefined2 DAT_0000f012;
 undefined2 g_status_flags_f224;
 ushort DAT_00010a5c;
+ushort DAT_00010a60;
 undefined2 DAT_0000f014;
 undefined2 DAT_0000f224;
-ushort DAT_00010a60;
 ushort DAT_00010aa4;
 byte[2] DAT_00010da2;
 undefined2 g_status_flags_f226;
@@ -1295,6 +1297,8 @@ ushort UNK_00010904;
 undefined2 DAT_0001f1f0;
 short DAT_0001f2dc;
 ushort DAT_0001f2f8;
+ushort DAT_00010922;
+ushort DAT_0001091c;
 undefined f27e_table_indexed_clamp_compute_via_table;
 undefined f26e_o2_closed_loop_output_blend_via_table;
 undefined o2_closed_loop_mode_selector_via_table;
@@ -1311,7 +1315,7 @@ ushort DAT_0001090e;
 undefined2 DAT_0001eed6;
 undefined2 DAT_0001eeda;
 undefined muldiv_u16_shr8_sat;
-undefined DAT_0002d444;
+undefined2 DAT_0002d444;
 undefined f2b4_threshold_table_lookup;
 undefined2 DAT_0000f2d6;
 undefined2 DAT_0000f2d8;
@@ -1390,8 +1394,8 @@ undefined2 DAT_0001f3ba;
 ushort DAT_00010b56;
 ushort DAT_00010b54;
 undefined2 DAT_00010b50;
-undefined2 g_status_flags_f3a4;
 undefined2 DAT_0001f3bc;
+undefined2 g_status_flags_f3a4;
 undefined2 DAT_00010b52;
 ushort DAT_00010b5c;
 ushort DAT_00010b5a;
@@ -1529,7 +1533,7 @@ ushort DAT_0001f3f4;
 ushort DAT_00010d68;
 ushort DAT_00010d62;
 ushort DAT_00010d66;
-undefined DAT_0002d460;
+undefined2 DAT_0002d460;
 undefined2 DAT_0001f41a;
 undefined2 DAT_00010d64;
 char DAT_000102da;
@@ -1680,7 +1684,6 @@ ushort DAT_00010f12;
 undefined2 DAT_00010c20;
 short DAT_0001f048;
 ushort DAT_00010c24;
-short DAT_0001f494;
 ushort DAT_00010c22;
 ushort DAT_00010d10;
 ushort DAT_00010d12;
@@ -1761,10 +1764,10 @@ undefined2 DAT_0000f0f4;
 undefined sci1_tx_response_feeder;
 undefined sci1_dispatch_and_latch_response;
 undefined f526_state_reset_dispatch;
-undefined sci1_periodic_phase_dispatch_f526;
+undefined sci1_post_handshake_status_broadcast_dispatch;
 undefined2 DAT_0001f534;
 undefined sci1_meta_cmd_dispatch_c0_ff;
-undefined latch_request_f588;
+undefined sci1_latch_and_send_f54a_handshake_byte;
 undefined T2CRH;
 ushort DAT_0001f514;
 undefined2 DAT_0001f526;
@@ -1773,7 +1776,6 @@ ushort DAT_0001f596;
 char UNK_00010205;
 ushort UNK_00010220;
 undefined f510_f512_f00e_f514_reset;
-undefined2 DAT_0001f510;
 undefined2 DAT_0001f512;
 undefined2 DAT_0001f00e;
 undefined2 DAT_0001f514;
@@ -1795,16 +1797,15 @@ short DAT_0001f584;
 short DAT_0001f534;
 ushort DAT_0001f59a;
 short DAT_0001f598;
-undefined diagnostic_snapshot_f54a_f566_build;
+undefined sci1_periodic_status_frame_build_f54a_f566;
 ushort DAT_0001f54a;
 ushort DAT_0001f4b8;
 ushort DAT_0001f54c;
 undefined2 DAT_0001f54e;
-undefined2 DAT_0001f17a;
 undefined2 DAT_0001f550;
 byte[2] BYTE_ARRAY_00010808;
-undefined2 DAT_0001f33c;
-undefined2 DAT_0001f33a;
+undefined2 accum_latch_100tick_f33a;
+undefined2 accum_latch_100tick_f33c;
 undefined2 DAT_0001f430;
 undefined2 DAT_0001f432;
 undefined2 DAT_0001f5f2;
@@ -1972,17 +1973,17 @@ undefined2 DAT_0001f050;
 undefined2 DAT_00011008;
 undefined2 DAT_0001f642;
 undefined2 DAT_0001f644;
-undefined tcu_dtc_status_check_dispatch;
+undefined tcu_sensor_range_check_and_f04e_max_update;
 undefined tcu_torque_converter_slip_calc_far_trampoline;
 ushort DAT_00010fce;
 short DAT_0001f646;
 undefined2 DAT_0001102e;
 ushort DAT_00010ff0;
-undefined2 DAT_0000f642;
 ushort DAT_00010fee;
+undefined2 DAT_0000f642;
 undefined2 DAT_00011000;
-undefined2 DAT_0000f644;
 ushort DAT_0001101c;
+undefined2 DAT_0000f644;
 ushort DAT_0001101a;
 undefined tcu_f050_max_update;
 undefined2 DAT_0000f04e;
@@ -2032,19 +2033,19 @@ short DAT_0001f6e6;
 short DAT_0001f6e8;
 short DAT_0001f6ea;
 short DAT_0001f6ec;
-ushort DAT_0001f6ee;
+short DAT_0001f6ee;
 short DAT_0001f6d8;
 short DAT_0001f6da;
 short DAT_0001f6dc;
 short DAT_0001f6de;
 short DAT_0001f6e0;
-ushort DAT_0001f6e2;
+short DAT_0001f6e2;
 short DAT_0001f714;
 short DAT_0001f716;
 short DAT_0001f718;
 short DAT_0001f71a;
 short DAT_0001f71c;
-ushort DAT_0001f71e;
+short DAT_0001f71e;
 undefined PTR_INTC_IPRA_000102bd;
 ushort DAT_0001f7c8;
 ushort DAT_0001f7d8;
@@ -2882,27 +2883,28 @@ weighted_blend_4term_u8frac
 // WARNING: Unable to track spacebase fully for stack
 // WARNING: Restarted to delay deadcode elimination for space: register
 
-undefined2 weighted_blend_2term_u8frac_div255(void)
+undefined2
+weighted_blend_2term_u8frac_div255
+          (ushort param_fp1,ushort param_fp2,ushort param_fp3,ushort param_fp4,ushort param_fp5)
 
 {
   ushort uVar1;
   int iVar2;
   int iVar4;
   bool bVar6;
-  ushort in_stack_0000000c;
   int iVar3;
   ushort uVar5;
   
-  if (0xff < in_stack_0000000c) {
-    in_stack_0000000c = 0xff;
+  if (0xff < param_fp4) {
+    param_fp4 = 0xff;
   }
-  iVar2 = (uint)in_stack_0000000c * (uint)*(ushort *)((int)&stack0xfffe + 6);
+  iVar2 = (uint)param_fp4 * (uint)*(ushort *)((int)&stack0xfffe + 6);
   uVar5 = (ushort)iVar2;
-  iVar3 = (uint)in_stack_0000000c * (uint)*(ushort *)((int)&stack0xfffe + 8);
+  iVar3 = (uint)param_fp4 * (uint)*(ushort *)((int)&stack0xfffe + 8);
   uVar1 = (ushort)((uint)iVar3 >> 0x10);
-  iVar4 = (uint)(0xff - in_stack_0000000c) * (uint)*(ushort *)((int)&stack0xfffe + 0xc);
+  iVar4 = (uint)(0xff - param_fp4) * (uint)*(ushort *)((int)&stack0xfffe + 0xc);
   bVar6 = CARRY2((ushort)iVar3,(ushort)iVar4);
-  return (short)(((uint)(0xff - in_stack_0000000c) * (uint)*(ushort *)((int)&stack0xfffe + 10) +
+  return (short)(((uint)(0xff - param_fp4) * (uint)*(ushort *)((int)&stack0xfffe + 10) +
                  CONCAT22((short)((uint)iVar2 >> 0x10) + (ushort)CARRY2(uVar5,uVar1) + (ushort)bVar6
                           ,uVar5 + uVar1 + (short)((uint)iVar4 >> 0x10) + (ushort)bVar6)) / 0xff);
 }
@@ -3231,6 +3233,39 @@ undefined2 gear_indexed_table_lookup_f1fc(byte bank,void *array_base)
 
 
 
+// [DOCUMENTED 2026-08-07, CORRECTED same session] Boot-time init: copies
+// 0x100 (256) bytes from ROM bank 2:0xcf80 into RAM 0xf862 via
+// memcpy_banked, AFTER subsystem_unconditional_init_chain (0x20d3c, this
+// function's caller) has zeroed the whole surrounding RAM range
+// (0xef64-0xf974) via zero_ram_range. So the 0xFF default (see below) is a
+// deliberate cold-boot state, confirmed not a static-analysis artifact.
+// 
+// This is the default/seed data for the EEPROM-backed MUT logging config
+// record consumed by eeprom_backup_table_write_dispatch (0x149f5), which
+// in turn feeds the RequestID lists used by
+// mut_configurable_reqid_backup_snapshot_5word (0x1504b) and
+// mut_configurable_reqid_periodic_snapshot_8word (0x14edd).
+// 
+// CHECKED 2026-08-07: read ROM 0x2cf80, length 0x100 directly -- ALL 256
+// BYTES ARE 0xFF (unprogrammed on this ROM). eeprom_backup_table_write_
+// dispatch's checksum/terminator check (expects 0x0D at record offset
+// 0x33) will fail against this blank source at cold boot.
+// 
+// CORRECTION: do NOT read this as "the mechanism is dead." eeprom_backup_
+// table_write_dispatch is called from channel_dispatch_and_snapshot_update
+// -> main_loop (0x20a80), i.e. it runs on EVERY main loop pass during
+// normal operation, not just once at boot. If anything writes valid data
+// (terminator 0x0D, matching checksum) into RAM 0xf862+ at runtime -- a
+// real EEPROM chip, a live SCI1 upload, etc, no such writer identified in
+// this project yet -- this dispatcher will pick it up on its next pass.
+// The all-0xFF ROM default only describes a factory-fresh/unconfigured
+// cold-boot state, not whether the mechanism is used in practice. See
+// mut_verification_status.md "CORRECTION: DEAD END CALL WAS PREMATURE"
+// (2026-08-07).
+// 
+// NOT YET DONE: find what else can write RAM 0xf862+ at runtime (search
+// for an EEPROM/I2C/SPI driver in this ROM -- not yet attempted).
+
 void init_copy_const_block_via_memcpy_banked(void)
 
 {
@@ -3249,9 +3284,32 @@ void init_copy_const_block_via_memcpy_banked(void)
 
 // WARNING: Removing unreachable block (ram,0x00014b20)
 // WARNING: Restarted to delay deadcode elimination for space: stack
+// [DOCUMENTED 2026-08-07] Validates a checksummed config record at RAM
+// 0xf814/0xf862 (terminator byte 0x0D at offset 0x33, checksum at 0x32)
+// and, on a match, populates the RequestID lists consumed by
+// mut_configurable_reqid_backup_snapshot_5word (0x1504b) and
+// mut_configurable_reqid_periodic_snapshot_8word (0x14edd). Called from
+// channel_dispatch_and_snapshot_update -> main_loop (0x20a80), i.e. runs
+// every main loop pass during normal operation, not just at boot.
+// 
+// WORKING CONCLUSION (2026-08-07): this ECU almost certainly has no
+// onboard EEPROM chip. Three independent searches (RAM-address xref
+// search, whole-ROM byte-pattern sweep for the literal 0xf862 operand,
+// and a structural review of every port-I/O function for a bit-banged
+// serial-protocol driver) all found nothing besides
+// init_copy_const_block_via_memcpy_banked (0x149c8, the boot-time loader
+// of the -- all 0xFF, unprogrammed -- ROM default) that ever touches this
+// record. This ECU already has substantial on-chip FLASH for non-volatile
+// storage (flash_write_marked_blocks_loop etc), making a separate EEPROM
+// largely redundant, and no corroborating driver/usage pattern was found
+// anywhere. Treating this mechanism as VESTIGIAL -- inherited from a
+// shared platform codebase, never actually populated on real hardware.
+// The two consumer functions will never find valid data in practice and
+// will never log anything via this path on a real vehicle.
+// See mut_verification_status.md "WORKING CONCLUSION: NO EEPROM ON THIS
+// ECU -- MECHANISM IS VESTIGIAL" (2026-08-07).
 
-void eeprom_backup_table_write_dispatch
-               (undefined2 param_1,undefined2 param_2,ushort param_3,short param_4)
+void eeprom_backup_table_write_dispatch(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -3259,11 +3317,13 @@ void eeprom_backup_table_write_dispatch
   ushort uVar3;
   char cVar5;
   ushort uVar4;
+  ushort in_R2;
   ushort unaff_R3;
   short unaff_R5;
   short sVar6;
   byte bVar7;
   undefined1 uVar8;
+  short in_stack_00000004;
   int in_stack_0000ffe0;
   ushort uStack_12;
   short sStack_10;
@@ -3279,12 +3339,12 @@ void eeprom_backup_table_write_dispatch
   if (*(short *)((int)&stack0xfffe + 6) != 0) {
     return;
   }
-  if ((*(ushort *)((int)(param_4 << 1) + -0x7b6) & 0x101) != 0) {
+  if ((*(ushort *)((int)(in_stack_00000004 << 1) + -0x7b6) & 0x101) != 0) {
     return;
   }
-  uStack_12 = *(ushort *)((int)(param_4 << 1) + -0x7b6);
+  uStack_12 = *(ushort *)((int)(in_stack_00000004 << 1) + -0x7b6);
   *(undefined2 *)((int)&stack0xfffe + -0xe) = 1;
-  puVar2 = (undefined2 *)(param_4 * 0x14 + 0x3898);
+  puVar2 = (undefined2 *)((short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14);
   if ((*(ushort *)((int)&stack0xfffe + -0x10) & 0x200) == 0) {
     return;
   }
@@ -3309,10 +3369,11 @@ void eeprom_backup_table_write_dispatch
       *(undefined2 *)((int)&stack0xfffe + -0xe) = 0;
     }
     else {
-      sStack_e = (short)&DAT_0000f814 + param_4 * 0x34;
+      sStack_e = (short)&DAT_0000f814 + in_stack_00000004 * 0x34;
       if ((*(char *)((int)sStack_e + 0x33) == '\r') &&
-         (cVar5 = byte_sum_banked('\0',(char *)CONCAT22((short)&DAT_0000f815 + param_4 * 0x34,0x31),
-                                  param_3), cVar5 == *(char *)((int)sStack_e + 0x32))) {
+         (cVar5 = byte_sum_banked('\0',(char *)CONCAT22((short)&DAT_0000f815 +
+                                                        in_stack_00000004 * 0x34,0x31),in_R2),
+         cVar5 == *(char *)((int)sStack_e + 0x32))) {
         cVar5 = *(char *)((int)sStack_e + 1);
         *(ushort *)((int)&stack0xfffe + -0x10) = *(ushort *)((int)&stack0xfffe + -0x10) & 0xdfff;
         if (cVar5 == -0x7f) {
@@ -3347,7 +3408,7 @@ void eeprom_backup_table_write_dispatch
           *(ushort *)((uint)bVar7 << 0x10 | 0xf5b8) = (ushort)*(byte *)((int)sStack_e + 0x30);
           *(ushort *)((uint)bVar7 << 0x10 | 0xf5ba) = (ushort)*(byte *)((int)sStack_e + 0x31);
         }
-        *(undefined2 *)((int)(param_4 << 1) + -0x7b4) = 0xffff;
+        *(undefined2 *)((int)(in_stack_00000004 << 1) + -0x7b4) = 0xffff;
         if (((*(ushort *)((int)&stack0xfffe + -0x10) & 0x40) != 0) &&
            (*(char *)((int)sStack_e + 3) == '\0' && *(char *)((int)sStack_e + 2) == '\0')) {
           uVar3 = CONCAT11(*(undefined1 *)((int)sStack_e + 4),*(undefined1 *)((int)sStack_e + 5));
@@ -3366,8 +3427,8 @@ void eeprom_backup_table_write_dispatch
     }
     goto LAB_00014d5b;
   }
-  sStack_c = (short)&DAT_0000f7e0 + param_4 * 0x34;
-  sStack_a = (short)&DAT_0000f814 + param_4 * 0x34;
+  sStack_c = (short)&mut_snapshot_ringbuf_base + in_stack_00000004 * 0x34;
+  sStack_a = (short)&DAT_0000f814 + in_stack_00000004 * 0x34;
   *(undefined1 *)((int)sStack_c + 1) = 5;
   sStack_8 = CONCAT11(*(undefined1 *)((int)sStack_a + 2),*(undefined1 *)((int)sStack_a + 3));
   if (((*(ushort *)((int)&stack0xfffe + -0x10) & 0x40) == 0) || (sStack_8 != 1)) {
@@ -3424,11 +3485,11 @@ void eeprom_backup_table_write_dispatch
     *(undefined1 *)((int)sStack_c + 3) = 1;
     *(char *)((int)sStack_c + 4) = (char)(uStack_4 >> 8);
     *(char *)((int)sStack_c + 5) = (char)uStack_4;
-    param_3 = sStack_c + 6;
+    in_R2 = sStack_c + 6;
     in_stack_0000ffe0 = (uint)((short)&DAT_0000f862 + uStack_4) << 0x10;
     unaff_R3 = uStack_6;
 LAB_00014b9c:
-    memcpy_banked(0,(ushort)((uint)in_stack_0000ffe0 >> 0x10),(ushort)in_stack_0000ffe0,param_3,
+    memcpy_banked(0,(ushort)((uint)in_stack_0000ffe0 >> 0x10),(ushort)in_stack_0000ffe0,in_R2,
                   unaff_R3);
   }
   cVar5 = byte_sum_banked('\0',(char *)CONCAT22(sStack_c + 1,0x31),unaff_R5);
@@ -3436,12 +3497,13 @@ LAB_00014b9c:
   *(undefined1 *)((int)sStack_c + 0x33) = 0xd;
   bVar7 = 0;
   (*(code *)(uint)CONCAT12((char)puVar2[2],puVar2[3]))();
-  *(undefined2 *)((int)(param_4 << 1) + -0x7b8) = *(undefined2 *)((uint)bVar7 << 0x10 | 0xff46);
+  *(undefined2 *)((int)(in_stack_00000004 << 1) + -0x7b8) =
+       *(undefined2 *)((uint)bVar7 << 0x10 | 0xff46);
   *(ushort *)((int)&stack0xfffe + -0x10) = *(ushort *)((int)&stack0xfffe + -0x10) | 0x800;
   bVar7 = 0;
 LAB_00014d5b:
   if (*(short *)((int)&stack0xfffe + -0xe) != 0) {
-    *(ushort *)((int)(param_4 << 1) + -0x7b6) = uStack_12;
+    *(ushort *)((int)(in_stack_00000004 << 1) + -0x7b6) = uStack_12;
   }
   return;
 }
@@ -3481,7 +3543,8 @@ void __stdcall_far_allstack channel_validity_gated_handler_dispatch(ushort chann
   if (*(short *)((int)&stack0xfffe + 6) == 0) {
     channel_status = *(ushort *)((int)(channel_index << 1) + -0x7b6);
     if ((channel_status & 0x101) == 0) {
-      table_entry_addr = (undefined2 *)(channel_index * 0x14 + 0x3898);
+      table_entry_addr =
+           (undefined2 *)((short)&mut_snapshot_channel_callback_table + channel_index * 0x14);
       handler_result = (*(code *)(uint)CONCAT12((char)table_entry_addr[6],table_entry_addr[7]))();
       if ((handler_result == 0) &&
          (((*(ushort *)((int)&stack0xfffe + -4) & 0x200) == 0 ||
@@ -3503,7 +3566,7 @@ void __stdcall_far_allstack channel_validity_gated_handler_dispatch(ushort chann
 
 // WARNING: Restarted to delay deadcode elimination for space: stack
 
-void adc_backup_snapshot_write_if_time_elapsed(void)
+void adc_backup_snapshot_write_if_time_elapsed(ushort param_fp1,ushort param_fp2)
 
 {
   ushort uVar1;
@@ -3517,17 +3580,16 @@ void adc_backup_snapshot_write_if_time_elapsed(void)
   byte bVar7;
   undefined1 uVar8;
   short in_stack_00000004;
-  short in_stack_00000006;
   short sStack_4;
   
   uVar8 = 0;
   uVar6 = 1;
   sVar4 = in_stack_00000004 * 0x34;
   uVar1 = (ushort)unaff_R3 >> 8;
-  puVar2 = (ushort *)(in_stack_00000006 * 6 + 0x38ac);
+  puVar2 = (ushort *)(param_fp1 * 6 + 0x38ac);
   if ((*(short *)((int)&stack0xfffe + 6) == 0) &&
      (*puVar2 <= (ushort)(DAT_0001ff46 - *(short *)((int)(in_stack_00000004 << 1) + -0x7b8)))) {
-    sVar3 = in_stack_00000004 * 0x14 + 0x3898;
+    sVar3 = (short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14;
     sVar3 = (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar3 + 0xc),
                                      *(undefined2 *)((int)sVar3 + 0xe)))();
     if (sVar3 == 0) {
@@ -3536,12 +3598,13 @@ void adc_backup_snapshot_write_if_time_elapsed(void)
                 ((uchar *)(uint)(ushort)((short)&UNK_0000f816 + in_stack_00000004 * 0x34),
                  (uchar *)(uint)(ushort)((short)&DAT_0000f7e2 + sVar4),
                  (ushort)*(byte *)((int)puVar2 + 3),(ushort)*(byte *)(puVar2 + 2));
-      *(undefined1 *)((int)((short)&DAT_0000f7e0 + sVar4) + 1) = *(undefined1 *)(puVar2 + 1);
+      *(undefined1 *)((int)((short)&mut_snapshot_ringbuf_base + sVar4) + 1) =
+           *(undefined1 *)(puVar2 + 1);
       sVar3 = sStack_4 + 1;
       cVar5 = byte_sum_banked('\0',(char *)CONCAT22((short)&UNK_0000f7e1 + sVar4,sVar3),unaff_R3);
       *(char *)(extraout_R2 + *(short *)((int)&stack0xfffe + -2)) = cVar5;
       *(undefined1 *)(extraout_R2 + sVar3) = 0xd;
-      sVar4 = in_stack_00000004 * 0x14 + 0x3898;
+      sVar4 = (short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14;
       bVar7 = 0;
       (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar4 + 4),*(undefined2 *)((int)sVar4 + 6)
                               ))();
@@ -3558,71 +3621,120 @@ void adc_backup_snapshot_write_if_time_elapsed(void)
 
 
 // WARNING: Restarted to delay deadcode elimination for space: stack
+// [RENAMED + DOCUMENTED 2026-08-07, CORRECTED same session] Formerly
+// channel_periodic_update_ringbuf_snapshot.
+// 
+// CORRECTION: an earlier pass this session claimed the RequestIDs used by
+// this function are "fixed, hardcoded literals baked into the call sites."
+// That was WRONG -- verified by disassembling the actual function body
+// (ghidra:disassemble_function) rather than trusting the decompiler's
+// collapsed view. The truth: each of the 8 adc_sensor_convert_single calls
+// reads its RequestID from a RAM table at 0xf814 + channel*0x34 (register
+// R2 walks through offsets 0x0,0x2,0x4,0x6,0x8,0xa,0xc,0xe of that record),
+// NOT a literal. That RAM record is itself populated/validated at runtime
+// by eeprom_backup_table_write_dispatch (0x149f5) via a checksummed
+// EEPROM-style blob (terminator byte 0x0D at offset 0x33, checksum at
+// 0x32, byte_sum_banked-validated) copied in from a staging buffer at
+// 0xf862+. This strongly suggests the RequestID list for each logging
+// "channel" is CONFIGURABLE/DOWNLOADABLE at runtime (e.g. via the same
+// SCI1 serial link documented elsewhere in this project), not a fixed ROM
+// constant -- i.e. this mechanism may be closer to a real "MUT data-list
+// request" facility than first assessed, just indirected through an
+// EEPROM-backed RAM table instead of taking the RequestID directly off the
+// wire byte-by-byte.
+// 
+// Internal periodic BLACK-BOX/BACKUP snapshot logger, indexed by an
+// internal "channel" number (param_4, one of only 2 possible values gated
+// by config flags F84A/F84C). Builds an 8-entry record by calling
+// adc_sensor_convert_single (0x171c3) 8 times with RequestIDs pulled from
+// RAM 0xf814+channel*0x34 (see correction above), computes a checksum via
+// byte_sum_banked, writes into ring buffer mut_snapshot_ringbuf_base
+// (0xf7e0 + channel*0x34), then invokes a callback from
+// mut_snapshot_channel_callback_table (0x3898 + channel*0x14).
+// 
+// Near-identical twin of mut_fixed_reqid_backup_snapshot_5word (0x1504b,
+// NAME ALSO NEEDS RE-EXAMINATION per this same correction -- not yet
+// re-verified this session, do that before trusting its "fixed_reqid" name
+// either).
+// 
+// See mut_verification_status.md "MAJOR FINDING ... CORRECTED" (2026-08-07)
+// for the walk-back of the original claim and what replaced it.
+// 
+// NOT YET DONE: read the ACTUAL runtime contents of the 0xf814 RAM table
+// (not possible from a static ROM dump -- RAM is zero at rest; would need
+// a live capture or to find what populates 0xf862+ at boot/config time) to
+// learn the real RequestID list for each channel; trace what writes/
+// uploads the 0xf862+ staging buffer (likely the real "next step" for
+// understanding configurable MUT logging); re-verify
+// mut_fixed_reqid_backup_snapshot_5word's RequestID source the same way.
 
-void channel_periodic_update_ringbuf_snapshot
-               (undefined2 param_1,undefined2 param_2,short param_3,short param_4)
+void mut_configurable_reqid_periodic_snapshot_8word(ushort param_fp1)
 
 {
+  short sVar1;
   undefined1 extraout_var;
   undefined1 extraout_var_00;
   undefined1 extraout_var_01;
   undefined1 extraout_var_02;
   undefined1 extraout_var_03;
   undefined1 extraout_var_04;
-  short sVar1;
   short sVar2;
-  undefined2 *puVar3;
-  undefined2 uVar4;
-  char cVar5;
-  undefined1 uVar6;
-  byte bVar7;
-  undefined1 uVar8;
+  short sVar3;
+  undefined2 *puVar4;
+  undefined2 uVar5;
+  char cVar6;
+  short in_R2;
+  undefined1 uVar7;
+  byte bVar8;
+  undefined1 uVar9;
+  short in_stack_00000004;
   ushort uStack_4;
   
-  uVar8 = 0;
-  uVar6 = 1;
+  uVar9 = 0;
+  uVar7 = 1;
   if ((*(short *)((int)&stack0xfffe + 6) == 0) &&
-     (0x243 < (ushort)(DAT_0001ff46 - *(short *)((int)(param_4 << 1) + -0x7b8)))) {
-    sVar1 = param_4 * 0x14 + 0x3898;
-    sVar1 = (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar1 + 0xc),
-                                     *(undefined2 *)((int)sVar1 + 0xe)))();
-    if (sVar1 == 0) {
-      sVar1 = param_4 * 0x34;
-      sVar2 = (short)&DAT_0000f7e0 + sVar1;
-      puVar3 = (undefined2 *)((short)&DAT_0000f7e2 + sVar1);
-      uStack_4 = *(short *)((int)(param_4 << 1) + -0x7b4) + 1;
+     (0x243 < (ushort)(DAT_0001ff46 - *(short *)((int)(in_stack_00000004 << 1) + -0x7b8)))) {
+    sVar2 = (short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14;
+    sVar2 = (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar2 + 0xc),
+                                     *(undefined2 *)((int)sVar2 + 0xe)))();
+    if (sVar2 == 0) {
+      sVar2 = in_stack_00000004 * 0x34;
+      sVar3 = (short)&mut_snapshot_ringbuf_base + sVar2;
+      puVar4 = (undefined2 *)((short)&DAT_0000f7e2 + sVar2);
+      uStack_4 = *(short *)((int)(in_stack_00000004 << 1) + -0x7b4) + 1;
       if (7 < uStack_4) {
         *(undefined2 *)((int)&stack0xfffe + -2) = 0;
       }
-      *(ushort *)((int)(param_4 << 1) + -0x7b4) = uStack_4;
-      uVar4 = (*adc_sensor_convert_single)();
-      *puVar3 = uVar4;
-      uVar4 = (*adc_sensor_convert_single)();
-      puVar3[1] = uVar4;
+      sVar1 = in_stack_00000004 << 1;
+      *(ushort *)((int)sVar1 + -0x7b4) = uStack_4;
+      uVar5 = (*adc_sensor_convert_single)();
+      *puVar4 = uVar5;
+      uVar5 = (*adc_sensor_convert_single)();
+      puVar4[1] = uVar5;
       (*adc_sensor_convert_single)();
-      *(undefined1 *)(puVar3 + 2) = extraout_var;
+      *(undefined1 *)(puVar4 + 2) = extraout_var;
       (*adc_sensor_convert_single)();
-      *(undefined1 *)((int)puVar3 + 5) = extraout_var_00;
+      *(undefined1 *)((int)puVar4 + 5) = extraout_var_00;
       (*adc_sensor_convert_single)();
-      *(undefined1 *)(puVar3 + 3) = extraout_var_01;
+      *(undefined1 *)(puVar4 + 3) = extraout_var_01;
       (*adc_sensor_convert_single)();
-      *(undefined1 *)((int)puVar3 + 7) = extraout_var_02;
+      *(undefined1 *)((int)puVar4 + 7) = extraout_var_02;
       (*adc_sensor_convert_single)();
-      *(undefined1 *)(puVar3 + 4) = extraout_var_03;
+      *(undefined1 *)(puVar4 + 4) = extraout_var_03;
       (*adc_sensor_convert_single)();
-      *(undefined1 *)((int)puVar3 + 9) = extraout_var_04;
-      *(byte *)((int)sVar2 + 1) = (byte)uStack_4 | 0x20;
-      cVar5 = byte_sum_banked('\0',(char *)CONCAT22((short)&UNK_0000f7e1 + sVar1,0xb),param_3);
-      *(char *)((int)sVar2 + 0xc) = cVar5;
-      *(undefined1 *)((int)sVar2 + 0xd) = 0xd;
-      sVar1 = param_4 * 0x14 + 0x3898;
-      bVar7 = 0;
-      (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar1 + 4),*(undefined2 *)((int)sVar1 + 6)
+      *(undefined1 *)((int)puVar4 + 9) = extraout_var_04;
+      *(byte *)((int)sVar3 + 1) = (byte)uStack_4 | 0x20;
+      cVar6 = byte_sum_banked('\0',(char *)CONCAT22((short)&UNK_0000f7e1 + sVar2,0xb),in_R2);
+      *(char *)((int)sVar3 + 0xc) = cVar6;
+      *(undefined1 *)((int)sVar3 + 0xd) = 0xd;
+      sVar2 = (short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14;
+      bVar8 = 0;
+      (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar2 + 4),*(undefined2 *)((int)sVar2 + 6)
                               ))();
-      *(undefined2 *)((int)(param_4 << 1) + -0x7b8) = *(undefined2 *)((uint)bVar7 << 0x10 | 0xff46);
+      *(undefined2 *)((int)sVar1 + -0x7b8) = *(undefined2 *)((uint)bVar8 << 0x10 | 0xff46);
     }
     else {
-      *(undefined2 *)((int)(param_4 << 1) + -0x7b6) = 0;
+      *(undefined2 *)((int)(in_stack_00000004 << 1) + -0x7b6) = 0;
     }
   }
   return;
@@ -3631,61 +3743,80 @@ void channel_periodic_update_ringbuf_snapshot
 
 
 // WARNING: Restarted to delay deadcode elimination for space: stack
+// [RENAMED 2026-08-07, then CORRECTED same session] Formerly named
+// mut_fixed_reqid_backup_snapshot_5word -- that name was WRONG, based on a
+// decompiler read that hid the real addressing. Verified via direct
+// disassemble_function: all 5 adc_sensor_convert_single (0x171c3) calls
+// read their RequestID from RAM 0xf814 + channel*0x34 (offsets
+// 0x0/0x2/0x4/0x6/0x8), NOT literals. See twin function
+// mut_configurable_reqid_periodic_snapshot_8word (0x14edd) for the fuller
+// writeup of the shared mechanism (same RAM record, populated/validated by
+// eeprom_backup_table_write_dispatch @0x149f5 from a checksummed
+// EEPROM-style blob) -- everything in that comment applies here too, just
+// with 5 record entries instead of 8.
+// 
+// Ring buffer: mut_snapshot_ringbuf_base + channel*0x34.
+// Callback table: mut_snapshot_channel_callback_table + channel*0x14.
+// 
+// See mut_verification_status.md "MAJOR FINDING ... CORRECTED" (2026-08-07).
 
-void adc_5channel_backup_snapshot_write
-               (undefined2 param_1,undefined2 param_2,short param_3,short param_4)
+void mut_configurable_reqid_backup_snapshot_5word(ushort param_fp1)
 
 {
   short sVar1;
   short sVar2;
-  undefined2 uVar3;
-  char cVar4;
+  short sVar3;
+  undefined2 uVar4;
+  char cVar5;
+  short in_R2;
   undefined2 extraout_R2;
   undefined2 extraout_R2_00;
   undefined2 extraout_R2_01;
   undefined2 extraout_R2_02;
-  undefined1 uVar5;
-  byte bVar6;
-  undefined1 uVar7;
+  undefined1 uVar6;
+  byte bVar7;
+  undefined1 uVar8;
+  short in_stack_00000004;
   ushort uStack_4;
   
-  uVar7 = 0;
-  uVar5 = 1;
+  uVar8 = 0;
+  uVar6 = 1;
   if ((*(short *)((int)&stack0xfffe + 6) == 0) &&
-     (0x243 < (ushort)(DAT_0001ff46 - *(short *)((int)(param_4 << 1) + -0x7b8)))) {
-    sVar1 = param_4 * 0x14 + 0x3898;
-    sVar1 = (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar1 + 0xc),
-                                     *(undefined2 *)((int)sVar1 + 0xe)))();
-    if (sVar1 == 0) {
-      sVar1 = param_4 * 0x34;
-      sVar2 = (short)&DAT_0000f7e0 + sVar1;
-      uStack_4 = *(short *)((int)(param_4 << 1) + -0x7b4) + 1;
+     (0x243 < (ushort)(DAT_0001ff46 - *(short *)((int)(in_stack_00000004 << 1) + -0x7b8)))) {
+    sVar2 = (short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14;
+    sVar2 = (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar2 + 0xc),
+                                     *(undefined2 *)((int)sVar2 + 0xe)))();
+    if (sVar2 == 0) {
+      sVar2 = in_stack_00000004 * 0x34;
+      sVar3 = (short)&mut_snapshot_ringbuf_base + sVar2;
+      uStack_4 = *(short *)((int)(in_stack_00000004 << 1) + -0x7b4) + 1;
       if (2 < uStack_4) {
         *(undefined2 *)((int)&stack0xfffe + -2) = 0;
       }
-      *(ushort *)((int)(param_4 << 1) + -0x7b4) = uStack_4;
-      uVar3 = (*adc_sensor_convert_single)();
-      *(undefined2 *)((short)&DAT_0000f7e2 + sVar1) = uVar3;
-      uVar3 = (*adc_sensor_convert_single)();
-      *(undefined2 *)((int)extraout_R2 + 2) = uVar3;
-      uVar3 = (*adc_sensor_convert_single)();
-      *(undefined2 *)((int)extraout_R2_00 + 4) = uVar3;
-      uVar3 = (*adc_sensor_convert_single)();
-      *(undefined2 *)((int)extraout_R2_01 + 6) = uVar3;
-      uVar3 = (*adc_sensor_convert_single)();
-      *(undefined2 *)((int)extraout_R2_02 + 8) = uVar3;
-      *(byte *)((int)sVar2 + 1) = (byte)uStack_4 | 0x30;
-      cVar4 = byte_sum_banked('\0',(char *)CONCAT22((short)&UNK_0000f7e1 + sVar1,0xb),param_3);
-      *(char *)((int)sVar2 + 0xc) = cVar4;
-      *(undefined1 *)((int)sVar2 + 0xd) = 0xd;
-      sVar1 = param_4 * 0x14 + 0x3898;
-      bVar6 = 0;
-      (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar1 + 4),*(undefined2 *)((int)sVar1 + 6)
+      sVar1 = in_stack_00000004 << 1;
+      *(ushort *)((int)sVar1 + -0x7b4) = uStack_4;
+      uVar4 = (*adc_sensor_convert_single)();
+      *(undefined2 *)((short)&DAT_0000f7e2 + sVar2) = uVar4;
+      uVar4 = (*adc_sensor_convert_single)();
+      *(undefined2 *)((int)extraout_R2 + 2) = uVar4;
+      uVar4 = (*adc_sensor_convert_single)();
+      *(undefined2 *)((int)extraout_R2_00 + 4) = uVar4;
+      uVar4 = (*adc_sensor_convert_single)();
+      *(undefined2 *)((int)extraout_R2_01 + 6) = uVar4;
+      uVar4 = (*adc_sensor_convert_single)();
+      *(undefined2 *)((int)extraout_R2_02 + 8) = uVar4;
+      *(byte *)((int)sVar3 + 1) = (byte)uStack_4 | 0x30;
+      cVar5 = byte_sum_banked('\0',(char *)CONCAT22((short)&UNK_0000f7e1 + sVar2,0xb),in_R2);
+      *(char *)((int)sVar3 + 0xc) = cVar5;
+      *(undefined1 *)((int)sVar3 + 0xd) = 0xd;
+      sVar2 = (short)&mut_snapshot_channel_callback_table + in_stack_00000004 * 0x14;
+      bVar7 = 0;
+      (*(code *)(uint)CONCAT12((char)*(undefined2 *)((int)sVar2 + 4),*(undefined2 *)((int)sVar2 + 6)
                               ))();
-      *(undefined2 *)((int)(param_4 << 1) + -0x7b8) = *(undefined2 *)((uint)bVar6 << 0x10 | 0xff46);
+      *(undefined2 *)((int)sVar1 + -0x7b8) = *(undefined2 *)((uint)bVar7 << 0x10 | 0xff46);
     }
     else {
-      *(undefined2 *)((int)(param_4 << 1) + -0x7b6) = 0;
+      *(undefined2 *)((int)(in_stack_00000004 << 1) + -0x7b6) = 0;
     }
   }
   return;
@@ -3727,13 +3858,18 @@ void noop_return(void)
 
 
 
-undefined2 peripheral_register_cold_init(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void peripheral_register_cold_init(void)
 
 {
   undefined1 uVar1;
   byte bVar2;
   byte bVar3;
-  undefined2 in_stack_0000000c;
+  undefined2 uStack0004;
+  undefined2 uStack0006;
+  undefined2 uStack0008;
+  undefined2 uStack000a;
   
   bVar3 = 1;
   (*peripheral_block_ff15_cold_init)();
@@ -3782,26 +3918,47 @@ LAB_000151ef:
   peripheral_reg_ff1d_cold_init();
   stub_empty_0x16158();
   peripheral_block_ff90_cold_init();
+  uStack0004 = 0x5263;
   init_state_block_ff21();
+  uStack0006 = 0x5267;
+  uStack0004 = 1;
   timer_ff51_ff54_arm_init();
+  uStack0008 = 0x526b;
+  uStack0006 = 1;
   (*serial_fef4_cold_init)();
+  uStack0008 = 0x526f;
+  uStack0006 = 1;
   (*peripheral_block_fec0_fed0_cold_init)();
+  uStack0008 = 0x5273;
+  uStack0006 = 1;
   init_state_sentinels_f5d2();
+  uStack000a = 0x5277;
+  uStack0008 = 1;
   (*peripheral_block_ff70_ff88_cold_init)();
+  uStack000a = 0x527b;
+  uStack0008 = 1;
   (*peripheral_block_ff00_cold_init)();
   *(undefined1 *)((uint)bVar3 << 0x10 | 0xfedb) = 0x81;
   *(undefined1 *)((uint)bVar3 << 0x10 | 0xfeda) = 0x60;
-  return in_stack_0000000c;
+  return;
 }
 
 
 
-undefined2 peripheral_register_warm_init(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void peripheral_register_warm_init(void)
 
 {
   ushort uVar1;
   byte bVar2;
-  undefined2 in_stack_00000012;
+  undefined2 uStack0004;
+  undefined2 uStack0006;
+  undefined2 uStack0008;
+  undefined2 uStack000a;
+  undefined2 uStack000c;
+  undefined2 uStack000e;
+  undefined2 uStack0010;
   
   bVar2 = 1;
   (*peripheral_block_ff15_warm_init)();
@@ -3811,13 +3968,28 @@ undefined2 peripheral_register_warm_init(void)
   (*timer_ff41_ff42_warm_init)();
   peripheral_reg_ff1d_cold_init();
   stub_empty_0x1615a();
+  uStack0004 = 0x52ae;
   peripheral_block_ff90_warm_init();
+  uStack0006 = 0x52b2;
+  uStack0004 = 1;
   peripheral_block_ff21_warm_init();
+  uStack0008 = 0x52b6;
+  uStack0006 = 1;
   timer_ff51_ff52_disarm();
+  uStack000a = 0x52ba;
+  uStack0008 = 1;
   serial_fef4_warm_init();
+  uStack000c = 0x52be;
+  uStack000a = 1;
   peripheral_fec0_fed0_state_update();
+  uStack000e = 0x52c2;
+  uStack000c = 1;
   (*peripheral_ff42_ff62_enable)();
+  uStack000e = 0x52c6;
+  uStack000c = 1;
   uVar1 = (*peripheral_block_ff70_ff88_warm_init)();
+  uStack000e = 0x52ca;
+  uStack000c = 1;
   peripheral_block_ff00_warm_init(uVar1);
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xfe98) = 0;
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xfe99) = 0;
@@ -3833,8 +4005,10 @@ undefined2 peripheral_register_warm_init(void)
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xfe95) = 0xff;
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xfedb) = 0x81;
   *(undefined1 *)((uint)bVar2 << 0x10 | 0xfeda) = 0x60;
+  uStack0010 = 0x5315;
+  uStack000e = 1;
   (*update_flag_f9a0_bit6_cond)();
-  return in_stack_00000012;
+  return;
 }
 
 
@@ -3854,7 +4028,9 @@ void update_flag_f9a0_bit6_cond(void)
 
 
 
-undefined2 compose_status_words_f0f6_fc(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void compose_status_words_f0f6_fc(void)
 
 {
   ushort uVar1;
@@ -4003,19 +4179,23 @@ undefined2 compose_status_words_f0f6_fc(undefined2 param_1)
   else {
     DAT_0001f0fc = uVar1 | 0x200;
   }
-  return param_1;
+  return;
 }
 
 
 
-undefined2 compose_status_word_f102(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void compose_status_word_f102(void)
 
 {
+  undefined2 in_R0;
   short sVar1;
+  undefined2 in_R1;
   ushort extraout_R1;
   ushort uVar2;
+  undefined2 in_R2;
   byte bVar3;
-  undefined2 unaff_retaddr;
   
   bVar3 = 1;
   if ((DAT_0001fe8a & 0x10) == 0) {
@@ -4078,7 +4258,7 @@ undefined2 compose_status_word_f102(undefined2 param_1,undefined2 param_2,undefi
   else {
     uVar2 = uVar2 | 0x200;
   }
-  sVar1 = latch_flag_read_fede_bit1(param_1,uVar2 & 0xfbff,param_3,param_2);
+  sVar1 = latch_flag_read_fede_bit1(in_R0,uVar2 & 0xfbff,in_R2,in_R1);
   uVar2 = extraout_R1;
   if (sVar1 != 0) {
     uVar2 = extraout_R1 | 0x400;
@@ -4108,7 +4288,7 @@ undefined2 compose_status_word_f102(undefined2 param_1,undefined2 param_2,undefi
     uVar2 = uVar2 & 0xbfff;
   }
   *(ushort *)((uint)bVar3 << 0x10 | 0xf102) = uVar2;
-  return unaff_retaddr;
+  return;
 }
 
 
@@ -4147,6 +4327,7 @@ bool check_flag_fe8a_bit1_set(void)
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly + bank-prefixed xrefs]
 // adc_read_sequence_main: reads a batch of MUT-relevant ADC channels via shared helper @0x15b0d.
 // Cross-checked each channel's word-write target against the MUT RequestID table @ROM 0x2fad0
@@ -4172,7 +4353,7 @@ bool check_flag_fe8a_bit1_set(void)
 // 6 of 8 channels now cross-verified against MUT table + consumer. Remaining 2 (channels 0/2/9/0xA
 // region) not yet individually re-checked - do not assume correct without checking.
 
-undefined2 adc_read_sequence_main(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void adc_read_sequence_main(void)
 
 {
   byte *pbVar1;
@@ -4187,20 +4368,22 @@ undefined2 adc_read_sequence_main(undefined2 param_1,undefined2 param_2,undefine
   byte extraout_var_07;
   byte extraout_var_08;
   byte extraout_var_09;
+  undefined2 in_R0;
   ushort uVar2;
   short sVar3;
+  undefined2 in_R1;
   undefined2 extraout_R1;
   undefined2 extraout_R1_00;
   undefined2 extraout_R1_01;
+  undefined2 in_R2;
   undefined2 extraout_R2;
   undefined2 extraout_R2_00;
   undefined2 extraout_R2_01;
   byte bVar4;
   ushort in_SR;
-  undefined2 unaff_retaddr;
   
   bVar4 = 1;
-  uVar2 = noop_return_void(0,param_2,param_3,param_1);
+  uVar2 = noop_return_void(0,in_R1,in_R2,in_R0);
   *(ushort *)((uint)bVar4 << 0x10 | 0xf10a) = uVar2 >> 6;
   *(ushort *)((uint)bVar4 << 0x10 | 0xf108) = uVar2 >> 8;
   (*adc_channel_convert_and_read)(1);
@@ -4240,31 +4423,35 @@ undefined2 adc_read_sequence_main(undefined2 param_1,undefined2 param_2,undefine
   *(ushort *)((uint)bVar4 << 0x10 | 0xf16a) = (ushort)extraout_var_08;
   (*adc_channel_convert_and_read)(9);
   *(ushort *)((uint)bVar4 << 0x10 | 0xf166) = (ushort)extraout_var_09;
-  return unaff_retaddr;
+  return;
 }
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // TRIAGE: only caller is subsystem_unconditional_init_chain. Calls noop_return_void(0xb) then
 // stores (result>>6) into peripheral reg at bank 1 offset 0xf16e. Name is a best-effort guess based
 // on the ADC-cluster location in the surrounding code (near adc_read_sequence_main/b) - verify
 // against hardware manual before trusting fully.
 
-undefined2 adc_channel_read_and_store_f16e(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void adc_channel_read_and_store_f16e(void)
 
 {
+  undefined2 in_R0;
   ushort uVar1;
+  undefined2 in_R1;
+  undefined2 in_R2;
   byte bVar2;
-  undefined2 unaff_retaddr;
   
   bVar2 = 1;
-  uVar1 = noop_return_void(0xb,param_2,param_3,param_1);
+  uVar1 = noop_return_void(0xb,in_R1,in_R2,in_R0);
   *(ushort *)((uint)bVar2 << 0x10 | 0xf16e) = uVar1 >> 6;
-  return unaff_retaddr;
+  return;
 }
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // [RE-VERIFIED 2026-07-12 under current Sleigh grammar, live disassembly]
 // adc_read_sequence_b: reads MUT-relevant ADC channels via shared helper
 // adc_sensor_convert_single-style ADC poll routine at 0x15b0d.
@@ -4276,35 +4463,41 @@ undefined2 adc_channel_read_and_store_f16e(undefined2 param_1,undefined2 param_2
 // @0x171c3, EP=2 bank, base -0x530 from EP:2 segment).
 // Confirms logging.txt CONFIRMED-section TPS/Battery claims are correct under current decoder.
 
-undefined2 adc_read_sequence_b(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void adc_read_sequence_b(void)
 
 {
   byte extraout_var;
   byte extraout_var_00;
+  undefined2 in_R0;
+  undefined2 in_R1;
+  undefined2 in_R2;
   byte bVar1;
-  undefined2 unaff_retaddr;
   
   bVar1 = 1;
-  noop_return_void(5,param_2,param_3,param_1);
+  noop_return_void(5,in_R1,in_R2,in_R0);
   *(ushort *)((uint)bVar1 << 0x10 | 0xf13a) = (ushort)extraout_var;
   (*adc_channel_convert_and_read)(7);
   *(ushort *)((uint)bVar1 << 0x10 | 0xf13c) = (ushort)extraout_var_00;
-  return unaff_retaddr;
+  return;
 }
 
 
 
-undefined2 adc_read_channel_6(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void adc_read_channel_6(void)
 
 {
   byte extraout_var;
+  undefined2 in_R0;
+  undefined2 in_R1;
+  undefined2 in_R2;
   byte bVar1;
-  undefined2 unaff_retaddr;
   
   bVar1 = 1;
-  noop_return_void(6,param_2,param_3,param_1);
+  noop_return_void(6,in_R1,in_R2,in_R0);
   *(ushort *)((uint)bVar1 << 0x10 | 0xf15c) = (ushort)extraout_var;
-  return unaff_retaddr;
+  return;
 }
 
 
@@ -4318,14 +4511,17 @@ void zero_var_f15a(void)
 
 
 
-undefined2 identity_passthrough_u16_b(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void identity_passthrough_u16_b(void)
 
 {
-  return param_1;
+  return;
 }
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // [FOUND 2026-07-22] Genuine RAM-flag-to-physical-output-pin mirror function.
 // Mirrors 8 individual bits of RAM 0xf0e6 onto real H8 port data register
 // pins, several gated by hardware-config bytes at ROM 0x102e4-0x102ee
@@ -4370,7 +4566,7 @@ undefined2 identity_passthrough_u16_b(undefined2 param_1)
 // See mut_verification_status.md for the actuator-ID investigation this
 // session grew out of.
 
-undefined2 mirror_status_f0e6_to_ports(undefined2 param_1)
+void mirror_status_f0e6_to_ports(void)
 
 {
   if (DAT_000102e6 == '\0') {
@@ -4445,7 +4641,7 @@ undefined2 mirror_status_f0e6_to_ports(undefined2 param_1)
       DAT_0001fe8b = DAT_0001fe8b & 0xfb;
     }
   }
-  return param_1;
+  return;
 }
 
 
@@ -4586,11 +4782,13 @@ void clear_flag_fe93_bit4(void)
 
 
 
-undefined2 update_port_fe82_indexed(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void update_port_fe82_indexed(void)
 
 {
   DAT_0001fe82 = *(byte *)((int)(DAT_0001eed2 & 3) + 0x58a3) | DAT_0001fe82 & 0xfc;
-  return param_1;
+  return;
 }
 
 
@@ -4738,28 +4936,35 @@ void __stdcall_far_allstack software_pwm_output_scheduler(void)
 
 
 // WARNING: Restarted to delay deadcode elimination for space: register
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+// [EXISTING FUNCTION, COMMENT ADDED 2026-08-08] serial_fef9_duty_scale_and_set:
+// runs only when EGR-hardware-variant config byte 0x102e4==2 (CONFIRMED
+// active on this ROM). Reads radfan_pwm_duty_target_f494 (renamed from
+// "EGR position target F494" -- see radfan_pwm_duty_target_f494_calc's
+// plate comment for why), feeds it to ff88_set_scaled_clamped (0x16c33)
+// which scales*16, clamps [1,2048], and writes T6GR1H (0xff88, real Timer
+// 6 PWM duty register). Externally forceable via SCI1 actuator cmd 0xCD/
+// 0xCE. See mut_verification_status.md "DISCREPANCY CHECKED..." (2026-08-08)
+// for the radiator-fan-vs-EGR physical identity correction.
 
-undefined2 serial_fef9_duty_scale_and_set(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void serial_fef9_duty_scale_and_set(void)
 
 {
   uint uVar1;
   short sVar2;
-  undefined2 extraout_R2;
   byte bVar3;
-  undefined2 unaff_retaddr;
   
   bVar3 = 1;
   if (DAT_000102e4 == '\x02') {
-    (*ff88_set_scaled_clamped)(DAT_0001f494,param_2,param_3,param_2,param_1);
-    param_3 = extraout_R2;
+    (*ff88_set_scaled_clamped)(radfan_pwm_duty_target_f494);
   }
   uVar1 = (uint)*(ushort *)((uint)bVar3 << 0x10 | 0xf450) * 0xfa;
   sVar2 = (short)(uVar1 / 0xff);
   if (0xfe < (ushort)((short)(uVar1 % 0xff) * 2)) {
     sVar2 = sVar2 + 1;
   }
-  serial_fef9_set_clamped(sVar2,sVar2,param_3,param_2);
-  return unaff_retaddr;
+  serial_fef9_set_clamped(sVar2);
+  return;
 }
 
 
@@ -4986,17 +5191,19 @@ ushort isr_sci1_eri_reset_timeout(ushort param_1)
 
 
 
-undefined2 detect_sci1_param_change_reset(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void detect_sci1_param_change_reset(void)
 
 {
   if ((DAT_0001f992 == DAT_0001f1d6) && (DAT_0001f99c == DAT_0001f99e)) {
-    return param_1;
+    return;
   }
   DAT_0001f99e = DAT_0001f99c;
   DAT_0001f1d6 = DAT_0001f992;
   DAT_0001ef96 = DAT_00010f56;
   DAT_0001ef64 = 0;
-  return param_1;
+  return;
 }
 
 
@@ -5012,7 +5219,9 @@ void isr_sci1_eri(ushort param_1)
 
 
 
-undefined2 timer_block_cold_init(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void timer_block_cold_init(void)
 
 {
   DAT_0001ff20 = 6;
@@ -5032,7 +5241,7 @@ undefined2 timer_block_cold_init(undefined2 param_1)
   DAT_0001ff62 = DAT_0001ff62 & 0xef | 4;
   DAT_0001ff54 = DAT_0001ff54 & 0xcf;
   DAT_0001ff52 = DAT_0001ff52 & 0xeb;
-  return param_1;
+  return;
 }
 
 
@@ -5059,7 +5268,25 @@ void timer_block_cold_init_b(void)
 
 
 
-undefined2 isr_sci2_eri(undefined2 param_1,undefined2 param_2)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+// [FOUND 2026-08-07] Despite its name/vector (SCI2 error interrupt), this is
+// actually functioning as a PERIODIC TIMER TICK, not a real SCI2 error
+// handler. Body: reads T4DR1H (Timer 4 compare register) and T4CNTH (Timer 4
+// free-running counter), reschedules T4DR1H to (current value + 200) with
+// overflow/wrap handling, clears T4SRL bit2, then unconditionally calls
+// tcu_rx_main_scheduler(). This is the master periodic tick that drives the
+// whole scheduler chain -- confirmed as the entry point for tcu_rx_main_scheduler,
+// which in turn calls sci1_protocol_state_machine every tick, which in turn
+// unconditionally calls sci1_tx_response_feeder (see its plate comment) --
+// i.e. this ISR is the ultimate root of the ECU's autonomous serial TX/RX
+// polling loop. Likely repurposes the SCI2-ERI vector as a convenient periodic
+// interrupt slot rather than for genuine SCI2 error signaling -- worth a
+// rename (e.g. isr_timer4_periodic_tick_via_sci2eri_vector) but not yet
+// renamed pending cross-check of whether SCI2 error conditions are ever
+// actually handled here (they are not, in the current disassembly). See
+// mut_verification_status.md serial/TCU section.
+
+void isr_sci2_eri(void)
 
 {
   byte bVar1;
@@ -5079,12 +5306,14 @@ undefined2 isr_sci2_eri(undefined2 param_1,undefined2 param_2)
   bVar1 = T4SRL;
   T4SRL = bVar1 & 0xfb;
   tcu_rx_main_scheduler();
-  return param_2;
+  return;
 }
 
 
 
-undefined2 timer_ff41_ff44_ff4a_cold_init(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void timer_ff41_ff44_ff4a_cold_init(void)
 
 {
   DAT_0001ff41 = DAT_0001ff41 & 0xf3;
@@ -5093,7 +5322,7 @@ undefined2 timer_ff41_ff44_ff4a_cold_init(undefined2 param_1)
   DAT_0001ff4c = DAT_0001ff4a;
   DAT_0001ff4e = DAT_0001ff4a;
   DAT_0001ff42 = DAT_0001ff42 & 0xf7 | 6;
-  return param_1;
+  return;
 }
 
 
@@ -5256,7 +5485,9 @@ undefined2 __stdcall_far_allstack timer4_oc_arm_from_flags(ushort channel_mask)
 
 
 
-undefined2 isr_sci3_rxi(undefined2 param_1,undefined2 param_2)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isr_sci3_rxi(void)
 
 {
   byte bVar1;
@@ -5264,12 +5495,14 @@ undefined2 isr_sci3_rxi(undefined2 param_1,undefined2 param_2)
   bVar1 = T2SRL;
   T2SRL = bVar1 & 0xfd;
   stub_empty_0x2a8d1();
-  return param_2;
+  return;
 }
 
 
 
-undefined2 isr_sci3_txi(undefined2 param_1,undefined2 param_2)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isr_sci3_txi(void)
 
 {
   byte *pbVar1;
@@ -5288,7 +5521,7 @@ undefined2 isr_sci3_txi(undefined2 param_1,undefined2 param_2)
     *pbVar1 = *pbVar1 & 0xf7;
     (*sci3_rx_process_tcu_byte)();
   }
-  return param_2;
+  return;
 }
 
 
@@ -5452,7 +5685,9 @@ void stub_empty_0x1615a(void)
 
 
 
-undefined2 propagate_flag_fe96_to_f0d8_db(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void propagate_flag_fe96_to_f0d8_db(void)
 
 {
   DAT_0001f0d8 = DAT_0001fe96;
@@ -5460,7 +5695,7 @@ undefined2 propagate_flag_fe96_to_f0d8_db(undefined2 param_1)
   DAT_0001f0da = DAT_0001fe96;
   DAT_0001fe97 = DAT_0001fe97 & 0xfc | 3;
   DAT_0001f0db = DAT_0001fe96;
-  return param_1;
+  return;
 }
 
 
@@ -5513,7 +5748,9 @@ ushort scale_counter_ff96_to_byte_clamped(void)
 
 
 
-undefined2 init_state_block_ff21(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void init_state_block_ff21(void)
 
 {
   DAT_0001ff21 = 0;
@@ -5528,12 +5765,14 @@ undefined2 init_state_block_ff21(undefined2 param_1)
   DAT_0001ff3e = DAT_0001ff2c;
   DAT_0001ff38 = DAT_0001ff2c;
   DAT_0001ff3a = DAT_0001ff2c;
-  return param_1;
+  return;
 }
 
 
 
-undefined2 peripheral_block_ff21_warm_init(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void peripheral_block_ff21_warm_init(void)
 
 {
   DAT_0001ff21 = 0;
@@ -5541,7 +5780,7 @@ undefined2 peripheral_block_ff21_warm_init(undefined2 param_1)
   DAT_0001ff22 = 0;
   DAT_0001ff32 = 0;
   DAT_0001ff24 = DAT_0001ff24 & 0xf0;
-  return param_1;
+  return;
 }
 
 
@@ -5598,7 +5837,9 @@ multi_channel_reg_write_and_poll_ff2x_ff3x(ushort duration,ushort channel_mask)
 
 
 
-undefined2 isr_adi_adc(undefined2 param_1,undefined2 param_2)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isr_adi_adc(void)
 
 {
   byte bVar1;
@@ -5606,7 +5847,7 @@ undefined2 isr_adi_adc(undefined2 param_1,undefined2 param_2)
   bVar1 = T1SRAL;
   T1SRAL = bVar1 & 0xfd;
   stub_empty_0x2a8cf();
-  return param_2;
+  return;
 }
 
 
@@ -5640,14 +5881,16 @@ byte compose_fe86_fe8a_status_nibble(void)
 
 
 
-undefined2 timer_ff51_ff54_arm_init(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void timer_ff51_ff54_arm_init(void)
 
 {
   DAT_0001ff51 = DAT_0001ff51 & 0xf3;
   DAT_0001ff5a = DAT_0001ff56 + 2;
   DAT_0001ff54 = DAT_0001ff54 | 0xc;
   DAT_0001ff52 = DAT_0001ff52 & 0xfd;
-  return param_1;
+  return;
 }
 
 
@@ -5773,7 +6016,9 @@ void peripheral_block_fec0_fed0_cold_init(void)
 
 
 
-undefined2 peripheral_fec0_fed0_state_update(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void peripheral_fec0_fed0_state_update(void)
 
 {
   char cVar1;
@@ -5823,12 +6068,14 @@ undefined2 peripheral_fec0_fed0_state_update(undefined2 param_1)
   if ((DAT_0001f516 & 0xf000) == 0) {
     DAT_0001f516 = DAT_0001f516 & 0xfdff;
   }
-  return param_1;
+  return;
 }
 
 
 
-undefined2 serial_fec3_load_byte0_init(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void serial_fec3_load_byte0_init(undefined2 param_1)
 
 {
   uRam0001fec3 = *DAT_00016672;
@@ -5836,14 +6083,15 @@ undefined2 serial_fec3_load_byte0_init(undefined2 param_1)
   DAT_0001fec2 = 0xb0;
   uRam0001f4ba = CONCAT11((char)((ushort)DAT_00016672 >> 8),*DAT_00016672);
   DAT_0001f4d0 = 1;
-  return param_1;
+  return;
 }
 
 
 
 // WARNING: Restarted to delay deadcode elimination for space: ram
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 
-undefined2 serial_fec3_load_next_byte(undefined2 param_1)
+void serial_fec3_load_next_byte(void)
 
 {
   undefined1 *puVar1;
@@ -5858,11 +6106,12 @@ undefined2 serial_fec3_load_next_byte(undefined2 param_1)
   else {
     DAT_0001fec2 = DAT_0001fec2 & 0x7f;
   }
-  return param_1;
+  return;
 }
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // [CONTEXT ADDED 2026-07-26] Writes a received UART byte into
 // tcu_rx_confirmed_byte3_f4c2 (F4C2). "fec5" falls inside the fec0-fed5
 // SCI1/2/3 UART register range confirmed elsewhere in this project (see
@@ -5876,7 +6125,7 @@ undefined2 serial_fec3_load_next_byte(undefined2 param_1)
 // belongs to, and whether it's the same physical UART as the
 // tcu_periodic_dispatch (0x2c12b) chain, not yet determined.
 
-undefined2 serial_fec5_byte_to_fifo(undefined2 param_1)
+void serial_fec5_byte_to_fifo(undefined2 param_1)
 
 {
   byte bVar1;
@@ -5891,12 +6140,25 @@ undefined2 serial_fec5_byte_to_fifo(undefined2 param_1)
     }
   }
   DAT_0001fec4 = bVar1;
-  return param_1;
+  return;
 }
 
 
 
-ushort latch_request_f588(ushort param_1)
+// [CONTEXT ADDED 2026-08-07] Called from
+// sci1_handshake_status_byte_builder_and_f516_hibit_writer (0x28b89) and
+// sci1_send_final_handshake_byte_85_and_park_phase_machine (0x28cc8) --
+// transmits the byte staged in F54A (0x55/0xEF/0xF8/0x85, matching the
+// publicly-documented MUT-II post-handshake status broadcast "C0 55 EF 85")
+// by writing it directly to FECB (SCI1 TDR). Resets F588=0, then if F522
+// bit0 armed AND F58C (length) nonzero: writes F54A to FECB, clears FECC
+// bit7, sets F588=1, sets F522 bit7, zeroes F590. Sibling/counterpart to
+// sci1_tx_response_feeder (0x166d7), which drains any REMAINING bytes in a
+// multi-byte response (F588 continuing past 1) after this function sends the
+// first. See sci1_periodic_phase_dispatch_f526 plate comment for the full
+// handshake state machine this feeds.
+
+ushort sci1_latch_and_send_f54a_handshake_byte(ushort param_1)
 
 {
   undefined2 uVar1;
@@ -5915,7 +6177,35 @@ ushort latch_request_f588(ushort param_1)
 
 
 
-undefined2 sci1_tx_response_feeder(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+// [FOUND 2026-08-07] Autonomous SCI1 transmit-FIFO feeder -- part of the
+// answer to "does the ECU send data on its own." Called UNCONDITIONALLY every
+// tick from sci1_protocol_state_machine (0x287af), which itself runs every
+// scheduler tick via tcu_rx_main_scheduler <- isr_sci2_eri (a Timer-4 compare-
+// match periodic tick repurposed through the SCI2-error vector, NOT a real
+// SCI2 error/receive event -- see isr_sci2_eri plate comment).
+// 
+// Logic: checks SCI1 TDR-empty flag (FECC bit7, confirmed SCI1 SSR) AND a
+// software "armed" flag (F522 bit0). If both set and the buffer index F588
+// hasn't reached the length F58C (max 15 bytes), pulls the next byte from a
+// ROM/RAM table at base -0xab6 (indexed by F588<<1) and writes it directly to
+// FECB (confirmed SCI1 TDR) -- a genuine byte-by-byte autonomous transmit, no
+// external request needed once armed.
+// 
+// Re-arm/advance side: f588_duty_gate_f516_bit11_set (0x28b62, reached via
+// sci1_periodic_phase_dispatch_f526's jump table) clears F522 bit0 and resets
+// F58C to 0 once the buffer is drained, sets F516 bit11, and advances phase
+// counter F526 (0-7 cycle).
+// 
+// NOT YET DONE: what fills the -0xab6 buffer and F58C (length) and arms F522
+// bit0 in the first place -- that's the real "what does the ECU broadcast"
+// question, still open. A parallel, near-identical SCI2 mechanism exists at
+// sci_fifo_f58a_advance_and_load_fed3 (0x16786) / sci_request_latch_f58a_conditional
+// (0x1677c), writing to FED3 (SCI2 TDR) via F58A/F58E/F524. See mut_verification_status.md
+// serial/TCU section for the receive-side chain (serial_fec5_byte_to_fifo etc.)
+// this connects to.
+
+void sci1_tx_response_feeder(void)
 
 {
   if (((DAT_0001fecc & 0x80) != 0) && ((DAT_0001f522 & 1) != 0)) {
@@ -5927,7 +6217,7 @@ undefined2 sci1_tx_response_feeder(undefined2 param_1)
       DAT_0001f590 = 0;
     }
   }
-  return param_1;
+  return;
 }
 
 
@@ -5983,11 +6273,17 @@ ushort sci1_rx_frame_accumulator(ushort param_1)
 
 
 
-// TRIAGE: no callers/xrefs found (likely reached indirectly, sits in the SCI1 rx/tx cluster near
-// sci1_tx_response_feeder/sci1_rx_frame_accumulator). Clears flag f58a, then if condition bits
-// f524.bit0 and f58e (both nonzero), copies a byte from DAT_0000f576 into fed3, clears fed4 bit7,
-// sets f58a=1, sets f524.bit7, and zeroes f592. Reads like a "latch/arm a pending SCI1 request"
-// gate. Name is a best-effort guess - verify against SCI1 register map before trusting fully.
+// [CORRECTED 2026-08-07] Was previously mislabeled "SCI1 request latch" in a
+// triage note -- CORRECTED: writes to FED3 (confirmed SCI2 TDR, not SCI1's
+// FECB), so this is the SCI2-side arm/latch function, sibling to
+// sci_fifo_f58a_advance_and_load_fed3 (0x16786) which drains the same F58A/
+// F58E/F524 state via a multi-byte table instead of this function's single
+// F576 byte. Clears F58A, then if F524 bit0 set AND F58E != 0: writes F576
+// directly to FED3, clears FED4 bit7, sets F58A=1, sets F524 bit7, zeroes
+// F592. Reads like "arm a single pending SCI2 byte" as opposed to the table-
+// driven multi-byte drain in the sibling function. Caller still not found via
+// static xref -- same blind spot as sci_fifo_f58a_advance_and_load_fed3. See
+// mut_verification_status.md serial/TCU section.
 
 ushort sci_request_latch_f58a_conditional(ushort param_1)
 
@@ -6009,6 +6305,17 @@ ushort sci_request_latch_f58a_conditional(ushort param_1)
 
 
 // WARNING: Unknown calling convention -- yet parameter storage is locked
+// [CONTEXT ADDED 2026-08-07] SCI2 sibling of sci1_tx_response_feeder (0x166d7)
+// -- same autonomous transmit-FIFO pattern, different registers/counters.
+// Checks FED4 bit7 (SCI2 SSR TDRE) AND F524 bit0 (armed flag); if set and
+// F58A < F58E (buffer index < length, max 7 bytes), pulls next byte from a
+// table at base -0xa8a and writes to FED3 (confirmed SCI2 TDR). Not yet
+// confirmed which scheduler/tick calls this function (no static xref found --
+// likely reached via the same computed-call pattern tcu_rx_main_scheduler uses
+// for serial_fec5_byte_to_fifo). Re-arm side: sci_request_latch_f58a_conditional
+// (0x1677c) -- same shape, gates on F524 bit0 + F58E != 0, loads a single byte
+// from F576 into FED3 directly rather than the table. See mut_verification_status.md
+// serial/TCU section.
 
 void sci_fifo_f58a_advance_and_load_fed3(void)
 
@@ -6127,7 +6434,9 @@ void isr_tpu5_tci5u(void)
 
 
 
-undefined2 init_state_sentinels_f5d2(undefined2 param_1)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void init_state_sentinels_f5d2(void)
 
 {
   DAT_0001ff41 = DAT_0001ff41 & 0xfd | 1;
@@ -6142,7 +6451,7 @@ undefined2 init_state_sentinels_f5d2(undefined2 param_1)
   DAT_0001f5d8 = 0xffff;
   DAT_0001ef66 = 0xffff;
   DAT_0001ef68 = 0xffff;
-  return param_1;
+  return;
 }
 
 
@@ -6157,6 +6466,7 @@ void peripheral_ff42_ff62_enable(void)
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // [RE-VERIFIED 2026-07-14] PIN MAPPING CONFIRMED for the 2026-07-13 RPM lead.
 // (Note: function has since been renamed isr_ipu_ch2ch4_input_capture, correcting
 // the earlier isr_sci3_eri mislabel referenced in review.md item 7.)
@@ -6200,7 +6510,7 @@ void peripheral_ff42_ff62_enable(void)
 // scale/units for F5D6/F5D8 - the 0x10 divisor's real-world meaning and timer
 // tick rate haven't been derived yet.
 
-undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void isr_ipu_ch2ch4_input_capture(void)
 
 {
   byte *pbVar1;
@@ -6236,7 +6546,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
     do {
       bVar5 = P5DR;
       if ((bVar5 & 0x10) != 0) {
-        return param_1;
+        return;
       }
       sVar4 = T2CNTH;
       uVar3 = T2CNTH;
@@ -6247,7 +6557,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
     do {
       bVar5 = P5DR;
       if ((bVar5 & 0x10) == 0) {
-        return param_1;
+        return;
       }
       sVar4 = T2CNTH;
       uVar3 = T2CNTH;
@@ -6263,7 +6573,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
       uVar7 = DAT_0000ef68;
       uVar3 = DAT_0000ef68;
       if (uVar7 < 0x28) {
-        return param_1;
+        return;
       }
     }
     uVar7 = DAT_0000ef66;
@@ -6301,7 +6611,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
       DAT_0000f5d4 = 0xffff;
     }
     DAT_0000ef66 = 0;
-    (*tcu_shift_torque_and_knock_mgmt)(uVar7,uVar10,uVar14,0x100,param_1,param_2,param_3);
+    (*tcu_shift_torque_and_knock_mgmt)(uVar7,uVar10,uVar14,0x100);
     *(short *)((uint)bVar13 << 0x10 | 0xf0e2) =
          *(short *)((uint)bVar13 << 0x10 | 0xff46) - *(short *)((uint)bVar13 << 0x10 | 0xf5e2);
     pbVar1 = (byte *)((uint)bVar13 << 0x10 | 0xff41);
@@ -6312,7 +6622,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
     *pbVar1 = *pbVar1 | 1;
     pbVar1 = (byte *)((uint)bVar13 << 0x10 | 0xff61);
     *pbVar1 = *pbVar1 & 0xfd;
-    return param_1;
+    return;
   }
   sVar9 = DAT_0000f5e2;
   if ((ushort)(sVar6 - sVar9) < 0xa2) {
@@ -6320,7 +6630,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
     uVar10 = DAT_0000ef66;
     uVar3 = DAT_0000ef66;
     if (uVar10 < 0x28) {
-      return param_1;
+      return;
     }
   }
   sci1_timing_period_tracker();
@@ -6364,7 +6674,7 @@ undefined2 isr_ipu_ch2ch4_input_capture(undefined2 param_1,undefined2 param_2,un
   *pbVar1 = *pbVar1 | 2;
   pbVar1 = (byte *)((uint)bVar13 << 0x10 | 0xff61);
   *pbVar1 = *pbVar1 & 0xfe;
-  return param_2;
+  return;
 }
 
 
@@ -6501,6 +6811,14 @@ void f978_increment_on_ff73_bit0(void)
 }
 
 
+
+// [EXISTING FUNCTION, COMMENT ADDED 2026-08-08] ff88_set_scaled_clamped:
+// scales input*16, clamps to [1,2048], writes T6GR1H (0xff88, real H8
+// Timer 6 PWM duty/compare register). Sole known caller this pass:
+// serial_fef9_duty_scale_and_set (0x15a06), part of the radiator-fan PWM
+// chain (renamed from "EGR" -- see radfan_pwm_duty_target_f494_calc's
+// plate comment, 0x18bc2, for the correction and reasoning). See
+// mut_verification_status.md "DISCREPANCY CHECKED..." (2026-08-08).
 
 void ff88_set_scaled_clamped(short sValue)
 
@@ -6748,7 +7066,9 @@ LAB_00016eb7:
 
 
 
-undefined2 isr_tpu3_tgi3b(undefined2 param_1,undefined2 param_2)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isr_tpu3_tgi3b(void)
 
 {
   byte bVar1;
@@ -6762,7 +7082,7 @@ undefined2 isr_tpu3_tgi3b(undefined2 param_1,undefined2 param_2)
   if ((*(byte *)((uint)bVar2 << 0x10 | 0xff73) & 8) != 0) {
     pwm_ch1_period_track_update();
   }
-  return param_2;
+  return;
 }
 
 
@@ -7015,6 +7335,31 @@ adc_sensor_convert_multi(uchar *src_ptr,uchar *dst_ptr,ushort count,ushort mode_
 // can't retarget this on H8; left undeclared (undefined2(void)) rather than commit a
 // misleading stack-based signature. Return is effectively a byte (CONCAT11 high byte is
 // 0 when RequestID<0xC0), typed undefined2 for the same reason.
+// 
+// [CALLER AUDIT 2026-08-07, CORRECTED same session] All 13 call sites enumerated via
+// get_function_callers -- exactly TWO callers, both internal periodic
+// snapshot/backup-logging routines:
+//   - mut_configurable_reqid_backup_snapshot_5word (0x1504b) -- 5 calls
+//   - mut_configurable_reqid_periodic_snapshot_8word (0x14edd) -- 8 calls
+// CORRECTION: an earlier pass this session claimed both callers pass FIXED,
+// HARDCODED RequestID literals. WRONG -- re-verified via direct
+// disassemble_function on both callers: every RequestID is read from a RAM
+// table at 0xf814+channel*0x34, itself populated/validated at runtime by
+// eeprom_backup_table_write_dispatch (0x149f5) from a checksummed
+// EEPROM-style config blob. So the RequestID set is CONFIGURABLE at
+// runtime, not compiled-in -- likely uploaded via the same SCI1 serial
+// mechanism documented elsewhere in this project, making this closer to a
+// real "MUT data-list" facility than first assessed, just indirected
+// through an EEPROM-backed RAM staging record instead of taking the
+// RequestID directly off the wire per-byte.
+// Still true regardless of the correction: cross-checked against the live
+// incoming command byte F534 (3 readers, all documented, none reach this
+// function) -- so whatever configures the 0xf814 RAM table, it is NOT the
+// same code path that processes the live per-byte SCI1 command stream;
+// it's a separate, likely session/config-time upload mechanism. See
+// mut_verification_status.md "MAJOR FINDING ... CORRECTED" (2026-08-07)
+// for full detail and the NOT YET DONE list (tracing what populates
+// 0xf862+, the real source of the config blob).
 
 undefined2 adc_sensor_convert_single(void)
 
@@ -7353,7 +7698,7 @@ bool knock_condition_eval(void)
   if (bVar1) {
     DAT_0001efe4 = DAT_00010dbc;
   }
-  if (DAT_0001f17a < DAT_00010dc2) {
+  if (engine_torque_pct_f17a < DAT_00010dc2) {
     DAT_0001efe6 = DAT_00010dbe;
   }
   usFlags = DAT_0001f43e;
@@ -7396,7 +7741,7 @@ bool knock_condition_eval(void)
     DAT_0001f042 = DAT_00010dc0;
   }
   DAT_0001f43e = usFlags;
-  if ((DAT_0001f17a < DAT_00010dc2 || bVar1) ||
+  if ((engine_torque_pct_f17a < DAT_00010dc2 || bVar1) ||
      (((DAT_0001f594 & 0x80) == 0 &&
       (((DAT_0001efe4 != 0 || (DAT_0001efe6 != 0)) || ((DAT_0001f042 != 0 || (DAT_0001f044 != 0)))))
       ))) {
@@ -7462,11 +7807,11 @@ void isc_condition_eval(undefined2 param_1,undefined2 param_2,undefined2 param_3
   
   bVar4 = 1;
   if ((DAT_0001f45a & 8) == 0) {
-    if (DAT_00010db2 < DAT_0001f17a) {
+    if (DAT_00010db2 < engine_torque_pct_f17a) {
       DAT_0001f45a = DAT_0001f45a | 8;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010db4) {
+  else if (engine_torque_pct_f17a <= DAT_00010db4) {
     DAT_0001f45a = DAT_0001f45a & 0xfff7;
   }
   if ((DAT_0001f45a & 2) == 0) {
@@ -7497,8 +7842,8 @@ void isc_condition_eval(undefined2 param_1,undefined2 param_2,undefined2 param_3
   if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 8) == 0) {
     *(undefined2 *)((uint)bVar4 << 0x10 | 0xeffe) = *(undefined2 *)((uint)bVar4 << 0x10 | 0x1108);
   }
-  sVar3 = isc_stepper_enable_check();
-  if (sVar3 == 0) {
+  uVar2 = isc_stepper_enable_check();
+  if (uVar2 == 0) {
     sVar3 = (*isc_decel_fuel_cut_check)();
     uVar2 = extraout_R2;
     if (sVar3 != 0) {
@@ -7525,23 +7870,23 @@ void isc_condition_eval(undefined2 param_1,undefined2 param_2,undefined2 param_3
 
 
 // WARNING: Type propagation algorithm not settling
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 
-undefined2 isc_stepper_enable_check(void)
+ushort isc_stepper_enable_check(void)
 
 {
   ushort *puVar1;
   ushort uVar2;
   ushort uVar3;
-  undefined2 uVar4;
   ushort extraout_R2;
   ushort extraout_R2_00;
-  byte bVar5;
+  byte bVar4;
   
-  bVar5 = 1;
+  bVar4 = 1;
   if (DAT_000102e2 == '\0') {
     if (DAT_000102df == '\x01') {
       if ((((DAT_0001f1fe & 8) == 0) ||
-          ((DAT_0001110a < DAT_0001f17a && (DAT_0001110c < DAT_0001f13c)))) &&
+          ((DAT_0001110a < engine_torque_pct_f17a && (DAT_0001110c < DAT_0001f13c)))) &&
          ((((DAT_0001f1fe & 8) != 0 || (((DAT_0001f45a & 4) != 0 && ((DAT_0001f45a & 2) == 0)))) &&
           (((g_status_flags_f20e & 8) == 0 || (DAT_0001effe != 0)))))) {
 joined_r0x00017904:
@@ -7556,43 +7901,43 @@ joined_r0x00017904:
                ((DAT_000102e1 == '\0' || ((g_status_flags_f216 & 0xf) != 0)))))))) &&
             ((DAT_000102e0 == '\0' || ((g_status_flags_f20e & 8) == 0)))) goto joined_r0x00017904;
 LAB_00017924:
-    uVar4 = 1;
+    uVar3 = 1;
   }
   else {
     uVar3 = g_status_flags_f20e & 0x800;
     if (((((DAT_0001f1fe & 8) != 0) &&
-         ((DAT_0001f17a <= DAT_0001110a || (DAT_0001f13c <= DAT_0001110c)))) ||
+         ((engine_torque_pct_f17a <= DAT_0001110a || (DAT_0001f13c <= DAT_0001110c)))) ||
         (((DAT_0001f1fe & 8) == 0 &&
          ((((g_status_flags_f216 & 0x80) == 0 || ((DAT_0001f45a & 4) == 0)) ||
           ((DAT_0001f45a & 2) != 0)))))) ||
        (((((g_status_flags_f20e & 8) != 0 ||
           (uVar2 = shift_left_byte_to_high(DAT_0001111e),
-          *(ushort *)((uint)bVar5 << 0x10 | 0xf26e) <= uVar2)) ||
+          *(ushort *)((uint)bVar4 << 0x10 | 0xf26e) <= uVar2)) ||
          (((uVar2 = extraout_R2, uVar3 != 0 &&
-           (uVar3 = sat_sub_u16(*(ushort *)((uint)bVar5 << 0x10 | 0x8a0),
-                                *(ushort *)((uint)bVar5 << 0x10 | 0x1126)),
-           puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xf06c), uVar2 = extraout_R2_00,
+           (uVar3 = sat_sub_u16(*(ushort *)((uint)bVar4 << 0x10 | 0x8a0),
+                                *(ushort *)((uint)bVar4 << 0x10 | 0x1126)),
+           puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf06c), uVar2 = extraout_R2_00,
            *puVar1 <= uVar3 && uVar3 != *puVar1)) ||
-          (((((*(ushort *)((uint)bVar5 << 0x10 | 0xf45a) & 8) == 0 ||
-             (puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xef6a),
+          (((((*(ushort *)((uint)bVar4 << 0x10 | 0xf45a) & 8) == 0 ||
+             (puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xef6a),
              *puVar1 <= uVar2 && uVar2 != *puVar1)) ||
-            ((*(ushort *)((uint)bVar5 << 0x10 | 0xf20e) & 0x11) != 0)) ||
-           (*(ushort *)((uint)bVar5 << 0x10 | 0xf10e) < *(ushort *)((uint)bVar5 << 0x10 | 0xda4)))))
-         )) || ((*(char *)((uint)bVar5 << 0x10 | 0x30a) != '\0' &&
-                (((((*(ushort *)((uint)bVar5 << 0x10 | 0xf1fe) & 8) == 0 &&
-                   ((*(ushort *)((uint)bVar5 << 0x10 | 0xf20e) & 0x80) == 0)) &&
-                  ((*(ushort *)((uint)bVar5 << 0x10 | 0xf45a) & 0x800) == 0)) ||
-                 (((((*(ushort *)((uint)bVar5 << 0x10 | 0xf1f6) & 4) != 0 &&
-                    ((*(ushort *)((uint)bVar5 << 0x10 | 0xf75a) & 8) != 0)) ||
-                   (((*(ushort *)((uint)bVar5 << 0x10 | 0xf1f6) & 0x80) != 0 &&
-                    ((*(ushort *)((uint)bVar5 << 0x10 | 0xf75a) & 4) != 0)))) ||
-                  (((*(ushort *)((uint)bVar5 << 0x10 | 0xf1f6) & 0x2000) != 0 &&
-                   ((*(ushort *)((uint)bVar5 << 0x10 | 0xf75a) & 0x10) != 0))))))))))))
+            ((*(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 0x11) != 0)) ||
+           (*(ushort *)((uint)bVar4 << 0x10 | 0xf10e) < *(ushort *)((uint)bVar4 << 0x10 | 0xda4)))))
+         )) || ((*(char *)((uint)bVar4 << 0x10 | 0x30a) != '\0' &&
+                (((((*(ushort *)((uint)bVar4 << 0x10 | 0xf1fe) & 8) == 0 &&
+                   ((*(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 0x80) == 0)) &&
+                  ((*(ushort *)((uint)bVar4 << 0x10 | 0xf45a) & 0x800) == 0)) ||
+                 (((((*(ushort *)((uint)bVar4 << 0x10 | 0xf1f6) & 4) != 0 &&
+                    ((*(ushort *)((uint)bVar4 << 0x10 | 0xf75a) & 8) != 0)) ||
+                   (((*(ushort *)((uint)bVar4 << 0x10 | 0xf1f6) & 0x80) != 0 &&
+                    ((*(ushort *)((uint)bVar4 << 0x10 | 0xf75a) & 4) != 0)))) ||
+                  (((*(ushort *)((uint)bVar4 << 0x10 | 0xf1f6) & 0x2000) != 0 &&
+                   ((*(ushort *)((uint)bVar4 << 0x10 | 0xf75a) & 0x10) != 0))))))))))))
     goto LAB_00017924;
 LAB_00017929:
-    uVar4 = 0;
+    uVar3 = 0;
   }
-  return uVar4;
+  return uVar3;
 }
 
 
@@ -7605,11 +7950,11 @@ bool isc_decel_fuel_cut_check(void)
   if ((((((DAT_0001030a != '\0') || ((g_status_flags_f20e & 0x80) != 0)) &&
         ((DAT_0001030a == '\0' ||
          (((g_status_flags_f20e & 0x80) != 0 || ((DAT_0001f45a & 0x800) == 0)))))) &&
-       (DAT_00010900 <= DAT_0001f130)) && (DAT_0001f118 < DAT_000108fc)) &&
+       (DAT_00010900 <= coolant_temp_scaled_f130)) && (DAT_0001f118 < DAT_000108fc)) &&
      ((DAT_0001030a == '\0' ||
       ((((DAT_0001f1f6 & 0x2000) == 0 || ((DAT_0001f75a & 0x20) == 0)) &&
        (((DAT_0001f1fe & 8) == 0 ||
-        ((DAT_0001f17a <= DAT_0001110a || (DAT_0001f13c <= DAT_0001110c)))))))))) {
+        ((engine_torque_pct_f17a <= DAT_0001110a || (DAT_0001f13c <= DAT_0001110c)))))))))) {
     return false;
   }
   return true;
@@ -8101,7 +8446,7 @@ void isc_integrator_update(void)
 // 0x180ab): reads table entries at fixed offsets +0x30, +0x40, +0x42. Confirms this is a
 // widely-shared table, not local to the knock/octane cluster.
 
-void isc_stepper_blend_from_struct(void)
+void isc_stepper_blend_from_struct(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -8488,8 +8833,8 @@ void egr_target_f448_update(void)
 
 {
   short sVar1;
-  undefined2 uVar2;
-  undefined2 extraout_R2;
+  ushort uVar2;
+  ushort extraout_R2;
   byte bVar3;
   
   bVar3 = 1;
@@ -8507,7 +8852,7 @@ void egr_target_f448_update(void)
       uVar2 = 0x80;
     }
   }
-  *(undefined2 *)((uint)bVar3 << 0x10 | 0xf448) = uVar2;
+  *(ushort *)((uint)bVar3 << 0x10 | 0xf448) = uVar2;
   return;
 }
 
@@ -8596,19 +8941,19 @@ ushort egr_duty_target_calc(void)
 
 
 
-void egr_mode_dispatch(void)
+void egr_mode_dispatch(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
   if (DAT_000102e4 == '\0') {
     DAT_0001f0e6 = DAT_0001f0e6 & 0xffcf;
-    DAT_0001f494 = 0;
+    radfan_pwm_duty_target_f494 = 0;
     DAT_0001f490 = DAT_0001f490 & 0xfffb;
   }
   else if (DAT_000102e4 == '\x01') {
     (*egr_sequence_control)();
   }
   else {
-    egr_position_target_f494_calc();
+    radfan_pwm_duty_target_f494_calc(param_1,param_2,param_3);
   }
   return;
 }
@@ -8638,11 +8983,12 @@ void egr_sequence_control(void)
 
 
 
-undefined1 egr_valve_state_eval_f490(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void egr_valve_state_eval_f490(void)
 
 {
   byte *pbVar1;
-  undefined1 uVar2;
   undefined2 uStack_6;
   byte *pbStack_4;
   
@@ -8706,14 +9052,7 @@ undefined1 egr_valve_state_eval_f490(void)
   if (((g_status_flags_f0f8 & 0x10) != 0) && ((DAT_0001f0fe & 0x10) != 0)) {
     DAT_0001f490 = DAT_0001f490 | 0x38;
   }
-  uVar2 = (DAT_0001f490 & 0x10) != 0;
-  if ((DAT_0001f490 & 8) != 0) {
-    uVar2 = 2;
-  }
-  if ((DAT_0001f490 & 0x20) != 0) {
-    uVar2 = 3;
-  }
-  return uVar2;
+  return;
 }
 
 
@@ -8738,11 +9077,11 @@ bool egr_f490_condition_flags_update(void)
     DAT_0001f490 = DAT_0001f490 & 0xdfff;
   }
   if ((DAT_0001f490 & 0x4000) == 0) {
-    if (DAT_00010e76 < DAT_0001f17a) {
+    if (DAT_00010e76 < engine_torque_pct_f17a) {
       DAT_0001f490 = DAT_0001f490 | 0x4000;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010e74) {
+  else if (engine_torque_pct_f17a <= DAT_00010e74) {
     DAT_0001f490 = DAT_0001f490 & 0xbfff;
   }
   if ((DAT_0001f490 & 0x8000) == 0) {
@@ -8765,8 +9104,6 @@ bool egr_f490_condition_flags_update(void)
 }
 
 
-
-// WARNING: Unknown calling convention -- yet parameter storage is locked
 
 bool check_hysteresis_gate_f490(void)
 
@@ -8800,6 +9137,18 @@ bool check_hysteresis_gate_f490(void)
 
 
 // WARNING: Unknown calling convention -- yet parameter storage is locked
+// [EXISTING FUNCTION, COMMENT ADDED 2026-08-08] Shared override-mode gate,
+// called from BOTH egr_sequence_control (0x187cf, genuinely-confirmed EGR
+// GPIO valve mechanism) and radfan_pwm_duty_target_f494_calc (0x18bc2,
+// renamed from egr_position_target_f494_calc -- see that function's plate
+// comment for why "EGR" was found to be an unconfirmed label, likely
+// actually a radiator fan PWM control). Being shared by both does NOT mean
+// they control the same physical system -- it means this ECU variant's
+// 0x102e4 config byte selects between several DIFFERENT actuator
+// mechanisms that happen to share this one SCI1-override-mode check (F510
+// bits 11/12, gated on F20E bit4). Returns usMode: 0 = no override, 1 =
+// override low, 3 = override high (used differently by each caller). See
+// mut_verification_status.md "DISCREPANCY CHECKED..." (2026-08-08).
 
 ushort check_mode_gate_f510(void)
 
@@ -8913,68 +9262,57 @@ LAB_00018bb0:
 
 
 
-// [FOUND 2026-07-26] Third EGR hardware variant (selected when ROM config
-// byte 0x102e4==2, dispatched from egr_mode_dispatch @ 0x187a0). CONFIRMED
-// LIVE ON THIS ROM: 0x102e4 reads 2 on this exact ROM (RVR_1998_x3 4g63t
-// 21000011 md352553.hex) -- this is the ACTIVE EGR mechanism here, not the
-// relay-style two-bit sequence (egr_f0e6_valve_bits_update, config==1,
-// inactive on this ROM) or the no-EGR stub (config==0).
+// [RENAMED 2026-08-08] Formerly egr_position_target_f494_calc. Renamed
+// because "EGR" was found to be an UNCONFIRMED label -- see full
+// correction below and in mut_verification_status.md "DISCREPANCY
+// CHECKED..." (2026-08-08).
 // 
-// Computes a duty/position target (f494) from an RPM-band lookup
-// (egr_table_row_lookup_f496) with hysteresis flags in f492, UNLESS an
-// override path is taken: when f20e bit4 is SET (or the RPM/load hysteresis
-// condition in the "normal" branch isn't met), calls check_mode_gate_f510
-// (0x18ae5), which returns nonzero if f20e bit4 is set AND f510 bits 11/12
-// (mask 0x1800) are set -- in which case f494 is force-set to a fixed ROM
-// calibration constant at 0xe6e instead of the computed value.
+// WHAT THIS FUNCTION DOES (unchanged from prior analysis): the THIRD of 3
+// hardware variants selected by ROM config byte 0x102e4 (0=none, 1=
+// egr_sequence_control's GPIO drive, 2=THIS function). CONFIRMED ACTIVE on
+// this ROM (0x102e4==2, read directly). Computes a target value and writes
+// it to RAM F494 (now radfan_pwm_duty_target_f494), which flows:
+//   F494 -> serial_fef9_duty_scale_and_set (0x15a06, runs only when
+//   config==2) -> ff88_set_scaled_clamped (0x16c33): scales F494*16,
+//   clamps to [1,2048] -> writes T6GR1H (0xff88), a REAL H8 Timer 6 PWM
+//   duty/compare register (confirmed real hardware peripheral, not an
+//   inferred RAM flag).
 // 
-// CONFIRMED SCI1-REACHABLE (FIFTH ACTUATOR-FORCE CHAIN FOUND, and the
-// STRONGEST/MOST CONCRETE ONE): f510 bit12 is set by SCI1 cmd 0xCD, bit11 by
-// cmd 0xCE (cmd_c0_d8_actuator_bit_table, see sci1_meta_cmd_dispatch_c0_ff
-// plate comment for the corrected table -- subject to the same f00e==0 AND
-// f25a bit4 gate as every other table-driven command). Either bit alone is
-// sufficient to trip check_mode_gate_f510's override (the function doesn't
-// distinguish usMode 1 vs 3 downstream, both are treated as "override
-// active"). f20e bit4's own meaning is still not independently pinned down
-// (170+ xref sites), so the real-world trigger condition isn't 100% nailed,
-// but the mechanism itself -- cmd 0xCD/0xCE -> f510 bit12/11 -> override ->
-// f494 forced to ROM 0xe6e -- is confirmed live end to end.
+// Externally forceable via SCI1 actuator commands 0xCD (sets F510 bit12)
+// and 0xCE (sets F510 bit11), read by this function's gate
+// check_mode_gate_f510 (0x18ae5): if F20E bit4 is set and either bit is
+// present, this function's normal RPM-band-computed target is overridden
+// with a fixed ROM calibration value from address 0xe6e instead.
 // 
-// f494 IS CONSUMED BY A REAL HARDWARE PWM TIMER, not just a RAM flag or an
-// inferred port pin -- the strongest physical-actuator evidence found in this
-// whole investigation:
-//   f494 -> serial_fef9_duty_scale_and_set (0x15a11, only when config==2)
-//        -> ff88_set_scaled_clamped (0x16c33): scales f494*16, clamps to
-//           [1, 0x800] (1-2048)
-//        -> writes DAT_0001ff88, which list_globals confirms is T6GR1H/L --
-//           Timer 6's General Register 1, a genuine H8 16-bit timer
-//           compare/PWM-duty register (not a RAM flag or an inferred label).
-//   Corroborated by peripheral_block_ff70_ff88_cold_init (0x16b52): at cold
-//   boot, Timer 6 is explicitly configured as a PWM channel -- T6CRH(0xff80)=1
-//   (control/mode), T6GR2H(0xff8a)=0x7FF=2047 (period register -- note this
-//   matches ff88_set_scaled_clamped's clamp ceiling of 0x800=2048 almost
-//   exactly, strongly suggesting GR2=period, GR1=duty, a standard H8 PWM
-//   compare-match pair), T6GR1H(0xff88)=1 (initial duty), T6OER(0xff84)=0
-//   (output-enable register, exact enable polarity not determined from this
-//   ROM alone -- would need H8/500 timer datasheet to confirm active-high vs
-//   active-low). Note this same init function also sets TMDRB (0xff35, Timer
-//   1's mode register, UNRELATED peripheral) bit3 specifically when
-//   config==2 -- a secondary hardware reconfiguration tied to the same
-//   variant selector, not yet explained, low priority.
+// CORRECTION (2026-08-08): this function and its RAM target F494 were
+// previously named "egr_position_target_f494_calc" / "EGR position/duty
+// target" based ONLY on being grouped alongside 2 separately-confirmed,
+// GENUINELY EGR mechanisms (egr_f0e6_bit1_update -> P2DR.7 EGR solenoid,
+// egr_f0e6_valve_bits_update -> P4DR.4+PCDR.6 EGR valve position) that
+// share the same 0x102e4 config-byte selector. That association was NEVER
+// independently verified -- this function's actual output (a Timer 6 PWM
+// DUTY CYCLE register) is structurally unlike the other two confirmed EGR
+// mechanisms (which drive plain GPIO bits, not PWM). Two INDEPENDENT
+// external sources -- a GalantLegnum MUT-profile XML (RequestID 0x84,
+// already flagged in this project as pointing at this same F494/F495 word
+// and labeled "RadFans") AND EvoScan.exe's real actuator-test UI (cmd
+// 0xCD/0xCE labeled "Radiator Fan Low/High") -- both independently call
+// this mechanism a RADIATOR FAN, not EGR. PWM duty control is also the
+// more typical mechanism for fan-speed control generally, vs GPIO/relay/
+// stepper drive more typical of EGR valves on this ECU generation (matching
+// the OTHER two, GENUINELY EGR, confirmed mechanisms' GPIO style).
+// RENAMED accordingly: egr_position_target_f494_calc ->
+// radfan_pwm_duty_target_f494_calc; global F494 -> radfan_pwm_duty_
+// target_f494. Not 100% certain -- flagging as "most likely correct given
+// 2 independent external sources vs 1 unconfirmed internal assumption",
+// not as fully proven. See mut_verification_status.md for full reasoning.
 // 
-// CONCLUSION: on THIS ROM, the EGR valve is PWM-duty-controlled via Timer 6
-// (T6GR1/T6GR2), and SCI1 commands 0xCD or 0xCE can force that duty target
-// to a fixed calibration value, subject to the f00e/f25a table gate and
-// f20e bit4. This is a genuinely stronger actuator-test candidate than the
-// f0e6/port-pin chains (cmd 0xD1 purge, cmd 0xD8/0xD2 ignition-adjacent)
-// because the endpoint is an unambiguous, confirmed real timer peripheral
-// register rather than an inferred/unconfirmed port-pin identity -- though
-// which PHYSICAL valve/actuator T6's output pin is wired to on the vehicle is
-// still not confirmed (no H8/500 pinout cross-reference done in this
-// project). See mut_verification_status.md "PHYSICAL OUTPUT PIN TRACE" and
-// the new EGR-PWM section for full context and next steps.
+// NOT YET DONE: independently verify against a real H8/500 pinout / vehicle
+// harness which physical device Timer 6's PWM output pin actually drives,
+// to fully settle this rather than relying on external-source agreement
+// alone.
 
-void egr_position_target_f494_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void radfan_pwm_duty_target_f494_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
   ushort *puVar1;
@@ -9198,14 +9536,14 @@ short purge_enable_check(void)
   }
   sVar1 = 0;
   if (((g_status_flags_f20e & 0x11) == 0) && (DAT_00010e1c < DAT_0001ef6a)) {
-    if ((uVar2 < DAT_0001f17a) &&
+    if ((uVar2 < engine_torque_pct_f17a) &&
        (*(ushort *)((int)&stack0xfffe + -2) <= DAT_0001f13e &&
         DAT_0001f13e != *(ushort *)((int)&stack0xfffe + -2))) {
       DAT_0001efee = DAT_00010e1e;
     }
     if ((DAT_0001f13e <= uVar3) &&
-       (((DAT_0001f17a <= uVar2 || (DAT_0001efee == 0)) && ((g_status_flags_f0f8 & 0x2000) != 0))))
-    {
+       (((engine_torque_pct_f17a <= uVar2 || (DAT_0001efee == 0)) &&
+        ((g_status_flags_f0f8 & 0x2000) != 0)))) {
       return 0;
     }
   }
@@ -9233,7 +9571,7 @@ void ign_advance_top_update(void)
   (*ign_advance_idle_correction_f44e)();
   ign_advance_base_calc_f860();
   (*(code *)0x18fe0)();
-  wgdc_output_clamp_f44c();
+  wgdc_output_clamp_f44c(*(ushort *)((int)&stack0xfff8 + 6));
   return;
 }
 
@@ -9265,20 +9603,20 @@ void ign_advance_enable_flags_f440_update(void)
   }
   else {
     if ((DAT_0001f440 & 2) == 0) {
-      if ((ushort)DAT_00010e06 < (ushort)DAT_0001f17a) {
+      if ((ushort)DAT_00010e06 < (ushort)engine_torque_pct_f17a) {
         DAT_0001f440 = DAT_0001f440 | 2;
       }
     }
-    else if ((ushort)DAT_0001f17a <= (ushort)DAT_00010e08) {
+    else if ((ushort)engine_torque_pct_f17a <= (ushort)DAT_00010e08) {
       DAT_0001f440 = DAT_0001f440 & 0xfffd;
     }
     if ((DAT_0001f440 & 1) != 0) {
-      if ((ushort)DAT_0001f17a <= (ushort)DAT_00010e04) {
+      if ((ushort)engine_torque_pct_f17a <= (ushort)DAT_00010e04) {
         DAT_0001f440 = DAT_0001f440 & 0xfffe;
       }
       goto LAB_00018f38;
     }
-    if ((ushort)DAT_0001f17a <= (ushort)BYTE_ARRAY_00010e02) goto LAB_00018f38;
+    if ((ushort)engine_torque_pct_f17a <= (ushort)BYTE_ARRAY_00010e02) goto LAB_00018f38;
   }
   DAT_0001f440 = DAT_0001f440 | 1;
 LAB_00018f38:
@@ -9335,7 +9673,7 @@ ushort ign_advance_base_calc_f860(void)
 // Turbo Boost Error Correction / Max Total Upward WGDC Correction tables), reads/writes
 // 0xF44A. Feeds wgdc_output_clamp_f44c (0x19110). VERIFIED - matches logging.txt structure.
 
-byte  [2] wgdc_correction_integrator_update(void)
+byte  [2] wgdc_correction_integrator_update(ushort param_fp1)
 
 {
   undefined2 uVar1;
@@ -9412,7 +9750,7 @@ void ign_advance_idle_correction_f44e(void)
 // address-correct) remains UNDETERMINED per logging.txt OPEN ITEM #3 - not resolved by
 // this verification pass, still open.
 
-void wgdc_output_clamp_f44c(void)
+void wgdc_output_clamp_f44c(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -9473,8 +9811,6 @@ void ign_advance_load_correction_f450(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 void rpm_map_zone_flags_f43e_update(void)
 
 {
@@ -9487,7 +9823,7 @@ void rpm_map_zone_flags_f43e_update(void)
         usZoneBits = 0x200;
       }
     }
-    if (_DAT_00010d7a <= DAT_0001f118) {
+    if (DAT_00010d7a <= DAT_0001f118) {
       if (DAT_00010d7e <= DAT_0001f10e) {
         usZoneBits = usZoneBits | 0x100;
       }
@@ -9544,22 +9880,20 @@ void f0ea_bit7_f43e_bit3_clear(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
-
 bool rpm_zone_enable_check(void)
 
 {
   bool bVar1;
   ushort usThreshold;
   
-  usThreshold = _DAT_00010d78 * 0x14;
+  usThreshold = DAT_00010d78 * 0x14;
   if ((DAT_0001f43e & 0x200) == 0) {
     if ((DAT_0001f43e & 0x100) != 0) {
-      usThreshold = _DAT_00010d76 * 0x14;
+      usThreshold = DAT_00010d76 * 0x14;
     }
   }
   else {
-    usThreshold = _DAT_00010d74 * 0x14;
+    usThreshold = DAT_00010d74 * 0x14;
   }
   if (DAT_0001f26e >> 8 < DAT_00010dda) {
     usThreshold = 0;
@@ -9575,7 +9909,7 @@ bool rpm_zone_enable_check(void)
   if (((((g_status_flags_f20e & 0x10) == 0) || ((DAT_0001f510 & 8) == 0)) &&
       ((((ushort)(DAT_00010ddc * 0x14) < DAT_0001ef6a && ((g_status_flags_f21c & 1) != 0)) ||
        ((DAT_0001f43e & 0x10) == 0)))) &&
-     (((g_status_flags_f20e & 0x10) != 0 || ((ushort)(_DAT_00010d78 * 0x14) < DAT_0001ef6a)))) {
+     (((g_status_flags_f20e & 0x10) != 0 || ((ushort)(DAT_00010d78 * 0x14) < DAT_0001ef6a)))) {
     bVar1 = false;
   }
   else {
@@ -9629,12 +9963,12 @@ void f0e6_bit6_update(void)
 
 {
   ushort *puVar1;
-  short sVar2;
+  ushort uVar2;
   byte bVar3;
   
   bVar3 = 1;
-  sVar2 = ign_advance_rpm_zone_enable_check();
-  if (sVar2 == 0) {
+  uVar2 = ign_advance_rpm_zone_enable_check();
+  if (uVar2 == 0) {
     puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf0e6);
     *puVar1 = *puVar1 & 0xffbf;
   }
@@ -9647,18 +9981,19 @@ void f0e6_bit6_update(void)
 
 
 
-undefined2 ign_advance_rpm_zone_enable_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort ign_advance_rpm_zone_enable_check(void)
 
 {
-  ushort a;
-  undefined2 uVar1;
+  ushort uVar1;
   ushort uVar2;
   byte bVar3;
   
   bVar3 = 1;
-  a = table_lookup_interp(1,(void *)0x2aea);
+  uVar1 = table_lookup_interp(1,(void *)0x2aea);
   if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf0e6) & 0x40) == 0) {
-    a = sat_sub_u16(a,*(ushort *)((uint)bVar3 << 0x10 | 0xe0e));
+    uVar1 = sat_sub_u16(uVar1,*(ushort *)((uint)bVar3 << 0x10 | 0xe0e));
   }
   uVar2 = *(short *)((uint)bVar3 << 0x10 | 0xd72) * 0x14;
   if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf43e) & 0x200) == 0) {
@@ -9674,7 +10009,7 @@ undefined2 ign_advance_rpm_zone_enable_check(void)
      (((*(ushort *)((uint)bVar3 << 0x10 | 0xf20e) & 0x11) != 0 ||
       (((*(ushort *)((uint)bVar3 << 0x10 | 0xef6a) <= uVar2 ||
         ((*(ushort *)((uint)bVar3 << 0x10 | 0xf1fe) & 8) != 0)) ||
-       (a < *(ushort *)((uint)bVar3 << 0x10 | 0xf186))))))) {
+       (uVar1 < *(ushort *)((uint)bVar3 << 0x10 | 0xf186))))))) {
     uVar1 = 0;
   }
   else {
@@ -9727,7 +10062,7 @@ void canister_purge_control_flags_f4d6_update(void)
     if (DAT_0001ef90 == 0) {
       uVar2 = uVar2 & 0xfffb;
     }
-    if ((DAT_00010e4a < DAT_0001f18e) || (DAT_00010e4c < DAT_0001f17a)) {
+    if ((DAT_00010e4a < DAT_0001f18e) || (DAT_00010e4c < engine_torque_pct_f17a)) {
       uVar2 = uVar2 | 0x20;
     }
   }
@@ -9753,43 +10088,33 @@ void canister_purge_mode_dispatch(void)
 
 
 
-void canister_purge_gear_mode_select_f4a2(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void canister_purge_gear_mode_select_f4a2(void)
 
 {
-  short sVar1;
-  undefined2 uVar2;
+  ushort uVar1;
   ushort extraout_R2;
-  ushort uVar3;
-  byte bVar4;
+  ushort uVar2;
+  byte bVar3;
   
-  bVar4 = 1;
-  uVar2 = 0;
-  if ((g_status_flags_f20e & 0x10) != 0) {
-    if ((DAT_0001f510 & 0x400) == 0) {
-      if ((DAT_0001f510 & 0x200) != 0) {
-        uVar2 = 2;
-      }
-    }
-    else {
-      uVar2 = 1;
-    }
+  bVar3 = 1;
+  uVar1 = canister_purge_feedback_active_check();
+  uVar2 = extraout_R2;
+  if (uVar1 != 0) {
+    uVar2 = extraout_R2 | 0x80;
   }
-  sVar1 = canister_purge_feedback_active_check(param_1,param_2,uVar2,param_3);
-  uVar3 = extraout_R2;
-  if (sVar1 != 0) {
-    uVar3 = extraout_R2 | 0x80;
-  }
-  *(ushort *)((uint)bVar4 << 0x10 | 0xf4a2) =
-       uVar3 | *(ushort *)((uint)bVar4 << 0x10 | 0xf4a2) & 0xff7c;
+  *(ushort *)((uint)bVar3 << 0x10 | 0xf4a2) =
+       uVar2 | *(ushort *)((uint)bVar3 << 0x10 | 0xf4a2) & 0xff7c;
   return;
 }
 
 
 
-undefined2 canister_purge_feedback_active_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort canister_purge_feedback_active_check(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   
   if ((((g_status_flags_f20e & 0x11) == 0) && ((DAT_0001f3f6 & 0x80) != 0)) &&
      ((tcu_rx_confirmed_byte1_f4be & 0x30) == 0x20)) {
@@ -10053,7 +10378,7 @@ ushort o2_upstream_enable_check(void)
       if (DAT_0001ef6a <= (ushort)(DAT_00010ea8 * 0x14)) {
         return 0;
       }
-      if (uVar3 <= DAT_0001f17a) {
+      if (uVar3 <= engine_torque_pct_f17a) {
         return 0;
       }
     }
@@ -10127,7 +10452,7 @@ ushort o2_downstream_enable_check(void)
       if (DAT_0001ef6a <= (ushort)(DAT_00010eb2 * 0x14)) {
         return 0;
       }
-      if (uVar3 <= DAT_0001f17a) {
+      if (uVar3 <= engine_torque_pct_f17a) {
         return 0;
       }
     }
@@ -10285,13 +10610,13 @@ void o2_heater_iat_zone_select_f4f0(void)
 
 {
   DAT_0001f4f0 = 1;
-  if (DAT_00010eea < DAT_0001f17a) {
+  if (DAT_00010eea < engine_torque_pct_f17a) {
     DAT_0001f4f0 = 8;
   }
-  else if (DAT_00010ee8 < DAT_0001f17a) {
+  else if (DAT_00010ee8 < engine_torque_pct_f17a) {
     DAT_0001f4f0 = 4;
   }
-  else if (DAT_00010ee6 < DAT_0001f17a) {
+  else if (DAT_00010ee6 < engine_torque_pct_f17a) {
     DAT_0001f4f0 = 2;
   }
   DAT_0001f4ec = DAT_00010ef0;
@@ -10336,16 +10661,16 @@ void o2_heater_duty_f4da_calc(undefined2 param_1,undefined2 param_2,undefined2 p
     DAT_0001f4d8 = DAT_0001f4d8 & 0xfffe;
   }
   if ((DAT_0001f4d8 & 2) == 0) {
-    if (DAT_00010efe < DAT_0001f17a) {
+    if (DAT_00010efe < engine_torque_pct_f17a) {
       DAT_0001f4d8 = DAT_0001f4d8 | 2;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010f00) {
+  else if (engine_torque_pct_f17a <= DAT_00010f00) {
     DAT_0001f4d8 = DAT_0001f4d8 & 0xfffd;
   }
-  iVar1 = CONCAT22(DAT_0001f17a,param_2);
+  iVar1 = CONCAT22(engine_torque_pct_f17a,param_2);
   if ((DAT_000102ec != '\0') &&
-     (iVar1 = CONCAT22(DAT_0001f17a,param_2), DAT_0001f17a <= DAT_00010f46)) {
+     (iVar1 = CONCAT22(engine_torque_pct_f17a,param_2), engine_torque_pct_f17a <= DAT_00010f46)) {
     iVar1 = (uint)DAT_00010f48 * 0x14;
     uVar2 = (ushort)iVar1;
     if ((DAT_0001ef6a < uVar2) && ((g_status_flags_f20e & 0x10) == 0)) {
@@ -10450,71 +10775,92 @@ bool o2_heater_force_off_check(void)
 
 
 
-void channel_dispatch_and_snapshot_update(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void channel_dispatch_and_snapshot_update(void)
 
 {
   ushort *puVar1;
-  undefined2 uVar2;
-  ushort uVar3;
+  ushort uVar2;
   byte in_ram_00000200;
   undefined2 in_ram_00000206;
   undefined2 in_ram_0000021c;
   undefined2 in_ram_0000021e;
-  byte bVar4;
+  byte bVar3;
+  ushort uStack_2;
   
-  uVar2 = *(undefined2 *)((int)(DAT_0001f1fc << 1) + 0x20c);
-  bVar4 = 0;
-  DAT_0000f5c0 = uVar2;
+  bVar3 = 0;
+  DAT_0000f5c0 = *(undefined2 *)((int)(DAT_0001f1fc << 1) + 0x20c);
   DAT_0000f5c2 = in_ram_0000021c;
   DAT_0000f5c4 = in_ram_0000021e;
   DAT_0000f5c6 = in_ram_00000206;
   if ((in_ram_00000200 & 1) != 0) {
-    uVar3 = DAT_0000f520;
-    if ((uVar3 & 0xf8) == 0) {
-      (*eeprom_backup_table_write_dispatch)(0,uVar2,param_3,0);
-      if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf84a) & 3) == 3) {
-        adc_backup_snapshot_write_if_time_elapsed();
+    uVar2 = DAT_0000f520;
+    if ((uVar2 & 0xf8) == 0) {
+      uStack_2 = 0;
+      (*eeprom_backup_table_write_dispatch)(0);
+      if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf84a) & 3) == 3) {
+        uStack_2 = 0;
+        adc_backup_snapshot_write_if_time_elapsed
+                  (*(ushort *)((int)&stack0xfff8 + 6),*(ushort *)((int)&stack0xfff8 + 8));
       }
-      else if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf170) < 0x66) &&
-              ((*(ushort *)((uint)bVar4 << 0x10 | 0xf84a) & 0x21) == 0x21)) {
-        (*adc_5channel_backup_snapshot_write)();
+      else if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf170) < 0x66) &&
+              ((*(ushort *)((uint)bVar3 << 0x10 | 0xf84a) & 0x21) == 0x21)) {
+        uStack_2 = 0;
+        (*mut_configurable_reqid_backup_snapshot_5word)();
       }
     }
     else {
       DAT_0000f84a = 0;
+      uStack_2 = 0x9dc4;
       ff0d_clear_bits5_6();
     }
   }
-  if ((*(byte *)((uint)bVar4 << 0x10 | 0x200) & 2) != 0) {
+  if ((*(byte *)((uint)bVar3 << 0x10 | 0x200) & 2) != 0) {
+    uStack_2 = 1;
     (*eeprom_backup_table_write_dispatch)();
-    if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf84c) & 3) == 3) {
-      adc_backup_snapshot_write_if_time_elapsed();
+    if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf84c) & 3) == 3) {
+      uStack_2 = 0;
+      adc_backup_snapshot_write_if_time_elapsed
+                (*(ushort *)((int)&stack0xfff8 + 6),*(ushort *)((int)&stack0xfff8 + 8));
     }
-    else if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf170) < 0x66) &&
-            ((*(ushort *)((uint)bVar4 << 0x10 | 0xf84c) & 0x21) == 0x21)) {
-      (*adc_5channel_backup_snapshot_write)();
+    else if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf170) < 0x66) &&
+            ((*(ushort *)((uint)bVar3 << 0x10 | 0xf84c) & 0x21) == 0x21)) {
+      uStack_2 = 1;
+      (*mut_configurable_reqid_backup_snapshot_5word)();
     }
   }
-  if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0e6) & 1) == 0) {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf5c8);
+  if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf0e6) & 1) == 0) {
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf5c8);
     *puVar1 = *puVar1 & 0xffef;
   }
   else {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf5c8);
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf5c8);
     *puVar1 = *puVar1 | 0x10;
   }
-  if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0ea) & 1) == 0) {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf5c8);
+  if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf0ea) & 1) == 0) {
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf5c8);
     *puVar1 = *puVar1 & 0xfffd;
   }
   else {
-    puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xf5c8);
+    puVar1 = (ushort *)((uint)bVar3 << 0x10 | 0xf5c8);
     *puVar1 = *puVar1 | 2;
   }
   return;
 }
 
 
+
+// [DOCUMENTED 2026-08-07] Dispatcher for the two internal fixed-RequestID
+// MUT snapshot loggers (see mut_fixed_reqid_backup_snapshot_5word @0x1504b
+// and mut_fixed_reqid_periodic_snapshot_8word @0x14edd). Called only from
+// tcu_rx_main_scheduler's periodic tick path -- confirms the whole chain is
+// an internal periodic black-box logger, not a live SCI1 request/response
+// handler. Selects between "channel 0" (gated by config bit DAT_00010200
+// bit0, using F84A flags) and "channel 1" (gated by bit1, using F84C
+// flags), each channel independently choosing between the 5-word backup
+// snapshot, the 8-word periodic snapshot, or a third handler at 0x14dd8
+// (not yet identified) based on bits 2/3/4 of its F84A/F84C flag word.
+// See mut_verification_status.md "MAJOR FINDING: NO LIVE WIRE-DRIVEN MUT
+// REQUESTID PATH EXISTS ON THIS ROM" (2026-08-07).
 
 void channel_event_or_periodic_dispatch(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
@@ -10531,7 +10877,7 @@ void channel_event_or_periodic_dispatch(undefined2 param_1,undefined2 param_2,un
     if ((uVar1 & 1) != 0) {
       if (((uVar1 & 4) == 0) && ((uVar1 & 8) == 0)) {
         if ((uVar1 & 0x10) != 0) {
-          (*channel_periodic_update_ringbuf_snapshot)();
+          (*mut_configurable_reqid_periodic_snapshot_8word)();
         }
       }
       else {
@@ -10545,7 +10891,7 @@ void channel_event_or_periodic_dispatch(undefined2 param_1,undefined2 param_2,un
     if ((uVar1 & 1) != 0) {
       if (((uVar1 & 4) == 0) && ((uVar1 & 8) == 0)) {
         if ((uVar1 & 0x10) != 0) {
-          (*channel_periodic_update_ringbuf_snapshot)();
+          (*mut_configurable_reqid_periodic_snapshot_8word)();
         }
       }
       else {
@@ -10566,12 +10912,12 @@ void channel_data_flush_if_active(void)
   
   bVar2 = 1;
   if ((((DAT_00010200 & 1) != 0) && ((DAT_0001f84a & 1) != 0)) && ((DAT_0001f84a & 0x20) != 0)) {
-    (*adc_5channel_backup_snapshot_write)();
+    (*mut_configurable_reqid_backup_snapshot_5word)();
   }
   uVar1 = *(ushort *)((uint)bVar2 << 0x10 | 0xf84c);
   if ((((*(byte *)((uint)bVar2 << 0x10 | 0x200) & 2) != 0) && ((uVar1 & 1) != 0)) &&
      ((uVar1 & 0x20) != 0)) {
-    (*adc_5channel_backup_snapshot_write)();
+    (*mut_configurable_reqid_backup_snapshot_5word)();
   }
   return;
 }
@@ -10590,15 +10936,15 @@ o2_lambda_or_passthrough_select(undefined2 _unused_far_pad,undefined2 raw_value)
 
 
 
-undefined2 o2_sensor_gain_divisor(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void o2_sensor_gain_divisor(void)
 
 {
-  undefined2 in_stack_00000004;
-  
-  if ((DAT_00010203 == -0x80) && (in_stack_00000004 = DAT_0001f5b8, (DAT_0001f0ec & 2) != 0)) {
-    in_stack_00000004 = (*div_u16_rounded)();
+  if ((DAT_00010203 == -0x80) && ((DAT_0001f0ec & 2) != 0)) {
+    (*div_u16_rounded)();
   }
-  return in_stack_00000004;
+  return;
 }
 
 
@@ -10619,7 +10965,7 @@ o2_wideband_mode_zero_check(undefined2 _unused_far_pad,undefined2 raw_value)
 
 
 
-ushort o2_wideband_cell_offset_adjust(void)
+ushort o2_wideband_cell_offset_adjust(ushort param_fp1)
 
 {
   ushort b;
@@ -10657,10 +11003,12 @@ o2_wideband_midpoint_select(undefined2 _unused_far_pad,undefined2 raw_value)
 
 
 
-undefined2 o2_lambda_correction_apply(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort o2_lambda_correction_apply(void)
 
 {
-  undefined2 in_stack_00000004;
+  ushort in_stack_00000004;
   
   if (DAT_00010201 == '\x01') {
     in_stack_00000004 = (*mul_fixedpoint_8)();
@@ -10673,11 +11021,13 @@ undefined2 o2_lambda_correction_apply(void)
 
 
 
-undefined2 o2_sensor_mode_correction_select(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort o2_sensor_mode_correction_select(void)
 
 {
-  undefined2 uVar1;
-  undefined2 in_stack_00000004;
+  ushort uVar1;
+  ushort in_stack_00000004;
   
   if (DAT_00010202 != '\x11') {
     if (DAT_00010202 == '\x12') {
@@ -10717,10 +11067,12 @@ bool o2_wideband_lsu_mode_check(void)
 
 
 
-undefined2 o2_mode7_8_correction_apply(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort o2_mode7_8_correction_apply(void)
 
 {
-  undefined2 in_stack_00000004;
+  ushort in_stack_00000004;
   
   if (DAT_00010201 == '\a') {
     in_stack_00000004 = (*mul_fixedpoint_8)();
@@ -10733,18 +11085,15 @@ undefined2 o2_mode7_8_correction_apply(void)
 
 
 
-undefined2 o2_mode9_10_correction_apply(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void o2_mode9_10_correction_apply(void)
 
 {
-  undefined2 in_stack_00000004;
-  
   if (DAT_00010201 == '\t') {
-    in_stack_00000004 = (*mul_fixedpoint_8)();
+    (*mul_fixedpoint_8)();
   }
-  else if (DAT_00010201 == '\n') {
-    in_stack_00000004 = DAT_0001f5b4;
-  }
-  return in_stack_00000004;
+  return;
 }
 
 
@@ -10794,7 +11143,7 @@ bool o2_closed_loop_config_check(void)
 
 
 
-ushort o2_sensor2_correction_apply(void)
+ushort o2_sensor2_correction_apply(ushort param_fp1)
 
 {
   ushort in_stack_00000004;
@@ -10938,10 +11287,12 @@ bool o2_downstream_mode17_check(void)
 
 
 
-undefined2 o2_downstream_correction_apply(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort o2_downstream_correction_apply(void)
 
 {
-  undefined2 in_stack_00000004;
+  ushort in_stack_00000004;
   
   if (DAT_00010203 == '\x01') {
     in_stack_00000004 = (*mul_fixedpoint_8)();
@@ -11082,7 +11433,8 @@ ushort dtc_status_flags_f204_f206_build(void)
   ushort usDtcBits;
   
   usDtcBits = 0;
-  if (((DAT_0001f118 <= DAT_00010fd8) || (DAT_0001f130 <= DAT_00010fda)) || (DAT_0001f00e != 0)) {
+  if (((DAT_0001f118 <= DAT_00010fd8) || (coolant_temp_scaled_f130 <= DAT_00010fda)) ||
+     (DAT_0001f00e != 0)) {
     usDtcBits = 1;
   }
   if (DAT_0001f10e <= DAT_00010fd4) {
@@ -11279,11 +11631,10 @@ void boot_sci1_init(byte bFec9Init)
 void boot_sci1_receive_command(void)
 
 {
-  undefined1 extraout_var;
-  char cVar2;
-  undefined2 uVar1;
-  short sVar3;
+  char cVar1;
+  byte bVar2;
   short extraout_R1;
+  short sVar3;
   short extraout_R2;
   short sVar4;
   undefined1 *puVar5;
@@ -11293,30 +11644,27 @@ void boot_sci1_receive_command(void)
   
   uVar7 = 0;
   bVar6 = 1;
-  cVar2 = sci1_rx_byte_wait_loop();
-  *(char *)((uint)bVar6 << 0x10 | 0xf200) = cVar2;
-  if (cVar2 == '\0') {
+  cVar1 = sci1_rx_byte_wait_loop();
+  *(char *)((uint)bVar6 << 0x10 | 0xf200) = cVar1;
+  if (cVar1 == '\0') {
     sci1_boot_tx_then_rx_transaction(0x10);
     return;
   }
   sci1_boot_tx_then_rx_transaction(0x61);
   sci1_boot_tx_then_rx_transaction();
   sci1_boot_tx_then_rx_transaction();
-  cVar2 = *(char *)((uint)bVar6 << 0x10 | 0xf20b);
-  uVar1 = CONCAT11(extraout_var,cVar2);
-  if (cVar2 == '\x01') {
-    sVar3 = 0x481c;
+  if (*(char *)((uint)bVar6 << 0x10 | 0xf20b) == '\x01') {
+    bVar2 = 1;
     uVar8 = 0;
     do {
-      uVar1 = sci1_rx_byte_poll_or_error(uVar1,sVar3);
+      bVar2 = sci1_rx_byte_poll_or_error(bVar2);
       sVar3 = extraout_R1;
       sVar4 = extraout_R2;
       if ((bool)uVar8) {
         sVar3 = 0x481c;
         sVar4 = 2;
       }
-      sVar3 = sVar3 + -1;
-    } while ((sVar3 != -1) || (sVar4 != 0));
+    } while ((sVar3 != 0) || (sVar4 != 0));
     *(undefined1 *)((uint)bVar6 << 0x10 | 0xf20b) = 0;
     *(undefined2 *)&DAT_0000fe7e = 0x40;
     boot_sci1_rom_id_verify();
@@ -11404,13 +11752,11 @@ void boot_sci1_receive_config_bytes(void)
 void boot_sci1_rom_id_verify(void)
 
 {
-  byte bFec9Init;
-  char cVar1;
-  undefined1 extraout_var;
-  undefined2 uVar2;
+  undefined2 uVar1;
+  byte bVar2;
   char *pcVar3;
-  short sVar4;
   short extraout_R1;
+  short sVar4;
   short extraout_R2;
   short sVar5;
   undefined1 *puVar6;
@@ -11420,30 +11766,27 @@ void boot_sci1_rom_id_verify(void)
   
   uVar8 = 0;
   bVar7 = 1;
-  uVar2 = sci1_rx_byte_wait_loop();
-  *(char *)((uint)bVar7 << 0x10 | 0xf208) = (char)uVar2;
+  uVar1 = sci1_rx_byte_wait_loop();
+  *(char *)((uint)bVar7 << 0x10 | 0xf208) = (char)uVar1;
   pcVar3 = (char *)&DAT_0000f394;
   while( true ) {
-    bFec9Init = pcVar3[1];
+    bVar2 = pcVar3[1];
     if (*pcVar3 == '\0') {
       sci1_boot_tx_then_rx_transaction(0x62);
       sci1_boot_tx_then_rx_transaction();
       sci1_boot_tx_then_rx_transaction();
-      cVar1 = *(char *)((uint)bVar7 << 0x10 | 0xf20b);
-      uVar2 = CONCAT11(extraout_var,cVar1);
-      if (cVar1 == '\x01') {
-        sVar4 = 0x481c;
+      if (*(char *)((uint)bVar7 << 0x10 | 0xf20b) == '\x01') {
+        bVar2 = 1;
         uVar9 = 0;
         do {
-          uVar2 = sci1_rx_byte_poll_or_error(uVar2,sVar4);
+          bVar2 = sci1_rx_byte_poll_or_error(bVar2);
           sVar4 = extraout_R1;
           sVar5 = extraout_R2;
           if ((bool)uVar9) {
             sVar4 = 0x481c;
             sVar5 = 2;
           }
-          sVar4 = sVar4 + -1;
-        } while ((sVar4 != -1) || (sVar5 != 0));
+        } while ((sVar4 != 0) || (sVar5 != 0));
         *(undefined1 *)((uint)bVar7 << 0x10 | 0xf20b) = 0;
         *(undefined2 *)&DAT_0000fe7e = 0x40;
         boot_sci1_rom_id_verify();
@@ -11460,13 +11803,13 @@ void boot_sci1_rom_id_verify(void)
                     // WARNING: Do nothing block with infinite loop
       } while( true );
     }
-    if (*pcVar3 == (char)uVar2) break;
+    if (*pcVar3 == (char)uVar1) break;
     pcVar3 = pcVar3 + 2;
   }
-  sci1_boot_tx_then_rx_transaction(uVar2);
+  sci1_boot_tx_then_rx_transaction(uVar1);
   do {
   } while ((*(byte *)((uint)bVar7 << 0x10 | 0xfecc) & 4) == 0);
-  boot_sci1_init(bFec9Init);
+  boot_sci1_init(bVar2);
   return;
 }
 
@@ -11501,56 +11844,53 @@ void boot_sci1_rom_id_verify(void)
 void sci1_boot_cmd_type_rx_validate(void)
 
 {
-  undefined1 extraout_var;
   undefined2 uVar1;
   char cVar2;
-  short sVar3;
+  byte bVar3;
   short extraout_R1;
-  short extraout_R2;
   short sVar4;
-  undefined1 *puVar5;
-  byte bVar6;
-  undefined1 uVar7;
+  short extraout_R2;
+  short sVar5;
+  undefined1 *puVar6;
+  byte bVar7;
   undefined1 uVar8;
+  undefined1 uVar9;
   
-  uVar7 = 0;
-  bVar6 = 1;
+  uVar8 = 0;
+  bVar7 = 1;
   uVar1 = sci1_rx_byte_wait_loop();
   cVar2 = (char)uVar1;
-  *(char *)((uint)bVar6 << 0x10 | 0xf209) = cVar2;
+  *(char *)((uint)bVar7 << 0x10 | 0xf209) = cVar2;
   if (((cVar2 != '\x06') && (cVar2 != '\t')) && (cVar2 != '\f')) {
     sci1_boot_tx_then_rx_transaction(0xbb);
     sci1_boot_tx_then_rx_transaction();
     sci1_boot_tx_then_rx_transaction();
-    cVar2 = *(char *)((uint)bVar6 << 0x10 | 0xf20b);
-    uVar1 = CONCAT11(extraout_var,cVar2);
-    if (cVar2 != '\x01') {
+    if (*(char *)((uint)bVar7 << 0x10 | 0xf20b) != '\x01') {
       do {
                     // WARNING: Do nothing block with infinite loop
       } while( true );
     }
-    sVar3 = 0x481c;
-    uVar8 = 0;
+    bVar3 = 1;
+    uVar9 = 0;
     do {
-      uVar1 = sci1_rx_byte_poll_or_error(uVar1,sVar3);
-      sVar3 = extraout_R1;
-      sVar4 = extraout_R2;
-      if ((bool)uVar8) {
-        sVar3 = 0x481c;
-        sVar4 = 2;
+      bVar3 = sci1_rx_byte_poll_or_error(bVar3);
+      sVar4 = extraout_R1;
+      sVar5 = extraout_R2;
+      if ((bool)uVar9) {
+        sVar4 = 0x481c;
+        sVar5 = 2;
       }
-      sVar3 = sVar3 + -1;
-    } while ((sVar3 != -1) || (sVar4 != 0));
-    *(undefined1 *)((uint)bVar6 << 0x10 | 0xf20b) = 0;
+    } while ((sVar4 != 0) || (sVar5 != 0));
+    *(undefined1 *)((uint)bVar7 << 0x10 | 0xf20b) = 0;
     *(undefined2 *)&DAT_0000fe7e = 0x40;
     boot_sci1_rom_id_verify();
     *(undefined2 *)&P1DDR = 0x43;
     sci1_boot_cmd_type_rx_validate();
-    puVar5 = (undefined1 *)&P3DDR;
+    puVar6 = (undefined1 *)&P3DDR;
     do {
-      *(undefined2 *)(puVar5 + -2) = 0x46;
+      *(undefined2 *)(puVar6 + -2) = 0x46;
       sci1_boot_cmd_dispatch();
-      puVar5 = puVar5 + 2;
+      puVar6 = puVar6 + 2;
     } while( true );
   }
   sci1_boot_tx_then_rx_transaction(uVar1);
@@ -11600,59 +11940,58 @@ void sci1_boot_cmd_dispatch(void)
   undefined1 extraout_var_03;
   undefined1 extraout_var_04;
   undefined1 extraout_var_05;
-  undefined1 extraout_var_06;
-  undefined1 extraout_var_07;
-  char cVar4;
-  ushort uVar2;
-  undefined1 uVar5;
-  undefined2 uVar3;
-  short sVar6;
+  char cVar3;
+  undefined2 uVar2;
+  undefined1 uVar4;
+  byte bVar5;
   short extraout_R1;
-  undefined1 extraout_var_08;
+  short sVar6;
+  undefined1 extraout_var_06;
   char extraout_R2_00;
   short extraout_R2;
   short sVar7;
+  undefined2 unaff_R5;
   undefined1 *puVar8;
   byte bVar9;
   undefined1 uVar10;
-  undefined1 uStack0004;
-  undefined1 uStack0005;
+  undefined2 in_stack_00000002;
   undefined1 uStack0006;
   undefined1 uStack000a;
   undefined1 uStack000c;
   
-  uVar5 = 0;
+  uVar4 = 0;
   bVar9 = 1;
-  cVar4 = sci1_rx_byte_wait_loop();
-  if (cVar4 == ' ') {
+  cVar3 = sci1_rx_byte_wait_loop();
+  if (cVar3 == ' ') {
                     // WARNING: Call to offcut address within same function
     func_0x000201ae();
-    cVar4 = *(char *)((uint)bVar9 << 0x10 | 0xf209);
-    if (cVar4 == '\x06') {
-      uVar3 = 0xf0ff;
+    cVar3 = *(char *)((uint)bVar9 << 0x10 | 0xf209);
+    if (cVar3 == '\x06') {
+      uVar2 = 0xf0ff;
     }
-    else if (cVar4 == '\t') {
-      uVar3 = 0xf00;
+    else if (cVar3 == '\t') {
+      uVar2 = 0xf00;
     }
     else {
-      uVar3 = 0xffff;
+      uVar2 = 0xffff;
     }
-    sVar6 = flash_erase_sectors(uVar3);
+    sVar6 = flash_erase_sectors(uVar2);
     if (sVar6 == 0) {
       sci1_boot_tx_then_rx_transaction(0xc1);
       return;
     }
     if (sVar6 == 1) {
-      uVar3 = 0x65;
+      uVar2 = 0x65;
     }
     else {
-      uVar3 = 100;
+      uVar2 = 100;
     }
   }
   else {
-    if (cVar4 == '@') {
+    if (cVar3 == '@') {
                     // WARNING: Call to offcut address within same function
-      uVar2 = func_0x000201ae();
+      func_0x000201ae();
+      uStack0006 = (undefined1)((ushort)unaff_R5 >> 8);
       *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20b) = 1;
       *(undefined1 *)((uint)bVar9 << 0x10 | 0xff14) = 0;
       sVar6 = 10;
@@ -11660,105 +11999,107 @@ void sci1_boot_cmd_dispatch(void)
       do {
         sVar6 = sVar6 + -1;
       } while (sVar6 != -1);
-      uVar3 = sci1_colon_frame_dispatch(uVar2 & 0xff00);
+      bVar5 = sci1_colon_frame_dispatch(0);
       sVar6 = 100;
       *(undefined1 *)((uint)bVar9 << 0x10 | 0xfee0) = 0;
       do {
         sVar6 = sVar6 + -1;
       } while (sVar6 != -1);
       *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20b) = 0;
-      uVar10 = (char)uVar3 != '\0';
-      if ((char)uVar3 == '\0') goto LAB_0002025e;
-      goto LAB_0002043f;
+      uVar10 = bVar5 != 0;
+      if (bVar5 == 0) goto LAB_0002025e;
+      goto LAB_00020445;
     }
-    if (cVar4 == -0x7f) {
+    if (cVar3 == -0x7f) {
       sci1_boot_tx_then_rx_transaction();
 LAB_0002025e:
-      cVar4 = *(char *)((uint)bVar9 << 0x10 | 0xf209);
-      if (cVar4 == '\x06') {
+      cVar3 = *(char *)((uint)bVar9 << 0x10 | 0xf209);
+      if (cVar3 == '\x06') {
         *(undefined2 *)((uint)bVar9 << 0x10 | 0xf214) = 0;
         uStack0006 = 0x76;
         sci1_boot_checksum_accumulate();
-        uVar5 = extraout_var_01;
+        uVar4 = extraout_var;
       }
-      else if (cVar4 == '\t') {
+      else if (cVar3 == '\t') {
         *(undefined2 *)((uint)bVar9 << 0x10 | 0xf214) = 0;
         uStack0006 = 0x8a;
         sci1_boot_checksum_accumulate();
-        uVar5 = extraout_var_02;
+        uVar4 = extraout_var_00;
       }
       else {
         *(undefined2 *)((uint)bVar9 << 0x10 | 0xf214) = 0;
         uStack0006 = 0x9a;
         sci1_boot_checksum_accumulate();
         sci1_boot_checksum_accumulate();
-        uVar5 = extraout_var_03;
+        uVar4 = extraout_var_01;
       }
       uStack000a = 0xa8;
       sci1_boot_tx_then_rx_transaction
-                (CONCAT11(uVar5,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf214)));
+                (CONCAT11(uVar4,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf214)));
       uStack000c = 0xaf;
       sci1_boot_tx_then_rx_transaction
-                (CONCAT11(extraout_var_04,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf215)));
+                (CONCAT11(extraout_var_02,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf215)));
       return;
     }
-    if (cVar4 == -0x80) {
+    if (cVar3 == -0x80) {
       sci1_boot_security_seed_check();
-      uVar5 = sci1_rx_byte_wait_loop();
-      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20c) = uVar5;
+      uVar4 = sci1_rx_byte_wait_loop();
+      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20c) = uVar4;
       sci1_boot_tx_then_rx_transaction();
-      uVar5 = sci1_rx_byte_wait_loop();
-      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20e) = uVar5;
+      uVar4 = sci1_rx_byte_wait_loop();
+      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20e) = uVar4;
       uStack0006 = 2;
       sci1_boot_tx_then_rx_transaction();
-      uVar5 = sci1_rx_byte_wait_loop();
-      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20f) = uVar5;
+      uVar4 = sci1_rx_byte_wait_loop();
+      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20f) = uVar4;
       uStack000a = 2;
       sci1_boot_tx_then_rx_transaction();
       uStack000c = 2;
-      uVar5 = sci1_rx_byte_wait_loop();
-      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20d) = uVar5;
+      uVar4 = sci1_rx_byte_wait_loop();
+      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20d) = uVar4;
       sci1_boot_tx_then_rx_transaction();
-      uVar5 = sci1_rx_byte_wait_loop();
-      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf210) = uVar5;
+      uVar4 = sci1_rx_byte_wait_loop();
+      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf210) = uVar4;
       sci1_boot_tx_then_rx_transaction();
-      uVar5 = sci1_rx_byte_wait_loop();
-      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf211) = uVar5;
+      uVar4 = sci1_rx_byte_wait_loop();
+      *(undefined1 *)((uint)bVar9 << 0x10 | 0xf211) = uVar4;
       sci1_boot_tx_then_rx_transaction();
       sci1_boot_flash_addr_range_validate
-                (CONCAT11(extraout_var_05,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf20c)),
+                (CONCAT11(extraout_var_03,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf20c)),
                  *(undefined2 *)((uint)bVar9 << 0x10 | 0xf20e),
-                 CONCAT11(extraout_var_08,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf20d)));
+                 CONCAT11(extraout_var_06,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf20d)));
       if (extraout_R2_00 == '\0') {
         return;
       }
       goto LAB_0002043d;
     }
-    if (cVar4 == 'M') {
+    if (cVar3 == 'M') {
                     // WARNING: Call to offcut address within same function
       func_0x000201ae();
-      cVar4 = sci1_colon_frame_dispatch(CONCAT11(extraout_var,2));
-      if (cVar4 == '\0') {
-        sci1_boot_tx_then_rx_transaction(*(undefined1 *)((uint)bVar9 << 0x10 | 0xf26e));
+      bVar5 = sci1_colon_frame_dispatch(2);
+      if (bVar5 == 0) {
         sci1_boot_tx_then_rx_transaction
-                  (CONCAT11(extraout_var_06,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf26f)));
-        uStack0006 = 3;
+                  (CONCAT11(extraout_var_04,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf26e)));
+        sci1_boot_tx_then_rx_transaction
+                  (CONCAT11(extraout_var_05,*(undefined1 *)((uint)bVar9 << 0x10 | 0xf26f)));
         boot_sci1_rom_id_verify();
+        uStack0006 = 3;
         boot_sci1_receive_config_bytes();
         return;
       }
       goto LAB_0002043d;
     }
-    if (cVar4 == 'P') {
+    if (cVar3 == 'P') {
                     // WARNING: Call to offcut address within same function
       func_0x000201ae();
-      cVar4 = sci1_colon_frame_dispatch(CONCAT11(extraout_var_00,1));
-      if (cVar4 == '\0') {
+      bVar5 = sci1_colon_frame_dispatch(1);
+      if (bVar5 == 0) {
         for (sVar6 = *(short *)((uint)bVar9 << 0x10 | 0xf270);
             *(short *)((uint)bVar9 << 0x10 | 0xf272) != sVar6; sVar6 = sVar6 + 1) {
         }
         sci1_boot_tx_then_rx_transaction();
-        sci1_boot_tx_then_rx_transaction(CONCAT11(uStack0005,uStack0004));
+        sci1_boot_tx_then_rx_transaction
+                  (CONCAT11((char)in_stack_00000002,(char)((ushort)in_stack_00000002 >> 8)));
                     // WARNING: Could not recover jumptable at 0x00020377. Too many branches
                     // WARNING: Treating indirect jump as call
         (*(code *)(uint)CONCAT12(*(undefined1 *)((uint)bVar9 << 0x10 | 0xf274),
@@ -11767,33 +12108,31 @@ LAB_0002025e:
       }
       goto LAB_0002043d;
     }
-    uVar3 = 99;
+    uVar2 = 99;
   }
-  sci1_boot_tx_then_rx_transaction(uVar3);
+  sci1_boot_tx_then_rx_transaction(uVar2);
   sci1_boot_tx_then_rx_transaction();
   sci1_boot_tx_then_rx_transaction();
   bVar1 = *(byte *)((uint)bVar9 << 0x10 | 0xf20b);
-  uVar3 = CONCAT11(extraout_var_07,bVar1);
   uVar10 = 1 < bVar1;
+  bVar5 = 1;
   if (bVar1 != 1) {
 LAB_0002043d:
     do {
                     // WARNING: Do nothing block with infinite loop
     } while( true );
   }
-LAB_0002043f:
-  sVar6 = 0x481c;
+LAB_00020445:
   do {
     uStack0006 = 4;
-    uVar3 = sci1_rx_byte_poll_or_error(uVar3,sVar6);
+    bVar5 = sci1_rx_byte_poll_or_error(bVar5);
     sVar6 = extraout_R1;
     sVar7 = extraout_R2;
     if ((bool)uVar10) {
       sVar6 = 0x481c;
       sVar7 = 2;
     }
-    sVar6 = sVar6 + -1;
-  } while ((sVar6 != -1) || (sVar7 != 0));
+  } while ((sVar6 != 0) || (sVar7 != 0));
   *(undefined1 *)((uint)bVar9 << 0x10 | 0xf20b) = 0;
   *(undefined2 *)&DAT_0000fe7e = 0x40;
   boot_sci1_rom_id_verify();
@@ -11843,20 +12182,18 @@ LAB_0002043f:
 void sci1_boot_security_seed_check(undefined2 param_1)
 
 {
-  char cVar1;
-  undefined1 extraout_var;
-  undefined2 uVar2;
-  short sVar3;
+  byte bVar1;
   short extraout_R1;
+  short sVar2;
   short extraout_R2;
-  short sVar4;
-  undefined1 *puVar5;
-  byte bVar6;
+  short sVar3;
+  undefined1 *puVar4;
+  byte bVar5;
+  undefined1 uVar6;
   undefined1 uVar7;
-  undefined1 uVar8;
   
-  uVar7 = 0;
-  bVar6 = 1;
+  uVar6 = 0;
+  bVar5 = 1;
   if ((((((char)DAT_0001f200 == -0x65) && (DAT_0001f202._0_1_ == -0x14)) &&
        ((char)DAT_0001f202 == '+')) &&
       ((DAT_0001f204._0_1_ == -0x75 && ((char)DAT_0001f204 == -0x2c)))) &&
@@ -11867,31 +12204,28 @@ void sci1_boot_security_seed_check(undefined2 param_1)
   sci1_boot_tx_then_rx_transaction(0xbc);
   sci1_boot_tx_then_rx_transaction();
   sci1_boot_tx_then_rx_transaction();
-  cVar1 = *(char *)((uint)bVar6 << 0x10 | 0xf20b);
-  uVar2 = CONCAT11(extraout_var,cVar1);
-  if (cVar1 == '\x01') {
-    sVar3 = 0x481c;
-    uVar8 = 0;
+  if (*(char *)((uint)bVar5 << 0x10 | 0xf20b) == '\x01') {
+    bVar1 = 1;
+    uVar7 = 0;
     do {
-      uVar2 = sci1_rx_byte_poll_or_error(uVar2,sVar3);
-      sVar3 = extraout_R1;
-      sVar4 = extraout_R2;
-      if ((bool)uVar8) {
-        sVar3 = 0x481c;
-        sVar4 = 2;
+      bVar1 = sci1_rx_byte_poll_or_error(bVar1);
+      sVar2 = extraout_R1;
+      sVar3 = extraout_R2;
+      if ((bool)uVar7) {
+        sVar2 = 0x481c;
+        sVar3 = 2;
       }
-      sVar3 = sVar3 + -1;
-    } while ((sVar3 != -1) || (sVar4 != 0));
-    *(undefined1 *)((uint)bVar6 << 0x10 | 0xf20b) = 0;
+    } while ((sVar2 != 0) || (sVar3 != 0));
+    *(undefined1 *)((uint)bVar5 << 0x10 | 0xf20b) = 0;
     *(undefined2 *)&DAT_0000fe7e = 0x40;
     boot_sci1_rom_id_verify();
     *(undefined2 *)&P1DDR = 0x43;
     sci1_boot_cmd_type_rx_validate();
-    puVar5 = (undefined1 *)&P3DDR;
+    puVar4 = (undefined1 *)&P3DDR;
     do {
-      *(undefined2 *)(puVar5 + -2) = 0x46;
+      *(undefined2 *)(puVar4 + -2) = 0x46;
       sci1_boot_cmd_dispatch();
-      puVar5 = puVar5 + 2;
+      puVar4 = puVar4 + 2;
     } while( true );
   }
   do {
@@ -11942,10 +12276,9 @@ void sci1_boot_security_seed_check(undefined2 param_1)
 void sci1_boot_flash_erase_dispatch(void)
 
 {
-  char cVar1;
-  undefined1 extraout_var;
-  undefined2 uVar2;
-  short sVar3;
+  undefined2 uVar1;
+  short sVar2;
+  byte bVar3;
   short extraout_R1;
   short extraout_R2;
   short sVar4;
@@ -11957,40 +12290,37 @@ void sci1_boot_flash_erase_dispatch(void)
   uVar7 = 0;
   bVar6 = 1;
   if ((char)DAT_0001f208 == '\x06') {
-    uVar2 = 0xf0ff;
+    uVar1 = 0xf0ff;
   }
   else if ((char)DAT_0001f208 == '\t') {
-    uVar2 = 0xf00;
+    uVar1 = 0xf00;
   }
   else {
-    uVar2 = 0xffff;
+    uVar1 = 0xffff;
   }
-  sVar3 = flash_erase_sectors(uVar2);
-  if (sVar3 != 0) {
-    if (sVar3 == 1) {
-      uVar2 = 0x65;
+  sVar2 = flash_erase_sectors(uVar1);
+  if (sVar2 != 0) {
+    if (sVar2 == 1) {
+      uVar1 = 0x65;
     }
     else {
-      uVar2 = 100;
+      uVar1 = 100;
     }
-    sci1_boot_tx_then_rx_transaction(uVar2);
+    sci1_boot_tx_then_rx_transaction(uVar1);
     sci1_boot_tx_then_rx_transaction();
     sci1_boot_tx_then_rx_transaction();
-    cVar1 = *(char *)((uint)bVar6 << 0x10 | 0xf20b);
-    uVar2 = CONCAT11(extraout_var,cVar1);
-    if (cVar1 == '\x01') {
-      sVar3 = 0x481c;
+    if (*(char *)((uint)bVar6 << 0x10 | 0xf20b) == '\x01') {
+      bVar3 = 1;
       uVar8 = 0;
       do {
-        uVar2 = sci1_rx_byte_poll_or_error(uVar2,sVar3);
-        sVar3 = extraout_R1;
+        bVar3 = sci1_rx_byte_poll_or_error(bVar3);
+        sVar2 = extraout_R1;
         sVar4 = extraout_R2;
         if ((bool)uVar8) {
-          sVar3 = 0x481c;
+          sVar2 = 0x481c;
           sVar4 = 2;
         }
-        sVar3 = sVar3 + -1;
-      } while ((sVar3 != -1) || (sVar4 != 0));
+      } while ((sVar2 != 0) || (sVar4 != 0));
       *(undefined1 *)((uint)bVar6 << 0x10 | 0xf20b) = 0;
       *(undefined2 *)&DAT_0000fe7e = 0x40;
       boot_sci1_rom_id_verify();
@@ -12112,24 +12442,25 @@ void sci1_boot_tx_then_rx_transaction(uchar param_1)
 void sci1_rx_byte_wait_loop(void)
 
 {
+  byte bVar1;
   undefined1 in_CF;
   
   sci1_boot_rx_byte_enqueue();
-  sci1_boot_rxbuf_read();
+  bVar1 = sci1_boot_rxbuf_read();
   while (!(bool)in_CF) {
-    sci1_rx_byte_poll_or_error();
+    bVar1 = sci1_rx_byte_poll_or_error(bVar1);
   }
   return;
 }
 
 
 
-void sci1_boot_rx_byte_enqueue(void)
+void sci1_boot_rx_byte_enqueue(byte param_1)
 
 {
   undefined1 in_CF;
   
-  sci1_rx_byte_poll_or_error();
+  sci1_rx_byte_poll_or_error(param_1);
   if ((bool)in_CF) {
     sci1_boot_rxbuf_write();
   }
@@ -12167,20 +12498,18 @@ void sci1_boot_rx_byte_enqueue(void)
 void sci1_boot_rxbuf_write(undefined1 param_1,undefined2 param_2,undefined2 param_3)
 
 {
-  char cVar1;
-  undefined1 extraout_var;
-  undefined2 uVar2;
-  short sVar3;
+  byte bVar1;
   short extraout_R1;
+  short sVar2;
   short extraout_R2;
-  short sVar4;
-  undefined1 *puVar5;
-  byte bVar6;
+  short sVar3;
+  undefined1 *puVar4;
+  byte bVar5;
+  undefined1 uVar6;
   undefined1 uVar7;
-  undefined1 uVar8;
   
-  uVar7 = 0;
-  bVar6 = 1;
+  uVar6 = 0;
+  bVar5 = 1;
   *g_status_flags_f216 = param_1;
   g_status_flags_f216 =
        (undefined1 *)
@@ -12191,31 +12520,28 @@ void sci1_boot_rxbuf_write(undefined1 param_1,undefined2 param_2,undefined2 para
   sci1_boot_tx_then_rx_transaction(0x65,g_status_flags_f216,DAT_0001f218,param_3);
   sci1_boot_tx_then_rx_transaction();
   sci1_boot_tx_then_rx_transaction();
-  cVar1 = *(char *)((uint)bVar6 << 0x10 | 0xf20b);
-  uVar2 = CONCAT11(extraout_var,cVar1);
-  if (cVar1 == '\x01') {
-    sVar3 = 0x481c;
-    uVar8 = 0;
+  if (*(char *)((uint)bVar5 << 0x10 | 0xf20b) == '\x01') {
+    bVar1 = 1;
+    uVar7 = 0;
     do {
-      uVar2 = sci1_rx_byte_poll_or_error(uVar2,sVar3);
-      sVar3 = extraout_R1;
-      sVar4 = extraout_R2;
-      if ((bool)uVar8) {
-        sVar3 = 0x481c;
-        sVar4 = 2;
+      bVar1 = sci1_rx_byte_poll_or_error(bVar1);
+      sVar2 = extraout_R1;
+      sVar3 = extraout_R2;
+      if ((bool)uVar7) {
+        sVar2 = 0x481c;
+        sVar3 = 2;
       }
-      sVar3 = sVar3 + -1;
-    } while ((sVar3 != -1) || (sVar4 != 0));
-    *(undefined1 *)((uint)bVar6 << 0x10 | 0xf20b) = 0;
+    } while ((sVar2 != 0) || (sVar3 != 0));
+    *(undefined1 *)((uint)bVar5 << 0x10 | 0xf20b) = 0;
     *(undefined2 *)&DAT_0000fe7e = 0x40;
     boot_sci1_rom_id_verify();
     *(undefined2 *)&P1DDR = 0x43;
     sci1_boot_cmd_type_rx_validate();
-    puVar5 = (undefined1 *)&P3DDR;
+    puVar4 = (undefined1 *)&P3DDR;
     do {
-      *(undefined2 *)(puVar5 + -2) = 0x46;
+      *(undefined2 *)(puVar4 + -2) = 0x46;
       sci1_boot_cmd_dispatch();
-      puVar5 = puVar5 + 2;
+      puVar4 = puVar4 + 2;
     } while( true );
   }
   do {
@@ -12242,14 +12568,14 @@ uchar sci1_boot_rxbuf_read(void)
 
 
 
-undefined1 sci1_rx_byte_poll_or_error(undefined1 param_1)
+byte sci1_rx_byte_poll_or_error(byte param_1)
 
 {
-  undefined1 uVar1;
+  byte bVar1;
   
   if ((DAT_0001fecc & 0x10) != 0) {
-    uVar1 = sci1_boot_handshake_and_bulk_rx(0xa1);
-    return uVar1;
+    bVar1 = sci1_boot_handshake_and_bulk_rx(0xa1);
+    return bVar1;
   }
   if ((DAT_0001fecc & 0x20) == 0) {
     if ((DAT_0001fecc & 8) == 0) {
@@ -12259,11 +12585,11 @@ undefined1 sci1_rx_byte_poll_or_error(undefined1 param_1)
       }
       return param_1;
     }
-    uVar1 = sci1_boot_handshake_and_bulk_rx(0xa2);
-    return uVar1;
+    bVar1 = sci1_boot_handshake_and_bulk_rx(0xa2);
+    return bVar1;
   }
-  uVar1 = sci1_boot_handshake_and_bulk_rx(0xa3);
-  return uVar1;
+  bVar1 = sci1_boot_handshake_and_bulk_rx(0xa3);
+  return bVar1;
 }
 
 
@@ -12330,48 +12656,43 @@ void sci1_boot_tx_buf_drain(char param_1,undefined1 *param_2)
 void sci1_boot_handshake_and_bulk_rx(void)
 
 {
-  char cVar1;
-  undefined1 extraout_var;
-  undefined2 uVar2;
-  short sVar3;
+  byte bVar1;
   short extraout_R1;
+  short sVar2;
   short extraout_R2;
-  short sVar4;
-  undefined1 *puVar5;
-  byte bVar6;
+  short sVar3;
+  undefined1 *puVar4;
+  byte bVar5;
+  undefined1 uVar6;
   undefined1 uVar7;
-  undefined1 uVar8;
   
-  uVar7 = 0;
-  bVar6 = 1;
+  uVar6 = 0;
+  bVar5 = 1;
   sci1_boot_tx_then_rx_transaction();
   sci1_boot_tx_then_rx_transaction();
   sci1_boot_tx_then_rx_transaction();
-  cVar1 = *(char *)((uint)bVar6 << 0x10 | 0xf20b);
-  uVar2 = CONCAT11(extraout_var,cVar1);
-  if (cVar1 == '\x01') {
-    sVar3 = 0x481c;
-    uVar8 = 0;
+  if (*(char *)((uint)bVar5 << 0x10 | 0xf20b) == '\x01') {
+    bVar1 = 1;
+    uVar7 = 0;
     do {
-      uVar2 = sci1_rx_byte_poll_or_error(uVar2,sVar3);
-      sVar3 = extraout_R1;
-      sVar4 = extraout_R2;
-      if ((bool)uVar8) {
-        sVar3 = 0x481c;
-        sVar4 = 2;
+      bVar1 = sci1_rx_byte_poll_or_error(bVar1);
+      sVar2 = extraout_R1;
+      sVar3 = extraout_R2;
+      if ((bool)uVar7) {
+        sVar2 = 0x481c;
+        sVar3 = 2;
       }
-      sVar3 = sVar3 + -1;
-    } while ((sVar3 != -1) || (sVar4 != 0));
-    *(undefined1 *)((uint)bVar6 << 0x10 | 0xf20b) = 0;
+    } while ((sVar2 != 0) || (sVar3 != 0));
+    *(undefined1 *)((uint)bVar5 << 0x10 | 0xf20b) = 0;
     *(undefined2 *)&DAT_0000fe7e = 0x40;
     boot_sci1_rom_id_verify();
     *(undefined2 *)&P1DDR = 0x43;
     sci1_boot_cmd_type_rx_validate();
-    puVar5 = (undefined1 *)&P3DDR;
+    puVar4 = (undefined1 *)&P3DDR;
     do {
-      *(undefined2 *)(puVar5 + -2) = 0x46;
+      *(undefined2 *)(puVar4 + -2) = 0x46;
       sci1_boot_cmd_dispatch();
-      puVar5 = puVar5 + 2;
+      puVar4 = puVar4 + 2;
     } while( true );
   }
   do {
@@ -12381,38 +12702,41 @@ void sci1_boot_handshake_and_bulk_rx(void)
 
 
 
-void sci1_boot_flash_write_block_loop(ushort param_1,undefined2 param_2,undefined1 param_3)
+void sci1_boot_flash_write_block_loop
+               (undefined2 param_1,undefined2 param_2,undefined1 param_3,char *param_4)
 
 {
   byte *pbVar1;
   char *pcVar2;
   byte bVar3;
-  undefined2 uVar4;
+  ushort uVar4;
   short sVar5;
-  ushort uVar6;
-  undefined1 extraout_var;
+  undefined2 uVar6;
   undefined2 extraout_R1;
   ushort param2;
   undefined2 unaff_R3;
+  undefined2 unaff_R5;
   byte bVar7;
+  undefined2 unaff_retaddr;
   undefined2 uVar8;
   char *in_stack_00000002;
   
   bVar7 = 1;
-  DAT_0001f26c = (undefined1)param_1;
+  DAT_0001f26c = (char)param_1;
   DAT_0001f268 = param_2;
   DAT_0001f26a = unaff_R3;
   DAT_0001f26d = param_3;
-  uVar4 = sci1_boot_build_row_addr_frame(param_1,param_1 & 0xff,(short)&DAT_0000f21a);
+  uVar4 = sci1_boot_build_row_addr_frame
+                    (param_1,DAT_0001f26c,(char *)CONCAT22(unaff_R5,unaff_retaddr));
   sci1_boot_tx_buf_drain(uVar4,(short)&DAT_0000f21a);
   while( true ) {
     while( true ) {
-      uVar6 = *(ushort *)((uint)bVar7 << 0x10 | 0xf268);
+      uVar4 = *(ushort *)((uint)bVar7 << 0x10 | 0xf268);
       bVar3 = *(byte *)((uint)bVar7 << 0x10 | 0xf26c);
-      if (0xffdf < uVar6) break;
+      if (0xffdf < uVar4) break;
       pbVar1 = (byte *)((uint)bVar7 << 0x10 | 0xf26d);
       if ((*pbVar1 <= bVar3) &&
-         ((bVar3 != *pbVar1 || (*(ushort *)((uint)bVar7 << 0x10 | 0xf26a) <= uVar6 + 0x20))))
+         ((bVar3 != *pbVar1 || (*(ushort *)((uint)bVar7 << 0x10 | 0xf26a) <= uVar4 + 0x20))))
       goto LAB_00020577;
       sVar5 = sci1_boot_build_data_frame
                         (CONCAT11(*(undefined1 *)((uint)bVar7 << 0x10 | 0xf26c),0x20),
@@ -12421,30 +12745,28 @@ void sci1_boot_flash_write_block_loop(ushort param_1,undefined2 param_2,undefine
       sci1_boot_tx_buf_drain(sVar5,(short)&DAT_0000f21a);
     }
     if (*(byte *)((uint)bVar7 << 0x10 | 0xf26d) <= bVar3) break;
-    uVar6 = *(ushort *)((uint)bVar7 << 0x10 | 0xf268);
+    uVar4 = *(ushort *)((uint)bVar7 << 0x10 | 0xf268);
     sVar5 = sci1_boot_build_data_frame
-                      (CONCAT11(*(undefined1 *)((uint)bVar7 << 0x10 | 0xf26c),-(char)uVar6),
-                       in_stack_00000002,uVar6);
-    uVar4 = sci1_boot_tx_buf_drain(sVar5,(short)&DAT_0000f21a);
+                      (CONCAT11(*(undefined1 *)((uint)bVar7 << 0x10 | 0xf26c),-(char)uVar4),
+                       in_stack_00000002,uVar4);
+    uVar6 = sci1_boot_tx_buf_drain(sVar5,(short)&DAT_0000f21a);
     *(undefined2 *)((uint)bVar7 << 0x10 | 0xf268) = 0;
     pcVar2 = (char *)((uint)bVar7 << 0x10 | 0xf26c);
     *pcVar2 = *pcVar2 + '\x01';
     uVar8 = 0x56f;
-    uVar4 = sci1_boot_build_row_addr_frame
-                      (uVar4,CONCAT11(extraout_var,*(undefined1 *)((uint)bVar7 << 0x10 | 0xf26c)),
-                       (short)&DAT_0000f21a);
+    uVar4 = sci1_boot_build_row_addr_frame(uVar6,*(char *)((uint)bVar7 << 0x10 | 0xf26c),param_4);
     in_stack_00000002 = (char *)CONCAT22(uVar8,0x575);
     sci1_boot_tx_buf_drain(uVar4,(short)&DAT_0000f21a);
   }
 LAB_00020577:
-  uVar6 = *(ushort *)((uint)bVar7 << 0x10 | 0xf268);
+  uVar4 = *(ushort *)((uint)bVar7 << 0x10 | 0xf268);
   sVar5 = sci1_boot_build_data_frame
                     (CONCAT11(*(undefined1 *)((uint)bVar7 << 0x10 | 0xf26c),
-                              ((char)*(undefined2 *)((uint)bVar7 << 0x10 | 0xf26a) - (char)uVar6) +
-                              '\x01'),in_stack_00000002,uVar6);
-  uVar6 = sci1_boot_tx_buf_drain(sVar5,(short)&DAT_0000f21a);
-  uVar6 = sci1_boot_build_eof_frame(uVar6,param2,0xf21a);
-  sci1_boot_tx_buf_drain(uVar6,(short)&DAT_0000f21a);
+                              ((char)*(undefined2 *)((uint)bVar7 << 0x10 | 0xf26a) - (char)uVar4) +
+                              '\x01'),in_stack_00000002,uVar4);
+  uVar4 = sci1_boot_tx_buf_drain(sVar5,(short)&DAT_0000f21a);
+  uVar4 = sci1_boot_build_eof_frame(uVar4,param2,0xf21a);
+  sci1_boot_tx_buf_drain(uVar4,(short)&DAT_0000f21a);
   return;
 }
 
@@ -12501,11 +12823,12 @@ short sci1_boot_build_data_frame(ushort cmd_and_len,char *payload,ushort tx_offs
 
 
 
-undefined2 sci1_boot_build_row_addr_frame(undefined2 param_1,char param_2,char *param_3)
+ushort sci1_boot_build_row_addr_frame(undefined2 param_1,char param_2,char *param_3)
 
 {
   char *pcVar1;
   char *pcVar2;
+  char *in_R2;
   char *pcVar3;
   char *pcVar4;
   char cVar5;
@@ -12514,13 +12837,13 @@ undefined2 sci1_boot_build_row_addr_frame(undefined2 param_1,char param_2,char *
   pcVar3 = (char *)&DAT_0000f8a0;
   cVar5 = '\x05';
   do {
-    pcVar4 = param_3;
+    pcVar4 = in_R2;
     pcVar1 = pcVar3;
     pcVar3 = pcVar3 + 1;
     *pcVar4 = *pcVar1;
     bVar6 = cVar5 != -1;
     cVar5 = cVar5 + -1;
-    param_3 = pcVar4 + 1;
+    in_R2 = pcVar4 + 1;
   } while (bVar6);
   cVar5 = DAT_0001f8a5 + param_2 * '\x10';
   pcVar4[1] = param_2 * '\x10';
@@ -12606,14 +12929,13 @@ ushort sci1_boot_build_eof_frame(ushort param1,ushort param2,ushort tx_offset)
 
 // WARNING: Removing unreachable block (ram,0x00020779)
 
-undefined1 sci1_colon_frame_dispatch(undefined1 param_1)
+byte sci1_colon_frame_dispatch(byte param_1)
 
 {
   char cVar1;
-  undefined1 uVar2;
-  byte bVar3;
+  byte bVar2;
   
-  bVar3 = 1;
+  bVar2 = 1;
   DAT_0001f27d = 0;
   DAT_0001f281 = 0;
   DAT_0001f276 = 0;
@@ -12625,19 +12947,19 @@ undefined1 sci1_colon_frame_dispatch(undefined1 param_1)
   DAT_0001f274 = 0;
   DAT_0001f275 = 0;
   DAT_0001f27c = param_1;
-  while (cVar1 = sci1_rx_byte_wait_loop(), *(char *)((uint)bVar3 << 0x10 | 0xf27d) == '\0') {
+  while (cVar1 = sci1_rx_byte_wait_loop(), *(char *)((uint)bVar2 << 0x10 | 0xf27d) == '\0') {
     if (cVar1 == ':') {
-      *(undefined1 *)((uint)bVar3 << 0x10 | 0xf27d) = 1;
-      *(undefined1 *)((uint)bVar3 << 0x10 | 0xf280) = 0;
+      *(undefined1 *)((uint)bVar2 << 0x10 | 0xf27d) = 1;
+      *(undefined1 *)((uint)bVar2 << 0x10 | 0xf280) = 0;
     }
   }
-  *(char *)((uint)bVar3 << 0x10 | 0xf280) = *(char *)((uint)bVar3 << 0x10 | 0xf280) + cVar1;
+  *(char *)((uint)bVar2 << 0x10 | 0xf280) = *(char *)((uint)bVar2 << 0x10 | 0xf280) + cVar1;
                     // WARNING: Could not recover jumptable at 0x000206cb. Too many branches
                     // WARNING: Treating indirect jump as call
-  uVar2 = (*(code *)((short)&UNK_0000f260 +
-                    *(short *)((int)((ushort)(byte)(*(char *)((uint)bVar3 << 0x10 | 0xf27d) - 1) <<
+  bVar2 = (*(code *)((short)&UNK_0000f260 +
+                    *(short *)((int)((ushort)(byte)(*(char *)((uint)bVar2 << 0x10 | 0xf27d) - 1) <<
                                     1) + -0x6d2)))();
-  return uVar2;
+  return bVar2;
 }
 
 
@@ -13058,12 +13380,12 @@ void cold_init_dispatch(void)
 void subsystem_cold_init(void)
 
 {
-  short sVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
-  sVar1 = check_cold_init_complete_sentinel_ef62();
-  if (sVar1 != 0) {
+  uVar1 = check_cold_init_complete_sentinel_ef62();
+  if (uVar1 != 0) {
     *(undefined2 *)((uint)bVar2 << 0x10 | 0xef62) = 0xa5a5;
     stub_empty_0x1519e();
     init_ee82_ee8a_from_rom_const();
@@ -13083,7 +13405,9 @@ void subsystem_cold_init(void)
 
 
 
-undefined2 check_cold_init_complete_sentinel_ef62(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort check_cold_init_complete_sentinel_ef62(void)
 
 {
   short sVar1;
@@ -13471,7 +13795,7 @@ LAB_00021091:
 
 
 
-ushort fuel_cut_enable_check(void)
+ushort fuel_cut_enable_check(ushort param_fp1)
 
 {
   ushort *puVar1;
@@ -13483,7 +13807,7 @@ ushort fuel_cut_enable_check(void)
   uVar4 = 0;
   bVar3 = 1;
   if (((DAT_000102c1 != '\0') && (DAT_00010d30 < DAT_0001f436)) ||
-     ((DAT_000102c1 == '\0' && (DAT_00010d2e < DAT_0001f130)))) {
+     ((DAT_000102c1 == '\0' && (DAT_00010d2e < coolant_temp_scaled_f130)))) {
     DAT_0001f066 = DAT_00010d3a;
   }
   uVar2 = get_high_byte(DAT_0001f4e8);
@@ -13783,7 +14107,7 @@ void coolant_temp_validity_and_scale(void)
 ushort coolant_temp_range_check(void)
 
 {
-  if (DAT_0001f13a < DAT_000109c6) {
+  if (mut_battery_voltage_f13a < DAT_000109c6) {
     DAT_0001ef92 = DAT_000109c8;
   }
   if (((DAT_0001ef92 == 0) && (DAT_000109c4 <= DAT_0001f12e)) && (DAT_0001f12e <= DAT_000109c2)) {
@@ -13818,6 +14142,18 @@ LAB_000214e2:
 }
 
 
+
+// [EXISTING FUNCTION, CROSS-REF ADDED 2026-08-08] tps_delta_calc: writes
+// RAM F158 (write site at 0x2152f). Confirmed consumer this session:
+// tcu_dtc_plausibility_check_and_fault_dispatch (0x2bc0f, renamed from
+// tcu_dtc_status_check_dispatch) reads F158 as part of a multi-condition
+// DTC/plausibility check, alongside engine_torque_pct_f17a and
+// coolant_temp_scaled_f130. See that function's plate comment and
+// mut_verification_status.md "MAJOR RECONCILIATION: EVOSCAN SOURCE + ROM
+// ANALYSIS CONFIRM A REAL DTC SUBSYSTEM" (2026-08-08) for the full DTC
+// subsystem writeup, including the EvoScan-confirmed MUT-II DTC RequestID
+// sequence (0x3B/0x3C/0x3D) this function's output may ultimately feed
+// into (not yet confirmed at the bit level).
 
 void tps_delta_calc(void)
 
@@ -14065,6 +14401,20 @@ void engine_torque_scale_state_reset(void)
 // rounded division + clamp), computed with no RPM input at all. VERIFIED under current
 // decoder - RPM's real location remains unknown, do not resume searching here
 // (logging.txt OPEN ITEM #1, still open).
+// 
+// [CROSS-REF ADDED 2026-08-07] Output global renamed DAT_0001f17a ->
+// engine_torque_pct_f17a. This is the single most heavily-consumed derived
+// value in the ROM (~86 read sites found via xref search) -- it's the
+// primary load/threshold input for closedloop_eligibility_check,
+// purge_enable_check, isc_condition_eval, warmup_complete_gate_check,
+// knock_condition_eval, cranking_detect_check, o2_upstream_enable_check,
+// egr_f490_condition_flags_update, and many more, plus it's one of the
+// fields packed into the periodic SCI1 status frame built by
+// sci1_periodic_status_frame_build_f54a_f566 (0x28d7d, field F550). No
+// static WRITE xref existed to F17A before this session traced it here --
+// worth keeping in mind that this global's writer wasn't visible to a
+// routine xref sweep, in case other "no writer found" cells in this project
+// have the same cause.
 
 void engine_torque_pct_scale_calc(void)
 
@@ -14218,34 +14568,28 @@ void fueling_lambda_update(void)
 void fueling_base_injection_calc(void)
 
 {
-  ushort uVar1;
-  short sVar2;
-  undefined2 uVar3;
-  byte bVar4;
-  undefined1 uVar5;
+  short sVar1;
+  undefined2 uVar2;
+  byte bVar3;
   void *table;
-  ushort uStack_4;
   
-  uVar5 = 0;
-  bVar4 = 1;
+  bVar3 = 1;
   (*axis_lookup_interp)();
-  if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0f8) & 0x20) == 0) {
+  if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf0f8) & 0x20) == 0) {
     table = (void *)0xda8c;
   }
   else {
     table = (void *)0xda6c;
   }
   table_lookup_indexed(2,table);
-  uStack_4 = (*(code *)0x14656)();
-  uVar1 = (*(code *)0x14656)();
-  o2_mode9_10_correction_apply
-            ((short)((uint)uVar1 * (uint)*(ushort *)((int)&stack0xfffe + -2) >> 0x10));
-  uStack_4 = (*muldiv_s16_rounded)();
-  sVar2 = (*clamp_u8)();
-  *(short *)((uint)bVar4 << 0x10 | 0xf1be) = sVar2 << 3;
-  uStack_4 = *(undefined2 *)((uint)bVar4 << 0x10 | 0xf29c);
-  uVar3 = (*mul_u16_x2_sat)();
-  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf1c2) = uVar3;
+  (*(code *)0x14656)();
+  (*(code *)0x14656)();
+  o2_mode9_10_correction_apply();
+  (*muldiv_s16_rounded)();
+  sVar1 = (*clamp_u8)();
+  *(short *)((uint)bVar3 << 0x10 | 0xf1be) = sVar1 << 3;
+  uVar2 = (*mul_u16_x2_sat)();
+  *(undefined2 *)((uint)bVar3 << 0x10 | 0xf1c2) = uVar2;
   return;
 }
 
@@ -14314,7 +14658,7 @@ void fueling_throttle_zone_flags_update(void)
   else if (DAT_0001f13e <= DAT_00010a5e) {
     g_status_flags_f224 = g_status_flags_f224 & 0xbfff;
   }
-  if (((g_status_flags_f224 & 0x4000) != 0) && (DAT_00010a60 < DAT_0001f17a)) {
+  if (((g_status_flags_f224 & 0x4000) != 0) && (DAT_00010a60 < engine_torque_pct_f17a)) {
     g_status_flags_f224 = g_status_flags_f224 | 0x8000;
     return;
   }
@@ -14467,7 +14811,7 @@ void fueling_coolant_inj_offset_calc(void)
   
   bVar2 = 1;
   uVar1 = DAT_0001089a;
-  if (DAT_0001f130 <= DAT_0001089c) {
+  if (coolant_temp_scaled_f130 <= DAT_0001089c) {
     uVar1 = sat_sub_u16(DAT_0001089a,DAT_0001089e);
   }
   *(ushort *)((uint)bVar2 << 0x10 | 0xf22c) = uVar1;
@@ -14529,10 +14873,17 @@ void rpm_load_zone_counter_update(void)
 // fueling_inj_accum_clamp_drain, per_cyl_knock_flag_update_cyl_a/b -- none touch
 // this address range). Static xref search also returns zero hits (consistent
 // with this ROM's known indirect/bank-prefixed addressing blind spot).
-// Open question: if these 6 values move during live logging, a real runtime
-// writer exists via indirect addressing and is worth re-tracing. If they never
-// move, this may be an unused/init-only feature. See mut_verification_status.md
-// EE8C-EE96 cluster entry.
+// 
+// [RECONFIRMED 2026-08-07] Re-checked with current disassembly using the
+// correct 4-byte write encoding (1D EE <hi> <lo> for mov:g.w Rn,@addr:16)
+// rather than unreliable 2-byte search -- confirms this is genuinely the ONLY
+// writer to all 6 cells anywhere in the ROM. Also checked the 33-byte
+// unanalyzed gap immediately preceding this function (0x21edf-0x21eff): it is
+// pure 0xFF padding, not orphaned/hidden code. CLOSING this open question: no
+// runtime updater exists in this ROM. These 6 cells are init-only, static for
+// the life of the ECU -- treat MUT ReqID 0x60-0x65 as effectively dead/
+// unused-feature reads (always return 0x8080), not live sensor or actuator
+// values. See mut_verification_status.md EE8C-EE96 cluster entry.
 
 void inj_channel_state_init(void)
 
@@ -14685,8 +15036,8 @@ ushort rpm_load_window_condition_check(void)
 
 {
   if (((((g_status_flags_f0f8 & 2) != 0) && ((g_status_flags_f20e & 0x11) == 0)) &&
-      (DAT_0001f17a < DAT_00010b70)) &&
-     ((DAT_00010b76 < DAT_0001f13a && (DAT_0001f13a < DAT_00010b74)))) {
+      (engine_torque_pct_f17a < DAT_00010b70)) &&
+     ((DAT_00010b76 < mut_battery_voltage_f13a && (mut_battery_voltage_f13a < DAT_00010b74)))) {
     return 1;
   }
   return 0;
@@ -15060,7 +15411,7 @@ ushort aux_load_condition_check(void)
     DAT_0001effa = DAT_00010ee4;
   }
   if (((((DAT_000102dd & 2) == 0) || ((g_status_flags_f0f8 & 0x80) != 0)) &&
-      ((g_status_flags_f20e & 4) != 0)) && (DAT_00010ee0 <= DAT_0001f17a)) {
+      ((g_status_flags_f20e & 4) != 0)) && (DAT_00010ee0 <= engine_torque_pct_f17a)) {
     return 1;
   }
   return 0;
@@ -15120,7 +15471,7 @@ void o2_heater_ready_flag_update(void)
     g_status_flags_f226 = g_status_flags_f226 & 0xfffe;
   }
   if ((((DAT_0001f1f4 & 2) == 0) || ((g_status_flags_f226 & 1) == 0)) ||
-     (DAT_0001f17a <= DAT_00010a76)) {
+     (engine_torque_pct_f17a <= DAT_00010a76)) {
     g_status_flags_f226 = g_status_flags_f226 & 0xfffd;
   }
   else {
@@ -15241,7 +15592,7 @@ uchar cranking_detect_check(void)
     if ((DAT_0001f25e & 0x2000) != 0) {
       uVar2 = uVar2 + DAT_0001082c;
     }
-    bVar1 = DAT_0001f17a < uVar2;
+    bVar1 = engine_torque_pct_f17a < uVar2;
   }
   return bVar1;
 }
@@ -15303,7 +15654,8 @@ ushort closedloop_eligibility_check(void)
     DAT_0001f076 = 0;
   }
   if ((((g_status_flags_f0f8 & 0x20) != 0) && (DAT_00010a46 < DAT_0001f10e)) &&
-     (((DAT_0001eee2 & 1) == 0 && (((DAT_0001f1fe & 8) == 0 && (DAT_00010a42 <= DAT_0001f17a)))))) {
+     (((DAT_0001eee2 & 1) == 0 &&
+      (((DAT_0001f1fe & 8) == 0 && (DAT_00010a42 <= engine_torque_pct_f17a)))))) {
     uVar2 = div_u32_u16_sat(0x1d,0x4c00,(ushort)BYTE_ARRAY_00010886);
     if (uVar2 + *(short *)((uint)bVar4 << 0x10 | 0xa44) * -8 <
         *(ushort *)((uint)bVar4 << 0x10 | 0xf170)) goto LAB_00022663;
@@ -15387,11 +15739,12 @@ bool closedloop_fuel_ready_check(void)
 
 
 
-undefined2 o2_temp_ready_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void o2_temp_ready_check(void)
 
 {
   byte _unused_far_pad [2];
-  short sVar1;
   undefined2 mode;
   
   if ((g_status_flags_f224 & 0x2000) == 0) {
@@ -15405,18 +15758,16 @@ undefined2 o2_temp_ready_check(void)
   if ((DAT_0001f1f2 & 0x40) != 0) {
     _unused_far_pad = DAT_0001f1e8;
     if (((g_status_flags_f224 & 0x2000) == 0) ||
-       (_unused_far_pad = DAT_0001f17a, (ushort)DAT_0001f17a <= (ushort)DAT_00010892)) {
+       (_unused_far_pad = engine_torque_pct_f17a,
+       (ushort)engine_torque_pct_f17a <= (ushort)DAT_00010892)) {
       mode = 0;
     }
     else {
       mode = 1;
     }
-    sVar1 = o2_ready_timer_update(_unused_far_pad,mode);
-    if (sVar1 != 0) {
-      return 1;
-    }
+    o2_ready_timer_update(_unused_far_pad,mode);
   }
-  return 0;
+  return;
 }
 
 
@@ -15433,7 +15784,7 @@ short __stdcall_far o2_ready_timer_update(undefined2 _unused_far_pad,short mode)
   }
   if (mode == 0) {
     DAT_0001f018 = DAT_0001088e;
-    if (DAT_0001f17a < DAT_00010892) {
+    if (engine_torque_pct_f17a < DAT_00010892) {
       DAT_0001f018 = DAT_0001088e;
       DAT_0001f228 = 0xffff;
       return 0;
@@ -15536,11 +15887,11 @@ f216_bits_f188_f17a_update_and_warmup_gate(undefined2 _unused_far_pad,ushort thr
     g_status_flags_f216 = g_status_flags_f216 & 0xff7f;
   }
   if ((g_status_flags_f216 & 0x8000) == 0) {
-    if (DAT_000108ce < DAT_0001f17a) {
+    if (DAT_000108ce < engine_torque_pct_f17a) {
       g_status_flags_f216 = g_status_flags_f216 | 0x8000;
     }
   }
-  else if (DAT_0001f17a <= DAT_000108d0) {
+  else if (engine_torque_pct_f17a <= DAT_000108d0) {
     g_status_flags_f216 = g_status_flags_f216 & 0x7fff;
   }
   if ((g_status_flags_f216 & 0x80) != 0) {
@@ -15549,8 +15900,8 @@ f216_bits_f188_f17a_update_and_warmup_gate(undefined2 _unused_far_pad,ushort thr
   if ((((DAT_000102c9 == '\0') || ((g_status_flags_f0f8 & 4) != 0)) &&
       ((g_status_flags_f216 & 0x40) == 0)) &&
      ((((DAT_0001f1fe & 8) == 0 &&
-       (*(ushort *)(&stack0xfffe + 6) <= DAT_0001f17a &&
-        DAT_0001f17a != *(ushort *)(&stack0xfffe + 6))) && (DAT_0001f026 == 0)))) {
+       (*(ushort *)(&stack0xfffe + 6) <= engine_torque_pct_f17a &&
+        engine_torque_pct_f17a != *(ushort *)(&stack0xfffe + 6))) && (DAT_0001f026 == 0)))) {
     uVar1 = 1;
   }
   else {
@@ -15561,14 +15912,16 @@ f216_bits_f188_f17a_update_and_warmup_gate(undefined2 _unused_far_pad,ushort thr
 
 
 
-undefined2 warmup_complete_gate_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort warmup_complete_gate_check(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   
-  if ((((DAT_0001f17a < *(ushort *)((int)&stack0xfffe + 6) ||
-         DAT_0001f17a == *(ushort *)((int)&stack0xfffe + 6)) || ((g_status_flags_f216 & 0x40) != 0))
-      || (DAT_0001ef6a < (ushort)(DAT_0001086a * 0x14))) ||
+  if ((((engine_torque_pct_f17a < *(ushort *)((int)&stack0xfffe + 6) ||
+         engine_torque_pct_f17a == *(ushort *)((int)&stack0xfffe + 6)) ||
+       ((g_status_flags_f216 & 0x40) != 0)) || (DAT_0001ef6a < (ushort)(DAT_0001086a * 0x14))) ||
      ((((g_status_flags_f3f0 & 0x20) != 0 ||
        ((g_status_flags_f0f8 & g_status_flags_f0fa & 0x80) == 0)) || (DAT_0001f23c != 0)))) {
     uVar1 = 0;
@@ -15612,7 +15965,7 @@ void engine_mode_dispatch_and_f240_edge_counter(void)
   f21c_bit1_update_dispatcher();
   uVar3 = (*f224_bits01_update_and_efa8_edge_latch)();
   status_word_composite_multibit_update_via_table(uVar3);
-  struct_bit11_toggle_from_gate_check();
+  struct_bit11_toggle_from_gate_check(*(ushort *)((int)&stack0xfffe + 6));
   *(undefined2 *)((uint)bVar5 << 0x10 | 0xf222) = 0;
   *(undefined2 *)((uint)bVar5 << 0x10 | 0xf21e) = 0;
   if ((*(ushort *)((uint)bVar5 << 0x10 | 0xf20e) & 0x800) == 0) {
@@ -15714,7 +16067,7 @@ void f21c_bit9_hysteresis_and_f23e_table_ramp(void)
   bVar5 = 1;
   uVar4 = DAT_0001f186;
   if ((DAT_0001f1f0 & 1) == 0) {
-    if (DAT_000108aa <= DAT_0001f130) {
+    if (DAT_000108aa <= coolant_temp_scaled_f130) {
       uVar4 = DAT_0001f18c;
     }
   }
@@ -16014,18 +16367,18 @@ LAB_00022dd9:
 // table-consumer family (status_word_bit3_conditional_update_via_table,
 // status_word_composite_multibit_update_via_table).
 
-void struct_bit11_toggle_from_gate_check(void)
+void struct_bit11_toggle_from_gate_check(ushort param_fp1)
 
 {
   ushort *puVar1;
-  short sVar2;
+  ushort uVar2;
   undefined1 uVar3;
   undefined2 in_stack_00000004;
   
   uVar3 = 1;
-  sVar2 = f21c_bit1_and_struct_bit5_gate_check();
+  uVar2 = f21c_bit1_and_struct_bit5_gate_check();
   puVar1 = *(ushort **)((int)in_stack_00000004 + 2);
-  if (sVar2 == 0) {
+  if (uVar2 == 0) {
     *puVar1 = *puVar1 & 0xf7ff;
   }
   else {
@@ -16036,10 +16389,12 @@ void struct_bit11_toggle_from_gate_check(void)
 
 
 
-undefined2 f21c_bit1_and_struct_bit5_gate_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort f21c_bit1_and_struct_bit5_gate_check(void)
 
 {
-  undefined2 uVar1;
+  ushort uVar1;
   undefined2 in_stack_00000004;
   ushort uStack_4;
   
@@ -16184,6 +16539,7 @@ void init_state_block_ee98_80(void)
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // TRIAGE NOTE: copies DAT_00010956 into f2f0/f2f2/f2f4/f2f6/f2f8 (5 identical writes -- looks like
 // resetting a small ring/history buffer to a common init value), sets f25a=0x10, computes f278/f276
 // from 0x131e4<<8 and f27c/f27a from TABLE_2D_0x131d4[4]<<8, and f2cc from (0x11df0 *
@@ -16192,10 +16548,10 @@ void init_state_block_ee98_80(void)
 // Not renamed: the in_ram_00000800 parameter source and TABLE_2D_000131D4 identity are unconfirmed.
 // Confidence: low.
 
-undefined2 f2f0_f2f8_ring_and_f27x_f2cc_periodic_init(void)
+void f2f0_f2f8_ring_and_f27x_f2cc_periodic_init(void)
 
 {
-  ushort in_ram_00000800;
+  short in_ram_00000800;
   
   DAT_0001f2f8 = DAT_00010956;
   DAT_0001f2f2 = DAT_00010956;
@@ -16207,8 +16563,8 @@ undefined2 f2f0_f2f8_ring_and_f27x_f2cc_periodic_init(void)
   DAT_0000f276 = (ushort)DAT_000131e4 << 8;
   DAT_0000f27c = (ushort)DAT_000131d8 << 8;
   DAT_0000f27a = (ushort)DAT_000131d8 << 8;
-  DAT_0000f2cc = (ushort)((uint)DAT_00011df0 * (uint)in_ram_00000800) >> 2;
-  return (short)((uint)DAT_00011df0 * (uint)in_ram_00000800 >> 0x10);
+  DAT_0000f2cc = (ushort)DAT_00011df0 * in_ram_00000800 >> 2;
+  return;
 }
 
 
@@ -16239,6 +16595,7 @@ void knock_octane_trim_master_dispatch(void)
 {
   undefined2 uVar1;
   byte bVar2;
+  undefined2 in_stack_00000006;
   
   bVar2 = 1;
   (*f25e_gate_chain_dispatch_b)();
@@ -16246,11 +16603,13 @@ void knock_octane_trim_master_dispatch(void)
   (*f2a0_f2c6_dual_timer_decay_and_f2c8_blend_dispatch)();
   f2b6_knock_retard_state_select();
   (*f2ca_table_override_from_f114_gate)();
-  o2_closed_loop_fuel_trim_compute();
-  f266_knock_octane_composite_trim_compute();
-  (*muldiv_s16_rounded)
-            ((short)((uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf2a4) *
-                     (uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf29c) >> 0x10));
+  o2_closed_loop_fuel_trim_compute(*(ushort *)((int)&stack0xfffe + 6));
+  f266_knock_octane_composite_trim_compute(*(ushort *)((int)register0x0e + 6));
+  in_stack_00000006 = 0x4000;
+  in_stack_00000006 =
+       (*muldiv_s16_rounded)
+                 ((short)((uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf2a4) *
+                          (uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf29c) >> 0x10));
   uVar1 = (*clamp_u8)();
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf5be) = uVar1;
   return;
@@ -16290,7 +16649,7 @@ void f25e_gate_chain_dispatch_a(void)
 void f07c_multi_channel_threshold_gate_check(void)
 
 {
-  if ((((DAT_0001f17a <= DAT_00010d84) || (DAT_0001f186 <= DAT_00010d82)) ||
+  if ((((engine_torque_pct_f17a <= DAT_00010d84) || (DAT_0001f186 <= DAT_00010d82)) ||
       (DAT_0001f10e <= DAT_00010d86)) || (DAT_0001f118 <= DAT_00010d88)) {
     DAT_0001f07c = DAT_00010d8a << 1;
   }
@@ -16522,7 +16881,7 @@ ushort f110_f17a_threshold_gate_check(void)
   if ((DAT_0001f25e & 0x100) != 0) {
     uVar1 = DAT_000109f0;
   }
-  if ((uVar1 <= DAT_0001f110) && (DAT_000109ec <= DAT_0001f17a)) {
+  if ((uVar1 <= DAT_0001f110) && (DAT_000109ec <= engine_torque_pct_f17a)) {
     return 1;
   }
   return 0;
@@ -16536,7 +16895,7 @@ void f25e_bit14_update_from_f186_f17a_gate(void)
 
 {
   if ((((DAT_0001f1f2 & 0x80) != 0) && (DAT_00010b4c <= DAT_0001f186)) &&
-     (DAT_00010b4a <= DAT_0001f17a)) {
+     (DAT_00010b4a <= engine_torque_pct_f17a)) {
     DAT_0001f25e = DAT_0001f25e | 0x4000;
     return;
   }
@@ -16631,8 +16990,8 @@ void f28e_f292_knock_lambda_composite_calc(void)
 
 {
   short sVar1;
-  undefined2 uVar2;
-  ushort uVar3;
+  ushort uVar2;
+  undefined2 uVar3;
   byte bVar4;
   undefined2 in_stack_00000002;
   
@@ -16642,19 +17001,19 @@ void f28e_f292_knock_lambda_composite_calc(void)
   *(short *)((uint)bVar4 << 0x10 | 0xf292) = sVar1 + *(short *)((uint)bVar4 << 0x10 | 0x818);
   (*(code *)0x14656)();
   uVar2 = o2_lambda_correction_apply();
-  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf296) = uVar2;
-  uVar3 = (*(code *)0x14656)();
-  uVar2 = (*div_u16_rounded)((short)((uint)uVar3 * 0xcd >> 0x10));
-  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf0ba) = uVar2;
-  (*axis_lookup_interp)();
-  (*axis_lookup_interp)();
+  *(ushort *)((uint)bVar4 << 0x10 | 0xf296) = uVar2;
   uVar2 = (*(code *)0x14656)();
-  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf294) = uVar2;
-  uVar2 = (*muldiv_s16_rounded)();
-  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf290) = uVar2;
+  uVar3 = (*div_u16_rounded)((short)((uint)uVar2 * 0xcd >> 0x10));
+  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf0ba) = uVar3;
+  (*axis_lookup_interp)();
+  (*axis_lookup_interp)();
+  uVar3 = (*(code *)0x14656)();
+  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf294) = uVar3;
+  uVar3 = (*muldiv_s16_rounded)();
+  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf290) = uVar3;
   read_indexed_byte_f1fc(0x18,(void *)(CONCAT22(0x18ab,in_stack_00000002) >> 8));
-  uVar2 = (*muldiv_s16_rounded)();
-  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf28e) = uVar2;
+  uVar3 = (*muldiv_s16_rounded)();
+  *(undefined2 *)((uint)bVar4 << 0x10 | 0xf28e) = uVar3;
   return;
 }
 
@@ -16785,8 +17144,8 @@ ushort f2b6_knock_retard_state_select(ushort param_1)
     if ((g_status_flags_f20e & 4) != 0) {
       param_1 = DAT_0001f10e;
       if (DAT_000109da < DAT_0001f10e) {
-        param_1 = DAT_0001f17a;
-        if (DAT_0001f17a < DAT_000109de) {
+        param_1 = engine_torque_pct_f17a;
+        if (engine_torque_pct_f17a < DAT_000109de) {
           param_1 = DAT_0001f174;
           if (DAT_000109d8 < DAT_0001f174) {
             DAT_0000f29e = 8;
@@ -16862,52 +17221,52 @@ ushort f2ca_table_override_from_f114_gate(ushort param_1)
 // address artifacts, CONCAT12/ZEXT24 garbage) - use disassembly for further analysis here,
 // not decompile_function.
 
-void o2_closed_loop_fuel_trim_compute(void)
+void o2_closed_loop_fuel_trim_compute(ushort param_fp1)
 
 {
   undefined1 extraout_var;
-  bool bVar2;
-  undefined2 uVar1;
-  ushort uVar3;
-  byte bVar4;
+  bool bVar1;
+  ushort uVar2;
+  byte bVar3;
+  ushort unaff_retaddr;
   undefined2 in_stack_00000004;
   
-  bVar4 = 1;
+  bVar3 = 1;
   if ((**(ushort **)((int)in_stack_00000004 + 2) & 0x800) == 0) {
     if ((DAT_0001f25e & 0x400) == 0) {
       if (((DAT_0001f25e & 0x4000) != 0) &&
-         (bVar2 = o2_downstream_type34_check(), CONCAT11(extraout_var,bVar2) == 0)) {
-        uVar3 = sat_sub_u16(*(ushort *)((uint)bVar4 << 0x10 | 0xf3a2),
-                            *(ushort *)((uint)bVar4 << 0x10 | 0xb46));
-        get_high_byte(uVar3 * *(short *)((uint)bVar4 << 0x10 | 0xb48));
+         (bVar1 = o2_downstream_type34_check(), CONCAT11(extraout_var,bVar1) == 0)) {
+        uVar2 = sat_sub_u16(*(ushort *)((uint)bVar3 << 0x10 | 0xf3a2),
+                            *(ushort *)((uint)bVar3 << 0x10 | 0xb46));
+        get_high_byte(uVar2 * *(short *)((uint)bVar3 << 0x10 | 0xb48));
       }
-      if ((*(char *)((uint)bVar4 << 0x10 | 0x2cf) != '\0') &&
-         (*(short *)((uint)bVar4 << 0x10 | 0xf07c) == 0)) {
+      if ((*(char *)((uint)bVar3 << 0x10 | 0x2cf) != '\0') &&
+         (*(short *)((uint)bVar3 << 0x10 | 0xf07c) == 0)) {
         (*mul_u16_x2_sat)();
       }
     }
     else {
-      uVar3 = DAT_0001f11e;
+      uVar2 = DAT_0001f11e;
       if (DAT_0001f11e < DAT_000109d6) {
-        uVar3 = 0x80;
+        uVar2 = 0x80;
       }
-      clamp_u16(uVar3,DAT_000109d2,DAT_000109d4);
+      clamp_u16(uVar2,DAT_000109d2,DAT_000109d4);
       (*clamp_u8)();
     }
-    if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf226) & 2) != 0) {
+    if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf226) & 2) != 0) {
       (*clamp_u8)();
     }
-    if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf25e) & 0x800) != 0) {
-      f0ba_f2b2_threshold_blend_calc();
+    if ((*(ushort *)((uint)bVar3 << 0x10 | 0xf25e) & 0x800) != 0) {
+      f0ba_f2b2_threshold_blend_calc(unaff_retaddr);
     }
     if ((**(ushort **)((int)in_stack_00000004 + 10) & 8) != 0) {
-      sat_sub_u16(*(short *)((uint)bVar4 << 0x10 | 0xd60) * 0x14,
-                  *(ushort *)((uint)bVar4 << 0x10 | 0xef6a));
+      sat_sub_u16(*(short *)((uint)bVar3 << 0x10 | 0xd60) * 0x14,
+                  *(ushort *)((uint)bVar3 << 0x10 | 0xef6a));
       (*muldiv_s16_rounded)();
     }
   }
-  uVar1 = o2_sensor_mode_correction_select();
-  **(undefined2 **)((int)in_stack_00000004 + 0x28) = uVar1;
+  uVar2 = o2_sensor_mode_correction_select();
+  **(ushort **)((int)in_stack_00000004 + 0x28) = uVar2;
   return;
 }
 
@@ -16919,14 +17278,14 @@ void o2_closed_loop_fuel_trim_compute(void)
 // f224_bit11_hysteresis_timer_and_gate_check. Not renamed: exact physical meaning of the blend
 // inputs unconfirmed. Confidence: low-medium.
 
-byte  [2] f0ba_f2b2_threshold_blend_calc(void)
+byte  [2] f0ba_f2b2_threshold_blend_calc(ushort param_fp1)
 
 {
   byte abVar1 [2];
   byte in_stack_00000004 [2];
   
   abVar1 = BYTE_ARRAY_000109e6;
-  if ((ushort)BYTE_ARRAY_000109e4 <= (ushort)DAT_0001f17a) {
+  if ((ushort)BYTE_ARRAY_000109e4 <= (ushort)engine_torque_pct_f17a) {
     DAT_0001f0ba = in_stack_00000004;
     (*axis_lookup_interp)();
     abVar1 = (byte  [2])(*(code *)0x14656)();
@@ -16950,7 +17309,7 @@ byte  [2] f0ba_f2b2_threshold_blend_calc(void)
 // written to f266 through the table indirection. Confidence: medium-high on data flow, output
 // register confirmed via table entry math.
 
-void f266_knock_octane_composite_trim_compute(void)
+void f266_knock_octane_composite_trim_compute(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -17026,7 +17385,7 @@ void knock_octane_secondary_dispatch(void)
 
 {
   knock_octane_secondary_dispatch_sub();
-  status_word_table_subdispatch_group_a();
+  status_word_table_subdispatch_group_a(*(ushort *)((int)&stack0xfffc + 6));
   return;
 }
 
@@ -17149,7 +17508,7 @@ short calc_staged_index_f0f8(void)
     sVar1 = sVar1 + 1;
   }
   sVar2 = sVar1;
-  if ((uVar4 <= DAT_0001f17a) && (sVar2 = sVar1 + 2, uVar3 <= DAT_0001f17a)) {
+  if ((uVar4 <= engine_torque_pct_f17a) && (sVar2 = sVar1 + 2, uVar3 <= engine_torque_pct_f17a)) {
     sVar2 = sVar1 + 4;
   }
   return sVar2;
@@ -17160,12 +17519,12 @@ short calc_staged_index_f0f8(void)
 void knock_octane_trim_gate_dispatch(void)
 
 {
-  short sVar1;
+  ushort uVar1;
   byte bVar2;
   
   bVar2 = 1;
-  sVar1 = knock_octane_trim_gate_condition_check();
-  if (sVar1 != 0) {
+  uVar1 = knock_octane_trim_gate_condition_check();
+  if (uVar1 != 0) {
     *(undefined2 *)((uint)bVar2 << 0x10 | 0xefae) = *(undefined2 *)((uint)bVar2 << 0x10 | 0x90a);
   }
   return;
@@ -17173,15 +17532,17 @@ void knock_octane_trim_gate_dispatch(void)
 
 
 
-undefined2 knock_octane_trim_gate_condition_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort knock_octane_trim_gate_condition_check(void)
 
 {
   if (((((((DAT_0001f218 ^ DAT_0001f218 >> 4) & 0xf) == 0) && ((g_status_flags_f20e & 0x80) != 0))
        && ((DAT_0001f1fe & 0x17) == 0)) &&
       ((((g_status_flags_f21c & 0x4000) == 0 && (DAT_000108fa <= DAT_0001f10e)) &&
        ((DAT_0001f118 < DAT_000108fc &&
-        ((DAT_00010902 <= DAT_0001f188 && (DAT_00010900 <= DAT_0001f130)))))))) &&
-     (((((DAT_0001f130 < DAT_000108fe &&
+        ((DAT_00010902 <= DAT_0001f188 && (DAT_00010900 <= coolant_temp_scaled_f130)))))))) &&
+     (((((coolant_temp_scaled_f130 < DAT_000108fe &&
          (((g_status_flags_f216 & 0x700) == 0 && (DAT_0001f034 == 0)))) &&
         (((DAT_000102c1 != '\0' || ((DAT_0001f1f2 & 0x20) == 0)) ||
          (((g_status_flags_f216 & 0x10) == 0 && ((DAT_0001f218 & 0xf) == 0)))))) &&
@@ -17196,12 +17557,59 @@ undefined2 knock_octane_trim_gate_condition_check(void)
 
 
 
-void status_word_table_subdispatch_group_a(void)
+ushort knock_octane_trim_ramp_update(ushort param_1)
 
 {
+  ushort uVar1;
+  byte bVar2;
+  
+  bVar2 = 1;
+  if (((g_status_flags_f20e & 0x80) != 0) &&
+     (param_1 = 0, ((DAT_0001f218 ^ DAT_0001f218 >> 4) & 0xf) != 0)) {
+    if ((DAT_0001f218 & 0xf) == 0) {
+      bVar2 = 1;
+      if (DAT_0001ee9a < DAT_0001ee98) {
+        uVar1 = get_high_byte((DAT_0001ee98 - DAT_0001ee9a) * DAT_0001091c);
+        if (*(ushort *)((uint)bVar2 << 0x10 | 0x920) <= uVar1) {
+          uVar1 = *(ushort *)((uint)bVar2 << 0x10 | 0x920);
+        }
+        param_1 = sat_sub_u16(*(ushort *)((uint)bVar2 << 0x10 | 0xee98),uVar1);
+        *(ushort *)((uint)bVar2 << 0x10 | 0xee98) = param_1;
+      }
+      else {
+        get_high_byte((DAT_0001ee9a - DAT_0001ee98) * DAT_0001091c);
+        param_1 = (*clamp_u8)();
+        *(ushort *)((uint)bVar2 << 0x10 | 0xee98) = param_1;
+      }
+    }
+    else if (DAT_0001ee98 < DAT_0001ee9a) {
+      bVar2 = 1;
+      uVar1 = get_high_byte((DAT_0001ee9a - DAT_0001ee98) * DAT_00010922);
+      if (*(ushort *)((uint)bVar2 << 0x10 | 0x926) <= uVar1) {
+        uVar1 = *(ushort *)((uint)bVar2 << 0x10 | 0x926);
+      }
+      param_1 = sat_sub_u16(*(ushort *)((uint)bVar2 << 0x10 | 0xee9a),uVar1);
+      *(ushort *)((uint)bVar2 << 0x10 | 0xee9a) = param_1;
+    }
+    else {
+      get_high_byte((DAT_0001ee98 - DAT_0001ee9a) * DAT_00010922);
+      param_1 = (*clamp_u8)();
+      *(ushort *)((uint)bVar2 << 0x10 | 0xee9a) = param_1;
+    }
+  }
+  return param_1;
+}
+
+
+
+void status_word_table_subdispatch_group_a(ushort param_fp1)
+
+{
+  ushort uStack_4;
+  
   (*(code *)0x23e8b)();
   (*f26e_o2_closed_loop_output_blend_via_table)();
-  f286_knock_octane_secondary_trim_compute_via_table();
+  f286_knock_octane_secondary_trim_compute_via_table(*(ushort *)((int)&stack0xfff6 + 6));
   (*f27e_table_indexed_clamp_compute_via_table)();
   return;
 }
@@ -17213,7 +17621,7 @@ void status_word_table_subdispatch_group_a(void)
 // writes results to entries +0x40 (f276) and +0x42 (f27a). f276/f27a were previously init'd to 0 by
 // init_state_block_ee98_80_call_wrapper's callee (0x23027) -- this is their real per-cycle compute.
 
-void f276_f27a_dual_channel_compute_via_table(void)
+void f276_f27a_dual_channel_compute_via_table(ushort param_fp1)
 
 {
   short sVar1;
@@ -17239,7 +17647,7 @@ void f276_f27a_dual_channel_compute_via_table(void)
 // constants at 0x8c4/0x8c6/0x8c8/0x8ca, else clears to 0x8080 default. Final override path checks
 // entry+2 (f20e) bit11 and entry+4 (f220) bit11. Consistent with existing o2_* naming family.
 
-void f26e_o2_closed_loop_output_blend_via_table(void)
+void f26e_o2_closed_loop_output_blend_via_table(ushort param_fp1)
 
 {
   ushort *puVar1;
@@ -17314,12 +17722,13 @@ LAB_00023fb9:
 
 
 
+// WARNING: Unknown calling convention -- yet parameter storage is locked
 // Table-driven mode selector: entry+2(f20e) bit11 -> return 1 (closed-loop override); else checks
 // f10e range vs entry+6(f21c) bit0x8000, entry+0x56 bits 0xf0, f43e bit3, f0f8 bit5-selected
 // threshold; then f216 bits 0x80/0x8000 disambiguate. Returns enum code 1/2/4/8/0x10 consumed as a
 // switch selector by f26e_o2_closed_loop_output_blend_via_table.
 
-undefined2 o2_closed_loop_mode_selector_via_table(void)
+ushort o2_closed_loop_mode_selector_via_table(void)
 
 {
   undefined2 in_stack_00000004;
@@ -17354,7 +17763,7 @@ undefined2 o2_closed_loop_mode_selector_via_table(void)
 // f266_knock_octane_composite_trim_compute (same shared-table family, parallel output register
 // f286). Confidence: medium on exact physical meaning, high on data flow/table linkage.
 
-void f286_knock_octane_secondary_trim_compute_via_table(void)
+void f286_knock_octane_secondary_trim_compute_via_table(ushort param_fp1)
 
 {
   byte *extraout_R1;
@@ -17435,7 +17844,7 @@ void f286_knock_octane_secondary_trim_compute_via_table(void)
 // clamp_u16's it, then overrides with 0x80 if f21c bit9 (0x200) set per entry+2 (f20e) bit11
 // branch. Sibling of f276_f27a_dual_channel_compute_via_table in style.
 
-void f27e_table_indexed_clamp_compute_via_table(void)
+void f27e_table_indexed_clamp_compute_via_table(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -17491,7 +17900,7 @@ LAB_000241f0:
 // trim/knock-learn style). On o2_closed_loop_config_check()==false, re-clamps via clamp_u16 into
 // the entry+0x34 array; on true, falls back to init_state_block_ee98_80.
 
-void eeac_adaptive_trim_learn_update_via_table(void)
+void eeac_adaptive_trim_learn_update_via_table(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -17564,34 +17973,33 @@ void f0ba_f2d0_o2_mode7_8_correction_calc(void)
 
 {
   undefined2 uVar1;
-  ushort a;
+  ushort uVar2;
   ushort b;
-  byte bVar2;
+  byte bVar3;
   
-  bVar2 = 1;
+  bVar3 = 1;
   table_lookup_interp(1,(void *)0x2986);
   uVar1 = (*clamp_u8)();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf0ba) = uVar1;
+  *(undefined2 *)((uint)bVar3 << 0x10 | 0xf0ba) = uVar1;
   (*axis_lookup_interp)();
   (*axis_lookup_interp)();
   table_lookup_interp(1,(void *)0x1dc2);
-  uVar1 = o2_mode7_8_correction_apply();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf2da) = uVar1;
-  a = (*identity_passthrough_arg1)
-                ((short)((uint)*(ushort *)((uint)bVar2 << 0x10 | 0xf2da) *
-                         (uint)*(ushort *)((uint)bVar2 << 0x10 | 0x814) >> 0x10));
-  muldiv_u16_scaled(a,b,*(short *)((uint)bVar2 << 0x10 | 0xf298) *
-                        *(short *)((uint)bVar2 << 0x10 | 0xf29a),b);
+  uVar2 = o2_mode7_8_correction_apply();
+  *(ushort *)((uint)bVar3 << 0x10 | 0xf2da) = uVar2;
+  uVar2 = (*identity_passthrough_arg1)
+                    ((short)((uint)*(ushort *)((uint)bVar3 << 0x10 | 0xf2da) *
+                             (uint)*(ushort *)((uint)bVar3 << 0x10 | 0x814) >> 0x10));
+  muldiv_u16_scaled(uVar2,b,*(short *)((uint)bVar3 << 0x10 | 0xf298) *
+                            *(short *)((uint)bVar3 << 0x10 | 0xf29a),b);
   (*muldiv_u16_shr8_sat)();
   (*muldiv_u16_shr8_sat)();
   uVar1 = (*inc_if_signed_flag)();
-  *(undefined2 *)((uint)bVar2 << 0x10 | 0xf2d0) = uVar1;
+  *(undefined2 *)((uint)bVar3 << 0x10 | 0xf2d0) = uVar1;
   return;
 }
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // WARNING: Restarted to delay deadcode elimination for space: stack
 
 void f2d2_composite_correction_calc(void)
@@ -17991,7 +18399,7 @@ void f250_f252_channel_snapshot_update(undefined2 param_1,undefined2 param_2,ush
   ushort in_SR;
   ushort uStack_2;
   
-  if (DAT_00010828 <= DAT_0001f17a) {
+  if (DAT_00010828 <= engine_torque_pct_f17a) {
     DAT_0001f25e = DAT_0001f25e & 0xfffd;
   }
   if (((g_status_flags_f20e & 0x10) != 0) && ((DAT_0001f25e & 2) == 0)) {
@@ -18432,7 +18840,7 @@ ushort tcu_slip_duty_gain_condition_check(void)
 
 {
   if ((((g_status_flags_f20e & 0x11) == 0) && ((g_status_flags_f33e & 0x80) == 0)) &&
-     (DAT_00010b06 <= DAT_0001f17a)) {
+     (DAT_00010b06 <= engine_torque_pct_f17a)) {
     return 1;
   }
   return 0;
@@ -18539,7 +18947,7 @@ ushort f0ec_bit1_threshold_gate_check(void)
   if ((DAT_0001f0ec & 2) != 0) {
     uVar1 = DAT_00010f86;
   }
-  if ((uVar1 <= DAT_0001f17a) && (DAT_00010f84 <= DAT_0001f186)) {
+  if ((uVar1 <= engine_torque_pct_f17a) && (DAT_00010f84 <= DAT_0001f186)) {
     return 1;
   }
   return 0;
@@ -18554,11 +18962,11 @@ void f3ba_f3bc_f3a4_hysteresis_update(void)
 {
   DAT_0001f3ba = DAT_00010b58;
   if ((g_status_flags_f3a4 & 0x800) == 0) {
-    if (DAT_00010b54 < DAT_0001f17a) {
+    if (DAT_00010b54 < engine_torque_pct_f17a) {
       g_status_flags_f3a4 = g_status_flags_f3a4 | 0x800;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010b56) {
+  else if (engine_torque_pct_f17a <= DAT_00010b56) {
     g_status_flags_f3a4 = g_status_flags_f3a4 & 0xf7ff;
   }
   if ((g_status_flags_f3a4 & 0x800) == 0) {
@@ -18567,7 +18975,7 @@ void f3ba_f3bc_f3a4_hysteresis_update(void)
   else {
     DAT_0001f3bc = DAT_00010b50;
   }
-  if ((DAT_0001f17a < DAT_00010b5c) || (DAT_00010b5a < DAT_0001f17a)) {
+  if ((engine_torque_pct_f17a < DAT_00010b5c) || (DAT_00010b5a < engine_torque_pct_f17a)) {
     g_status_flags_f3a4 = g_status_flags_f3a4 & 0xfdff;
   }
   else {
@@ -18584,11 +18992,11 @@ void f3a4_bit8_hysteresis_update(void)
 
 {
   if ((g_status_flags_f3a4 & 0x100) == 0) {
-    if (DAT_00010b34 < DAT_0001f17a) {
+    if (DAT_00010b34 < engine_torque_pct_f17a) {
       g_status_flags_f3a4 = g_status_flags_f3a4 | 0x100;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010b30) {
+  else if (engine_torque_pct_f17a <= DAT_00010b30) {
     g_status_flags_f3a4 = g_status_flags_f3a4 & 0xfeff;
   }
   return;
@@ -18800,8 +19208,8 @@ ushort f33e_bit2_source_condition_check(void)
   if (((((DAT_00010bac < DAT_0001f14c) && (DAT_0001f18e <= DAT_00010bb2)) &&
        (((g_status_flags_f0f8 & 0x20) != 0 || (DAT_000102d4 == '\x02')))) &&
       ((((DAT_00010bae <= DAT_0001f10e && (DAT_00010bb0 <= DAT_0001f1e6)) &&
-        (DAT_00010bb4 <= DAT_0001f17a)) &&
-       ((DAT_0001f17a <= DAT_00010bb6 && (DAT_0001f242 >> 1 < DAT_00010bb8)))))) &&
+        (DAT_00010bb4 <= engine_torque_pct_f17a)) &&
+       ((engine_torque_pct_f17a <= DAT_00010bb6 && (DAT_0001f242 >> 1 < DAT_00010bb8)))))) &&
      (DAT_00010bba < DAT_0001f242 >> 1)) {
     return 1;
   }
@@ -18866,14 +19274,14 @@ ushort f33e_bit5_update_and_condition_check(void)
   byte bVar2;
   
   bVar2 = 1;
-  if (DAT_00010bc6 < DAT_0001f17a) {
+  if (DAT_00010bc6 < engine_torque_pct_f17a) {
     g_status_flags_f33e = g_status_flags_f33e | 0x20;
   }
   else {
     g_status_flags_f33e = g_status_flags_f33e & 0xffdf;
   }
-  if ((((DAT_00010bc0 < DAT_0001f10e) && (DAT_00010bc2 <= DAT_0001f17a)) &&
-      (DAT_0001f17a <= DAT_00010bc4)) &&
+  if ((((DAT_00010bc0 < DAT_0001f10e) && (DAT_00010bc2 <= engine_torque_pct_f17a)) &&
+      (engine_torque_pct_f17a <= DAT_00010bc4)) &&
      ((uVar1 = table_lookup_interp(1,(void *)0x286c),
       uVar1 < *(ushort *)((uint)bVar2 << 0x10 | 0xf18e) &&
       (*(ushort *)((uint)bVar2 << 0x10 | 0xf13e) < *(ushort *)((uint)bVar2 << 0x10 | 0xbbe))))) {
@@ -18901,11 +19309,11 @@ undefined2 f33e_bit11_bit10_hysteresis_gate_check(void)
   undefined2 uVar1;
   
   if ((g_status_flags_f33e & 0x800) == 0) {
-    if (DAT_00010ba4 < DAT_0001f130) {
+    if (DAT_00010ba4 < coolant_temp_scaled_f130) {
       g_status_flags_f33e = g_status_flags_f33e | 0x800;
     }
   }
-  else if (DAT_0001f130 <= DAT_00010ba2) {
+  else if (coolant_temp_scaled_f130 <= DAT_00010ba2) {
     g_status_flags_f33e = g_status_flags_f33e & 0xf7ff;
   }
   if ((g_status_flags_f33e & 0x400) == 0) {
@@ -18954,8 +19362,8 @@ ushort f20e_bit15_source_condition_check(void)
 
 {
   if (((((((g_status_flags_f0f8 & 0x80) == 0) && ((g_status_flags_f0f8 & 0x20) != 0)) &&
-        (DAT_0001f17a < DAT_00010b7a)) &&
-       ((DAT_00010b7c < DAT_0001f17a && (DAT_00010b82 < DAT_0001f10e)))) &&
+        (engine_torque_pct_f17a < DAT_00010b7a)) &&
+       ((DAT_00010b7c < engine_torque_pct_f17a && (DAT_00010b82 < DAT_0001f10e)))) &&
       ((DAT_00010d96 < DAT_0001f1e6 &&
        (((DAT_0001eed0 & 4) == 0 && ((g_status_flags_f20e & 0x11) == 0)))))) &&
      ((DAT_0001f242 < DAT_00010b7e && (DAT_00010b80 < DAT_0001f242)))) {
@@ -18996,11 +19404,11 @@ ushort f33e_bit1_hysteresis_gate_check(void)
   ushort uVar1;
   
   if ((g_status_flags_f33e & 2) == 0) {
-    if (DAT_00010aee < DAT_0001f17a) {
+    if (DAT_00010aee < engine_torque_pct_f17a) {
       g_status_flags_f33e = g_status_flags_f33e | 2;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010af0) {
+  else if (engine_torque_pct_f17a <= DAT_00010af0) {
     g_status_flags_f33e = g_status_flags_f33e & 0xfffd;
   }
   if (((((g_status_flags_f0f8 & 0x80) == 0) || ((g_status_flags_f33e & 2) != 0)) ||
@@ -19083,9 +19491,9 @@ void isc_f344_correction_calc(void)
   
   bVar2 = 1;
   isc_f34e_f34a_correction_calc();
-  isc_f34c_correction_calc();
+  isc_f34c_correction_calc(*(ushort *)((int)&stack0xfffa + 6));
   (*isc_f4d6_gated_offset_calc)();
-  uVar1 = o2_sensor2_correction_apply();
+  uVar1 = o2_sensor2_correction_apply(*(ushort *)((int)&stack0xfffc + 6));
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf344) = uVar1;
   return;
 }
@@ -19198,7 +19606,7 @@ ushort select_value_f194_f196(void)
 
 
 
-ushort isc_f34c_correction_calc(void)
+ushort isc_f34c_correction_calc(ushort param_fp1)
 
 {
   undefined2 uVar1;
@@ -19250,7 +19658,7 @@ ushort isc_f34c_correction_calc(void)
 // for the F4Dx/F4Ex MUT ReqID 0x8C-0x93 cluster (mut_verification_status.md) and
 // ruled out -- no write to any of F84F/EEFB/F4DF/F4DD/F4E5/F4E7/F4EB/F4DB found here.
 
-short isc_f4d6_gated_offset_calc(void)
+short isc_f4d6_gated_offset_calc(ushort param_fp1)
 
 {
   short sVar1;
@@ -19260,15 +19668,17 @@ short isc_f4d6_gated_offset_calc(void)
   uVar2 = 0;
   if (((DAT_000102ea != '\0') && (sVar1 = (*isc_f4d6_gate_condition_check)(), sVar1 != 0)) &&
      (0x13 < *(ushort *)((int)&stack0xfffe + 6))) {
-    in_stack_00000004 = (*mul_u16_x2_sat)();
-    in_stack_00000004 = in_stack_00000004 + 0x14;
+    sVar1 = (*mul_u16_x2_sat)();
+    in_stack_00000004 = sVar1 + 0x14;
   }
   return in_stack_00000004;
 }
 
 
 
-undefined2 isc_f4d6_gate_condition_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort isc_f4d6_gate_condition_check(void)
 
 {
   if (((((DAT_0001f1f2 & 0x2000) == 0) || (DAT_0001f374 == 0x80)) &&
@@ -19281,7 +19691,9 @@ undefined2 isc_f4d6_gate_condition_check(void)
 
 
 
-undefined2 isc_f36a_f36c_target_calc(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isc_f36a_f36c_target_calc(void)
 
 {
   undefined2 in_ram_00000afc;
@@ -19312,14 +19724,15 @@ LAB_00025a97:
       DAT_0000f36a = uVar1;
     }
     DAT_0000f36c = in_ram_00000afc;
-    bVar3 = 0;
   }
-  return *(undefined2 *)((uint)bVar3 << 0x10 | 0xf36a);
+  return;
 }
 
 
 
-undefined2 isc_f37c_ramp_target_calc(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isc_f37c_ramp_target_calc(void)
 
 {
   ushort c;
@@ -19368,12 +19781,14 @@ LAB_00025be5:
   else {
     *(ushort *)((uint)bVar2 << 0x10 | 0xf37c) = uVar1;
   }
-  return *(undefined2 *)((uint)bVar2 << 0x10 | 0xf37c);
+  return;
 }
 
 
 
-undefined2 isc_f352_table_lookup(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isc_f352_table_lookup(void)
 
 {
   undefined2 uVar1;
@@ -19382,7 +19797,7 @@ undefined2 isc_f352_table_lookup(void)
   bVar2 = 1;
   uVar1 = table_lookup_interp(1,(void *)0x27cc);
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf352) = uVar1;
-  return *(undefined2 *)((uint)bVar2 << 0x10 | 0xf352);
+  return;
 }
 
 
@@ -19455,11 +19870,11 @@ ushort f33e_bit15_hysteresis_update(void)
 
 {
   if ((g_status_flags_f33e & 0x8000) == 0) {
-    if (DAT_000114bc < DAT_0001f17a) {
+    if (DAT_000114bc < engine_torque_pct_f17a) {
       g_status_flags_f33e = g_status_flags_f33e | 0x8000;
     }
   }
-  else if (DAT_0001f17a <= DAT_000114ba) {
+  else if (engine_torque_pct_f17a <= DAT_000114ba) {
     g_status_flags_f33e = g_status_flags_f33e & 0x7fff;
   }
   return 0;
@@ -19568,7 +19983,9 @@ ushort isc_f374_correction_calc(void)
 
 
 
-undefined2 isc_f36e_f370_target_calc(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort isc_f36e_f370_target_calc(void)
 
 {
   undefined2 in_ram_00000bd4;
@@ -19580,8 +19997,8 @@ undefined2 isc_f36e_f370_target_calc(void)
   if ((DAT_000102d5 != '\0') && ((g_status_flags_f20e & 0x10) == 0)) {
     if (DAT_00010bca <= DAT_0001f18e) {
       if (DAT_0001f18e <= DAT_00010bc8) {
-        if (DAT_00010bce <= DAT_0001f17a) {
-          if ((DAT_0001f17a <= DAT_00010bcc) && ((g_status_flags_f0f8 & 0x80) != 0)) {
+        if (DAT_00010bce <= engine_torque_pct_f17a) {
+          if ((engine_torque_pct_f17a <= DAT_00010bcc) && ((g_status_flags_f0f8 & 0x80) != 0)) {
             if ((g_status_flags_f0f8 & 0x20) != 0) {
               if ((DAT_00010bd0 <= DAT_0001f10e) && ((g_status_flags_f0f8 & 4) != 0)) {
                 uVar1 = sat_sub_u16(DAT_0001f17e,0x80);
@@ -19601,7 +20018,7 @@ undefined2 isc_f36e_f370_target_calc(void)
   DAT_0000f36e = 0x80;
   bVar2 = 0;
 LAB_00025fe8:
-  return *(undefined2 *)((uint)bVar2 << 0x10 | 0xf36e);
+  return *(ushort *)((uint)bVar2 << 0x10 | 0xf36e);
 }
 
 
@@ -19882,7 +20299,6 @@ void idle_target_rpm_compute_f400(void)
 
 
 
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 // WARNING: Restarted to delay deadcode elimination for space: ram
 
 void isc_f41a_correction_calc(ushort param_1)
@@ -20652,7 +21068,7 @@ void isc_f084_f3f0_bit8_update(void)
   ushort uVar3;
   
   if (DAT_000102d9 != '\0') {
-    uVar1 = DAT_0001f130;
+    uVar1 = coolant_temp_scaled_f130;
     uVar2 = DAT_00010d0c;
     uVar3 = DAT_00010d0a;
     if (DAT_000102c1 != '\0') {
@@ -20812,13 +21228,13 @@ void isc_stepper_state_dispatch(void)
 
 {
   ushort *puVar1;
-  short sVar2;
-  ushort uVar3;
+  ushort uVar2;
+  short sVar3;
   byte bVar4;
   
   bVar4 = 1;
-  sVar2 = isc_stepper_position_reached_check();
-  if (sVar2 != 0) {
+  uVar2 = isc_stepper_position_reached_check();
+  if (uVar2 != 0) {
     (*isc_stepper_state_reinit_and_target_select)();
   }
   if ((*(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0x20) != 0) {
@@ -20836,25 +21252,25 @@ void isc_stepper_state_dispatch(void)
        ((*(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0x40) == 0)))))) {
     (*(code *)0x2705b)();
   }
-  uVar3 = *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0xa0;
-  if ((uVar3 == 0) && (*(short *)((uint)bVar4 << 0x10 | 0xef90) == 0)) {
-    uVar3 = (*(code *)0x270b5)(0);
+  uVar2 = *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0xa0;
+  if ((uVar2 == 0) && (*(short *)((uint)bVar4 << 0x10 | 0xef90) == 0)) {
+    uVar2 = (*(code *)0x270b5)(0);
   }
   else {
     puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xeed0);
     *puVar1 = *puVar1 & 0xffef;
   }
   if ((((*(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 2) == 0) ||
-      (uVar3 = *(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 0x11, uVar3 != 0)) ||
-     (uVar3 = *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0xb0, uVar3 != 0)) {
+      (uVar2 = *(ushort *)((uint)bVar4 << 0x10 | 0xf20e) & 0x11, uVar2 != 0)) ||
+     (uVar2 = *(ushort *)((uint)bVar4 << 0x10 | 0xeed0) & 0xb0, uVar2 != 0)) {
     puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xeed0);
     *puVar1 = *puVar1 & 0xfff7;
   }
   else {
-    uVar3 = (*(code *)0x270db)(0);
+    uVar2 = (*(code *)0x270db)(0);
   }
-  sVar2 = (*isc_efd0_gate_condition_check)(uVar3);
-  if (sVar2 == 0) {
+  sVar3 = (*isc_efd0_gate_condition_check)(uVar2);
+  if (sVar3 == 0) {
     puVar1 = (ushort *)((uint)bVar4 << 0x10 | 0xeed0);
     *puVar1 = *puVar1 & 0xfffb;
   }
@@ -20866,36 +21282,37 @@ void isc_stepper_state_dispatch(void)
 
 
 
-undefined2 isc_stepper_position_reached_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort isc_stepper_position_reached_check(void)
 
 {
   ushort *puVar1;
   ushort uVar2;
-  ushort uVar3;
-  short sVar4;
-  undefined2 uVar5;
+  short sVar3;
+  ushort uVar4;
   short extraout_R2;
-  byte bVar6;
+  byte bVar5;
   
-  bVar6 = 1;
-  sVar4 = (*swap_invert_high_byte)();
-  if ((((extraout_R2 == sVar4) &&
-       (uVar2 = *(ushort *)((uint)bVar6 << 0x10 | 0xc70),
-       *(ushort *)((uint)bVar6 << 0x10 | 0xeeca) <= *(ushort *)((uint)bVar6 << 0x10 | 0xc70))) &&
-      (*(ushort *)((uint)bVar6 << 0x10 | 0xeecc) <= uVar2)) &&
-     (((*(ushort *)((uint)bVar6 << 0x10 | 0xeece) <= uVar2 &&
-       (uVar2 = *(ushort *)((uint)bVar6 << 0x10 | 0xc72),
-       uVar3 = *(ushort *)((uint)bVar6 << 0x10 | 0xc72),
-       puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xeeca), uVar3 < *puVar1 || uVar3 == *puVar1)) &&
-      ((puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xeecc), uVar2 < *puVar1 || uVar2 == *puVar1 &&
-       (puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xeece), uVar2 < *puVar1 || uVar2 == *puVar1))))))
+  bVar5 = 1;
+  sVar3 = (*swap_invert_high_byte)();
+  if ((((extraout_R2 == sVar3) &&
+       (uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xc70),
+       *(ushort *)((uint)bVar5 << 0x10 | 0xeeca) <= *(ushort *)((uint)bVar5 << 0x10 | 0xc70))) &&
+      (*(ushort *)((uint)bVar5 << 0x10 | 0xeecc) <= uVar4)) &&
+     (((*(ushort *)((uint)bVar5 << 0x10 | 0xeece) <= uVar4 &&
+       (uVar4 = *(ushort *)((uint)bVar5 << 0x10 | 0xc72),
+       uVar2 = *(ushort *)((uint)bVar5 << 0x10 | 0xc72),
+       puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xeeca), uVar2 < *puVar1 || uVar2 == *puVar1)) &&
+      ((puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xeecc), uVar4 < *puVar1 || uVar4 == *puVar1 &&
+       (puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xeece), uVar4 < *puVar1 || uVar4 == *puVar1))))))
   {
-    uVar5 = 0;
+    uVar4 = 0;
   }
   else {
-    uVar5 = 1;
+    uVar4 = 1;
   }
-  return uVar5;
+  return uVar4;
 }
 
 
@@ -20933,9 +21350,11 @@ void isc_stepper_output_state_machine_eed4(undefined2 param_1,undefined2 param_2
   ushort in_SR;
   byte in_CF;
   byte bVar7;
+  ushort uStack_2;
   
   uVar3 = DAT_0001eed0 & 3;
   bVar7 = uVar3 != 0;
+  uStack_2 = param_3;
   if (!(bool)bVar7) {
     in_SR = (in_SR & 0xfffe | (ushort)in_CF) & 0xfff1;
     bVar6 = 0;
@@ -20954,7 +21373,7 @@ void isc_stepper_output_state_machine_eed4(undefined2 param_1,undefined2 param_2
     }
     else {
       *(undefined2 *)((uint)bVar7 << 0x10 | 0xf406) = 0;
-      uVar3 = f3f0_target_state_reset_and_reload();
+      uVar3 = f3f0_target_state_reset_and_reload(*(ushort *)((int)&stack0xfff8 + 6));
       param_2 = extraout_R1_00;
     }
   }
@@ -20969,14 +21388,14 @@ void isc_stepper_output_state_machine_eed4(undefined2 param_1,undefined2 param_2
                          in_SR & 0xfff0 | (ushort)(uVar5 < *puVar1) |
                          (ushort)((short)*puVar1 < (short)uVar5 == (short)(uVar5 - uVar2) < 0) << 1
                          | (ushort)(uVar5 == uVar2) << 2 | (ushort)((short)(uVar5 - uVar2) < 0) << 3
-                         ,param_3);
+                        );
       *(undefined2 *)((uint)bVar7 << 0x10 | 0xeed4) = uVar4;
       uVar3 = DAT_0000eed0;
       DAT_0000eed0 = uVar3 & 0xffdc;
     }
     else {
       *(undefined2 *)((uint)bVar7 << 0x10 | 0xf406) = *(undefined2 *)((uint)bVar7 << 0x10 | 0xcbe);
-      f3f0_target_state_reset_and_reload();
+      f3f0_target_state_reset_and_reload(*(ushort *)((int)&stack0xfff8 + 6));
     }
   }
   return;
@@ -20984,7 +21403,7 @@ void isc_stepper_output_state_machine_eed4(undefined2 param_1,undefined2 param_2
 
 
 
-void f3f0_target_state_reset_and_reload(void)
+void f3f0_target_state_reset_and_reload(ushort param_fp1)
 
 {
   ushort *puVar1;
@@ -21025,7 +21444,7 @@ void isc_stepper_mode_state_reload_b(void)
     *puVar1 = *puVar1 | 0x40;
   }
   else {
-    f3f0_target_state_reset_and_reload();
+    f3f0_target_state_reset_and_reload(*(ushort *)((int)&stack0xfffa + 6));
     *(undefined2 *)((uint)bVar3 << 0x10 | 0xf406) = *(undefined2 *)((uint)bVar3 << 0x10 | 0xcb8);
   }
   return;
@@ -21040,7 +21459,7 @@ void isc_stepper_mode_state_reload_c(void)
   
   bVar1 = 1;
   DAT_0001eed0 = DAT_0001eed0 & 0xff50 | 0x10;
-  f3f0_target_state_reset_and_reload();
+  f3f0_target_state_reset_and_reload(*(ushort *)((int)&stack0xfffa + 6));
   *(undefined2 *)((uint)bVar1 << 0x10 | 0xf406) = *(undefined2 *)((uint)bVar1 << 0x10 | 0xcbc);
   return;
 }
@@ -21055,7 +21474,7 @@ void isc_stepper_mode_state_reload_d(void)
   
   bVar2 = 1;
   DAT_0001eed0 = DAT_0001eed0 & 0xff48 | 8;
-  f3f0_target_state_reset_and_reload();
+  f3f0_target_state_reset_and_reload(*(ushort *)((int)&stack0xfffa + 6));
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf408) = *(undefined2 *)((uint)bVar2 << 0x10 | 0xd42);
   uVar1 = idle_stepper_table_lookup_wrapper();
   *(ushort *)((uint)bVar2 << 0x10 | 0xf406) = uVar1;
@@ -21078,7 +21497,7 @@ uchar isc_efd0_gate_condition_check(void)
 
 
 
-void isc_f408_f406_stepper_target_calc(void)
+void isc_f408_f406_stepper_target_calc(undefined2 param_1,undefined2 param_2,ushort param_3)
 
 {
   undefined2 uVar1;
@@ -21087,7 +21506,7 @@ void isc_f408_f406_stepper_target_calc(void)
   
   bVar3 = 1;
   DAT_0001eed0 = DAT_0001eed0 | 4;
-  f3f0_target_state_reset_and_reload();
+  f3f0_target_state_reset_and_reload(param_3);
   table_lookup_indexed(2,(void *)0xd92c);
   uVar1 = (*clamp_u8)();
   *(undefined2 *)((uint)bVar3 << 0x10 | 0xf408) = uVar1;
@@ -21256,7 +21675,7 @@ void isc_f408_correction_calc(void)
   ushort extraout_R2_00;
   byte bVar3;
   undefined1 uVar4;
-  short sStack_4;
+  ushort in_stack_0000fffc;
   
   uVar4 = 0;
   bVar3 = 1;
@@ -21287,7 +21706,7 @@ void isc_f408_correction_calc(void)
         sat_sub_u16(*(ushort *)((uint)bVar3 << 0x10 | 0xf40c),b);
       }
       else if (*(ushort *)((uint)bVar3 << 0x10 | 0xf40e) <= uVar2) goto LAB_00027395;
-      uVar1 = isc_stepper_target_clamp_calc();
+      uVar1 = isc_stepper_target_clamp_calc(in_stack_0000fffc);
     }
   }
 LAB_00027395:
@@ -21313,7 +21732,7 @@ ushort f0f8_bit5_constant_select(void)
 
 
 
-ushort isc_stepper_target_clamp_calc(void)
+ushort isc_stepper_target_clamp_calc(ushort param_fp1)
 
 {
   ushort lo;
@@ -21386,77 +21805,75 @@ void isc_stepper_correction_dispatch_b(void)
 
 
 
-void isc_f402_composite_correction_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
+void isc_f402_composite_correction_calc(void)
 
 {
   ushort *puVar1;
-  short sVar2;
-  ushort uVar3;
-  undefined2 uVar4;
+  ushort uVar2;
+  undefined2 uVar3;
   undefined2 extraout_R1;
-  undefined2 extraout_R1_00;
   ushort extraout_R2;
-  ushort uVar5;
+  ushort uVar4;
   ushort extraout_R2_00;
   short extraout_R2_01;
-  byte bVar6;
+  byte bVar5;
   
-  bVar6 = 1;
-  sVar2 = (*isc_f41c_table_lookup)();
-  isc_f41e_table_lookup(sVar2,extraout_R1,sVar2 + *(short *)((uint)bVar6 << 0x10 | 0xf428),param_3);
-  puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xf3f4);
+  bVar5 = 1;
+  (*isc_f41c_table_lookup)();
+  isc_f41e_table_lookup();
+  puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xf3f4);
   *puVar1 = *puVar1 & 0xfffd;
   (*isc_f420_correction_calc)();
-  uVar3 = f216_bit6_constant_select();
-  uVar5 = extraout_R2;
-  if (extraout_R2 < uVar3) {
-    uVar5 = uVar3;
+  uVar2 = f216_bit6_constant_select();
+  uVar4 = extraout_R2;
+  if (extraout_R2 < uVar2) {
+    uVar4 = uVar2;
   }
-  uVar5 = uVar5 + *(short *)((uint)bVar6 << 0x10 | 0xf42a) +
-          *(short *)((uint)bVar6 << 0x10 | 0xf424);
-  if ((*(ushort *)((uint)bVar6 << 0x10 | 0xf0f8) & 0x80) == 0) {
-    uVar3 = sat_sub_u16(*(ushort *)((uint)bVar6 << 0x10 | 0xf438),
-                        *(ushort *)((uint)bVar6 << 0x10 | 0xc82));
-    uVar5 = extraout_R2_00;
-    if (uVar3 < *(ushort *)((uint)bVar6 << 0x10 | 0xf416)) goto LAB_00027505;
+  uVar4 = uVar4 + *(short *)((uint)bVar5 << 0x10 | 0xf42a) +
+          *(short *)((uint)bVar5 << 0x10 | 0xf424);
+  if ((*(ushort *)((uint)bVar5 << 0x10 | 0xf0f8) & 0x80) == 0) {
+    uVar2 = sat_sub_u16(*(ushort *)((uint)bVar5 << 0x10 | 0xf438),
+                        *(ushort *)((uint)bVar5 << 0x10 | 0xc82));
+    uVar4 = extraout_R2_00;
+    if (uVar2 < *(ushort *)((uint)bVar5 << 0x10 | 0xf416)) goto LAB_00027505;
 LAB_00027500:
-    *(ushort *)((uint)bVar6 << 0x10 | 0xf416) = uVar3;
+    *(ushort *)((uint)bVar5 << 0x10 | 0xf416) = uVar2;
   }
   else {
-    if (*(short *)((uint)bVar6 << 0x10 | 0xefe2) == 0) {
-      if (*(ushort *)((uint)bVar6 << 0x10 | 0xf438) < *(ushort *)((uint)bVar6 << 0x10 | 0xf416))
+    if (*(short *)((uint)bVar5 << 0x10 | 0xefe2) == 0) {
+      if (*(ushort *)((uint)bVar5 << 0x10 | 0xf438) < *(ushort *)((uint)bVar5 << 0x10 | 0xf416))
       goto LAB_00027505;
     }
     else {
-      uVar3 = uVar5 + *(short *)((uint)bVar6 << 0x10 | 0xc84);
-      if (*(ushort *)((uint)bVar6 << 0x10 | 0xf438) <= uVar3) goto LAB_00027500;
+      uVar2 = uVar4 + *(short *)((uint)bVar5 << 0x10 | 0xc84);
+      if (*(ushort *)((uint)bVar5 << 0x10 | 0xf438) <= uVar2) goto LAB_00027500;
     }
-    *(undefined2 *)((uint)bVar6 << 0x10 | 0xf416) = *(undefined2 *)((uint)bVar6 << 0x10 | 0xf438);
+    *(undefined2 *)((uint)bVar5 << 0x10 | 0xf416) = *(undefined2 *)((uint)bVar5 << 0x10 | 0xf438);
   }
 LAB_00027505:
-  if (uVar5 < *(ushort *)((uint)bVar6 << 0x10 | 0xf416)) {
-    puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xf3f0);
+  if (uVar4 < *(ushort *)((uint)bVar5 << 0x10 | 0xf416)) {
+    puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xf3f0);
     *puVar1 = *puVar1 | 0x20;
   }
   else {
-    puVar1 = (ushort *)((uint)bVar6 << 0x10 | 0xf3f0);
+    puVar1 = (ushort *)((uint)bVar5 << 0x10 | 0xf3f0);
     *puVar1 = *puVar1 & 0xffdf;
-    *(undefined2 *)((uint)bVar6 << 0x10 | 0xf416) = 0;
-    *(undefined2 *)((uint)bVar6 << 0x10 | 0xf438) = 0;
+    *(undefined2 *)((uint)bVar5 << 0x10 | 0xf416) = 0;
+    *(undefined2 *)((uint)bVar5 << 0x10 | 0xf438) = 0;
   }
-  if ((*(ushort *)((uint)bVar6 << 0x10 | 0xf25e) & 0x200) != 0) {
+  if ((*(ushort *)((uint)bVar5 << 0x10 | 0xf25e) & 0x200) != 0) {
     table_lookup_interp(1,(void *)0x2ebc);
   }
   isc_f42e_or_default_select();
   isc_f038_constant_select();
   f0f8_bit9_constant_or_calc_select();
   f490_bits01_constant_select();
-  uVar5 = f3f0_bit8_constant_select();
-  (*f430_clear)(uVar5,extraout_R1_00,extraout_R2_01 + uVar5);
+  uVar4 = f3f0_bit8_constant_select();
+  (*f430_clear)(uVar4,extraout_R1,extraout_R2_01 + uVar4);
   f430_clear();
   f0f8_masked_constant_select();
-  uVar4 = (*clamp_u8)();
-  *(undefined2 *)((uint)bVar6 << 0x10 | 0xf402) = uVar4;
+  uVar3 = (*clamp_u8)();
+  *(undefined2 *)((uint)bVar5 << 0x10 | 0xf402) = uVar3;
   return;
 }
 
@@ -21483,7 +21900,9 @@ ushort isc_f41c_table_lookup(void)
 
 
 
-undefined2 isc_f41e_table_lookup(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+void isc_f41e_table_lookup(void)
 
 {
   short sVar1;
@@ -21525,7 +21944,7 @@ undefined2 isc_f41e_table_lookup(void)
     }
   }
   *(ushort *)((uint)bVar4 << 0x10 | 0xf41e) = uVar3;
-  return *(undefined2 *)((uint)bVar4 << 0x10 | 0xf41e);
+  return;
 }
 
 
@@ -21544,11 +21963,11 @@ undefined2 f3f4_bit2_3_4_hysteresis_gate_check(void)
     DAT_0001f3f4 = DAT_0001f3f4 & 0xffef;
   }
   if ((DAT_0001f3f4 & 8) == 0) {
-    if (DAT_00010cd8 < DAT_0001f17a) {
+    if (DAT_00010cd8 < engine_torque_pct_f17a) {
       DAT_0001f3f4 = DAT_0001f3f4 | 8;
     }
   }
-  else if (DAT_0001f17a <= DAT_00010cda) {
+  else if (engine_torque_pct_f17a <= DAT_00010cda) {
     DAT_0001f3f4 = DAT_0001f3f4 & 0xfff7;
   }
   if ((DAT_0001f3f4 & 4) == 0) {
@@ -21584,8 +22003,6 @@ undefined2 f0f8_gated_constant_select_f3f4_neighbor(void)
 }
 
 
-
-// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort isc_f420_correction_calc(void)
 
@@ -21714,8 +22131,8 @@ ushort f490_bits01_constant_select(void)
       return DAT_00010c24;
     }
   }
-  else if (((DAT_000102e4 == '\x02') && (DAT_0001f494 != 0)) && ((g_status_flags_f0f8 & 0x10) == 0))
-  {
+  else if (((DAT_000102e4 == '\x02') && (radfan_pwm_duty_target_f494 != 0)) &&
+          ((g_status_flags_f0f8 & 0x10) == 0)) {
     return DAT_00010c22;
   }
   return 0;
@@ -21759,7 +22176,7 @@ ushort f0f8_masked_constant_select(void)
 
 
 
-short isc_f416_f3f0_bit5_gate_check(void)
+short isc_f416_f3f0_bit5_gate_check(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -21805,7 +22222,9 @@ void isc_f3fa_f3fe_dispatch(void)
 
 
 
-undefined2 isc_f406_ramp_gate_condition_check(void)
+// WARNING: Unknown calling convention -- yet parameter storage is locked
+
+ushort isc_f406_ramp_gate_condition_check(void)
 
 {
   if (((((g_status_flags_f3f0 & 0x10) != 0) && ((g_status_flags_f3f0 & 1) == 0)) &&
@@ -22067,7 +22486,7 @@ void isc_f406_clamp_dispatch(void)
 
 
 
-undefined1 isc_table_read_byte_clamped_2eca(void)
+undefined1 isc_table_read_byte_clamped_2eca(ushort param_fp1)
 
 {
   ushort in_stack_00000004;
@@ -22264,7 +22683,7 @@ void knock_sensor_diagnostic_update(void)
     if ((g_status_flags_f20e & 0x10) != 0) {
       if (DAT_0001f108 < 5) {
         uVar2 = DAT_0001f594;
-        if (0xf5 < DAT_0001f13a) goto LAB_00027db2;
+        if (0xf5 < mut_battery_voltage_f13a) goto LAB_00027db2;
       }
     }
     uVar2 = DAT_0001f594 & 0xffbf;
@@ -22279,7 +22698,7 @@ void knock_sensor_diagnostic_update(void)
       }
     }
     uVar2 = DAT_0001f594 & 0xffbe;
-    if (DAT_0001f13a < 0xb1) {
+    if (mut_battery_voltage_f13a < 0xb1) {
       uVar2 = DAT_0001f594 & 0xff3e;
     }
   }
@@ -22461,7 +22880,7 @@ undefined2 f17a_load_zone_and_ef96_f1d8_check(void)
 {
   undefined2 uVar1;
   
-  if (DAT_00010f54 < DAT_0001f17a) {
+  if (DAT_00010f54 < engine_torque_pct_f17a) {
     if ((DAT_0001ef96 == 0) || ((ushort)(DAT_00010f58 * 0x200) <= DAT_0001f1d8)) {
       uVar1 = 0;
     }
@@ -22506,7 +22925,7 @@ undefined2 FUN_00028038(void)
   undefined2 uVar1;
   
   if (DAT_0001f1ec == 0) {
-    if (((((g_status_flags_f0f8 & 0x80) == 0) && (DAT_00010f74 < DAT_0001f17a)) &&
+    if (((((g_status_flags_f0f8 & 0x80) == 0) && (DAT_00010f74 < engine_torque_pct_f17a)) &&
         (DAT_00010f76 < DAT_0001f186)) &&
        (((DAT_00010f4e <= DAT_0001ef78 && ((g_status_flags_f20e & 2) == 0)) &&
         ((DAT_0001f25a & 0x20) == 0)))) {
@@ -22525,8 +22944,8 @@ undefined2 FUN_00028038(void)
 undefined2 f17a_f13c_load_zone_and_f514_gate_check(void)
 
 {
-  if ((((DAT_0001efa2 != 0) && (DAT_0001f17a < DAT_00010f7c)) && (DAT_0001f13c < DAT_00010f7e)) &&
-     (DAT_0001f514 == -1)) {
+  if ((((DAT_0001efa2 != 0) && (engine_torque_pct_f17a < DAT_00010f7c)) &&
+      (DAT_0001f13c < DAT_00010f7e)) && (DAT_0001f514 == -1)) {
     if ((DAT_0001f200 & 2) != 0) {
       return 0;
     }
@@ -23021,7 +23440,7 @@ void sci1_protocol_state_machine(undefined2 param_1,undefined2 param_2,undefined
   }
   uVar2 = extraout_R2 & *(ushort *)((uint)bVar4 << 0x10 | 0xf526);
   if (uVar2 == 0) {
-    (*sci1_periodic_phase_dispatch_f526)(0);
+    (*sci1_post_handshake_status_broadcast_dispatch)(0);
   }
   else if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf520) & extraout_R2) == 0) {
     if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf520) & 0x20) != 0) {
@@ -23054,7 +23473,7 @@ void sci1_dispatch_and_latch_response(void)
     if (sVar1 != -1) {
       *(short *)((uint)bVar2 << 0x10 | 0xf54a) = sVar1;
       *(undefined2 *)((uint)bVar2 << 0x10 | 0xf58c) = 1;
-      (*latch_request_f588)();
+      (*sci1_latch_and_send_f54a_handshake_byte)();
     }
   }
   *(ushort *)((uint)bVar2 << 0x10 | 0xf522) = *(ushort *)((uint)bVar2 << 0x10 | 0xf522) & 0xff9f;
@@ -23185,22 +23604,20 @@ void sci1_dispatch_and_latch_response(void)
 // "PHYSICAL OUTPUT PIN TRACE" / "~20 UNTRACED ... CLOSED" for full details.
 // Caller: sci1_dispatch_and_latch_response (0x2882b).
 
-ushort sci1_meta_cmd_dispatch_c0_ff
-                 (undefined2 param_1,undefined2 param_2,undefined2 param_3,short param_4)
+ushort sci1_meta_cmd_dispatch_c0_ff(ushort param_fp1)
 
 {
   ushort uVar1;
   short sVar2;
   ushort uVar3;
   byte *pbVar4;
-  undefined2 uVar5;
+  short in_stack_00000004;
   undefined1 auStack_9 [3];
   ushort auStack_6 [2];
   
-  uVar5 = param_3;
   *(undefined2 *)((int)&stack0xfffe + -4) = 0;
   if (*(ushort *)((int)&stack0xfffe + 6) < 0xc0) {
-    return (ushort)**(byte **)((int)(param_4 << 1) + -0x530);
+    return (ushort)**(byte **)((int)(in_stack_00000004 << 1) + -0x530);
   }
   uVar3 = DAT_0001f516;
   if ((*(short *)((int)&stack0xfffe + 6) != 0xca) && (*(short *)((int)&stack0xfffe + 6) != 0xcb)) {
@@ -23217,7 +23634,7 @@ ushort sci1_meta_cmd_dispatch_c0_ff
     }
     else if (*(ushort *)((int)&stack0xfffe + 6) < 0xd9) {
       if ((DAT_0001f00e == 0) && ((DAT_0001f25a & 0x10) != 0)) {
-        sVar2 = ((short)&T2CRH + param_4) * 4;
+        sVar2 = ((short)&T2CRH + in_stack_00000004) * 4;
         uVar1 = *(ushort *)((int)(sVar2 + 0x3740) + 2);
         if (uVar1 != 0) {
           sVar2 = (short)*(char *)((int)sVar2 + 0x3740) << 1;
@@ -23241,8 +23658,8 @@ ushort sci1_meta_cmd_dispatch_c0_ff
     else if (*(ushort *)((int)&stack0xfffe + 6) < 0xe0) {
       if ((DAT_0001f00e == 0) && (DAT_0001f1ec == 0)) {
         uVar3 = 1;
-        sVar2 = (short)&TMDRA + param_4;
-        if (param_4 != 0xd9) {
+        sVar2 = (short)&TMDRA + in_stack_00000004;
+        if (in_stack_00000004 != 0xd9) {
           do {
             uVar3 = uVar3 << 1;
             if (uVar3 == 0) break;
@@ -23258,22 +23675,22 @@ ushort sci1_meta_cmd_dispatch_c0_ff
       if ((0xeb < *(ushort *)((int)&stack0xfffe + 6)) && (*(ushort *)((int)&stack0xfffe + 6) < 0xf0)
          ) {
         pbVar4 = (byte *)(DAT_0001f1fc * 4 + 0x232);
-        if (param_4 == 0xec) {
+        if (in_stack_00000004 == 0xec) {
           return (ushort)pbVar4[3];
         }
-        if (param_4 == 0xed) {
+        if (in_stack_00000004 == 0xed) {
           return (ushort)pbVar4[2];
         }
-        if (param_4 == 0xee) {
+        if (in_stack_00000004 == 0xee) {
           return (ushort)pbVar4[1];
         }
-        if (param_4 == 0xef) {
+        if (in_stack_00000004 == 0xef) {
           return (ushort)*pbVar4;
         }
         return auStack_6[0];
       }
       if (*(short *)((int)&stack0xfffe + 6) == 0xf3) {
-        (*f510_f512_f00e_f514_reset)(param_1,param_2,param_3,uVar5);
+        (*f510_f512_f00e_f514_reset)();
         return auStack_6[0];
       }
       if (0xf7 < *(ushort *)((int)&stack0xfffe + 6)) {
@@ -23367,34 +23784,58 @@ void f510_f512_f00e_f514_reset(void)
 
 // WARNING: Control flow encountered bad instruction data
 // WARNING: Removing unreachable block (ram,0x000250f2)
-// [CORRECTED 2026-07-15] RETRACTING the earlier "Bad Instruction" caution -
-// raw disassembly is 100% clean throughout. What looked like decompiler
-// trouble was just Ghidra's switch-statement reconstruction failing to
-// present an 8-entry jump table cleanly (visible directly in disassembly at
-// 0x28b4c/0x28b50: `mov:g.w @(-0x74ae:16,R4)=>switchD_00028b50,R4` /
-// `jmp @R4`). NOT an unresolved/mis-split function - it's a completely normal
-// indexed jump table, just poorly rendered by the decompiler's switch logic.
+// [RESOLVED 2026-08-07] "halt_baddata()" decompiler warnings on cases 0/2/6
+// are CONFIRMED SPURIOUS -- read raw disassembly directly at every jump-table
+// target (8 entries at 0x28b52-0x28b60, all landing 0x28b62-0x28cc8) and every
+// single one is clean, valid H8 code with no bad instructions anywhere. The
+// decompiler's switch() reconstruction for this indexed jump (via
+// `mov:g.w @(-0x74ae:16,R4),R4` / `jmp @R4`, EP=2 bank-relative) is simply
+// wrong -- ignore the decompiled body of this function entirely; trust only
+// the raw disassembly at each of the 8 targets below.
 // 
-// Called from sci1_protocol_state_machine (0x287af). Gates on phase counter
-// @0xf526 (valid range 0-7, reset to 0 if >7 via bhi check), increments a
-// separate counter @0xf532 each call. The 8 jump targets (confirmed via
-// disassembly table at 0x28b52-0x28b60):
-//   idx0 (0x28b62) f588_duty_gate_f516_bit11_set
-//   idx1-6 (0x28b89-0x28cc6) phase_cases_1to6_f516_hibit_f54a_writer (ONE
-//     Ghidra function covering all six of these - see its plate comment for
-//     full per-case breakdown, including the f516 bit13/bit15 writer)
-//   idx7 (0x28cc8) valid jump target (xref confirmed) but not yet
-//     disassembled/defined in Ghidra - small remaining gap.
-// Not part of the SCI1 command-dispatcher investigation itself - this is an
-// independent periodic/duty-cycle state machine that happens to share the
-// f516 register with sci1_meta_cmd_dispatch_c0_ff (0x28869). Case idx1
-// (f526==5) case body separately also calls a chain of fueling/lambda
-// functions per the decompiler read of that entry - not yet re-verified
-// against this cleaner disassembly-based picture, treat with some caution
-// until cross-checked.
+// MAJOR FINDING: this state machine is the source of the MUT-II protocol's
+// well-documented post-handshake status broadcast. Public MUT-II protocol
+// documentation (K-line, 5-baud init) confirms the ECU sends bytes
+// "C0 55 EF 85" before it starts responding to MUT commands. This maps almost
+// exactly onto the ISO-9141/K-line keyword-protocol shape (sync byte, then
+// keyword byte(s), then address echo):
+//   - 0x55 = the universal K-line SYNC byte (case 3, gated on a 40-tick timer
+//     + F516 bit9)
+//   - 0xEF / 0xF8 / (0x08,0x08) = the KEYWORD byte(s), selected by case 5 from
+//     F520's protocol-mode value (F520 bit7 -> 0xEF, matching the public doc
+//     exactly; F520 bit5 -> 0xF8; else -> two bytes 0x08 0x08) -- three
+//     variants beyond the single public-doc value, likely covering different
+//     MUT-II sub-protocol/speed negotiations
+//   - 0x85 = sent by case 7/idx7, matches the public doc's 4th byte exactly
+//     (likely an ECU/address echo), then parks the machine (F526=0x80) and
+//     hands control to normal MUT command processing
+// See sci1_handshake_status_byte_builder_and_f516_hibit_writer (0x28b89) plate
+// comment for the full precise per-case breakdown of cases 1-6 including the
+// F520/F516 mode-selection logic. All bytes are staged in F54A (single-byte
+// cases) or F54A+F54C (two-byte case) and transmitted via
+// sci1_latch_and_send_f54a_handshake_byte (0x166cd) into FECB (SCI1 TDR),
+// which is the downstream half of the autonomous-TX chain documented on
+// sci1_tx_response_feeder (0x166d7).
+// 
+// Per-target index (raw disassembly, all confirmed clean):
+//   idx0 (0x28b62) f588_duty_gate_f516_bit11_set -- rearm/phase-advance, shares
+//     F58C duty-period register with case 5's byte-count field
+//   idx1 (0x28b89) case 1 -- init F528/F52A/F52C/F52E, arm F530=10
+//   idx2 (0x28ba8) case 2 -- F516 bits 13/15 writer, mode-lock state machine
+//   idx3 (0x28c5a) case 3 -- SENDS 0x55 (sync byte)
+//   idx4 (0x28c78) case 4 -- inter-byte timing spacer (F590>=4 gate)
+//   idx5 (0x28c83) case 5 -- SENDS 0xEF / 0xF8 / (0x08,0x08) (keyword byte(s))
+//   idx6 (0x28cba) case 6 -- inter-byte timing spacer, clears F584
+//   idx7 (0x28cc8) sci1_send_final_handshake_byte_85_and_park_phase_machine --
+//     SENDS 0x85, parks phase machine, hands off to sci1_dispatch_and_latch_response
+// 
+// Called from sci1_protocol_state_machine (0x287af) only when F526 bit7 is
+// clear (link not yet fully up / still in handshake-broadcast mode). See
+// mut_verification_status.md serial/TCU section.
 
 undefined2
-sci1_periodic_phase_dispatch_f526(undefined2 param_1,undefined2 param_2,undefined1 *param_3)
+sci1_post_handshake_status_broadcast_dispatch
+          (undefined2 param_1,undefined2 param_2,undefined1 *param_3)
 
 {
   char *pcVar1;
@@ -23599,48 +24040,55 @@ void f588_duty_gate_f516_bit11_set(void)
 // WARNING: Removing unreachable block (ram,0x00028c80)
 // WARNING: Removing unreachable block (ram,0x00028cba)
 // WARNING: Removing unreachable block (ram,0x00028cc2)
-// [CORRECTED 2026-07-15] Prior name/comment undersold this function - raw
-// disassembly (confirmed 100% clean, no bad instructions at all - the earlier
-// "decompiler trouble" was purely a switch-reconstruction presentation issue
-// in Ghidra's decompiler, not anything wrong with the ROM) shows this single
-// function body (0x28b89-0x28d22) actually contains the shared code for
-// jump-table cases 1 through 6 (of 8) from sci1_periodic_phase_dispatch_f526's
-// switch on @0xf526, not just "case 1's zero+advance" as originally named.
+// [RESOLVED 2026-08-07] Confirmed physical meaning: this is the MUT-II K-line
+// handshake KEYWORD BYTE SELECTOR, gated on F520's protocol-mode value (set by
+// f516_hibits_f520_f0f2_mode_select, 0x28700). This function contains cases
+// 1-6 (of 8) from sci1_post_handshake_status_broadcast_dispatch's (0x28b2f)
+// switch on F526.
 // 
-// Case 1 (entry @0x28b89): if @0xf102 bit5==0: zero f528/f52a/f52c/f52e, set
-//   f530=10, advance phase (f526++).
-// Case 2 (@0x28ba8, LONG body, falls through several internal labels):
-//   tracks f52a/f52c/f52e as up/down counters gated on f102 bit5 and
-//   (f102^f106) bit5; once f52e reaches 0x50(80): sets/clears f528 bit9 based
-//   on f52a bit15, decrements/right-shifts f530 countdown; once f530==0 AND
-//   f52c<5: reset phase to 0 (abort, no advance). Once f530==0:
-//     - if f528==0x0200: @0xf516 |= 0x8200 (BITS 9 AND 15)
-//     - elif f528==0x0220: @0xf516 |= 0x2200 (BITS 9 AND 13), then advance
+// Case 1 (@0x28b89): if F102 bit5==0: zero F528/F52A/F52C/F52E, set F530=10,
+//   advance phase.
+// Case 2 (@0x28ba8): tracks F52A/F52C/F52E as up/down counters gated on F102
+//   bit5 and (F102^F106) bit5; once F52E reaches 0x50(80): sets/clears F528
+//   bit9 from F52A bit15, decrements/right-shifts F530 countdown; once
+//   F530==0 AND F52C<5: reset phase to 0 (abort). Once F530==0:
+//     - if F528==0x0200: F516 |= 0x8200 (bits 9 and 15)
+//     - elif F528==0x0220: F516 |= 0x2200 (bits 9 and 13), advance
 //     - else: reset phase to 0 (abort)
-//   This is the WRITER for f516 bits 13 and 15 (both also set bit9 alongside),
-//   resolving that open question from sci1_meta_cmd_dispatch_c0_ff's plate
-//   comment - CONFIRMED NOT related to the SCI1 command dispatcher, this is
-//   purely an internal periodic/duty state machine.
-// Case 3 (@0x28c5a): checks elapsed counter f532>=0x28(40) AND @0xf516 bit9 -
-//   if both true, sets f54a=0x55 and continues; else gated on f102 bit5 to
-//   either abort or just advance. (Bit9 here is READ, confirming it's a real
-//   gating flag co-set by case 2 above.)
-// Case 4 (@0x28c78): trivial gate on f590>=4, abort or advance only.
-// Case 5 (@0x28c83): checks @0xf520 bits 7/5, sets f54a to 0xef/0xf8/8 and
-//   f54c=8, sets f58c=1 or 2 (the SAME duty-period register checked by
-//   f588_duty_gate_f516_bit11_set's case 0!), calls a subroutine at 0x166cd,
-//   then advances.
-// Case 6 (@0x28cba): trivial gate on f590>=4, clears f584, abort or advance.
-// Case 7 (@0x28cc8): confirmed a VALID jump target via xref, but not yet
-//   disassembled/defined as code in Ghidra - small gap, follow-up needed.
+//   WRITER for F516 bits 13/15 (both also set bit9) -- confirmed unrelated to
+//   the SCI1 command dispatcher, purely this handshake sequencer's internal
+//   state.
+// Case 3 (@0x28c5a): *** SENDS THE SYNC BYTE 0x55 *** -- gated on elapsed
+//   counter F532>=0x28(40 ticks) AND F516 bit9 set (written by case 2 above,
+//   confirming the sync byte only fires after the case-2 state machine has
+//   locked onto a mode). Matches ISO-9141/K-line convention: 0x55 is the
+//   universal K-line sync byte, sent before the two protocol keyword bytes.
+// Case 4 (@0x28c78): trivial gate on F590>=4 elapsed ticks, abort or advance
+//   only (inter-byte timing spacer).
+// Case 5 (@0x28c83): *** SENDS THE KEYWORD BYTE(S) *** -- reads F520 (set by
+//   f516_hibits_f520_f0f2_mode_select from F594 bit7/F516 bits 11/12/13/15):
+//     - F520 bit7 set (F594 bit7 or F516 bit15) -> F54A = 0xEF, F58C=1 (1 byte)
+//     - else F520 bit5 set (F516 bit13)         -> F54A = 0xF8, F58C=1 (1 byte)
+//     - else (F520 bit3 clear-path / F516 bit11) -> F54A=0x08, F54C=0x08,
+//       F58C=2 (TWO bytes: 0x08 0x08)
+//   Confirms three distinct keyword-byte responses depending on which
+//   protocol/comms mode F516's high bits selected -- likely corresponds to
+//   MUT-II variant/speed negotiation (the public MUT-II doc's documented
+//   "EF" keyword byte matches the F520-bit7 case exactly; 0xF8 and the 0x08/
+//   0x08 pair are additional variants not covered by that public doc, possibly
+//   TCU-address or alternate-baud negotiation paths). Calls
+//   sci1_latch_and_send_f54a_handshake_byte (0x166cd) to transmit.
+// Case 6 (@0x28cba): trivial gate on F590>=4, clears F584, abort or advance.
 // 
-// f54a/f54c look like output/duty targets for whatever hardware this
-// sequencer drives (possibly an actuator self-test or duty-cycle output
-// generator, given the f588_duty_gate_f516_bit11_set connection at case0/
-// case5). f516 bit12 is NOT set anywhere in this function - still unresolved.
-// Physical meaning of the whole sequencer still unconfirmed.
+// See sci1_post_handshake_status_broadcast_dispatch (0x28b2f) plate comment
+// for the full 8-case picture including case 7 (sends the documented final
+// 0x85 byte and parks the machine) and case 0
+// (f588_duty_gate_f516_bit11_set, the rearm/period logic sharing F58C with
+// case 5 here). F54A/F54C are confirmed as the TX staging registers feeding
+// sci1_latch_and_send_f54a_handshake_byte / sci1_tx_response_feeder, NOT
+// actuator/duty-cycle output targets as an earlier hypothesis suggested.
 
-void phase_cases_1to6_f516_hibit_f54a_writer(void)
+void sci1_handshake_status_byte_builder_and_f516_hibit_writer(void)
 
 {
   if ((DAT_0001f102 & 0x20) == 0) {
@@ -23670,7 +24118,7 @@ void phase_cases_1to6_f516_hibit_f54a_writer(void)
 // dispatcher), so this looks like a deliberate abort/fault sentinel rather than a valid next phase,
 // distinct from the normal increment path above.
 
-void phase_case7_f590_gate_advance_or_latch(void)
+void sci1_send_final_handshake_byte_85_and_park_phase_machine(void)
 
 {
   byte bVar1;
@@ -23699,12 +24147,25 @@ void phase_case7_f590_gate_advance_or_latch(void)
   }
   DAT_0001f54a = 0x85;
   DAT_0001f58c = 1;
-  (*latch_request_f588)(DAT_0001f520 & 0x88);
+  (*sci1_latch_and_send_f54a_handshake_byte)(DAT_0001f520 & 0x88);
   *(undefined2 *)((uint)bVar1 << 0x10 | 0xf526) = 0x80;
   return;
 }
 
 
+
+// [UPDATED 2026-08-07] Phase-counter (F526) housekeeping + periodic frame
+// trigger, called every tick from sci1_protocol_state_machine (0x287af).
+// Advances/resets F526 based on F522 bits 5-6 and a stall counter F59a
+// (times out after 10 ticks if F534 sits at 0xf8). Every 200 ticks (F598
+// countdown), if F526 has reached phase 0x80: sets F58C=15 (frame length),
+// calls sci1_periodic_status_frame_build_f54a_f566 (0x28d7d) to PACK the
+// 14-byte status frame + checksum into F54A-F566, then calls
+// sci1_latch_and_send_f54a_handshake_byte (0x166cd) to start transmitting
+// it. This is the periodic (not request-driven) broadcast path, distinct
+// from sci1_dispatch_and_latch_response's command-triggered path -- both
+// converge on the same F54A staging buffer and the same send/feeder
+// mechanism. See mut_verification_status.md "packs and sends" trace.
 
 void f526_state_reset_dispatch(void)
 
@@ -23730,8 +24191,8 @@ LAB_00028d4e:
     DAT_0001f598 = 200;
     if (DAT_0001f526 == 0x80) {
       DAT_0001f58c = 0xf;
-      (*diagnostic_snapshot_f54a_f566_build)(uVar1);
-      (*latch_request_f588)();
+      (*sci1_periodic_status_frame_build_f54a_f566)(uVar1);
+      (*sci1_latch_and_send_f54a_handshake_byte)();
     }
   }
   *(ushort *)((uint)bVar2 << 0x10 | 0xf522) = *(ushort *)((uint)bVar2 << 0x10 | 0xf522) & 0xff9f;
@@ -23740,7 +24201,121 @@ LAB_00028d4e:
 
 
 
-void diagnostic_snapshot_f54a_f566_build(void)
+// [UPDATED 2026-08-07] Builds the 14-byte periodic status/handshake frame at
+// F54A-F564 plus a checksum byte at F566 (sum of all 14 words, &0xff). This
+// is the "pack" step feeding the autonomous SCI1 TX chain: called only from
+// f526_state_reset_dispatch (0x28d23) when phase counter F526==0x80, which
+// also sets F58C=15 (frame length) right before calling this, then triggers
+// sci1_latch_and_send_f54a_handshake_byte (0x166cd) to start transmission;
+// sci1_tx_response_feeder (0x166d7) drains the remaining bytes on later
+// ticks by reading a ROM/RAM table at -0xab6 (NOT confirmed to be this
+// frame directly -- see NOT YET DONE below).
+// 
+// Field sources (offset : source : status):
+//   F54A : (RAM 0x102c1 != 0) as 0/1                    -- boolean status bit, untraced
+//   F54C : packed bitfield from F4B6/F4B8/tcu_rx_confirmed_byte2_f4c0/F4B4
+//          -- CONFIRMED link to TCU RX frame fields (see mut_verification_status.md
+//          "TCU SERIAL RX FRAME FOUND" section)
+//   F54E : raw copy of DAT_0001f18c                      -- TRACED 2026-08-07: written by
+//          fueling_inj_pw_calc (0x21c2f, called from fueling_lambda_update). F18C is one
+//          of four sibling cells (F186/F188/F18A/F18C) each computed as
+//          clamp_u8(inc_if_signed_flag(mul_u16_sat_s16(...))) -- clamped per-cylinder/
+//          per-bank injector pulse-width term. NOT renamed -- which of the 4 siblings
+//          maps to which bank/cylinder isn't confirmed yet.
+//   F550 : raw copy of engine_torque_pct_f17a             -- CONFIRMED/RESOLVED 2026-08-07:
+//          renamed from DAT_0001f17a. Written by engine_torque_pct_scale_calc (0x2184b,
+//          write at 0x218b8, called from throttle_body_update): computes
+//          clamp_u8(div_s32_s16_rounded(F5CA/F5CC-derived torque values)) -- a torque
+//          percentage/scale value with NO RPM input anywhere in the computation. Already
+//          investigated in an earlier session (logging.txt OPEN ITEM #1): an old "is this
+//          RPM?" theory was REFUTED there, torque-based identity CONFIRMED. RPM's real
+//          location is still unknown -- do not resume that search here.
+//   F552/F554/F55A : ALL THREE DERIVE FROM ONE muldiv_s16_rounded_3op() CALL --
+//          CHAIN FULLY TRACED 2026-08-07 (operands found via raw disassembly at
+//          0x28dd6-0x28dfb; decompiler hid the pushed args). Call is
+//          muldiv_s16_rounded_3op(accum_latch_100tick_f33c, accum_latch_100tick_f33a,
+//          ROM_word@0x808, 0x246). The raw result is saturated via passthrough_or_sat(),
+//          split hi/lo into F552/F554, and the SAME result is ALSO passed to clamp_u8()
+//          for F55A (not an independent field, just a clamped view of the same value).
+// 
+//          accum_latch_100tick_f33a/f33c (renamed from DAT_0001f33a/DAT_0001f33c) RESOLVED
+//          this session: earlier "zero other xrefs" search was checking the wrong EP/bank
+//          prefix (0001 instead of 0000) -- same address, different bank tag, real xrefs
+//          exist under the 0000-prefixed form. They are written INSIDE
+//          tcu_rx_main_scheduler (0x2aa36, write site ~0x2af3e), as a straight latch:
+//              DAT_0000f33a = DAT_0000f336;
+//              DAT_0000f33c = DAT_0000f338;
+//              DAT_0000f336 = 0;
+//              DAT_0000f338 = 0;
+//          gated on a 100-tick reload timer (EF8E). So F33A/F33C are a SNAPSHOT-AND-RESET
+//          of accumulator F336/F338, taken once every 100 scheduler ticks, immediately
+//          zeroing the accumulator for the next window -- i.e. F33A/F33C hold "whatever
+//          F336/F338 accumulated over the last 100-tick window."
+//          F336/F338 themselves are written inside fuel_pw_and_airvol_compute (0x29fba,
+//          write site ~0x2a77f) following a mul_u16_hi/sat_add_s16 accumulation sequence
+//          near the end of that function's fuel/air computation. Exact physical meaning
+//          of the F336/F338 accumulator itself NOT YET fully pinned down this session
+//          (fuel_pw_and_airvol_compute is a large function; only the write-site tail was
+//          inspected here) -- but strong circumstantial case for an integrated fuel-
+//          delivery or airflow quantity given the parent function's scope, consistent
+//          with a "per-100-tick-window average/rate" being what ultimately lands in
+//          F552/F554/F55A of this frame. ROM word @0x808 and constant 0x246 are a
+//          fixed scale/divisor pair for that averaging -- ROM@0x808 not readable from
+//          this context (likely EP/bank-relative), not resolved.
+//   F556 : raw copy of mut_battery_voltage_f13a           -- CONFIRMED 2026-08-07: this is
+//          MUT Battery voltage, RequestID 0x14 (see adc_read_sequence_b @0x15689 plate
+//          comment, already verified in an earlier session against the MUT table @0x2fad0).
+//          Renamed DAT_0001f13a -> mut_battery_voltage_f13a.
+//   F558 : raw copy of coolant_temp_scaled_f130            -- CONFIRMED 2026-08-07: renamed
+//          from DAT_0001f130. This is the validated/scaled coolant temperature from the
+//          F84E->F12E->F130->F29A chain documented in coolant_temp_validity_and_scale's
+//          plate comment (0x21414). NOTE per that comment this path does NOT reconcile
+//          with the MUT profile's claimed coolant temp address (F109/F10F) -- still an
+//          open reconciliation question, but F130 itself is a real, traced coolant value.
+//   F55C : raw copy of DAT_0001f10e                       -- TRACED 2026-08-07: written by
+//          calc_f110_f10e_via_table (0x21314, called from map_tps_axis_update and
+//          post_init_status_compose_and_ef98_signal). Table/axis-interpolation output,
+//          paired with F110/F112, using F10A/F10C as axis inputs -- consistent with a
+//          MAP or TPS-derived interpolated load value. NOT renamed yet -- need to confirm
+//          which axis/table before committing a name. Note a sibling function
+//          calc_load_correction_f10e (0x199f0) also exists and touches F10E-adjacent
+//          territory -- not yet cross-checked against this writer, worth a look.
+//   F55E/F560/F562/F564 : always zero (reserved/padding, 4 words)
+//   F566 : checksum = sum(F54A..F564 as words) & 0xff
+// 
+// SUMMARY: ALL 14 fields now traced to a concrete source. With F550=Engine
+// TorquePct(CONFIRMED), F556=Battery(CONFIRMED), F558=CoolantTemp
+// (CONFIRMED), F54E=InjectorPW(traced), F552/554/55A=100-tick-averaged
+// fuel/air accumulator from fuel_pw_and_airvol_compute(traced, physical
+// meaning of the underlying F336/F338 accumulator itself still open), and
+// F55C=table/axis output(traced), this frame is a compact PERIODIC SNAPSHOT
+// of key engine channels -- not a generic handshake broadcast, and not the
+// request-driven Mode-2 MUT-table path (adc_sensor_convert_single/0x2fad0),
+// but a fixed-format bundle reusing real, independently-confirmed sensor/
+// MUT cells, including one (Battery, ReqID 0x14) with a direct known MUT
+// identity. Sent automatically every 200 ticks once phase counter F526
+// reaches 0x80.
+// 
+// NOT YET DONE:
+// - Pin down the exact physical meaning of the F336/F338 accumulator inside
+//   fuel_pw_and_airvol_compute (only the write-site tail was inspected;
+//   the full function is large and multi-purpose).
+// - Read/resolve ROM word @0x808 (not accessible from this context directly
+//   -- likely bank/EP-relative) and confirm the 0x246 scale constant's role.
+// - Confirm exact identity/name for F18C (which injector PW sibling) and
+//   F10E (which table/axis; check calc_load_correction_f10e for overlap).
+// - Confirm/deny whether sci1_tx_response_feeder's -0xab6 table is this
+//   same frame or a separate buffer.
+// - Trace the actual Mode-2 MUT RequestID response path (via
+//   adc_sensor_convert_single) onto the wire -- still not found, separate
+//   from this periodic-frame chain.
+// - REMINDER FOR FUTURE SESSIONS: when a static xref search shows "zero
+//   other references" for a cell, double check the EP/bank-address PREFIX
+//   (0000 vs 0001, as seen here and with F17A) before concluding the writer
+//   doesn't exist -- it may just be indexed under a different bank tag for
+//   the same physical RAM address.
+
+void sci1_periodic_status_frame_build_f54a_f566(void)
 
 {
   ushort uVar1;
@@ -23754,7 +24329,7 @@ void diagnostic_snapshot_f54a_f566_build(void)
                  (DAT_0001f4b8 & 0x80) >> 1 |
                  DAT_0001f4b8 & 0x30 | tcu_rx_confirmed_byte2_f4c0 & 7 | DAT_0001f4b4 & 0x80;
   DAT_0001f54e = DAT_0001f18c;
-  DAT_0001f550 = DAT_0001f17a;
+  DAT_0001f550 = engine_torque_pct_f17a;
   uVar1 = (*muldiv_s16_rounded_3op)();
   uVar1 = passthrough_or_sat(uVar1,value);
   *(ushort *)((uint)bVar3 << 0x10 | 0xf552) = uVar1 >> 8;
@@ -23925,9 +24500,9 @@ void tcu_shift_torque_and_knock_mgmt(undefined2 param_1,undefined2 param_2,ushor
   undefined1 extraout_var;
   short sVar3;
   ushort uVar4;
-  ushort uVar5;
-  undefined2 uVar6;
-  char cVar7;
+  undefined2 uVar5;
+  char cVar6;
+  ushort uVar7;
   short extraout_R2;
   ushort extraout_R2_00;
   ushort uVar8;
@@ -23935,8 +24510,16 @@ void tcu_shift_torque_and_knock_mgmt(undefined2 param_1,undefined2 param_2,ushor
   ushort unaff_R5;
   byte bVar10;
   undefined1 uVar11;
+  ushort in_SR;
+  ushort uVar12;
+  byte in_CF;
+  byte in_VF;
+  byte in_ZF;
+  byte in_NF;
   
   uVar11 = 0;
+  uVar12 = (((in_SR & 0xfffe | (ushort)in_CF) & 0xfffd | (ushort)in_VF << 1) & 0xfffb |
+           (ushort)in_ZF << 2) & 0xfff7 | (ushort)in_NF << 3;
   bVar10 = 0;
   sVar3 = DAT_0000f5e6;
   DAT_0000f5e6 = sVar3 << 1;
@@ -23955,20 +24538,20 @@ void tcu_shift_torque_and_knock_mgmt(undefined2 param_1,undefined2 param_2,ushor
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf5e8) = 0;
     }
   }
-  uVar5 = *(ushort *)((int)(*(short *)((uint)bVar10 << 0x10 | 0xf5e8) << 1) + 0x3284) ^
+  uVar4 = *(ushort *)((int)(*(short *)((uint)bVar10 << 0x10 | 0xf5e8) << 1) + 0x3284) ^
           *(ushort *)((uint)bVar10 << 0x10 | 0xf5e6);
   sVar3 = (*(code *)0x15549)();
   if (sVar3 == 0) {
-    if ((*(ushort *)((uint)bVar10 << 0x10 | 0x328c) & uVar5) == 0) {
-      if ((uVar5 & 0xf) == 0) {
+    if ((*(ushort *)((uint)bVar10 << 0x10 | 0x328c) & uVar4) == 0) {
+      if ((uVar4 & 0xf) == 0) {
         puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf5ee);
         *puVar1 = *puVar1 | 1;
       }
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf5f0) = 2;
     }
     else if (*(short *)((uint)bVar10 << 0x10 | 0xf5f0) == 0) {
-      uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf5e6) & 0xf;
-      if ((uVar5 != 0) && (uVar5 != 0xf)) goto LAB_00029088;
+      uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xf5e6) & 0xf;
+      if ((uVar4 != 0) && (uVar4 != 0xf)) goto LAB_00029088;
     }
     else {
       psVar2 = (short *)((uint)bVar10 << 0x10 | 0xf5f0);
@@ -23981,12 +24564,12 @@ LAB_00029088:
     *puVar1 = *puVar1 & 0xfffe;
   }
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf5ee) & 1) == 0) {
-    uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf5e6);
+    uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xf5e6);
   }
   else {
-    uVar5 = *(ushort *)((int)(*(short *)((uint)bVar10 << 0x10 | 0xf5e8) << 1) + 0x3284);
+    uVar4 = *(ushort *)((int)(*(short *)((uint)bVar10 << 0x10 | 0xf5e8) << 1) + 0x3284);
   }
-  sVar3 = (uVar5 & 3) << 1;
+  sVar3 = (uVar4 & 3) << 1;
   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf39e) = *(undefined2 *)((int)sVar3 + 0x328e);
   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3a0) = *(undefined2 *)((int)sVar3 + 0x3296);
   *(short *)((uint)bVar10 << 0x10 | 0xf3d2) = *(short *)((uint)bVar10 << 0x10 | 0xf3d2) << 1;
@@ -23996,20 +24579,20 @@ LAB_00029088:
     *puVar1 = *puVar1 | 1;
   }
   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf384) = *(undefined2 *)((uint)bVar10 << 0x10 | 0xf5de);
-  uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf384);
+  uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xf384);
   uVar8 = (*(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) & 5) << 1;
-  uVar4 = uVar8 | 0x35;
+  uVar7 = uVar8 | 0x35;
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf33e) & 0x80) != 0) {
-    uVar4 = uVar8 | 0x75;
+    uVar7 = uVar8 | 0x75;
   }
-  if (*(ushort *)((uint)bVar10 << 0x10 | 0xad2) <= uVar5) {
-    uVar8 = uVar4 & 0xffdf;
-    if (0x1080 < uVar5) {
-      uVar8 = uVar4 & 0xffdb;
+  if (*(ushort *)((uint)bVar10 << 0x10 | 0xad2) <= uVar4) {
+    uVar8 = uVar7 & 0xffdf;
+    if (0x1080 < uVar4) {
+      uVar8 = uVar7 & 0xffdb;
     }
-    uVar4 = uVar8;
+    uVar7 = uVar8;
     if (0x1305 < *(ushort *)((int)&stack0xfffe + -4)) {
-      uVar4 = uVar4 & 0xffef;
+      uVar7 = uVar7 & 0xffef;
     }
     uVar8 = 0x3a00;
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) & 1) != 0) {
@@ -24017,16 +24600,16 @@ LAB_00029088:
     }
     if (uVar8 < *(ushort *)((int)&stack0xfffe + -4) || uVar8 == *(ushort *)((int)&stack0xfffe + -4))
     {
-      uVar4 = uVar4 & 0xfffe;
+      uVar7 = uVar7 & 0xfffe;
     }
   }
-  *(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) = uVar4;
+  *(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) = uVar7;
   puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3ce);
   *puVar1 = *puVar1 & 0xfffe;
   if (*(short *)((uint)bVar10 << 0x10 | 0xefa4) == 0) {
     *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3cc) = 0;
 LAB_0002935d:
-    tcu_shift_state_reset();
+    tcu_shift_state_reset(uVar12);
   }
   else {
     sVar3 = (*(code *)0x15549)();
@@ -24037,6 +24620,7 @@ LAB_0002935d:
       if (*puVar1 <= uVar8 && uVar8 != *puVar1) {
         *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3a2) = 0;
       }
+      uVar8 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3a2);
       (*o2_wideband_mode_zero_check)();
       if (((*(ushort *)((uint)bVar10 << 0x10 | 0xf33e) & 8) != 0) &&
          ((*(ushort *)((uint)bVar10 << 0x10 | 0xf5ee) & 1) != 0)) {
@@ -24047,7 +24631,7 @@ LAB_0002935d:
           bVar10 = 0;
         }
       }
-      uVar8 = o2_wideband_cell_offset_adjust();
+      uVar8 = o2_wideband_cell_offset_adjust(uVar8);
       if (*(ushort *)((uint)bVar10 << 0x10 | 0xad4) <= uVar8) {
         uVar8 = *(ushort *)((uint)bVar10 << 0x10 | 0xad4);
       }
@@ -24055,29 +24639,30 @@ LAB_0002935d:
       puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf38c);
       if (uVar8 < *puVar1 || uVar8 == *puVar1) {
         param_3 = *(ushort *)((uint)bVar10 << 0x10 | 0xf38e);
-        uVar4 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38c),
-                            *(ushort *)((uint)bVar10 << 0x10 | 0xad0));
-        if (uVar8 < uVar4) {
-          *(ushort *)((uint)bVar10 << 0x10 | 0xf38c) = uVar4;
+        uVar12 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38c),
+                             *(ushort *)((uint)bVar10 << 0x10 | 0xad0));
+        if (uVar8 < uVar12) {
+          *(ushort *)((uint)bVar10 << 0x10 | 0xf38c) = uVar12;
         }
         else {
           *(ushort *)((uint)bVar10 << 0x10 | 0xf38c) = uVar8;
         }
         if (uVar8 < *(ushort *)((uint)bVar10 << 0x10 | 0xf38e)) {
-          uVar4 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38e),
-                              *(ushort *)((uint)bVar10 << 0x10 | 0xad0));
-          if (uVar8 < uVar4) {
-            *(ushort *)((uint)bVar10 << 0x10 | 0xf38e) = uVar4;
+          uVar12 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38e),
+                               *(ushort *)((uint)bVar10 << 0x10 | 0xad0));
+          if (uVar8 < uVar12) {
+            *(ushort *)((uint)bVar10 << 0x10 | 0xf38e) = uVar12;
           }
           else {
             *(ushort *)((uint)bVar10 << 0x10 | 0xf38e) = uVar8;
           }
         }
         else {
-          uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xf38c);
-          *(ushort *)((uint)bVar10 << 0x10 | 0xf38e) = uVar4;
+          uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf38c);
+          *(ushort *)((uint)bVar10 << 0x10 | 0xf38e) = uVar12;
         }
-        uVar8 = o2_wideband_midpoint_select(uVar4,0xe);
+        uVar8 = o2_wideband_midpoint_select(uVar12,0xe);
+        uVar12 = 0x9258;
         uVar8 = sat_sub_u16(param_3,uVar8);
         puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf38c);
         if (*puVar1 <= uVar8 && uVar8 != *puVar1) {
@@ -24085,10 +24670,10 @@ LAB_0002935d:
         }
       }
       else {
-        uVar4 = *(short *)((uint)bVar10 << 0x10 | 0xf38c) + *(short *)((uint)bVar10 << 0x10 | 0xace)
+        uVar7 = *(short *)((uint)bVar10 << 0x10 | 0xf38c) + *(short *)((uint)bVar10 << 0x10 | 0xace)
         ;
-        if (uVar4 < uVar8) {
-          uVar8 = uVar4;
+        if (uVar7 < uVar8) {
+          uVar8 = uVar7;
         }
         *(ushort *)((uint)bVar10 << 0x10 | 0xf38e) = uVar8;
         *(ushort *)((uint)bVar10 << 0x10 | 0xf38c) = uVar8;
@@ -24109,6 +24694,7 @@ LAB_00029356:
       goto LAB_0002935d;
     }
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) & 2) == 0) {
+      uVar12 = 0x92ac;
       sVar3 = (*tcu_f384_f388_hysteresis_gate_check)();
       if (sVar3 == 0) {
         *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3cc) = 1;
@@ -24120,58 +24706,63 @@ LAB_00029356:
     if (((*(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) & 0x20) == 0) &&
        (*(ushort *)((int)&stack0xfffe + -4) < 0x1d4c)) {
       sVar3 = 5;
-      uVar4 = uVar5;
+      uVar7 = uVar4;
       do {
-        uVar4 = uVar4 >> 1;
-        if (uVar4 == 0) break;
+        uVar7 = uVar7 >> 1;
+        if (uVar7 == 0) break;
         sVar3 = sVar3 + -1;
       } while (sVar3 != -1);
       if (uVar8 < *(ushort *)((int)&stack0xfffe + -4) ||
           uVar8 == *(ushort *)((int)&stack0xfffe + -4)) {
-        if (uVar4 <= uVar5 - uVar8) {
+        if (uVar7 <= uVar4 - uVar8) {
+          uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xaca);
           uVar8 = (*mul_u16_x2_sat_alt)();
-          uVar5 = sat_add_u16(uVar5,uVar8);
+          uVar4 = sat_add_u16(uVar4,uVar8);
         }
       }
-      else if (uVar4 <= uVar8 - *(short *)((int)&stack0xfffe + -4)) {
+      else if (uVar7 <= uVar8 - *(short *)((int)&stack0xfffe + -4)) {
+        uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xac8);
         uVar8 = (*mul_u16_x2_sat_alt)();
-        uVar5 = sat_sub_u16(uVar5,uVar8);
+        uVar4 = sat_sub_u16(uVar4,uVar8);
       }
     }
-    *(ushort *)((uint)bVar10 << 0x10 | 0xf38a) = uVar5;
-    if ((((0x186a < *(ushort *)((int)&stack0xfffe + -4)) &&
-         (*(ushort *)((uint)bVar10 << 0x10 | 0xf38c) < 0xcb)) &&
-        (sVar3 = (*tcu_f384_f388_hysteresis_gate_check)(), sVar3 != 0)) ||
-       (((uVar5 & 0x8000) != 0 || (uVar5 < 0x146)))) goto LAB_00029356;
-    uVar8 = muldiv_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38c),uVar5,0x200);
-    uVar8 = sat_sub_u16(uVar8,param_3);
-    *(ushort *)((uint)bVar10 << 0x10 | 0xf390) = uVar8;
-    uVar8 = muldiv_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38e),uVar5,0x200);
-    uVar4 = 0x93ab;
-    uVar8 = sat_sub_u16(uVar8,unaff_R5);
-    *(ushort *)((uint)bVar10 << 0x10 | 0xf392) = uVar8;
-    uVar8 = (*compose_status_bits_fe86_fe8a)();
-    if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf39e) & uVar8) == 0) {
+    *(ushort *)((uint)bVar10 << 0x10 | 0xf38a) = uVar4;
+    if ((0x186a < *(ushort *)((int)&stack0xfffe + -4)) &&
+       (*(ushort *)((uint)bVar10 << 0x10 | 0xf38c) < 0xcb)) {
+      uVar12 = 0x9349;
+      sVar3 = (*tcu_f384_f388_hysteresis_gate_check)();
+      if (sVar3 != 0) goto LAB_00029356;
+    }
+    if (((uVar4 & 0x8000) != 0) || (uVar4 < 0x146)) goto LAB_00029356;
+    uVar12 = muldiv_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38c),uVar4,0x200);
+    uVar12 = sat_sub_u16(uVar12,param_3);
+    *(ushort *)((uint)bVar10 << 0x10 | 0xf390) = uVar12;
+    uVar12 = muldiv_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf38e),uVar4,0x200);
+    uVar8 = 0x93ab;
+    uVar12 = sat_sub_u16(uVar12,unaff_R5);
+    *(ushort *)((uint)bVar10 << 0x10 | 0xf392) = uVar12;
+    uVar12 = (*compose_status_bits_fe86_fe8a)();
+    if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf39e) & uVar12) == 0) {
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3d0) = 2;
       if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) & 0xc) == 0xc) {
         sVar3 = *(short *)((uint)bVar10 << 0x10 | 0xf382);
       }
-      else if (uVar5 < 0x1130) {
+      else if (uVar4 < 0x1130) {
         sVar3 = *(short *)((uint)bVar10 << 0x10 | 0xf380);
       }
       else {
-        uVar8 = (short)&DAT_0000eed0 + uVar5 >> 4;
+        uVar12 = (short)&DAT_0000eed0 + uVar4 >> 4;
         if (0xca < *(ushort *)((uint)bVar10 << 0x10 | 0xf38c)) {
-          uVar8 = muldiv_u16((short)&T1GR4H + *(short *)((uint)bVar10 << 0x10 | 0xf38c),uVar5,0x400)
-          ;
-          if (uVar8 < 0x100) {
-            uVar8 = extraout_R2 + uVar8;
+          uVar12 = muldiv_u16((short)&T1GR4H + *(short *)((uint)bVar10 << 0x10 | 0xf38c),uVar4,0x400
+                             );
+          if (uVar12 < 0x100) {
+            uVar12 = extraout_R2 + uVar12;
           }
           else {
-            uVar8 = extraout_R2 + 0x100;
+            uVar12 = extraout_R2 + 0x100;
           }
         }
-        sVar3 = uVar8 + *(short *)((uint)bVar10 << 0x10 | 0xf380);
+        sVar3 = uVar12 + *(short *)((uint)bVar10 << 0x10 | 0xf380);
       }
       sVar3 = (*(short *)((uint)bVar10 << 0x10 | 0xf5e2) + *(short *)((uint)bVar10 << 0x10 | 0xf390)
               ) - sVar3;
@@ -24211,19 +24802,19 @@ LAB_00029356:
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf394) = 0;
     }
     else if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3cc) & 0x40) == 0) {
-      uVar8 = muldiv_u16((short)&T1GR3L + *(short *)((uint)bVar10 << 0x10 | 0xf38c),uVar5,0x200);
-      uVar8 = sat_sub_u16(uVar8,uVar4);
-      if (uVar8 == 0) {
+      uVar12 = muldiv_u16((short)&T1GR3L + *(short *)((uint)bVar10 << 0x10 | 0xf38c),uVar4,0x200);
+      uVar12 = sat_sub_u16(uVar12,uVar8);
+      if (uVar12 == 0) {
         *(undefined2 *)((uint)bVar10 << 0x10 | 0xf394) = 1;
       }
       else {
-        *(ushort *)((uint)bVar10 << 0x10 | 0xf394) = uVar8;
+        *(ushort *)((uint)bVar10 << 0x10 | 0xf394) = uVar12;
       }
     }
     else {
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf394) = 0x32;
     }
-    sVar3 = (uVar5 + *(short *)((uint)bVar10 << 0x10 | 0xf5e2) +
+    sVar3 = (uVar4 + *(short *)((uint)bVar10 << 0x10 | 0xf5e2) +
             *(short *)((uint)bVar10 << 0x10 | 0xf392)) - *(short *)((uint)bVar10 << 0x10 | 0xf382);
     sVar9 = *(short *)((uint)bVar10 << 0x10 | 0xf398) + *(short *)((uint)bVar10 << 0x10 | 0xad8);
     if ((sVar3 - sVar9 & 0x8000U) != 0) {
@@ -24232,35 +24823,35 @@ LAB_00029356:
     *(short *)((uint)bVar10 << 0x10 | 0xf39a) = sVar3;
   }
   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf388) = *(undefined2 *)((uint)bVar10 << 0x10 | 0xf384);
-  uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf384);
+  uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf384);
   sVar3 = 6;
   do {
-    uVar5 = uVar5 >> 1;
-    if (uVar5 == 0) break;
+    uVar12 = uVar12 >> 1;
+    if (uVar12 == 0) break;
     sVar3 = sVar3 + -1;
   } while (sVar3 != -1);
-  *(ushort *)((uint)bVar10 << 0x10 | 0xf39c) = uVar5;
+  *(ushort *)((uint)bVar10 << 0x10 | 0xf39c) = uVar12;
   bVar10 = 0;
   DAT_0000efa4 = 0x33;
-  uVar6 = DAT_0000f5ce;
-  DAT_0000f5d0 = uVar6;
-  uVar6 = DAT_0000f5cc;
-  DAT_0000f5ce = uVar6;
-  uVar6 = candidate_rpm_period_hist_newest;
-  DAT_0000f5cc = uVar6;
-  uVar6 = DAT_0000f384;
-  candidate_rpm_period_hist_newest = uVar6;
-  uVar6 = candidate_rpm_period_hist_newest;
-  uVar6 = (*div_s32_s16_rounded)();
+  uVar5 = DAT_0000f5ce;
+  DAT_0000f5d0 = uVar5;
+  uVar5 = DAT_0000f5cc;
+  DAT_0000f5ce = uVar5;
+  uVar5 = candidate_rpm_period_hist_newest;
+  DAT_0000f5cc = uVar5;
+  uVar5 = DAT_0000f384;
+  candidate_rpm_period_hist_newest = uVar5;
+  uVar5 = candidate_rpm_period_hist_newest;
+  uVar5 = (*div_s32_s16_rounded)();
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf25a) & 1) == 0) {
-    uVar6 = (*axis_interp_lerp_u8frac_256)();
-    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf180) = uVar6;
-    uVar6 = (*axis_interp_lerp_u8frac_256)();
-    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf182) = uVar6;
+    uVar5 = (*axis_interp_lerp_u8frac_256)();
+    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf180) = uVar5;
+    uVar5 = (*axis_interp_lerp_u8frac_256)();
+    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf182) = uVar5;
   }
   else {
-    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf180) = uVar6;
-    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf182) = uVar6;
+    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf180) = uVar5;
+    *(undefined2 *)((uint)bVar10 << 0x10 | 0xf182) = uVar5;
   }
   if (*(short *)((uint)bVar10 << 0x10 | 0xf36c) != 0) {
     psVar2 = (short *)((uint)bVar10 << 0x10 | 0xf36c);
@@ -24279,9 +24870,9 @@ LAB_00029356:
   if (*(short *)((uint)bVar10 << 0x10 | 0xf368) == 0) {
     *(undefined2 *)((uint)bVar10 << 0x10 | 0xf366) = 0;
   }
-  uVar5 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf376),
-                      *(ushort *)((uint)bVar10 << 0x10 | 0xe60));
-  *(ushort *)((uint)bVar10 << 0x10 | 0xf376) = uVar5;
+  uVar12 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf376),
+                       *(ushort *)((uint)bVar10 << 0x10 | 0xe60));
+  *(ushort *)((uint)bVar10 << 0x10 | 0xf376) = uVar12;
   if (*(short *)((uint)bVar10 << 0x10 | 0xf370) != 0) {
     psVar2 = (short *)((uint)bVar10 << 0x10 | 0xf370);
     *psVar2 = *psVar2 + -1;
@@ -24308,16 +24899,16 @@ LAB_00029356:
   }
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf25a) & 0x800) != 0) {
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf21c) & 0x40) == 0) {
-      uVar5 = sat_add_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf26e),
-                          *(short *)((uint)bVar10 << 0x10 | 0xf264) << 2);
+      uVar12 = sat_add_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf26e),
+                           *(short *)((uint)bVar10 << 0x10 | 0xf264) << 2);
     }
     else {
-      uVar5 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf26e),
-                          *(short *)((uint)bVar10 << 0x10 | 0xf262) << 2);
+      uVar12 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf26e),
+                           *(short *)((uint)bVar10 << 0x10 | 0xf262) << 2);
     }
-    uVar5 = clamp_u16(uVar5,*(ushort *)((uint)bVar10 << 0x10 | 0xf276),
-                      *(ushort *)((uint)bVar10 << 0x10 | 0xf27a));
-    *(ushort *)((uint)bVar10 << 0x10 | 0xf26e) = uVar5;
+    uVar12 = clamp_u16(uVar12,*(ushort *)((uint)bVar10 << 0x10 | 0xf276),
+                       *(ushort *)((uint)bVar10 << 0x10 | 0xf27a));
+    *(ushort *)((uint)bVar10 << 0x10 | 0xf26e) = uVar12;
   }
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf25a) & 0x200) != 0) {
     fuel_pw_and_airvol_compute();
@@ -24331,22 +24922,22 @@ LAB_00029356:
       *psVar2 = *psVar2 + -1;
     }
     if (*(short *)((uint)bVar10 << 0x10 | 0xf4f2) == 0) {
-      uVar6 = scale_counter_ff96_to_byte_clamped();
-      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf4e4) = uVar6;
-      uVar5 = (*muldiv_s16_rounded)();
-      if (0xfe < uVar5) {
-        uVar5 = 0xff;
+      uVar5 = scale_counter_ff96_to_byte_clamped();
+      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf4e4) = uVar5;
+      uVar12 = (*muldiv_s16_rounded)();
+      if (0xfe < uVar12) {
+        uVar12 = 0xff;
       }
-      *(ushort *)((uint)bVar10 << 0x10 | 0xf4e6) = uVar5;
+      *(ushort *)((uint)bVar10 << 0x10 | 0xf4e6) = uVar12;
       if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf25a) & 1) == 0) {
-        uVar5 = (*axis_interp_lerp_u8frac_256)();
-        *(ushort *)((uint)bVar10 << 0x10 | 0xf4e8) = uVar5;
-        cVar7 = round_high_byte_signed(uVar5);
-        *(ushort *)((uint)bVar10 << 0x10 | 0xf4ea) = CONCAT11(extraout_var,cVar7);
+        uVar12 = (*axis_interp_lerp_u8frac_256)();
+        *(ushort *)((uint)bVar10 << 0x10 | 0xf4e8) = uVar12;
+        cVar6 = round_high_byte_signed(uVar12);
+        *(ushort *)((uint)bVar10 << 0x10 | 0xf4ea) = CONCAT11(extraout_var,cVar6);
       }
       else {
-        *(ushort *)((uint)bVar10 << 0x10 | 0xf4e8) = uVar5 << 8;
-        *(ushort *)((uint)bVar10 << 0x10 | 0xf4ea) = uVar5;
+        *(ushort *)((uint)bVar10 << 0x10 | 0xf4e8) = uVar12 << 8;
+        *(ushort *)((uint)bVar10 << 0x10 | 0xf4ea) = uVar12;
       }
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf4ee) = 0;
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf4f2) =
@@ -24372,25 +24963,25 @@ LAB_00029356:
     return;
   }
   (*adc_read_channel_6)();
-  uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf15c);
-  if (uVar5 < 0x65) {
-    if (uVar5 < 0x5d) {
-      uVar5 = (*mul_fixedpoint_8)();
+  uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf15c);
+  if (uVar12 < 0x65) {
+    if (uVar12 < 0x5d) {
+      uVar12 = (*mul_fixedpoint_8)();
     }
     else {
       sVar3 = (*mul_fixedpoint_8)();
-      uVar5 = sVar3 + 0x31;
+      uVar12 = sVar3 + 0x31;
     }
   }
   else {
     sVar3 = (*mul_fixedpoint_8)();
-    uVar5 = sVar3 + 0x37;
+    uVar12 = sVar3 + 0x37;
   }
-  if (0xfe < uVar5) {
-    uVar5 = 0xff;
+  if (0xfe < uVar12) {
+    uVar12 = 0xff;
   }
-  uVar8 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3a8);
-  *(ushort *)((uint)bVar10 << 0x10 | 0xf3a8) = uVar5;
+  uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3a8);
+  *(ushort *)((uint)bVar10 << 0x10 | 0xf3a8) = uVar12;
   if (((*(ushort *)((uint)bVar10 << 0x10 | 0xf3a4) & 0x400) == 0) ||
      ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3a6) & 1) != 0)) {
     *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3b6) = 0;
@@ -24398,19 +24989,19 @@ LAB_00029356:
   }
   else {
     puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3a8);
-    if (uVar8 < *puVar1 || uVar8 == *puVar1) {
-      uVar8 = 0;
+    if (uVar4 < *puVar1 || uVar4 == *puVar1) {
+      uVar4 = 0;
     }
     else {
-      uVar8 = uVar8 - *(short *)((uint)bVar10 << 0x10 | 0xf3a8);
+      uVar4 = uVar4 - *(short *)((uint)bVar10 << 0x10 | 0xf3a8);
     }
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf0ec) & 2) == 0) {
-      uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf8a);
+      uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf8a);
     }
     else {
-      uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf8c);
+      uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf8c);
     }
-    if (uVar8 < uVar5) {
+    if (uVar4 < uVar12) {
       if (*(short *)((uint)bVar10 << 0x10 | 0xf3b6) != -1) {
         psVar2 = (short *)((uint)bVar10 << 0x10 | 0xf3b6);
         *psVar2 = *psVar2 + 1;
@@ -24427,30 +25018,30 @@ LAB_00029356:
       *puVar1 = *puVar1 & 0xfffe;
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3b6) = 0;
     }
-    *(ushort *)((uint)bVar10 << 0x10 | 0xf968) = uVar8;
+    *(ushort *)((uint)bVar10 << 0x10 | 0xf968) = uVar4;
   }
   init_state_block_ff54();
-  uVar5 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf3a8),
-                      *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa));
-  *(ushort *)((uint)bVar10 << 0x10 | 0xf3b0) = uVar5;
+  uVar12 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf3a8),
+                       *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa));
+  *(ushort *)((uint)bVar10 << 0x10 | 0xf3b0) = uVar12;
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3a4) & 0x40) == 0) {
     *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3a2) = 0;
   }
   else {
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf200) & 1) == 0) {
       if (*(short *)((uint)bVar10 << 0x10 | 0xf3b0) == 0) {
-        uVar5 = 0;
+        uVar12 = 0;
       }
       else {
         sVar3 = (*muldiv_s16_rounded)();
-        uVar5 = sVar3 + 1;
-        if (0xfe < uVar5) {
-          uVar5 = 0xff;
+        uVar12 = sVar3 + 1;
+        if (0xfe < uVar12) {
+          uVar12 = 0xff;
         }
       }
       if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3a4) & 0x200) == 0) {
         (*tcu_torque_state_reset)();
-        uVar5 = extraout_R2_00;
+        uVar12 = extraout_R2_00;
       }
       else {
         psVar2 = (short *)((uint)bVar10 << 0x10 | 0xf3be);
@@ -24470,9 +25061,9 @@ LAB_00029356:
           *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3c6) = 0x8000;
         }
         *(short *)((uint)bVar10 << 0x10 | 0xf3ca) = *(short *)((uint)bVar10 << 0x10 | 0xf3ca) << 1;
-        if ((*(ushort *)((uint)bVar10 << 0x10 | 0xb4e) <= uVar5) &&
-           (puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3bc), uVar5 < *puVar1 || uVar5 == *puVar1)
-           ) {
+        if ((*(ushort *)((uint)bVar10 << 0x10 | 0xb4e) <= uVar12) &&
+           (puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3bc),
+           uVar12 < *puVar1 || uVar12 == *puVar1)) {
           puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3ca);
           *puVar1 = *puVar1 | 1;
           if (*(short *)((uint)bVar10 << 0x10 | 0xf5ea) == *(short *)((uint)bVar10 << 0x10 | 0xf3c4)
@@ -24488,40 +25079,40 @@ LAB_00029356:
                   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3c4) =
                        *(undefined2 *)((uint)bVar10 << 0x10 | 0xf5ea);
                   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3be) = 0;
-                  cVar7 = *(char *)((uint)bVar10 << 0x10 | 0x2d0);
+                  cVar6 = *(char *)((uint)bVar10 << 0x10 | 0x2d0);
                 }
                 else {
                   if (*(short *)((uint)bVar10 << 0x10 | 0xf3c6) != -0x8000) goto LAB_00029a10;
                   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3c6) =
                        *(undefined2 *)((uint)bVar10 << 0x10 | 0xf5ea);
                   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3c0) = 0;
-                  cVar7 = *(char *)((uint)bVar10 << 0x10 | 0x2d0);
+                  cVar6 = *(char *)((uint)bVar10 << 0x10 | 0x2d0);
                 }
-                if (cVar7 != '\0') goto LAB_00029a08;
+                if (cVar6 != '\0') goto LAB_00029a08;
               }
               goto LAB_00029a10;
             }
             *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3c0) = 0;
           }
 LAB_00029a08:
-          uVar5 = 0;
+          uVar12 = 0;
         }
       }
 LAB_00029a10:
       *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3b4) =
            *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3b2);
       if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3a4) & 0x80) == 0) {
-        uVar8 = *(ushort *)((uint)bVar10 << 0x10 | 0xb0e);
+        uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xb0e);
       }
       else {
-        uVar8 = *(ushort *)((uint)bVar10 << 0x10 | 0xb0c);
+        uVar4 = *(ushort *)((uint)bVar10 << 0x10 | 0xb0c);
       }
-      if (uVar8 <= uVar5) {
-        uVar5 = uVar8;
+      if (uVar4 <= uVar12) {
+        uVar12 = uVar4;
       }
-      uVar8 = *(short *)((uint)bVar10 << 0x10 | 0xf3a2) + uVar5;
-      if (uVar8 < *(ushort *)((uint)bVar10 << 0x10 | 0xf3b4)) {
-        *(ushort *)((uint)bVar10 << 0x10 | 0xf3a2) = uVar8;
+      uVar4 = *(short *)((uint)bVar10 << 0x10 | 0xf3a2) + uVar12;
+      if (uVar4 < *(ushort *)((uint)bVar10 << 0x10 | 0xf3b4)) {
+        *(ushort *)((uint)bVar10 << 0x10 | 0xf3a2) = uVar4;
       }
       else {
         *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3a2) =
@@ -24539,14 +25130,14 @@ LAB_00029a10:
     }
   }
   (*tcu_torque_state_reset)();
-  uVar5 = 0;
+  uVar12 = 0;
 LAB_00029a48:
-  *(ushort *)((uint)bVar10 << 0x10 | 0xf962) = uVar5;
+  *(ushort *)((uint)bVar10 << 0x10 | 0xf962) = uVar12;
   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf964) = *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ae);
   *(undefined2 *)((uint)bVar10 << 0x10 | 0xf966) = *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3aa);
-  uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3ae) >> 8;
+  uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3ae) >> 8;
   puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3a8);
-  if (uVar5 < *puVar1 || uVar5 == *puVar1) {
+  if (uVar12 < *puVar1 || uVar12 == *puVar1) {
     if (*(short *)((uint)bVar10 << 0x10 | 0xf3b8) != -1) {
       psVar2 = (short *)((uint)bVar10 << 0x10 | 0xf3b8);
       *psVar2 = *psVar2 + 1;
@@ -24558,8 +25149,8 @@ LAB_00029a48:
   sVar3 = 0x20;
   if (*(short *)((uint)bVar10 << 0x10 | 0xefc2) == 0) {
     if (*(short *)((uint)bVar10 << 0x10 | 0xf3b0) == 0) {
-      uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3b8);
-      if (*(ushort *)((uint)bVar10 << 0x10 | 0xb62) <= uVar5) {
+      uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3b8);
+      if (*(ushort *)((uint)bVar10 << 0x10 | 0xb62) <= uVar12) {
         sVar3 = 0x10;
       }
     }
@@ -24567,14 +25158,14 @@ LAB_00029a48:
       sVar3 = 0x100;
     }
     if ((sVar3 != 0x10) && (sVar3 != 0x20)) {
-      uVar5 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3a8);
+      uVar12 = *(ushort *)((uint)bVar10 << 0x10 | 0xf3a8);
     }
   }
-  (*identity_passthrough_arg1)(uVar5);
+  (*identity_passthrough_arg1)(uVar12);
   (*mul_u16_hi)();
   (*sat_add_s16)();
-  uVar6 = (*inc_if_signed_flag)();
-  *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ac) = uVar6;
+  uVar5 = (*inc_if_signed_flag)();
+  *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ac) = uVar5;
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf0ec) & 2) == 0) {
     if (*(ushort *)((uint)bVar10 << 0x10 | 0xb2c) <= *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa)) {
       puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3a6);
@@ -24584,10 +25175,10 @@ LAB_00029a48:
     }
   }
   else {
-    uVar5 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf3de),
-                        *(ushort *)((uint)bVar10 << 0x10 | 0xb2e));
+    uVar12 = sat_sub_u16(*(ushort *)((uint)bVar10 << 0x10 | 0xf3de),
+                         *(ushort *)((uint)bVar10 << 0x10 | 0xb2e));
     puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf17a);
-    if ((*puVar1 <= uVar5 && uVar5 != *puVar1) ||
+    if ((*puVar1 <= uVar12 && uVar12 != *puVar1) ||
        (*(ushort *)((uint)bVar10 << 0x10 | 0xf3aa) < *(ushort *)((uint)bVar10 << 0x10 | 0xb2a))) {
       puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3a6);
       *puVar1 = *puVar1 & 0xffef;
@@ -24597,15 +25188,15 @@ LAB_00029a48:
   *puVar1 = *puVar1 & 0xfffe;
   if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf3a6) & 0x10) == 0) {
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf0ec) & 2) != 0) {
-      uVar6 = (*(code *)0x1405c)();
-      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ac) = uVar6;
-      uVar6 = (*(code *)0x1405c)();
-      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ae) = uVar6;
-      uVar4 = 0xff;
-      uVar8 = 3;
       uVar5 = (*(code *)0x1405c)();
-      uVar5 = clamp_u16(uVar5,uVar8,uVar4);
-      *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa) = uVar5;
+      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ac) = uVar5;
+      uVar5 = (*(code *)0x1405c)();
+      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ae) = uVar5;
+      uVar8 = 0xff;
+      uVar4 = 3;
+      uVar12 = (*(code *)0x1405c)();
+      uVar12 = clamp_u16(uVar12,uVar4,uVar8);
+      *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa) = uVar12;
       puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3a6);
       *puVar1 = *puVar1 | 1;
     }
@@ -24614,15 +25205,15 @@ LAB_00029a48:
   }
   else {
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf0ec) & 2) == 0) {
-      uVar6 = (*(code *)0x1412b)();
-      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ac) = uVar6;
-      uVar6 = (*(code *)0x1412b)();
-      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ae) = uVar6;
-      uVar4 = 0xff;
-      uVar8 = 3;
       uVar5 = (*(code *)0x1412b)();
-      uVar5 = clamp_u16(uVar5,uVar8,uVar4);
-      *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa) = uVar5;
+      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ac) = uVar5;
+      uVar5 = (*(code *)0x1412b)();
+      *(undefined2 *)((uint)bVar10 << 0x10 | 0xf3ae) = uVar5;
+      uVar8 = 0xff;
+      uVar4 = 3;
+      uVar12 = (*(code *)0x1412b)();
+      uVar12 = clamp_u16(uVar12,uVar4,uVar8);
+      *(ushort *)((uint)bVar10 << 0x10 | 0xf3aa) = uVar12;
       puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf3a6);
       *puVar1 = *puVar1 | 1;
     }
@@ -24653,7 +25244,7 @@ bool tcu_f384_f388_hysteresis_gate_check(void)
 
 
 
-void tcu_shift_state_reset(void)
+void tcu_shift_state_reset(ushort param_fp1)
 
 {
   byte bVar1;
@@ -25451,7 +26042,7 @@ void tcu_periodic_timer_update(void)
 
 
 
-void f2cc_offset_accumulate(void)
+void f2cc_offset_accumulate(ushort param_fp1)
 
 {
   byte bVar1;
@@ -25469,13 +26060,12 @@ void f2cc_offset_accumulate(void)
 
 
 
-void channel_enable_mask_build_and_dispatch_ff2x_ff3x(void)
+void channel_enable_mask_build_and_dispatch_ff2x_ff3x(ushort param_fp1,ushort param_fp2)
 
 {
   ushort uVar1;
-  ushort in_stack_00000006;
   
-  uVar1 = DAT_0001f3dc & DAT_0001f514 & in_stack_00000006 & 0xf;
+  uVar1 = DAT_0001f3dc & DAT_0001f514 & param_fp1 & 0xf;
   if (((DAT_0001f1f2 & 0x40) != 0) && (DAT_000102ca != '\0')) {
     uVar1 = DAT_0001f228 & uVar1;
   }
@@ -25544,7 +26134,7 @@ void stub_empty_0x2a8d1(void)
 
 
 
-void sci3_rx_process_tcu_byte(void)
+void sci3_rx_process_tcu_byte(ushort param_fp1)
 
 {
   byte bVar1;
@@ -26681,11 +27271,12 @@ void tcu_gear_shift_history_reset(void)
 
 
 
-void tcu_diagnostic_state_cold_init(void)
+void tcu_diagnostic_state_cold_init(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
   ushort *puVar1;
   byte bVar2;
+  ushort uStack_4;
   
   bVar2 = 1;
   DAT_0001f730 = 0xffff;
@@ -26729,13 +27320,15 @@ void tcu_diagnostic_state_cold_init(void)
   DAT_0001f050 = DAT_00011006;
   DAT_0001f642 = DAT_00011008;
   DAT_0001f644 = DAT_00011008;
-  coldinit_f6c0_f7c8_state_clear_and_intc_flag_read();
+  uStack_4 = param_3;
+  coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(*(ushort *)((int)&stack0xfff6 + 6));
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf73a) = 0;
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf738) = 0;
   *(undefined2 *)((uint)bVar2 << 0x10 | 0xf736) = 0;
   puVar1 = (ushort *)((uint)bVar2 << 0x10 | 0xf6c8);
   *puVar1 = *puVar1 & 0xffbf;
   *(ushort *)((uint)bVar2 << 0x10 | 0xf64a) = *(ushort *)((uint)bVar2 << 0x10 | 0xf64a) & 0xffcf;
+  uStack_4 = 0xb9a1;
   (*tcu_shift_timer_scale_init)();
   return;
 }
@@ -26750,7 +27343,7 @@ void tcu_shift_flags_dispatch(void)
   
   bVar2 = 1;
   tcu_shift_solenoid_table_init();
-  (*tcu_dtc_status_check_dispatch)();
+  (*tcu_sensor_range_check_and_f04e_max_update)();
   if ((*(ushort *)((uint)bVar2 << 0x10 | 0xf1f4) & 4) == 0) {
     *(ushort *)((uint)bVar2 << 0x10 | 0xf226) = *(ushort *)((uint)bVar2 << 0x10 | 0xf226) & 0x3fff;
     *(undefined2 *)((uint)bVar2 << 0x10 | 0xf730) = 0xffff;
@@ -26878,7 +27471,68 @@ void tcu_shift_timer_scale_init(void)
 
 
 
-void tcu_dtc_status_check_dispatch(void)
+// [RENAMED 2026-08-08] Formerly tcu_dtc_status_check_dispatch. Called once
+// from tcu_shift_flags_dispatch (0x2b9a9).
+// 
+// CORRECTED 2026-08-08: an earlier pass of this comment called ROM 0x2bdb3
+// "the fault/DTC-set routine" -- WRONG, verified by decompiling it
+// directly. 0x2bdb3 is update_max_f04e, a simple running-maximum helper
+// (if F04E < value then F04E = value), NOT a DTC/fault-setting routine.
+// So while this function's overall SHAPE (many range/plausibility checks,
+// each calling out to a shared helper on a condition) still resembles a
+// DTC-setting pattern structurally, the specific claim that it sets a
+// fault flag via 0x2bdb3 was incorrect -- it's tracking a running maximum
+// of SOME value (context suggests possibly a max-observed engine
+// load/torque or similar), not recording a fault. Do not assume this
+// function sets DTCs without further verification; "DTC" in its old name
+// may itself have been a mis-assumption from an earlier session, not
+// re-confirmed here.
+// 
+// CONFIRMED (2026-08-08, structure only, re-verify "DTC" framing before
+// relying on it further): genuine multi-condition sensor-range checker.
+// Cross-checks several already-independently-confirmed sensor values
+// against expected ranges:
+//   - engine_torque_pct_f17a (confirmed elsewhere this project) against
+//     range tables at 0x101a/0x101c or 0x10ee/0x10f0 depending on a TCU
+//     shift-mode flag (DAT_0001ef1c bit7).
+//   - A TPS-axis interpolated value against F18C.
+//   - coolant_temp_scaled_f130 (confirmed elsewhere this project) against
+//     a threshold at 0xff4, plus a flags word at F204 bit7 and a word at
+//     F202.
+//   - RAM F158 (written by tps_delta_calc @0x214ea) and F14C against
+//     thresholds at 0xff6/0xff8.
+//   - Two status words F0FA/F0F8 XORed and checked against bit4.
+//   - Under a separate mode (EF1C bit7 set), re-checks engine_torque_pct_
+//     f17a and F18C against a different threshold set.
+// 
+// On any check "failing" (out of expected range), calls update_max_f04e
+// (0x2bdb3) -- updates a running max value at F04E, does NOT set a fault
+// flag as far as verified. Function's actual purpose is more likely
+// tracking peak/extreme sensor readings for logging or adaptive-limit
+// purposes than classic DTC-setting -- RENAME MAY NEED REVISITING once
+// F04E's consumers are traced (not done this session).
+// 
+// RELATION TO MUT DTC WORK (2026-08-08, STATUS DOWNGRADED FROM EARLIER
+// CLAIM): a real diagnostic tool (EvoScan, decompiled via de4dot+ILSpy,
+// see tools_ilspy\decompiled_evoscan\frmMain.cs) reads MUT-II EFI DTC
+// status via 3 sequential MUT RequestID reads: 0x3B (RAM F15A/F15B), 0x3C
+// (RAM F123, "Oxygen Sensor #2"), 0x3D (RAM F125). F158 (read by THIS
+// function) is in the same RAM neighborhood as F123/F125/F14C, which is
+// suggestive, but the DIRECT connection between this function and the
+// actual F15A/F123/F125 DTC bytes has NOT been established -- this
+// function updates F04E, not any of the three DTC bytes. Treat the "DTC
+// subsystem" link as a plausible neighborhood/proximity observation only,
+// not a confirmed data-flow connection, until F04E and the real writers of
+// F15A/F123/F125 are traced and shown to connect. See
+// mut_verification_status.md "MAJOR RECONCILIATION..." (2026-08-08) for
+// the full writeup and this correction.
+// 
+// NOT YET DONE: trace F04E's consumers to determine this function's real
+// purpose; trace the actual writer(s) of F15A/F123/F125 (the real DTC
+// bytes EvoScan reads) to see if they connect to this function or F158 at
+// all.
+
+void tcu_sensor_range_check_and_f04e_max_update(void)
 
 {
   ushort *puVar1;
@@ -26897,7 +27551,7 @@ void tcu_dtc_status_check_dispatch(void)
     return;
   }
   if ((DAT_0001ef1c & 0x80) == 0) {
-    if ((DAT_0001101c <= DAT_0001f17a) || (DAT_0001f17a < DAT_0001101a)) {
+    if ((DAT_0001101c <= engine_torque_pct_f17a) || (engine_torque_pct_f17a < DAT_0001101a)) {
       (*(code *)0x2bdb3)();
     }
     if ((*(ushort *)((uint)bVar4 << 0x10 | 0xf0f8) & 4) == 0) {
@@ -26912,7 +27566,7 @@ void tcu_dtc_status_check_dispatch(void)
     goto LAB_0002bcce;
   }
   else {
-    if ((DAT_00010ff0 <= DAT_0001f17a) || (DAT_0001f17a < DAT_00010fee)) {
+    if ((DAT_00010ff0 <= engine_torque_pct_f17a) || (engine_torque_pct_f17a < DAT_00010fee)) {
       (*(code *)0x2bdb3)();
     }
     (*axis_lookup_interp)();
@@ -26959,6 +27613,21 @@ LAB_0002bcce:
 }
 
 
+
+// [EXISTING FUNCTION update_max_f04e, COMMENT ADDED 2026-08-08] Simple
+// running-maximum helper: if (F04E < value) F04E = value. NOT a fault/DTC-
+// set routine -- an earlier pass on the caller's plate comment
+// (tcu_sensor_range_check_and_f04e_max_update, 0x2bc0f) incorrectly
+// labeled this as "the fault/DTC-set routine"; corrected same session.
+// Called 7 times from that one caller, each after a sensor-range
+// plausibility check fails, always with the sensor value that failed the
+// check as the argument -- so F04E accumulates the highest "out of
+// expected range" reading seen across engine_torque_pct_f17a, TPS-derived,
+// coolant_temp_scaled_f130, F158, F14C, and F0FA/F0F8-XOR checks. Real
+// purpose (peak-value logging? adaptive limit? diagnostic snapshot input?)
+// NOT YET DETERMINED -- would need F04E's own consumers traced. See
+// mut_verification_status.md "MAJOR RECONCILIATION..." (2026-08-08) and
+// its correction entry for full context.
 
 void __stdcall_far update_max_f04e(undefined2 _unused_far_pad,ushort value)
 
@@ -27023,6 +27692,7 @@ void tcu_torque_converter_slip_calc(void)
   undefined2 uVar8;
   undefined2 extraout_R1;
   ushort extraout_R2;
+  ushort unaff_R3;
   undefined2 uVar9;
   byte bVar10;
   ushort uStack_6;
@@ -27085,7 +27755,7 @@ void tcu_torque_converter_slip_calc(void)
     puVar1 = (ushort *)((uint)bVar10 << 0x10 | 0xf6c8);
     *puVar1 = *puVar1 & 0xfffb;
     if ((*(ushort *)((uint)bVar10 << 0x10 | 0xf226) & 0xc000) != 0) {
-      tcu_shift_quality_index_calc();
+      tcu_shift_quality_index_calc(unaff_R3);
     }
     *(ushort *)((uint)bVar10 << 0x10 | 0xf6d6) = *(ushort *)((uint)bVar10 << 0x10 | 0xf6d6) & 0xfff5
     ;
@@ -27151,7 +27821,7 @@ ushort tiered_threshold_table_select
 
 
 
-ushort * tcu_shift_quality_index_calc(void)
+ushort * tcu_shift_quality_index_calc(ushort param_fp1)
 
 {
   short sVar1;
@@ -27212,38 +27882,41 @@ ushort * tcu_shift_quality_index_calc(void)
 
 
 
-ushort tcu_shift_pattern_threshold_select(void)
+ushort tcu_shift_pattern_threshold_select(ushort param_fp1,ushort param_fp2)
 
 {
   ushort uVar1;
-  ushort uVar2;
+  ushort *puVar2;
+  ushort uVar3;
   ushort *in_stack_00000004;
   ushort uStack_8;
   ushort uStack_6;
   ushort uStack_4;
   
-  uVar2 = in_stack_00000004[1];
+  puVar2 = in_stack_00000004;
+  uVar3 = in_stack_00000004[1];
   *(undefined2 *)((int)&stack0xfffe + -4) = 2;
-  if (uVar2 <= in_stack_00000004[3]) {
+  if (uVar3 <= puVar2[3]) {
     *(undefined2 *)((int)&stack0xfffe + -4) = 8;
   }
   if (*(ushort *)((int)&stack0xfffe + -2) <= in_stack_00000004[5]) {
     *(undefined2 *)((int)&stack0xfffe + -4) = 0x20;
   }
-  uVar2 = *in_stack_00000004;
+  puVar2 = in_stack_00000004;
+  uVar3 = *in_stack_00000004;
   *(undefined2 *)((int)&stack0xfffe + -6) = 1;
-  uVar1 = in_stack_00000004[2];
-  if (uVar2 <= uVar1) {
+  uVar1 = puVar2[2];
+  if (uVar3 <= uVar1) {
     *(undefined2 *)((int)&stack0xfffe + -6) = 4;
-    uVar2 = uVar1;
+    uVar3 = uVar1;
   }
   uVar1 = in_stack_00000004[4];
-  if (uVar2 <= uVar1) {
+  if (uVar3 <= uVar1) {
     *(undefined2 *)((int)&stack0xfffe + -6) = 0x10;
-    uVar2 = uVar1;
+    uVar3 = uVar1;
   }
   if ((*(short *)((int)&stack0xfffe + 8) == 1) ||
-     (*(ushort *)((int)&stack0xfffe + -2) <= uVar2 && uVar2 != *(ushort *)((int)&stack0xfffe + -2)))
+     (*(ushort *)((int)&stack0xfffe + -2) <= uVar3 && uVar3 != *(ushort *)((int)&stack0xfffe + -2)))
   {
     uStack_6 = uStack_8;
   }
@@ -27265,10 +27938,11 @@ void tcu_periodic_dispatch(void)
 {
   short *psVar1;
   byte bVar2;
+  ushort unaff_retaddr;
   
   bVar2 = 1;
   div_u32_u16_sat(DAT_0001f5d6,DAT_0001f5d8,4);
-  tcu_shift_ratio_buffer_update();
+  tcu_shift_ratio_buffer_update(unaff_retaddr);
   (*tcu_solenoid_diagnostic_calc)();
   tcu_gear_ratio_calc();
   tcu_lockup_clutch_state_update();
@@ -27310,7 +27984,7 @@ void tcu_periodic_dispatch(void)
 // this and tcu_torque_converter_slip_calc). Not itself an RPM output, but
 // downstream of one - the F5D6/F5D8 input is the RPM-candidate signal.
 
-void tcu_shift_ratio_buffer_update(void)
+void tcu_shift_ratio_buffer_update(ushort param_fp1)
 
 {
   ushort uVar1;
@@ -27450,7 +28124,7 @@ void tcu_solenoid_diagnostic_calc(void)
     if ((g_status_flags_f0f8 & 0x20) != 0) {
       uVar8 = DAT_00010ffa;
     }
-    if (((DAT_0001f17a < uVar8) && ((DAT_0001f634 & 0x8000) == 0)) &&
+    if (((engine_torque_pct_f17a < uVar8) && ((DAT_0001f634 & 0x8000) == 0)) &&
        (uVar5 = (*clamp_u8)(), puVar1 = (ushort *)((uint)bVar9 << 0x10 | 0xf65a),
        *puVar1 <= uVar5 && uVar5 != *puVar1)) {
       uVar5 = *(ushort *)((uint)bVar9 << 0x10 | 0x1008);
@@ -27817,23 +28491,20 @@ void tcu_solenoid_diagnostic_calc(void)
 
 
 
-void tcu_shift_buffer_average_calc(undefined2 param_1,ushort param_2)
+void tcu_shift_buffer_average_calc(undefined2 param_1,undefined2 param_2,undefined2 param_3)
 
 {
-  ushort uVar1;
+  ushort uStack_2;
   
-  uVar1 = g_status_flags_f20e & 0x11;
-  if ((((g_status_flags_f20e & 0x11) == 0) &&
-      (uVar1 = DAT_00011006 << 2, (ushort)(DAT_00011006 << 2) < DAT_0001ef70)) &&
-     ((uVar1 = DAT_0001f17a, DAT_0001150a <= DAT_0001f17a ||
-      (uVar1 = DAT_0001f18c, DAT_0001150c <= DAT_0001f18c)))) {
+  if ((((g_status_flags_f20e & 0x11) == 0) && ((ushort)(DAT_00011006 << 2) < DAT_0001ef70)) &&
+     ((DAT_0001150a <= engine_torque_pct_f17a || (DAT_0001150c <= DAT_0001f18c)))) {
     DAT_0001f64a = DAT_0001f64a | 0x20;
   }
   if (DAT_0001f6cc == 0) {
-    param_2 = DAT_0001f6d8 + DAT_0001f6da + DAT_0001f6dc + DAT_0001f6de + DAT_0001f6e0 +
-              DAT_0001f6e2;
-    if (param_2 < DAT_0001f6e4 + DAT_0001f6e6 + DAT_0001f6e8 + DAT_0001f6ea + DAT_0001f6ec +
-                  DAT_0001f6ee) {
+    if ((ushort)(DAT_0001f6d8 + DAT_0001f6da + DAT_0001f6dc + DAT_0001f6de + DAT_0001f6e0 +
+                DAT_0001f6e2) <
+        (ushort)(DAT_0001f6e4 + DAT_0001f6e6 + DAT_0001f6e8 + DAT_0001f6ea + DAT_0001f6ec +
+                DAT_0001f6ee)) {
       DAT_0001f714 = DAT_0001f6e4;
       DAT_0001f716 = DAT_0001f6e6;
       DAT_0001f718 = DAT_0001f6e8;
@@ -27849,7 +28520,6 @@ void tcu_shift_buffer_average_calc(undefined2 param_1,ushort param_2)
       DAT_0001f71c = DAT_0001f6e0;
       DAT_0001f71e = DAT_0001f6e2;
     }
-    uVar1 = DAT_0001f71e;
     if (PTR_INTC_IPRA_000102bd._0_1_ != '\0') {
       if (DAT_0001f7d8 <= DAT_0001f7c8) {
         DAT_0001f7d8 = DAT_0001f7c8;
@@ -27860,7 +28530,6 @@ void tcu_shift_buffer_average_calc(undefined2 param_1,ushort param_2)
       if (DAT_0001f7dc <= DAT_0001f7cc) {
         DAT_0001f7dc = DAT_0001f7cc;
       }
-      uVar1 = DAT_0001f7ce;
       if (DAT_0001f7de <= DAT_0001f7ce) {
         DAT_0001f7de = DAT_0001f7ce;
       }
@@ -27891,13 +28560,14 @@ void tcu_shift_buffer_average_calc(undefined2 param_1,ushort param_2)
     }
     DAT_0001f6d4 = DAT_0001f6d4 & 0xfffd;
   }
-  coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(uVar1,param_2,DAT_0001f04e,1);
+  uStack_2 = param_3;
+  coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(*(ushort *)((int)&stack0xfff8 + 6));
   return;
 }
 
 
 
-void coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(void)
+void coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(ushort param_fp1)
 
 {
   if ((*(ushort *)((int)&stack0xfffe + 6) & 1) != 0) {
@@ -27927,7 +28597,7 @@ void coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(void)
 
 
 
-ushort tcu_gear_ratio_calc(void)
+ushort tcu_gear_ratio_calc(undefined2 param_1,undefined2 param_2,ushort param_3)
 
 {
   ushort *puVar1;
@@ -27942,6 +28612,7 @@ ushort tcu_gear_ratio_calc(void)
   ushort extraout_R1;
   undefined2 extraout_R1_00;
   short sVar10;
+  ushort unaff_R3;
   char cVar11;
   byte bVar12;
   undefined1 uVar13;
@@ -28051,7 +28722,7 @@ LAB_0002cb81:
       {
         puVar1 = (ushort *)((uint)bVar12 << 0x10 | 0xef1c);
         *puVar1 = *puVar1 | 0x80;
-        coldinit_f6c0_f7c8_state_clear_and_intc_flag_read();
+        coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(param_3);
       }
     }
     uStack_10 = *(ushort *)((uint)bVar12 << 0x10 | 0xef04);
@@ -28111,7 +28782,7 @@ LAB_0002cb81:
       puVar1 = (ushort *)((uint)bVar12 << 0x10 | 0xef1c);
       *puVar1 = *puVar1 & 0xff7f;
       *(undefined2 *)((uint)bVar12 << 0x10 | 0xef1e) = 0;
-      uVar7 = coldinit_f6c0_f7c8_state_clear_and_intc_flag_read();
+      uVar7 = coldinit_f6c0_f7c8_state_clear_and_intc_flag_read(unaff_R3);
     }
   }
   *(undefined2 *)((uint)bVar12 << 0x10 | 0xf5fa) = 0;
