@@ -2019,3 +2019,170 @@ chase further.
     between them, or cross-checking against get_xrefs_to counts before
     trusting a resolution) would avoid this failure mode -- not
     implemented this session.
+
+SESSION 2026-08-07: MUT DISPATCH/PACK-AND-SEND TRACE, METHODOLOGY
+CORRECTIONS, AND A BETTER VERIFICATION TOOL
+============================================================
+Long session continuing from "trace where the ECU packs and sends MUT
+IDs." Full detail lives in mut_verification_status.md; this entry
+summarizes the METHODOLOGY findings specifically, since they apply to
+all future sessions/tools, not just this one topic.
+
+WHAT WAS TRACED (see mut_verification_status.md for full detail):
+- sci1_periodic_status_frame_build_f54a_f566 (renamed from
+  diagnostic_snapshot_f54a_f566_build): the periodic (every-200-tick)
+  SCI1 status/handshake frame builder. All 14 fields traced to a source;
+  3 confirmed as real known values (engine_torque_pct_f17a,
+  mut_battery_voltage_f13a, coolant_temp_scaled_f130), 2 traced but
+  unnamed (F18C injector-PW sibling, F10E table/axis output), 3
+  (F552/F554/F55A) traced to a shared muldiv_s16_rounded_3op() call whose
+  inputs are a 100-tick snapshot-and-reset of an accumulator
+  (accum_latch_100tick_f33a/f33c, renamed) inside
+  fuel_pw_and_airvol_compute -- exact physical meaning of THAT
+  accumulator not pinned down.
+- Separately traced the ACTUAL Mode-2 MUT RequestID path
+  (adc_sensor_convert_single, the 0x2fad0 table reader): found it has
+  exactly 2 callers, both internal periodic snapshot/backup-logging
+  functions (renamed mut_configurable_reqid_backup_snapshot_5word /
+  _periodic_snapshot_8word), which pull their RequestID list from a
+  RAM record fed by a boot-time ROM copy that turned out to be all-0xFF
+  (unprogrammed) on this ROM. Traced who else could populate that record
+  at runtime (eeprom_backup_table_write_dispatch, called every main_loop
+  pass) and searched exhaustively for an EEPROM/serial driver -- found
+  none. Working conclusion (per user's steer): this ECU likely has no
+  onboard EEPROM, the whole mechanism is vestigial/inherited from a
+  shared platform codebase, never populated on real hardware. CONCLUSION:
+  there is no live, wire-driven "answer any RequestID you're asked for"
+  handler on this ROM -- the sub-0xC0 command table @0x1fad0 that would
+  normally hold one is entirely unprogrammed (separate, earlier finding).
+- Used the above work as a base to confirm 6 MUT table RequestIDs as
+  genuinely dead/unimplemented cells: 0x18 F21D, 0x19 F217, 0x20 F179,
+  0x2E F1E7, 0x44 EEDF (MAT Scaled), 0x45 EEE1 (MAP Scaled).
+
+METHODOLOGY LESSONS (the important part for future sessions/tools):
+
+1. get_xrefs_to / get_bulk_xrefs must be checked under BOTH the 0000-
+   and 0001-address-bank-prefix forms of an address before concluding no
+   writer exists. This bit twice this session: F17A and F33A/F33C both
+   showed "zero xrefs" under one prefix but had real writers findable
+   under the other. Root cause: this ROM's H8/500 code accesses the same
+   physical RAM cell under different bank-tag prefixes depending on
+   which bank was active at the access site (same idiom as the
+   `bVar<<0x10 | 0xfxxx` pattern already documented elsewhere in this
+   project) -- Ghidra's xref index appears to track these separately
+   rather than unifying them to one physical address.
+
+2. search_byte_patterns on a raw 2-byte address literal is UNRELIABLE
+   used alone -- H8/500 instructions are variable-length and a 2-byte
+   substring can coincidentally appear inside a completely unrelated
+   instruction's encoding (demonstrated concretely with F21D: a
+   byte-pattern hit at 0x2be19 looked like a real reference but
+   get_assembly_context proved it wasn't even an instruction boundary --
+   it was a byte-offset overlap inside a different instruction targeting
+   a different address entirely, F71C). MANDATORY: verify every
+   byte-pattern hit with get_assembly_context (or equivalent) to confirm
+   it lands on a genuine instruction boundary referencing the intended
+   address, before treating it as a real reference either way (a hit
+   OR a non-hit both need this check -- a real hit could also coincide
+   with data/table regions that aren't code references, as seen with the
+   EEDF/EEE1/F217/F179/F1E7 table-entry hits, which were real matches
+   but were table DATA, not code writers).
+
+3. BEST METHOD FOUND THIS SESSION, should be the PRIMARY method going
+   forward: the project has a full decompiled-C dump of the entire ROM
+   at test/rvr/RVR_1998_x3 4g63t 21000011 md352553.hex.c (28,456 lines,
+   confirmed current -- reflects today's Ghidra renames already). Grep
+   this file directly for a target symbol/address FIRST. It is immune to
+   BOTH failure modes above simultaneously: it's flat decompiled text
+   (no bank-prefix split, so can't miss a writer the way get_xrefs_to
+   did), and it matches on actual decompiled address/symbol text rather
+   than raw instruction-encoding bytes (so can't produce the
+   coincidental-byte-overlap false positives search_byte_patterns did).
+   Verified by grepping "f17a" and finding the exact known-good writer
+   line in plain text (`*(undefined2 *)((uint)bVar2 << 0x10 | 0xf17a) =
+   uVar1;`). Re-ran all 6 "confirmed dead" cells through this file as a
+   third independent check -- all came back 0 matches, giving much
+   higher confidence than either of the other two methods alone.
+   RECOMMENDATION: for any future "does X have a writer / who references
+   Y" question in this project, grep the .c dump first; use
+   get_xrefs_to second (checking both bank prefixes) to jump from a hit's
+   line number to the live Ghidra function name/address; reserve
+   search_byte_patterns for cases where the .c dump doesn't exist yet or
+   needs regenerating, and always verify its hits against instruction
+   boundaries before trusting them.
+
+4. Général process note: several conclusions this session were stated
+   too confidently on a first pass and had to be walked back after
+   direct pushback/re-checking (the "fixed literal RequestID" claim, the
+   "dead end" framing on the EEPROM mechanism, the F21D byte-pattern
+   dismissal). Worth building in the habit of treating a first
+   xref/byte-pattern search as provisional, especially when it produces
+   a clean "definitely nothing here" result, rather than writing it up
+   as final until cross-checked by a second, structurally different
+   method (per point 3 above, that second method should now be the .c
+   dump grep by default).
+
+SCRIPT ADDED 2026-08-07: FindRealWritersAcrossBankForms.java
+============================================================
+Saved in "ghidra scripts/FindRealWritersAcrossBankForms.java" (copy into
+Ghidra's own ghidra_scripts search path before running, per the existing
+documented gotcha for all scripts in this project).
+
+WHY: get_xrefs_to was confirmed this session to have a real, reproducible
+blind spot -- it indexes references per literal address-space-prefix
+string ("0000fXXX" vs "0001fXXX") and does NOT unify them even when they
+are the same physical RAM byte. Verified directly: get_xrefs_to(0001f130)
+returns 17 correct references; get_xrefs_to(0000f130) returns ZERO for
+the exact same physical cell, in the same session, immediately after.
+"Check both prefixes" (the mid-session workaround) is a partial
+mitigation, not a fix -- it still misses any write using a THIRD
+addressing form, e.g. a runtime-computed bank-relative store like
+(uint)bVar<<0x10 | 0xfXXX, which is exactly how F17A's and F33A/F33C's
+real writers were built (found only by decompiling/disassembling
+candidate functions directly, not via get_xrefs_to under either prefix).
+
+WHAT IT DOES: single pass over every instruction in the program.
+  - Pass 1 (MEM-REF, high confidence): checks every instruction's already-
+    resolved memory references, normalizes the target address to its bare
+    16-bit RAM offset (strips the bank-prefix distinction Ghidra's live
+    xref index fails to unify), and reports a hit if it matches a target.
+    This alone reproduces everything get_xrefs_to would find under BOTH
+    prefixes, in one query.
+  - Pass 2 (IMM-ONLY, lower confidence, needs manual review): separately
+    scans every instruction's operands for the bare 16-bit target value
+    appearing as a plain scalar immediate, REGARDLESS of whether Ghidra
+    recognized it as a memory reference. This is the pass that would have
+    caught F17A/F33A/F33C without prior knowledge of where to look --
+    those writers use a computed-bank store where the low 16 bits still
+    appear as a literal, just not as something Ghidra's operand analysis
+    resolved into a formal Reference.
+  - Does NOT auto-classify Pass 2 hits as real -- deliberately, per the
+    F21D false-positive already found this session (a byte-pattern match
+    that turned out to be a coincidental sub-instruction byte overlap,
+    not a real reference). Every Pass 2 hit needs a human to confirm it's
+    a genuine address-forming immediate and not a coincidental literal
+    (loop bound, unrelated constant, etc.) before treating it as a real
+    writer.
+  - Optional CONFIRM_AND_ANNOTATE list: once a hit is manually confirmed,
+    add it there and re-run to have the script create a real Ghidra
+    memory reference, so future get_xrefs_to queries (under either
+    prefix) will find it going forward -- closes the gap for that
+    specific cell permanently rather than needing this script re-run
+    every time.
+
+NOT YET RUN this session -- written and reviewed but not executed inside
+Ghidra (requires copying into ghidra_scripts path and running via the
+GUI or a script-runner tool, not yet done). Default TARGET_OFFSETS list
+is pre-loaded with the 6 cells this session called "confirmed dead"
+(f21d, f217, f179, f1e7, eedf, eee1) specifically so running it is the
+natural next step to re-verify those conclusions with a method immune to
+both known blind spots at once (the prefix-index bug AND the byte-
+pattern-false-positive risk), especially given the EvoScan log
+contradiction found the same session (real live MATScaled/MAPScaled data
+existing despite "no writer found" for EEDF/EEE1).
+
+NOT YET DONE: actually run this script in Ghidra and reconcile its
+output against both the .c dump grep results (which agreed "0 matches"
+for all 6 targets, but is ALSO potentially blind to computed-bank-store
+writers if the decompiler folds them into a form that doesn't textually
+contain the literal) and the EvoScan log question.

@@ -859,6 +859,8 @@ leads that something is actually wrong, not just unverified.
    Pulsar's run-command / PowerShell Copy-Item) before re-running in
    Ghidra, editing the repo copy alone has no effect on script execution.
 
+REAL CALLER FOUND 2026-08-07 [Claude, manual disassembly trace]: isc_f438_correction_calc (0x26b67) is the real caller of the 4-table Decel Fuel Cut Delay cluster. The 4 literals (0x28f6/0x2902/0x290e/0x291a) are pushed via an FP-relative spill-then-reload (mov #imm,@(-0x2:8,FP) → mov @(-0x2:8,FP),R0 → mov R0,@-SP) rather than a direct @-SP immediate push — a fourth calling-convention shape this project hadn't catalogued, invisible to both the literal-byte search and FixBankOffsetReferences_v2.java's adjacency scan. Axis is 0x2d3da (RPM-shaped, corroborated independently by review2.md line 2145). Naming reopened, not resolved: the branch is selected by g_status_flags_f0f8 bits 4/5, but tracing those bits back through compose_status_word_f0f8 → g_status_flags_f20e bits 0/4 shows the real gate is an open-loop/operating-mode flag pair (bit4 set inside a function already named ecu_openloop_state_reset), not an A/C-switch or gear-position signal. The inherited "Neutral/In Gear A/C Off/On" names are now suspect but NOT renamed — bit0 of f20e still needs its own trace. STATUS: caller CONFIRMED (was NO-CALLER). Naming: OPEN.
+
 9. DEGENERATE/EMPTY 3D-table cluster: 0x131A0_ISC, 0x131A8_ISC, 0x131B0_ISC
    (user screenshot, EcuFlash rendering wildly jumpy 8x10/7x10/10x10 grids
    instead of a smooth surface). RESOLVED 2026-08-06 [Claude, live Ghidra
