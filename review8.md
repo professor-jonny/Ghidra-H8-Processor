@@ -146,17 +146,155 @@ code.
 2026-08-09 (session 2): Implemented H8StateTableDispatchAnalyzer.java (see
 that file's own doc comment for full detail). Scoped strictly to the two
 known/verified table addresses per the PLAN above, not a general pattern
-scan. Not yet compiled/run in Ghidra -- no Java compiler available in the
-tool environment used to write it, so it has only been checked by careful
-manual read-through (imports, API usage against the same Ghidra API
-surface H8FramePointerParamAnalyzer/H8FunctionPurgeAnalyzer already use
-successfully) rather than an actual build. NEXT STEP: build the h8
-extension (existing project build process -- same one that produced the
-.class files for the other three analyzers) and run it against the RVR
-md352553 program, then verify: (a) all 16 missing functions get created,
-(b) all 21 COMPUTED_CALL references land correctly, (c) the 4
-already-existing functions pick up their new reference without any other
-change, (d) re-run H8FramePointerParamAnalyzer afterward to see if the 16
-newly-created functions get real FP-relative parameter storage now that
-they're reachable, which would be the real end-to-end validation of this
-whole investigation.
+scan. Compiled successfully via javac against every jar under
+ghidra_12.0.4_PUBLIC (exit code 0; a handful of unrelated bad-classpath-
+element warnings for jars that don't exist in this 12.0.4 layout, and the
+same [this-escape] setPriority()-in-constructor info warning the other
+three analyzers already produce -- neither is a real problem). Compiled
+alongside the other three analyzers in one pass to confirm nothing broke.
+H8StateTableDispatchAnalyzer.class now sits in h8/build/classes/h8539f/
+next to the other three .class files. NOT YET RUN inside Ghidra itself --
+compiling is not the same as verifying correct runtime behavior.
+NEXT STEP: run it against the RVR md352553 program (via Ghidra's Analysis
+> One Shot menu, or by re-running full auto-analysis with it enabled) and
+verify: (a) all 16 missing functions get created, (b) all 21 COMPUTED_CALL
+references land correctly, (c) the 4 already-existing functions pick up
+their new reference without any other change, (d) re-run
+H8FramePointerParamAnalyzer afterward to see if the 16 newly-created
+functions get real FP-relative parameter storage now that they're
+reachable, which would be the real end-to-end validation of this whole
+investigation.
+
+2026-08-09 (session 2 cont.): CORRECTION -- compiling into the git repo's
+own h8/build/classes was not sufficient. The live module Ghidra actually
+loads analyzers from is C:\Users\j.brophy.CORKILLSYSTEMS\Downloads\
+ghidra_12.0.4_PUBLIC\Ghidra\Processors\h8\lib\h8539f-analyzers.jar -- a
+jar file, not loose .class files, and a completely separate location from
+the git repo (this is why the git repo's build/classes dir existing at
+all was a bit of a red herring; it's not what Ghidra reads). Backed up the
+live jar to h8539f-analyzers.jar.bak-20260809-134432 (matching the backup
+naming convention already present in that lib folder from prior sessions),
+then rebuilt it from the git repo's freshly-compiled build/classes/h8539f
+directory (all 4 source files compiled together in one javac pass, so
+internally consistent) via `jar cf h8539f-analyzers.jar h8539f`. New jar
+verified to contain all 5 class files: the 4 pre-existing ones plus
+H8StateTableDispatchAnalyzer.class. Ghidra was NOT running during this
+swap (CodeBrowser screenshot showing the missing analyzer was from before
+this fix). NEXT STEP: restart Ghidra, reopen the RVR md352553 program, and
+check Analysis Options for "H8 State Table Dispatch Analyzer" -- if it now
+appears, run it and verify per the checklist two log entries up.
+
+2026-08-09 (session 2 cont., BUG FOUND AND FIXED): Analyzer ran successfully
+this time (confirmed via Ghidra log) but did nothing useful: all 21 records
+failed the bank-byte check and were skipped, 0 functions created, 0
+references added -- decompile output correctly reported as identical to
+before, since nothing changed. Root cause: decodeRecord() had the pad and
+bank byte positions swapped. My own manual byte trace earlier in this file
+(record bytes "00 02 00 02 7f b1" -> address bytes are raw[3],raw[4],raw[5]
+= 02,7f,b1, meaning bank=raw[3]) was correct, but when writing the Java I
+transcribed it backwards as bank=raw[2], pad=raw[3] -- the actual layout is
+[flags:16][pad:8][bank:8][offset:16], not [flags:16][bank:8][pad:8]
+[offset:16] as both this file and the class doc comment originally stated.
+Corrected in H8StateTableDispatchAnalyzer.java (decodeRecord swapped to
+pad=raw[2], bank=raw[3]) and in both doc comments that described the
+layout. Recompiled (exit 0) and redeployed to the live jar, backed up as
+h8539f-analyzers.jar.bak-20260809-134936. NEXT STEP: restart Ghidra again,
+re-run analysis, and this time expect real output -- 16 functions created,
+21 COMPUTED_CALL references added (or fewer if some records still don't
+match for a different, not-yet-seen reason -- watch the log closely rather
+than assuming success). If any records STILL fail the bank check after
+this fix, stop and re-derive the byte layout from scratch with a fresh
+read_memory dump rather than patching the check further -- two wrong
+transcriptions in a row would mean the manual derivation process itself
+needs redoing, not another one-line fix.
+
+2026-08-09 (session 2, SUCCESS -- end-to-end validated): Re-ran after the
+pad/bank fix. Decompile output for all 21 targets now shows real function
+bodies (previously these 16 were raw undisassembled bytes, and the other
+4 existed but were unreachable per Ghidra's xref graph). All 21 handlers
+follow the same shape: tri-state return (0/1/2, proceed/hold/deny-style),
+reading the same status-word cluster already well-documented elsewhere in
+this ROM (DAT_0001f1fe, DAT_0001efa2, g_status_flags_f0f8,
+g_status_flags_f20e, DAT_0001f200, etc.) -- confirms
+f502_state_table_dispatch is a genuine condition-gate state machine
+consulted by whatever writes/reads state 0xf502, not dead weight. Still
+unnamed (FUN_0002xxxx) -- naming these based on the flags each guards is
+a reasonable follow-up but NOT done automatically by this analyzer (out
+of scope per the SAFETY/SCOPE section -- naming requires understanding
+what each flag means, which is human judgement, not mechanical
+derivation). H8StateTableDispatchAnalyzer considered DONE for its stated
+v1 scope: functions created, references added, mechanism fully explained.
+REMAINING FOLLOW-UPS (not started):
+  1. Name the 16 newly-created functions based on what each guards, once
+     their flag meanings are understood (e.g. FUN_00027fea reads
+     g_status_flags_f0f8 bit 6 and DAT_0001efa2, similar shape to its
+     neighbor phase_dispatch_efa2_f500_f5ee_gate_check -- may be a related
+     zone/phase check worth a matching name).
+  2. Re-run H8FramePointerParamAnalyzer now that these 16 are real,
+     reachable functions -- none of them take FP-relative parameters
+     (all are `(void)` per the decompile shown), so no new CUSTOM_STORAGE
+     signatures are expected from that pass for this batch, but worth
+     confirming rather than assuming.
+  3. review6.md's zero-caller-cohort verdict for the 4 previously-existing
+     functions (f17a_load_zone_and_ef96_f1d8_check,
+     phase_dispatch_efa2_f500_f5ee_gate_check, FUN_00028038 (now
+     resolved, still unnamed),f17a_f13c_load_zone_and_f514_gate_check)
+     should be formally corrected there, not just noted here.
+  4. f502_state_index_update (0x27f60) still not investigated -- would
+     explain what actually drives state selection and complete the
+     picture of this subsystem.
+  5. The other 13 functions in review6.md's original 17-function
+     zero-caller cohort remain unaddressed -- no evidence yet ties them
+     to this or any other computed-call mechanism.
+
+2026-08-09 (session 2, NAMING PASS COMPLETE): Renamed and documented all
+18 unnamed functions in the state table (17 created by
+H8StateTableDispatchAnalyzer + the 1 pre-existing FUN_00028038 that just
+never had a name). Names follow the project's existing convention
+(f<addr>_<condition>_gate_check / _stub), derived directly from each
+function's actual reads/writes -- not guessed. Each got a plate comment
+describing its condition and, where relevant, cross-references to sibling
+handlers sharing the same status word (DAT_0001f1fe in particular is
+checked by 3 different states: 9, 14, 15 -- worth treating as a real
+bitfield with known bit meanings if this subsystem gets revisited).
+Final name list:
+  0x27fe5  f502_state12_const_deny2_stub
+  0x27fea  f0f8_bit6_efa2_phase_gate_check
+  0x28038  f1ec_torque_f17a_multi_zone_gate_check  (was already a function,
+           just unnamed -- only this one predates the analyzer)
+  0x280be  f340_bit0_clear_check
+  0x280d3  f502_state6_const_hold1_stub
+  0x280d8  f502_state7_const_hold1_stub
+  0x280dd  f1fe_f00c_timer_calc_gate_check  (largest/most complex, 116
+           bytes -- writes DAT_0001f00c, a likely timer/count reload)
+  0x28151  f1fe_bit5_clear_reset_f09a_check
+  0x2816c  f1f2_bit7_f3a4_bit10_gate_check
+  0x28192  f1fe_bit1_clear_check
+  0x281a1  f1fe_bit6_clear_check
+  0x281b6  ef92_f12e_range_gate_check
+  0x281e4  flag102ea_f4d6_bit2_gate_check
+  0x28210  f502_state18_const_hold1_stub
+  0x28215  f1f2_bit13_f4ae_mask0a_gate_check
+  0x28234  f1f2_bit13_f4ae_mask05_gate_check  (near-identical to state 19,
+           different mask on same DAT_0001f4ae byte)
+  0x28253  f502_state10_const_hold1_stub
+  0x28258  f1f4_eedc_f202_gate_check
+No parameter/return typing changes were needed or made: all 18 are (void)
+with no FP-relative parameters (confirmed in the earlier decompile dump),
+so there is nothing for H8FramePointerParamAnalyzer to do for this batch,
+and Ghidra's own inferred return types (undefined2/bool) already match
+the convention used by the 3 pre-existing named siblings, so those were
+left alone rather than force a more specific type not actually evidenced
+by the decompile.
+REMAINING FOLLOW-UPS (updated):
+  1. DONE -- naming (this entry).
+  2. Confirmed not needed -- no FP params in this batch, nothing for
+     H8FramePointerParamAnalyzer to add.
+  3. review6.md's zero-caller-cohort verdict still needs formal correction
+     there (not done yet -- only noted in this file so far).
+  4. f502_state_index_update (0x27f60) still not investigated.
+  5. The other 13 functions in review6.md's original 17-function
+     zero-caller cohort remain unaddressed.
+  6. NEW: DAT_0001f1fe is checked by 3 of these handlers (states 9, 14,
+     15) plus written by state 8 -- worth formally documenting as a
+     bitfield if a future session wants to push this further.
