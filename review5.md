@@ -58,6 +58,25 @@ METHOD (per axis)
 7. When fixing RVR_base.xml, keep the same discipline as review2.md: only
    change what's proven, leave everything else exactly as found, note the
    change inline with a dated comment.
+8. STANDING RULE (added 2026-08-09, PJ's instruction): axis/table data can
+   never legitimately overlap another table -- two structures cannot
+   physically occupy the same ROM bytes. Whenever an axis's real element
+   count is UNRESOLVED/UNCONFIRMED (caller trace inconclusive, no
+   scaling-header cross-check available), its element count in
+   RVR_base.xml MUST be capped so the data span (address + elements*2 for
+   uint16, or *1 for uint8) does NOT reach the start address of the next
+   known table/axis in ROM order. This is a placeholder safety bound, not
+   a claim about the true axis length -- tag it with a dated comment
+   stating it's a physical-gap cap pending a real caller trace (e.g. "el
+   count capped to N pending caller trace, real length unconfirmed").
+   Never leave an unconfirmed axis's element count large enough to
+   overlap a neighbor even temporarily. When the real length is later
+   confirmed (header cross-check or caller trace), replace the cap with
+   the real value and remove the placeholder tag. Precedent: this was
+   already done ad hoc for 0x11f4a/0x127d8/0x1297a before being written
+   up as a rule here (see the Group A trim-curve entries elsewhere in
+   this file) -- including a caught mislabeling bug from doing this too
+   hastily (axis identity must still be checked, not just the count).
 
 Status key: OPEN / CONFIRMED CORRECT / CONFIRMED WRONG-FIXED /
 CONFIRMED WRONG-UNRESOLVED
@@ -914,6 +933,252 @@ REAL CALLER FOUND 2026-08-07 [Claude, manual disassembly trace]: isc_f438_correc
    count field of its own to sanity-check against, so that would need a
    different detection approach (e.g. minimum data_len only).
 
+10. FALSE-RPM-AXIS CLUSTER (2026-08-10, Claude): 8 Ghidra-scraper-only
+    table_2d_record bookmarks -- TABLE_2D_00011EE2_CompositeCalc,
+    TABLE_2D_00011F4A_CompositeCorr, TABLE_2D_000127D8_ISC,
+    TABLE_2D_0001297A_Trim, TABLE_2D_0001315C, TABLE_2D_00013168,
+    TABLE_2D_0001317C, TABLE_2D_000131EC -- each carry an
+    H8539F-AXIS-DATA-OFFSET note claiming their axis is "6 bytes behind"
+    at 0x2d32c (the confirmed-good 18-element RPM axis @0x2d332, same one
+    SEED #6 fixed). NONE of these 8 are in new/RVR_base.xml as curated
+    entries yet -- scraper-only, never promoted. Investigated because a
+    user screenshot showed EcuFlash rendering several of these as jumpy/
+    garbage grids under the inherited 18-elem-RPM assumption.
+
+    FINDING: the "6 bytes behind = shared RPM axis" claim is a scraper
+    false trail for this whole cluster, same failure mode as SEED #7a's
+    Air Temp misdiagnosis -- it's just grabbing the nearest preceding
+    axis-shaped header, not what's actually consumed. Each of these 8
+    table_2d_records has its OWN 4-byte header (mode=02, mode_hi=00,
+    index_src) read directly, and index_src is NOT F0C0/RPM for 6 of the
+    8. None of them go through axis_lookup_interp or touch 0x2d332 at
+    all -- confirmed both by direct header byte reads and by the fact
+    that real callers (where found) call table_lookup_interp with no
+    preceding axis_lookup_interp call.
+
+    Also discovered while tracing these: table_lookup_interp itself
+    (0x14656) has NO count/bounds field or check anywhere in its own
+    logic -- it just uses the dereferenced index_src cell's low byte as
+    a raw offset into the table's inline data, unlike axis_lookup_interp
+    which does clamp against a real stored count. So "element count" for
+    a table_2d_record isn't a fixed ROM-stored value the way it is for
+    axis records; the real constraint is whatever range the driving
+    RAM cell can take, which is a separate open question per table (see
+    Group A below).
+
+    Split into two groups based on how far the trace got:
+
+    GROUP A -- TRACED (real caller found, real index_src register
+    confirmed by direct header read; STATUS: CONFIRMED WRONG-UNRESOLVED,
+    narrowed -- identity known, exact element count/boundary still open):
+      - 0x11ee2 CompositeCalc: index_src=F0C4 (CoolantTempA, ADC).
+        Real caller: f310_f316_composite_calc (@0x2495c), literal push
+        confirmed via disassembly (BF 07 1E E2 / BF 06 01 / pjsr
+        @0x14656). Real data span independently confirmed elsewhere in
+        this file's own XML comments as 11ee2-11eef (10 data bytes) --
+        the following bytes are a SEPARATE real table @0x11ef0 (a third,
+        not-yet-fully-documented record shape consumed by
+        table_3axis_interp_triple), not a continuation or a header
+        false-positive. Element count for CompositeCalc itself: 10.
+      - 0x11f4a CompositeCorr: index_src=F0C6 (AirTemp, ADC). Real
+        caller: f2ea_f2ee_composite_correction_calc (@0x248ec), literal
+        0x1f4a pushed into table_lookup_interp. Boundary not yet
+        confirmed the way 11ee2's was.
+      - 0x127d8 ISC: index_src=F0D0 (IAT_raw). Real caller:
+        isc_f356_correction_calc (@0x25c61), literal 0x27d8 pushed into
+        table_lookup_interp. Boundary not yet confirmed.
+      - 0x1297a Trim: index_src=F0C8 (CoolantTempB, ADC). Real caller:
+        f414_trim_calc_gated_by_f0f8_f3f0 (@0x2728d), literal 0x297a
+        pushed into table_lookup_interp. Boundary not yet confirmed.
+      UPDATE 2026-08-10 (same session): found these 3 ARE already in
+      21000011_1997-2001_RVR_X3_Mt__4g63t_.xml (a different file than
+      new/RVR_base.xml, which is where I'd checked before -- they were
+      never missing from XML, just not where I looked). An earlier pass
+      TODAY had already capped 11f4a/127d8/1297a's element counts to the
+      physical byte-gap before the next table (14/32/46 respectively),
+      but still mislabeled the axis as "RPM"/2d332 in all three. Fixed
+      now: axis identity corrected in-place to match the real index_src
+      register found above (F0C6/F0D0/F0C8), with UNCONFIRMED suffix
+      since scaling/engineering-units are still unresolved and the
+      capped element counts remain physical-gap placeholders, not
+      confirmed true lookup ranges (no bounds check exists in
+      table_lookup_interp itself, per the earlier finding).
+      CAUTION FLAGGED: 1297a's existing "gap before next table" comment
+      cites "12926 to 12954" as the boundary basis, but 0x12926 is
+      BEFORE 0x1297a, not after it -- that citation is almost certainly
+      a copy/paste artifact from the blanket trim pass and should not be
+      trusted. The real next-table gap for 1297a has not been
+      re-verified this session.
+      NEXT STEP for Group A: boundary-walk confirmed complete for all 4
+      as of this session (see UPDATE 2 below).
+
+      UPDATE 2 2026-08-10 (same session): direct byte-read verification
+      of all 3 remaining tables' boundaries, not trusting the earlier
+      blanket-trim gap numbers:
+        - 0x11f4a: CONFIRMED CORRECT as-is. 14 data bytes, all flat 0x80
+          (128) -- plausible neutral/unity-correction table. Genuine
+          next header starts cleanly at 0x11f5c, matching XML. No fix
+          needed.
+        - 0x127d8: WAS WRONG (32), same failure as 1297a below --
+          blanket trim pass missed a real, previously-unlisted
+          table_2d_record starting at 0x127e4 (index_src=F0C0/RPM) that
+          sits well inside the assumed 127dc-127fc span. Real data:
+          7 bytes (126,127,128,128,127,126,125) + an 0xFF end-marker
+          sentinel (matches this file's already-documented sentinel
+          pattern from SEED #5/#6/#9), then 127e4's genuine header
+          starts cleanly. XML fixed: 32 -> 7.
+        - 0x1297a: WAS WRONG (46), confirming the caution flag above --
+          real data is 8 bytes (38,34,30,25,21,17,7,5, a clean declining
+          curve), then a genuine NEW table_2d_record header starts
+          cleanly at 0x12986 (also index_src=F0C8, interestingly).
+          XML fixed: 46 -> 8.
+      TAKEAWAY: the earlier blanket trim pass's "cap to nearest known
+      table in its address list" method is NOT reliable -- it silently
+      missed real intervening tables in 2 of 3 cases here. Any other
+      table this project trimmed the same way should be treated as
+      suspect until independently byte-verified the way these were,
+      not just trusted because a plausible-looking comment exists.
+      BONUS LEAD for Group B: the newly-found table at 0x127e4 uses
+      index_src=F0C0 (RPM raw register) -- same register as Group B's
+      0x1315c/0x13168. Real caller found: isc_f354_table_lookup_
+      conditional (@0x25c15, xref from isc_f342_composite_correction_
+      calc). MAJOR FINDING from checking it (see entry immediately
+      below): F0C0 is NOT a dedicated RPM register after all.
+
+  ** FOUNDATIONAL CORRECTION 2026-08-10 (same session): "F0C0 = RPM" IS
+     NOT A FIXED IDENTITY **
+    isc_f354_table_lookup_conditional (@0x25c15) calls axis_lookup_interp
+    FIRST (literal push: bank=2, offset=0xd28c -> real address 0x2d28c),
+    THEN table_lookup_interp (bank=1, offset=0x27e4 -> 0x127e4). This is
+    the pattern our Group A tables notably do NOT show (no preceding
+    axis_lookup_interp call in any of their 4 callers) -- so this is a
+    genuinely different consumption pattern for the same F0C0 cell.
+    Read the axis header at 0x2d28c directly:
+      0x2d28c: F0 C0 F1 30 00 05  (output_dest=F0C0, count=5)
+      0x2d292: 00 5d 00 7d 00 9d 00 ad 00 bd  (breakpoints: 93,125,157,
+                173,189)
+    Those are NOT RPM-shaped values (confirmed RPM axes in this ROM run
+    500-11000+, e.g. the 2d332 18-elem axis). This proves F0C0 is a
+    SHARED SCRATCH CELL that axis_lookup_interp writes its {index,frac}
+    result into -- whichever axis was most recently interpolated by
+    whatever caller ran last is what's actually sitting in F0C0 when a
+    given table_lookup_interp reads it. It is NOT a dedicated, always-
+    RPM register the way this file's existing pointer map implies.
+    IMPLICATION: every table_2d_record with index_src=F0C0 (or likely
+    F0C4/F0C6/F0C8/F0D0 too, by the same logic) needs its OWN caller
+    checked individually for a preceding axis_lookup_interp call before
+    trusting ANY fixed identity label for that register -- "RPM" (or
+    "CoolantTempA" etc.) may be correct for some call sites and wrong
+    for others simultaneously. This likely also bears on SEED #3's F0C0
+    writer search: the reason no direct-addressing WRITE to F0C0 was
+    ever found may simply be that axis_lookup_interp itself is the
+    writer (a shared subroutine, not a per-register dedicated store),
+    which direct byte-pattern search for a specific address wouldn't
+    catch since the destination is a runtime argument, not baked into
+    the write instruction's literal bytes.
+    NOT YET DONE: checking whether Group B's 1315c/13168 -- if/when a
+    caller is found -- follow this axis_lookup_interp-fed pattern or the
+    Group-A-style raw/scratch pattern. Also not yet done: auditing
+    OTHER existing F0C0="RPM" labeled tables elsewhere in this project
+    (outside today's cluster) for the same risk.
+
+    GROUP B -- UNTRACED, NO CALLER FOUND (header identity known by
+    direct byte read only; zero real callers by any method tried;
+    STATUS: CONFIRMED WRONG-UNRESOLVED, same "no caller" category as
+    SEED #7d/#8 before their tooling breakthroughs -- do not assume
+    dead, per this file's "never guess" discipline):
+      - 0x1315c: index_src=F0C0 (RPM, read as raw register directly,
+        NOT via axis_lookup_interp/0x2d332). Zero hits: get_xrefs_to,
+        literal-push search (bf07315c), raw 2-byte "315c" scan.
+      - 0x13168: index_src=F0C0 (RPM, raw register). Same zero-hit
+        result across all three methods.
+      - 0x1317c: index_src=F0C8 (CoolantTempB). Same zero-hit result.
+      - 0x131ec: index_src=F0C8 (CoolantTempB). Same zero-hit result.
+      NEXT STEP for Group B: same as SEED #7d/#8 -- try
+      h8539_find_axis_consumer.py / h8539_find_table_axis.py-style
+      whole-ROM scans rather than more manual xref-chasing, since the
+      manual methods are now exhausted for these 4.
+
+      UPDATE 2026-08-10 (same session): while chasing the 0x127e4 lead,
+      found a THIRD distinct table-access convention in this codebase,
+      separate from both table_lookup_interp(literal push) and the
+      axis_lookup_interp-fed pattern: table_read_indexed(bank, offset),
+      seen in f286_knock_octane_secondary_trim_compute_via_table (sibling
+      of the 127e4 caller's dispatch family, status_word_table_
+      subdispatch_group_a). Critically, its bank and offset arguments are
+      loaded via SEPARATE, non-adjacent mov:i instructions (e.g.
+      "bank=0xdb; uVar4=0xc;" with other code between the two loads) --
+      NOT a single contiguous literal the way table_lookup_interp's
+      "BF 07 <addr:16>" push is.
+      IMPLICATION: this fully explains why the exhaustive contiguous-
+      byte scans for 1315c/13168/1317c/131ec (bf07-prefixed push, and
+      plain 2-byte "315c" etc. scans) all came back empty -- if any of
+      these 4 are reached via table_read_indexed with a split bank/
+      offset load (or a page value set once and reused across a whole
+      block of calls), the address would never exist as a contiguous
+      byte pattern anywhere in ROM, regardless of whether the table is
+      genuinely consumed. This is a real methodological gap, not
+      further evidence the tables are dead -- do not downgrade these 4
+      to "likely dead" on the strength of the contiguous-scan result
+      alone.
+      REVISED NEXT STEP for Group B: search for standalone single-byte
+      loads of the relevant low bytes (0x5c/0x68/0x7c/0xec) occurring
+      near table_read_indexed call sites in the surrounding 0x13xxx
+      cluster's likely callers (ISC/knock/trim dispatch family), rather
+      than continuing to assume a single contiguous literal is required.
+
+      UPDATE 2026-08-10 (same session, continued): checked this theory
+      directly -- pulled ALL 5 callers of table_read_indexed in the
+      entire ROM (f286_knock_octane_secondary_trim_compute_via_table,
+      isc_f41a_correction_calc, isc_f420_correction_calc,
+      octane_trim_f262_f264_table_select,
+      table_select_scale_fanout_f1be_f1c2). Every single one uses ONLY
+      RAM banks 0xd8-0xdb (small adaptive-trim/correction arrays).
+      NONE ever uses bank 0x01 (ROM page 1, where 1315c/13168/1317c/
+      131ec live). table_read_indexed is structurally scoped to a
+      different address space and RULED OUT (not just unconfirmed) as a
+      path to these 4 -- do not re-check this avenue in a future
+      session.
+      Group B therefore remains genuinely unresolved after this
+      session's attempt: no caller found by direct xref, contiguous
+      literal-push scan, raw 2-byte scan, or table_read_indexed. Next
+      genuinely untried avenue: automated whole-ROM scan tooling
+      (h8539_find_axis_consumer.py-style) per the original SEED #7d/#8
+      precedent, since manual methods are now exhausted for these 4.
+
+      FINAL UPDATE 2026-08-10 (same session): went further than planned
+      and manually checked EVERY SINGLE caller of table_lookup_interp in
+      the entire ROM (all ~65, enumerated via get_function_callers) plus
+      all 5 callers of table_read_indexed, decompiling each and
+      inspecting for any literal reference to 0x315c/0x3168/0x317c/
+      0x31ec. ZERO hits across the entire set. This is now a genuinely
+      exhaustive manual result, not a partial one -- every known code
+      path that could plausibly reach a table_2d_record has been
+      checked directly. Side-note found along the way: tcu_rx_main_
+      scheduler's own plate comment (an earlier, independent session)
+      already documented that F0C0 has no discoverable software writer
+      by any method either ("no function or label references 0xF0C0...
+      status stays... unsupported, inconclusive") -- consistent with,
+      not additional to, this session's findings.
+      CONCLUSION: manual methods are fully exhausted for Group B in
+      this session. A future session should not re-attempt xref/literal/
+      byte-pattern searches for these 4 -- go straight to automated
+      whole-ROM scan tooling (h8539_find_axis_consumer.py-style, per
+      SEED #7d/#8 precedent) as the only remaining untried avenue.
+
+    SIDE FINDING (relevant to SEED #3): searched exhaustively for any
+    direct-addressing write OR read of 0xF0C4 (CoolantTempA) anywhere in
+    this ROM, same method already used for 0xF0C0. Result: zero genuine
+    code references -- the one apparent hit (0x271ce) is a confirmed
+    false positive (a `bset.w` instruction in isc_stepper_target_dispatch
+    whose F0/C4 bytes are coincidental displacement/immediate bytes, same
+    false-positive class already documented for F0C0). This is now a
+    SECOND independently-discovered RAM cell with no software writer by
+    any direct-addressing method, which strengthens (but does not yet
+    confirm) SEED #3's DTC-write theory rather than being a one-off. Not
+    yet checked: whether a DTC vector table entry targets F0C4, same open
+    next-step already flagged under SEED #3.
+
 --------------------------------------------------------------------
 --------------------------------------------------------------------
 STRUCT DEFINITIONS -- axis_lookup_record / table_2d_record /
@@ -1214,12 +1479,37 @@ X Axes (45 total tag instances, deduplicated by address below):
     caller trace for exact replacement name.
 [ ] 2d3c8 "TPS" (9 elem, scaling=TPS Percent)
 
-Y Axes: not yet pulled into this checklist -- grep RVR_base.xml for
-type="Y Axis" and repeat the same dedup-by-address pass before starting
-caller traces, since the X-axis pass alone already found 5 same-address-
-different-name contradictions (2d418, 2d42e, 2d3fe, 2d2e6, 2d4c0) out of
-only 18 distinct X-axis addresses. Expect a comparable or higher hit
-rate on Y axes.
+Y Axes (2026-08-09 pull, Claude): grep type="Y Axis" against RVR_base.xml,
+dedup by address, cross-referenced against already-resolved SEEDS. 13
+distinct addresses total; 5 already covered by prior seed work (2d4ac
+Air Temp/SEED#7a, 2d3fe Axis2/SEED#4, 2d332 RPM, 2d59c Boost Error/SEED#5,
+2d5dc RPM/SEED#7b -- all CONFIRMED CORRECT or CONFIRMED WRONG-FIXED
+already). Remaining unchecked: 2d21e (Load MAF Hz raw, 21 elem), 2d24e
+(RPM, 9 elem), 2d2b0 (RPM, 14 elem), 2d0a0 (RPM, 16 elem), 2d260
+(Battery Voltage, 7 elem), 2d656 (Load, 10 elem), 2d418 (Engine Temp,
+8 elem -- same address as the X-axis SEED#1 contradiction, now also
+used as a Y-axis, worth an independent check), 2d4d6 (ISCV Demand,
+27 elem), 2d100 (RPM, 10 elem -- see below), 2d2d2 (RPM, 7 elem,
+scaling=RPMStatLimit), 2d576 (RPM, 16 elem). (Addressless "PN1"
+CaseAlphaNumeric entries excluded, not real axes.)
+
+2d100 Y-axis check (2026-08-09, Claude): this is the SAME "Boost Limit"
+table (0x11cee) already dead-ended in SEED #7d as an X-axis -- 2d100 is
+its Y-axis, not a new lead. Re-ran all three exhausted methods now that
+disassembly is more mature: get_xrefs_to(0x11cee) and get_xrefs_to(0x2d100)
+both still zero; literal-push byte search (bf070cee / bf07d100) still
+zero; broadened 2-byte "0cee" scan turned up several NEW candidate hits
+beyond the one already-documented f216_bit6_update_from_hysteresis_gate
+scalar-compare (0x21fd4) -- checked the first two by full disassembly
+(0x14084 inside mul_u16_x2_or_sum_check_overflow, 0x14ee0 inside
+mut_configurable_reqid_periodic_snapshot_8word): both confirmed false
+positives, coincidental FP-displacement/immediate byte pairs unrelated
+to 0x0cee, same noise category already documented for other addresses
+in this file. STATUS: SEED #7d dead-end RECONFIRMED with the more mature
+disassembly, no new evidence found either way. Not spending further
+time here per the file's own guidance (flagged for broader/automated
+search, not more manual xref-chasing) -- moving to other unchecked
+Y-axis addresses instead.
 
 --------------------------------------------------------------------
 NEXT SESSION START HERE

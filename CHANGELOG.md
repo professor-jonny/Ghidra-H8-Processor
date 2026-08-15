@@ -3,6 +3,96 @@
 All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
+### Added — AXIS-AMBIGUOUS / PAIRED-AMBIGUOUS status tiers in the axis-pairing checkers
+
+`find_preceding_axis_call()` in both `h8539_import_tables_xml2.py` and `h8539_audit_axis_data_length.py`
+(two independent copies, kept in sync) now walks the full backward window instead of stopping at the
+first match, and detects whether a second, different `axis_lookup_interp` call also precedes the table
+call within the same window. Return shape changed from `(imm, steps)` to
+`(imm, steps, other_axis_calls_count)`.
+
+New status tiers: `verify_table_pairing()` (importer) now reports `PAIRED-AMBIGUOUS` — a real axis call
+was found, but a different one was also found earlier in the walk — bookmarked as
+`H8539F-TABLE-PAIRED-AMBIGUOUS`. `audit_table()` (standalone length auditor) reports the equivalent
+`AXIS-AMBIGUOUS`, checked before the length-mismatch check since axis identity uncertainty is more
+fundamental than a length match against a possibly-wrong axis. `PAIRED-AMBIGUOUS` tables also now run
+`convention_b_writer_check` — only clean, unambiguous `PAIRED` tables skip that follow-up.
+
+A table can now land in any of: `NO-CALLER`, `NO-AXIS-CALL`, `AXIS-AMBIGUOUS`, `LENGTH-UNVERIFIED`,
+`LENGTH-MATCH`. Confirmed via a live run: several previously "cleanly PAIRED" tables (e.g.
+`TABLE_2D_00012858_ISC`, `Barometric Pressure Compensation`, multiple Knock Sensor Filter Maps) turned
+out to have a second candidate axis call nearby and are now correctly flagged ambiguous rather than
+over-classified as confirmed.
+
+### Fixed — status wording overclaimed on axis-length mismatches ("LENGTH-MISMATCH" → "LENGTH-UNVERIFIED")
+
+A shared axis is frequently longer than an individual table's data span by design (e.g. an 18-point
+axis spanning 0-11000 RPM shared by several tables, where an idle-related table only needs 0-4000 RPM)
+— normal ECU calibration practice, not corruption. The old `LENGTH-MISMATCH` status in
+`h8539_audit_axis_data_length.py`'s `audit_table()` and the `DATA-OFFSET` status in
+`h8539_import_tables_xml2.py`'s `verify_xml_axis()` were worded as if this always indicated a
+wrong/broken XML value ("the claimed END of the axis data is wrong"). There is no ROM-format field
+declaring which subset of a shared axis's breakpoints a shorter table corresponds to, so neither script
+can actually confirm which side (ROM's declared count vs XML's claimed length) is wrong, if either is —
+a genuine detection limitation, not proof of a bug.
+
+Renamed `LENGTH-MISMATCH` → `LENGTH-UNVERIFIED` throughout `h8539_audit_axis_data_length.py`
+(classification logic, print output, summary line); detail text now explicitly notes this may be
+legitimate partial-axis coverage. Also now separately flags when `measured_len > axis_count` (more
+table entries than axis breakpoints) as the one direction that IS structurally suspicious, since more
+entries than breakpoints to index them can't be legitimate partial coverage. `verify_xml_axis()`'s two
+`DATA-OFFSET` return sites reworded the same way. The same caveat was noted as applying to the axis
+address itself, not just its length — `find_preceding_axis_call()` only confirms a real
+`axis_lookup_interp` call precedes the table call, not that it's the semantically-correct axis for that
+table if more than one axis call exists in the function; addressed by the AXIS-AMBIGUOUS/PAIRED-AMBIGUOUS
+tiers above.
+
+### Fixed — `read_axis_count()` double-counted ROM_BASE in axis address formula
+
+`h8539_audit_axis_data_length.py`'s `read_axis_count()` computed
+`full = 0x00010000 + (AXIS_BANK * 0x10000) + (axis_offset_bare & 0xFFFF)`, double-counting ROM_BASE on
+top of the bank multiply. For a confirmed-good axis record (`isc_openloop_target_calc`'s push of
+bank=2, offset=0xd7ca), the old formula computed 0x3d7ca, which has no backing memory block in this
+program. Corrected to `full = (AXIS_BANK * 0x10000) + (axis_offset_bare & 0xFFFF)`, verified against the
+same record (0x2d7ca), which reads back a clean, sane `axis_lookup_interp` record (value_ptr=F0C0,
+axis_ptr=EF6A, axis_count=5, monotonic breakpoints). Independently corroborated by the H8/500
+far-address encoding in the IDA SDK reference (`ana.cpp` line 344,
+`insn.Op1.addr = (page<<16) | insn.get_next_word();`) and by the project's own `spSegment` SLEIGH
+segmentop pcode body (`res = (zext(base) << 16) | zext(inner);`) — three independent confirmations of
+the same `bank*0x10000+offset` arithmetic.
+
+Checked `h8539_import_tables_xml2.py`'s `verify_table_pairing`/`find_table_call_sites`/
+`find_preceding_axis_call` for the same bug: clean, no equivalent issue exists there since that script
+never resolves a full address, only compares the raw `(bank, imm)` tuple against `TABLE_BANK`/
+`AXIS_BANK` constants.
+
+An early version of the follow-up script `h8539_find_convention_b_writers.py` had the same ROM_BASE
+double-counting bug (computed `addr(value_ptr)`, adding ROM_BASE a second time, instead of the bare RAM
+address). Fixed, and every run now also removes any stale bad xref left by the old buggy version before
+creating the correct one — confirmed via `get_xrefs_from` that the bad `0001xxxx`-prefixed xrefs are
+gone and only correct `0000xxxx`-prefixed ones remain, for both originally-affected tables (0x11e94,
+0x127d8).
+
+### Added — `resolve_header_address()` two-convention header resolution in `h8539_import_tables_xml2.py`
+
+This ROM's XML uses two different addressing conventions for 2D/3D table headers and nothing in the
+XML itself says which one a given entry follows: Convention A ("address = header") — the XML address
+IS the header byte (mode + RAM pointer(s)) directly, confirmed the common case via live memory reads
+(e.g. "Knock Control Above Load" @0x12832 → `02 00 F0 C4`). Convention B ("address = data, header is
+`hdr_size` bytes earlier") — the XML address is the data start and the real header sits `hdr_size`
+bytes before it; this is the convention the script originally assumed unconditionally.
+
+Since `header_shape_ok()` is a real, independent positive-evidence check (mode byte + in-RAM pointer
+verified against live ROM bytes, not guessed), `resolve_header_address()` now tries both candidate
+addresses and returns whichever one actually passes `header_shape_ok()` on this ROM, rather than
+assuming one convention for every table in the file. Returns `(header_int, convention_label)` where
+`convention_label` is `"header-at-xml-addr"`, `"header-before-xml-addr"`, or `"unresolved"` (neither
+candidate passed the check — caller falls back to the old default guess and lets the normal
+SUSPECT/REJECTED logic report the uncertainty, rather than silently typing a wrong header). Some tables
+genuinely use neither flat convention (the "header-record indirection" case, e.g. some Ignition Map and
+ISC tables) — for those, `"unresolved"` is the correct, honest result, not a bug.
+
+---
 ### fixed the badspace error in c output
 
 The compiler did not track the stack variables properly so the c output was

@@ -83,7 +83,58 @@
 
 from java.math import BigInteger
 from ghidra.program.flatapi import FlatProgramAPI
+from ghidra.program.model.symbol import RefType, SourceType
 import os, xml.etree.ElementTree as ET
+import datetime as _datetime
+
+# ──────────────────────────────────────────────────────────────────
+# CONSOLE-BUFFER FIX (2026-08-11): a full XML import run against a
+# large table set (~250+ tables) can produce several thousand
+# [XML-VERIFY] lines -- Ghidra's console has a scrollback limit and
+# the early part of a run gets silently dropped before the user can
+# read it. EVERYTHING is still bookmarked in Ghidra regardless (that
+# was always the durable record), but the live narration was the only
+# place to see it without manually opening the Bookmarks window table
+# by table. Fix: write every [XML-VERIFY] line to a full log FILE
+# (never truncated), and only ECHO the routine per-table lines
+# (PAIRING PAIRED/NOT-PAIRED/UNVERIFIED/PAIRED-AMBIGUOUS, span,
+# AXIS DATA OFFSET) to console when VERBOSE_CONSOLE is False (the
+# default) -- genuinely actionable tiers (CHECK, SUSPECT, OVERLAP,
+# REJECTED) still print live either way, since those need attention
+# during the run, not just in the log afterward.
+VERBOSE_CONSOLE = False
+
+_log_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in dir() else os.getcwd()
+_log_path = os.path.join(_log_dir, "h8539_import_tables_xml2.log")
+try:
+    _log_fh = open(_log_path, "a")
+    _log_fh.write("\n" + "=" * 70 + "\n")
+    _log_fh.write("RUN START: %s\n" % _datetime.datetime.now().isoformat())
+    _log_fh.write("=" * 70 + "\n")
+except Exception as _e:
+    _log_fh = None
+    print("WARNING: could not open log file %s (%s) -- falling back to console-only, "
+          "VERBOSE_CONSOLE forced True" % (_log_path, _e))
+    VERBOSE_CONSOLE = True
+
+# Tiers that always echo to console even when VERBOSE_CONSOLE is False --
+# these need attention DURING the run, not just review afterward.
+_ALWAYS_ECHO_MARKERS = ("CHECK", "SUSPECT", "OVERLAP", "REJECTED", "WARNING", "ERROR")
+
+def vlog(msg):
+    """Write msg to the full log file always; echo to console only if
+    VERBOSE_CONSOLE is True or msg contains one of _ALWAYS_ECHO_MARKERS.
+    Use this instead of print() for [XML-VERIFY]-style per-table lines."""
+    if _log_fh is not None:
+        try:
+            _log_fh.write(msg + "\n")
+            _log_fh.flush()
+        except Exception:
+            pass
+    if VERBOSE_CONSOLE or any(marker in msg for marker in _ALWAYS_ECHO_MARKERS):
+        print(msg)
+
+
 
 flat_api = FlatProgramAPI(currentProgram)
 mem      = currentProgram.getMemory()
@@ -91,6 +142,8 @@ space    = currentProgram.getAddressFactory().getDefaultAddressSpace()
 listing  = currentProgram.getListing()
 symTable = currentProgram.getSymbolTable()
 bookmarkMgr = currentProgram.getBookmarkManager()
+refMgr   = currentProgram.getReferenceManager()
+fnMgr    = currentProgram.getFunctionManager()
 
 ROM_BASE  = 0x00010000
 ROM_END   = 0x0002FFFF
@@ -107,6 +160,21 @@ MEM_ADDR_MAX = 0xFEFF
 
 # Header sizes by table type (bytes before data start)
 HEADER_SIZE = {"2D": 4, "3D": 7}
+
+# Primitive dispatcher addresses (confirmed via decompile, review5.md
+# STRUCT DEFINITIONS section, 2026-08-06). CPU-page-relative (bank 1).
+# Used ONLY by verify_table_pairing() below -- the caller-trace check
+# ported from h8539_audit_axis_data_length.py. This is independent of
+# verify_xml_table/verify_xml_axis's shape+sentinel checks above: those
+# confirm a table/axis LOOKS structurally real, this confirms a real
+# instruction in the disassembly actually CALLS this axis together with
+# this table at runtime (literal-push convention).
+AXIS_LOOKUP_INTERP        = 0x00014735   # axis_lookup_interp
+TABLE_LOOKUP_INTERP       = 0x00014656   # table_lookup_interp (2D)
+TABLE_3AXIS_INTERP_TRIPLE = 0x000148a2   # table_3axis_interp_triple (3D)
+TABLE_BANK = 1
+AXIS_BANK  = 2
+MAX_BACKWARD_WALK = 400
 
 PROGRAM_INFO_CATEGORY   = "H8539F Setup Script"
 XML_APPLIED_KEY         = "Last XML Applied"
@@ -311,6 +379,60 @@ def find_next_header_boundary(start, max_len=0x1FF):
             return j
     return None
 
+def axis_derived_data_len(data_offset, elements, max_row_width=2):
+    """
+    Compute a table's real data length from its own declared axis element
+    count, instead of guessing via find_sentinel_data_len()/
+    find_next_header_boundary()'s forward scans -- those are heuristics
+    that can over- or under-shoot (see both functions' docstrings for
+    confirmed real failure cases); this is ground truth when available.
+
+    Rationale (user question, 2026-08-09): a 2D/3D table's own header
+    carries no row-count field (table_2d_record is a bare 4-byte mode+ptr
+    header; see header_shape_ok's docstring), but the AXIS it points at
+    does -- axis_lookup_record has a real element count at offset+4 (see
+    review5.md STRUCT DEFINITIONS), and the XML already surfaces that same
+    count via the axis child's elements="" attribute. Row count is fully
+    determined by the axis; the only remaining unknown is row byte-width
+    (1 byte for 8-bit scalings like Load8/Percent, 2 bytes for 16-bit
+    scalings like Load16/RPM-style tables), which this ROM does not encode
+    in-header either -- so this function tries both and prefers whichever
+    one is corroborated by real evidence (a genuine next-table header
+    landing exactly at the computed boundary), rather than assuming one.
+
+    Returns (data_len, row_width, confidence) where confidence is:
+      "CONFIRMED" - the computed boundary (data_offset + elements*row_width)
+                    lands exactly on a real next-table header. Strong
+                    evidence this is the correct, exact length.
+      "GUESS"     - no row width was corroborated by a real header
+                    boundary; returns the 1-byte-width estimate as a
+                    fallback (matches this ROM's more common 8-bit
+                    scalings) but this is NOT verified.
+      None        - elements <= 0, nothing to compute.
+
+    Deliberately does NOT replace find_sentinel_data_len()/
+    find_next_header_boundary() -- callers should treat a CONFIRMED result
+    here as corroboration to prefer over those heuristics (it explains
+    *why* a table's span is what it is, from the axis, rather than just
+    scanning for where data happens to stop), but fall back to the
+    heuristics when this returns None or only a GUESS, since a handful of
+    tables on this ROM are confirmed to have irregular lengths that don't
+    evenly divide by any row width (see find_next_header_boundary's Table D
+    / 0x11dc2 note) -- axis-derived length cannot explain those cases and
+    should not override real boundary evidence when the two disagree.
+    """
+    if elements is None or elements <= 0:
+        return None
+    for row_width in ((1, 2) if max_row_width >= 2 else (1,)):
+        candidate_len = elements * row_width
+        boundary_off = data_offset + candidate_len
+        if header_shape_ok(boundary_off, "2D") or header_shape_ok(boundary_off, "3D"):
+            return (candidate_len, row_width, "CONFIRMED")
+    # No row width corroborated by a real boundary -- return the 1-byte
+    # estimate as an unverified fallback rather than nothing, so callers
+    # still have a number to compare against, but must treat it as a guess.
+    return (elements * 1, 1, "GUESS")
+
 def header_shape_fault(header_offset, ttype):
     """
     Positive-evidence check for a SPECIFIC, nameable header defect, as
@@ -356,6 +478,271 @@ def header_shape_fault(header_offset, ttype):
                        "a 3D table needs two distinct axes" % x_ptr
         return None
     return None
+
+# ──────────────────────────────────────────────────────────────────
+# Caller-trace pairing check (ported from
+# h8539_audit_axis_data_length.py). verify_xml_table/verify_xml_axis
+# above only confirm structural SHAPE (does this look like a real
+# header, does the data terminate sanely, does the axis's own element
+# count match the measured span). None of that proves the axis is
+# actually the one this table uses at runtime -- two structurally
+# valid records sitting near each other can still be an unrelated
+# pairing. This block instead asks: is there a REAL instruction that
+# calls table_lookup_interp/table_3axis_interp_triple for this table,
+# with a table_lookup_interp preceded (in the same function) by an
+# axis_lookup_interp call? That's live-code evidence, not a shape
+# guess -- see verify_table_pairing() below.
+# ──────────────────────────────────────────────────────────────────
+
+def containing_function(a):
+    return fnMgr.getFunctionContaining(a)
+
+def is_call_to(instr, target_offset):
+    if instr is None:
+        return False
+    mnem = instr.getMnemonicString().lower()
+    if "jsr" not in mnem and "call" not in mnem and "bsr" not in mnem:
+        return False
+    for r in instr.getReferencesFrom():
+        if r.getReferenceType().isCall():
+            if r.getToAddress().getOffset() == (ROM_BASE + target_offset):
+                return True
+    return False
+
+def read_preceding_push_pair(instr):
+    prev1 = instr.getPrevious()
+    prev2 = prev1.getPrevious() if prev1 is not None else None
+    if prev1 is None or prev2 is None:
+        return None
+    try:
+        bank_str = prev1.toString()
+        imm_str  = prev2.toString()
+        if "#0x" not in bank_str or "#0x" not in imm_str:
+            return None
+        bank = int(bank_str.split("#0x")[1].split(":")[0], 16)
+        imm  = int(imm_str.split("#0x")[1].split(":")[0], 16)
+        return (bank, imm)
+    except Exception:
+        return None
+
+def find_table_call_sites(table_offset):
+    results = []
+    for target, is_3d in ((TABLE_LOOKUP_INTERP, False), (TABLE_3AXIS_INTERP_TRIPLE, True)):
+        target_off = target - ROM_BASE if target >= ROM_BASE else target
+        target_addr = addr(ROM_BASE + target_off)
+        for ref in refMgr.getReferencesTo(target_addr):
+            if not ref.getReferenceType().isCall():
+                continue
+            call_instr = listing.getInstructionAt(ref.getFromAddress())
+            if call_instr is None:
+                continue
+            pushed = read_preceding_push_pair(call_instr)
+            if pushed is None:
+                continue
+            bank, imm = pushed
+            if bank == TABLE_BANK and imm == table_offset:
+                results.append((call_instr, is_3d))
+    return results
+
+def find_preceding_axis_call(call_instr):
+    fn = containing_function(call_instr.getAddress())
+    if fn is None:
+        return None
+    fn_start = fn.getEntryPoint()
+    axis_target_off = AXIS_LOOKUP_INTERP - ROM_BASE if AXIS_LOOKUP_INTERP >= ROM_BASE else AXIS_LOOKUP_INTERP
+    cur = call_instr.getPrevious()
+    steps = 0
+    found = None
+    other_axis_calls = 0
+    while cur is not None and steps < MAX_BACKWARD_WALK:
+        if cur.getAddress().getOffset() < fn_start.getOffset():
+            break
+        if is_call_to(cur, axis_target_off):
+            pushed = read_preceding_push_pair(cur)
+            if pushed is not None:
+                bank, imm = pushed
+                if bank == AXIS_BANK:
+                    if found is None:
+                        found = (imm, steps)
+                    elif imm != found[0]:
+                        # A second, DIFFERENT axis call also precedes this
+                        # table call within the walk-back window -- the
+                        # match we returned is a plausible nearest-call
+                        # match, not a proven-unique one. Caller should
+                        # treat this as lower confidence.
+                        other_axis_calls += 1
+        cur = cur.getPrevious()
+        steps += 1
+    if found is None:
+        return None
+    return (found[0], found[1], other_axis_calls)
+
+def read_table_header_for_convention_b(header_offset):
+    """Read mode/correction/value_ptr directly from ROM bytes for the
+    Convention B check (merged in from h8539_find_convention_b_writers.py,
+    see review10.md). Only meaningful for real mode 0x02/0x03 headers --
+    caller should treat other mode bytes as a misclassification/alignment
+    warning, not a genuine Convention B case."""
+    a = space.getAddress((ROM_BASE + header_offset) & 0xFFFFFFFF)
+    try:
+        mode       = mem.getByte(a) & 0xFF
+        correction = mem.getByte(a.add(1)) & 0xFF
+        value_ptr  = mem.getShort(a.add(2)) & 0xFFFF
+        return {"mode": mode, "correction": correction, "value_ptr": value_ptr}
+    except Exception:
+        return None
+
+
+def convention_b_writer_check(header_offset, name, ttype):
+    """For a table whose pairing came back NOT-PAIRED/UNVERIFIED: read its
+    value_ptr, create the (safe, unblocked) header+2 -> value_ptr xref, and
+    do a whole-ROM direct-mode writer scan for that RAM cell -- exactly
+    h8539_find_convention_b_writers.py's logic, merged in here so the
+    NOT-PAIRED/UNVERIFIED branch produces one unified verdict instead of
+    requiring a second script run. See review10.md for full background
+    and the false-positive discipline behind the writer-candidate scan.
+
+    PAIRED tables never reach this function -- Convention B axis
+    resolution is irrelevant once a real caller's axis is already
+    confirmed by find_preceding_axis_call(), so gating on pairing_status
+    avoids wasted scan time and avoids polluting PAIRED tables' bookmarks
+    with an unrelated check.
+    """
+    hdr = read_table_header_for_convention_b(header_offset)
+    if hdr is None:
+        return
+    if hdr["mode"] not in (0x02, 0x03):
+        # Not a real 2D/3D header -- likely misclassified NOT-PAIRED/
+        # UNVERIFIED entry or wrong header address. Flag distinctly so it
+        # isn't lumped in with genuine Convention B blocked tables (see
+        # review10.md "FIVE TABLES FLAGGED AS SUSPECT").
+        header_addr = space.getAddress((ROM_BASE + header_offset) & 0xFFFFFFFF)
+        safe_bookmark(header_addr, "H8539F-CONVENTION-B-SUSPECT-HEADER",
+                      "%s (%s) -- mode=0x%02X is outside documented {0x02,0x03} header "
+                      "layout; likely misclassified or misaligned, NOT a genuine Convention "
+                      "B case -- needs manual review" % (name, ttype, hdr["mode"]))
+        return
+
+    value_ptr = hdr["value_ptr"]
+    field_addr = space.getAddress((ROM_BASE + header_offset + 2) & 0xFFFFFFFF)
+    header_addr = space.getAddress((ROM_BASE + header_offset) & 0xFFFFFFFF)
+
+    # Self-heal: remove any stale bad xref from the old ROM_BASE-doubling
+    # bug (addr(value_ptr) instead of the bare RAM address) before
+    # creating the correct one -- see review10.md.
+    bad_addr = space.getAddress((ROM_BASE + value_ptr) & 0xFFFFFFFF)
+    for r in list(refMgr.getReferencesFrom(field_addr)):
+        if r.getToAddress().equals(bad_addr):
+            refMgr.delete(r)
+
+    try:
+        ram_addr = space.getAddress(value_ptr & 0xFFFFFFFF)
+        if mem.contains(ram_addr):
+            already = any(r.getToAddress().equals(ram_addr)
+                          for r in refMgr.getReferencesFrom(field_addr))
+            if not already:
+                refMgr.addMemoryReference(field_addr, ram_addr, RefType.DATA,
+                                          SourceType.USER_DEFINED, 0)
+        else:
+            ram_addr = None
+    except Exception:
+        ram_addr = None
+
+    if ram_addr is None:
+        safe_bookmark(header_addr, "H8539F-CONVENTION-B-VALUE-PTR-OFF-CHIP",
+                      "%s (%s) -- value_ptr=0x%04X does not resolve to defined memory; "
+                      "needs manual review" % (name, ttype, value_ptr))
+        return
+
+    hits = []
+    for fn in fnMgr.getFunctions(True):
+        for instr in listing.getInstructions(fn.getBody(), True):
+            mnem = instr.getMnemonicString().lower()
+            if not mnem.startswith("mov"):
+                continue
+            n = instr.getNumOperands()
+            if n == 0:
+                continue
+            dest = instr.getDefaultOperandRepresentation(n - 1)
+            if dest is None:
+                continue
+            dest = dest.lower()
+            if ("0x%x" % value_ptr) in dest and "@" in dest:
+                hits.append((fn.getName(), instr.getAddress().toString(), instr.toString()))
+
+    if hits:
+        safe_bookmark(header_addr, "H8539F-CONVENTION-B-WRITER-CANDIDATE-FOUND",
+                      "%s (%s) -- value_ptr=0x%04X -- %d direct-mode writer candidate(s) "
+                      "found, needs manual confirmation before treating as PAIRED" %
+                      (name, ttype, value_ptr, len(hits)))
+        print("      [CONVENTION-B] %d writer candidate(s) for value_ptr=0x%04X:" %
+              (len(hits), value_ptr))
+        for fn_name, a_str, instr_str in hits[:10]:
+            print("        %s @ %s :: %s" % (fn_name, a_str, instr_str))
+    else:
+        safe_bookmark(header_addr, "H8539F-CONVENTION-B-WRITER-NOT-FOUND",
+                      "%s (%s) -- value_ptr=0x%04X -- no direct-mode writer found; likely "
+                      "EP-banked, blocked on review.md item 8 step 3b (see review10.md)" %
+                      (name, ttype, value_ptr))
+
+
+def verify_table_pairing(header_offset, ttype):
+    """
+    Confirm, via real caller trace, whether this table's axis pairing
+    is actually exercised by live code -- independent of what the XML
+    claims and independent of the shape checks above. Returns
+    (status, detail):
+
+      "PAIRED"     - a real caller of table_lookup_interp/
+                     table_3axis_interp_triple for this table has a
+                     confirmed preceding axis_lookup_interp call in
+                     the same function, with no other DIFFERENT axis
+                     call also found in the same backward walk. Best
+                     available evidence the XML's axis attachment for
+                     this table is real AND unambiguous -- but NOTE:
+                     this still only proves "a plausible nearest axis
+                     call precedes this table call," not formal proof
+                     via dataflow that this specific axis feeds this
+                     specific table call. Treat as high-confidence, not
+                     as mathematically certain.
+      "PAIRED-AMBIGUOUS" - a real caller has a preceding axis_lookup_interp
+                     call, but a DIFFERENT axis_lookup_interp call was
+                     also found earlier in the same backward walk. The
+                     nearest one is reported as the pairing, but which
+                     axis actually feeds this table call cannot be
+                     determined by proximity alone -- needs manual
+                     verification, same discipline as NOT-PAIRED/
+                     UNVERIFIED (see review10.md).
+      "NOT-PAIRED" - a real caller was found, but none has a
+                     preceding axis_lookup_interp call. Whatever axis
+                     the XML attaches to this table is unconfirmed by
+                     any live code path -- flag for manual review.
+      "UNVERIFIED" - no real caller of this table was found at all via
+                     the literal-push convention. Can't confirm or
+                     deny the pairing either way (may just mean the
+                     caller uses a different calling convention this
+                     trace doesn't recognise).
+    """
+    if ttype not in ("2D", "3D"):
+        return ("UNVERIFIED", "not a 2D/3D table - no caller trace applicable")
+    call_sites = find_table_call_sites(header_offset)
+    if not call_sites:
+        return ("UNVERIFIED", "no real caller found via literal-push convention")
+    for call_instr, is_3d in call_sites:
+        axis_result = find_preceding_axis_call(call_instr)
+        if axis_result is not None:
+            axis_imm, axis_steps, other_axis_calls = axis_result
+            if other_axis_calls > 0:
+                return ("PAIRED-AMBIGUOUS",
+                        "a real caller has a preceding axis_lookup_interp call %d "
+                        "instruction(s) back, but %d other DIFFERENT axis_lookup_interp "
+                        "call(s) also precede this table call in the same function -- "
+                        "proximity match only, which axis actually feeds this table is "
+                        "unconfirmed" % (axis_steps, other_axis_calls))
+            return ("PAIRED", "a real caller has a confirmed preceding axis_lookup_interp "
+                              "call %d instruction(s) back, no other axis call found in "
+                              "the same walk" % axis_steps)
+    return ("NOT-PAIRED", "real caller(s) found, but none has a preceding axis_lookup_interp call")
 
 def verify_xml_table(name, ttype, header_offset, data_offset):
     """
@@ -598,12 +985,20 @@ def verify_xml_axis(name, axis_offset, elements_claimed):
         if count_found != elements_claimed:
             # Start is right (a real header sits exactly at the claimed
             # address) but the record's own element count disagrees with
-            # what the XML claims -- the END of the axis is wrong, not
-            # the start.
+            # what the XML claims. NOT necessarily an XML bug -- e.g. a
+            # table may legitimately cover only part of a shared axis's
+            # range (an 18-point 0-11000 RPM axis where one table only
+            # needs 0-4000 RPM), or the ROM's own declared count could be
+            # stale/wrong instead of the XML. This tool can't verify
+            # which side is correct without a value-level cross-check
+            # against a reference; flag for manual review, don't assume
+            # either side is at fault.
             return ("DATA-OFFSET",
                     "axis header found (%s) at the claimed address, but element count "
-                    "disagrees: ROM says %d, XML claims %d -- start is right, the claimed "
-                    "END of the axis data is wrong" %
+                    "disagrees: ROM says %d, XML claims %d -- start is right, but which "
+                    "side (ROM's declared count vs XML's claimed length) is correct is "
+                    "UNVERIFIED by this tool; may be legitimate partial-axis coverage, "
+                    "not necessarily a bug -- needs manual/value-level check" %
                     (shape_name, count_found, elements_claimed),
                     data_off, count_found * 2)
         return ("VERIFIED", "axis header shape OK (%s), element count matches (%d)" %
@@ -623,7 +1018,8 @@ def verify_xml_axis(name, axis_offset, elements_claimed):
             return ("DATA-OFFSET",
                     "%s header found %d bytes behind this address (ROM offset 0x%05X) with data "
                     "correctly starting here, but element count disagrees: ROM says %d, XML "
-                    "claims %d -- start is right, the claimed END of the axis data is wrong" %
+                    "claims %d -- start is right, but which side is correct is UNVERIFIED by "
+                    "this tool; may be legitimate partial-axis coverage, not necessarily a bug" %
                     (b_shape_name, b_size, ROM_BASE + b_header_off, b_count, elements_claimed),
                     axis_offset, (b_count * 2) if b_count is not None else claimed_len)
         return ("VERIFIED",
@@ -1400,6 +1796,46 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                                   "(1D/2D/3D) found at this address" % (name, ttype))
                 continue
 
+            # ── Caller-trace pairing check (see verify_table_pairing's
+            # docstring). Independent of the shape/sentinel checks above:
+            # confirms whether a real instruction actually calls this
+            # axis together with this table, rather than just "looks
+            # structurally plausible". Recorded on the plate comment and
+            # as its own bookmark category so it's visible/filterable
+            # separately from VERIFIED/SUSPECT/CHECK.
+            pairing_status, pairing_detail = verify_table_pairing(header_int - ROM_BASE, ttype)
+            meta.append("Pairing status : %s (%s)" % (pairing_status, pairing_detail))
+            vlog("  [XML-VERIFY] PAIRING %s: '%s' (%s) at header 0x%05X -- %s" %
+                  (pairing_status, name, ttype, header_int, pairing_detail))
+            if pairing_status == "PAIRED":
+                safe_bookmark(header_addr, "H8539F-TABLE-PAIRED",
+                              "%s (%s) -- axis pairing confirmed by real caller trace" % (name, ttype))
+            elif pairing_status == "PAIRED-AMBIGUOUS":
+                safe_bookmark(header_addr, "H8539F-TABLE-PAIRED-AMBIGUOUS",
+                              "%s (%s) -- %s" % (name, ttype, pairing_detail))
+                # Same gate rationale as NOT-PAIRED/UNVERIFIED below: an
+                # ambiguous axis match means the axis attached to this
+                # table is NOT reliably confirmed, even though a nearby
+                # axis_lookup_interp call exists -- run the same
+                # Convention B / axis-not-verified follow-up rather than
+                # treating it like a clean PAIRED table. See review10.md.
+                convention_b_writer_check(header_int - ROM_BASE, name, ttype)
+            elif pairing_status == "NOT-PAIRED":
+                safe_bookmark(header_addr, "H8539F-TABLE-NOT-PAIRED",
+                              "%s (%s) -- real caller(s) found but none has a preceding "
+                              "axis_lookup_interp call; XML axis attachment unconfirmed" % (name, ttype))
+                # Gate: only NOT-PAIRED/UNVERIFIED/PAIRED-AMBIGUOUS tables
+                # need the Convention B check -- cleanly PAIRED tables
+                # already have a confirmed, unambiguous caller-supplied
+                # axis, so value_ptr-derived-axis analysis doesn't apply
+                # and would just add noise. See review10.md.
+                convention_b_writer_check(header_int - ROM_BASE, name, ttype)
+            else:
+                safe_bookmark(header_addr, "H8539F-TABLE-PAIRING-UNVERIFIED",
+                              "%s (%s) -- no real caller found via literal-push convention; "
+                              "cannot confirm or deny axis pairing" % (name, ttype))
+                convention_b_writer_check(header_int - ROM_BASE, name, ttype)
+
             if verify_status == "CHECK":
                 check_count += 1
                 print("  [XML-VERIFY] CHECK: '%s' (%s) at header 0x%05X -- %s" %
@@ -1426,15 +1862,57 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                 # call site. Using the unresolved address here made the overlap
                 # scan look at header bytes instead of real data for any table
                 # on the "header-at-xml-addr" convention.
+                #
+                # 2026-08-09 [user question: "we know the axis lengths, cant we
+                # compute the data length? doesnt the table say how long it is?"]:
+                # prefer axis-derived length over the sentinel/next-header scan
+                # when it's available and CONFIRMED (see axis_derived_data_len's
+                # docstring) -- the table's own axis child already declares its
+                # real element count, which is ground truth rather than a guess.
+                # This was the root cause of several false H8539F-TABLE-DATA-
+                # OVERLAP(-SUSPECT) bookmarks traced by hand this session (e.g.
+                # "Open Loop Load # 1" @0x11d24 vs the unclaimed header @0x11d20):
+                # the old heuristic-only span estimate could over/undershoot the
+                # real data length and make two genuinely non-overlapping,
+                # back-to-back tables register as colliding.
                 data_offset = real_data_int - ROM_BASE
-                span_len = find_next_header_boundary(data_offset)
+                axis_elements = None
+                for _axis_peek in table.findall('table'):
+                    _peek_type = _axis_peek.get('type') or ""
+                    if 'Axis' not in _peek_type and 'axis' not in _peek_type:
+                        continue
+                    try:
+                        _peek_elems = int(_axis_peek.get('elements') or "0")
+                    except ValueError:
+                        _peek_elems = 0
+                    if _peek_elems > 1:
+                        axis_elements = _peek_elems if axis_elements is None else max(axis_elements, _peek_elems)
+
+                axis_len_result = axis_derived_data_len(data_offset, axis_elements)
+                span_len = None
+                span_len_source = "heuristic"
+                if axis_len_result is not None and axis_len_result[2] == "CONFIRMED":
+                    span_len = axis_len_result[0]
+                    span_len_source = "axis-confirmed (%d elements x %d byte(s))" % (axis_elements, axis_len_result[1])
+                if span_len is None:
+                    span_len = find_next_header_boundary(data_offset)
                 if span_len is None:
                     span_len = find_sentinel_data_len(data_offset)
+                if span_len is None and axis_len_result is not None:
+                    # Neither heuristic found a boundary -- fall back to the
+                    # unconfirmed axis-derived GUESS rather than 0, since an
+                    # element-count-based estimate is still better evidence
+                    # than assuming zero-length data.
+                    span_len = axis_len_result[0]
+                    span_len_source = "axis-guess, unconfirmed (%d elements x %d byte(s))" % (axis_elements, axis_len_result[1])
                 if span_len is None:
                     span_len = 0
+                    span_len_source = "none (all methods failed)"
                 span_start = header_int - ROM_BASE
                 span_end = data_offset + span_len - 1
                 span_end = max(span_end, span_start + hdr_size - 1)
+                vlog("  [XML-VERIFY] '%s' span: 0x%05X-0x%05X (len=%d, source: %s)" %
+                      (name, ROM_BASE + span_start, ROM_BASE + span_end, span_len, span_len_source))
 
                 overlap = check_range_overlap(touched_ranges, span_start, span_end, header_offset=span_start)
                 if overlap is not None:
@@ -1536,7 +2014,7 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                         safe_bookmark(a_addr_ghidra, "H8539F-AXIS-OFFSET-%s" % sanitise_name(name),
                                       "%s (axis of '%s') -- %s" % (a_name, name, a_detail))
                     elif a_status == "DATA-OFFSET":
-                        print("  [XML-VERIFY] AXIS DATA OFFSET (END WRONG): '%s' (child of '%s') at 0x%05X -- %s" %
+                        vlog("  [XML-VERIFY] AXIS DATA OFFSET (END WRONG): '%s' (child of '%s') at 0x%05X -- %s" %
                               (a_name, name, a_xml_addr_int, a_detail))
                         safe_bookmark(a_addr_ghidra, "H8539F-AXIS-DATA-OFFSET-%s" % sanitise_name(name),
                                       "%s (axis of '%s') -- %s" % (a_name, name, a_detail))
@@ -1558,7 +2036,7 @@ def apply_xml(file_path, visited=None, id_verified=None, touched_offsets=None, w
                                                      header_offset=a_span_start)
                     if a_overlap is not None:
                         ao_start, ao_end, ao_name, ao_header_addr = a_overlap
-                        print("  [XML-VERIFY] AXIS OVERLAP: '%s' (axis of '%s') at 0x%05X "
+                        vlog("  [XML-VERIFY] AXIS OVERLAP: '%s' (axis of '%s') at 0x%05X "
                               "(bytes 0x%05X-0x%05X) overlaps '%s' (already claimed "
                               "0x%05X-0x%05X earlier in this same import)" %
                               (a_name, name, a_xml_addr_int, ROM_BASE + a_span_start,
@@ -2106,7 +2584,9 @@ _ARTIFACT_CATEGORIES = ("H8539F-TABLE", "H8539F-SCRAPED-TABLE", "H8539F-TABLE-RE
                          "H8539F-TABLE-SUSPECT-CORRECTED", "H8539F-TABLE-DATA-OVERLAP-CORRECTED",
                          "H8539F-TABLE-DATA-OVERLAP-SUSPECT-CORRECTED",
                          "H8539F-AXIS", "H8539F-AXIS-SUSPECT", "H8539F-AXIS-DATA-OVERLAP",
-                         "H8539F-AXIS-OFFSET", "H8539F-AXIS-DATA-OFFSET")
+                         "H8539F-AXIS-OFFSET", "H8539F-AXIS-DATA-OFFSET",
+                         "H8539F-TABLE-PAIRED", "H8539F-TABLE-PAIRED-AMBIGUOUS", "H8539F-TABLE-NOT-PAIRED",
+                         "H8539F-TABLE-PAIRING-UNVERIFIED")
 _found_artifact_offsets = []
 _it2 = bookmarkMgr.getBookmarksIterator(_BookmarkType2.NOTE)
 while _it2.hasNext():
@@ -2265,4 +2745,12 @@ print("")
 print("=" * 60)
 print("H8/539F XML Import + Scraper complete!")
 print("You can now run h8539_export_tables_xml.py to write these labels back out.")
+if _log_fh is not None:
+    print("Full [XML-VERIFY] detail (every table, not just what printed above) "
+          "was written to:")
+    print("  %s" % _log_path)
+    try:
+        _log_fh.close()
+    except Exception:
+        pass
 print("=" * 60)

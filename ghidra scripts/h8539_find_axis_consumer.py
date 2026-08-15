@@ -81,6 +81,49 @@ AXIS_ADDRESSES = [
     0x0002d146,   # "Error" @ Idle Error Correction -- review5.md SEED #3,
                    # real write confirmed (isc_f408_correction_calc via
                    # 0xD146 literal push), F0C0-writer question still open
+
+    # --- 2026-08-14 [Claude/session]: Alternator candidate axes ---
+    # From VR4's ROM-specific 20030013.xml (has real addresses, unlike
+    # vr4base.xml which is address-less). "Alternator G Terminal Dead
+    # Zone" table @ VR4 0x12574, RPM Y-axis header @ VR4 0x2d020 (data
+    # starts 0x2d026, confirmed 10-elem clean 500-7000 RPM breakpoints
+    # via direct memory read). "Alternator Charge Current" table @ VR4
+    # 0x12527, Load X-axis header @ VR4 0x2d03a (data 0x2d040, 9 elem),
+    # RPM Y-axis header @ VR4 0x2d00a (data 0x2d010, 8 elem). VR4 itself
+    # has ZERO xrefs/literal-push hits anywhere in its own ROM for
+    # 12574/12527/2d026/2d010/2d040 -- axis_lookup_interp caller sweep
+    # (47 call sites) and raw byte-pattern search both came back empty.
+    # Adding the RVR-side candidate axis (byte-identical RPM breakpoint
+    # data found via search_byte_patterns at RVR 0x2d63c) here anyway,
+    # since that address is already claimed by TCU/Knock tables and this
+    # script's whole-ROM cross-function scan is the last real check
+    # before calling Alternator a dead end in this project.
+    0x0002d63c,   # RVR: identical RPM curve to VR4 Alt Dead Zone axis
+                   # data (500-7000 RPM x10), but ALREADY claimed by
+                   # TABLE_3D_000131FA_TCU (Axis1) and Knock Sensor
+                   # Filter Maps 1-5 in 21000011...xml. Running here to
+                   # get the FULL consumer list (script's cross-fn scan),
+                   # not just the first caller found by hand.
+
+    # --- ISC cluster orphan axes (RVRbase.xml SCALING_TABLE_* holding
+    # pen, addresses given as DATA start = header+6, matching this
+    # script's axis_offset convention) still sitting under generic
+    # TABLE_2D_XXXXXXXX_ISC / TABLE_2D_XXXXXXXX names in RVR's
+    # 21000011...xml as of 2026-08-14. Batch 1 of the sweep discussed
+    # with the user -- cross-reference results against VR4's named ISC
+    # tables (ISC Baro Compensation, ISCV Demand..., ISCV Initial
+    # Steps..., Idle Error Correction (Manual/drive), etc.)
+    0x0002d0a0,   # RPM, 16 elem -- feeds several "Open Loop Load"/ISC-
+                   # adjacent 2D tables per 21000011...xml
+    0x0002d0f6,   # RPM, 8/16 elem -- TABLE_2D_0001186C/11880/11894_Fueling
+    0x0002d136,   # RPM, 8 elem -- TABLE_2D_00011E4A_TableLookup
+    0x0002d200,   # RPM, 5 elem -- TABLE_2D_00012950_ISC
+    0x0002d2a2,   # RPM, 4 elem -- TABLE_2D_00012858_ISC / 00012860_ISC
+    0x0002d496,   # RPM, 8 elem -- TABLE_2D_000127FC_ISC
+    0x0002d186,   # RPM, 6 elem -- TABLE_2D_0001284E_ISC
+    0x0002d27a,   # Battery, 9 elem -- TABLE_2D_00012824_ISC (VR4 has no
+                   # direct Battery-axis ISC table named; check whether
+                   # this is really Coil Charge Time family instead)
 ]
 
 def normalize_axis_offset(a):

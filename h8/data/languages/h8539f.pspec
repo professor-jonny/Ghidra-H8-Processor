@@ -341,8 +341,9 @@ res = (zext(base) << 16) | zext(inner);
 
    <!-- Flash Memory Control Registers -->
    <symbol name="FLMCR"    address="ram:0xFEE0" entry="false"/>
-   <symbol name="FLM_EBR1" address="ram:0xFEE1" entry="false"/>
-   <symbol name="FLM_EBR2" address="ram:0xFEE2" entry="false"/>
+   <!-- 0xFEE1 is reserved (per H8/539F Hardware Manual Appendix C, p.682) -->
+   <symbol name="FLM_EBR1" address="ram:0xFEE2" entry="false"/>
+   <symbol name="FLM_EBR2" address="ram:0xFEE3" entry="false"/>
    <symbol name="FLMER"    address="ram:0xFEEC" entry="false"/>
    <symbol name="FLMSR"    address="ram:0xFEED" entry="false"/>
 
