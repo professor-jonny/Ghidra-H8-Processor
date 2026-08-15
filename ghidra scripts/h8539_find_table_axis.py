@@ -106,6 +106,33 @@ TABLE_ADDRESSES = [
     0x00012906,   # "Decel Fuel Cut Delay - In Gear A/C Off"
     0x00012912,   # "Decel Fuel Cut Delay - Neutral A/C On"
     0x0001291e,   # "Decel Fuel Cut Delay - In Gear A/C On"
+
+    # --- 2026-08-14 [Claude/session]: VR4 Alternator candidates ---
+    # RUN THIS BLOCK AGAINST THE VR4 PROGRAM ("20030013_legnum vr4.hex"),
+    # NOT RVR. From VR4's ROM-specific 20030013.xml. Manual get_xrefs_to
+    # and raw byte-pattern search for both addresses already came back
+    # empty (see session notes), but this script's literal-push backward
+    # walk is more thorough than either -- worth confirming NO-CALLER
+    # properly before writing these off as unresolvable.
+    0x00012574,   # "Alternator G Terminal Dead Zone" (VR4, 20030013.xml)
+    0x00012527,   # "Alternator Charge Current" (VR4, 20030013.xml)
+
+    # --- ISC cluster generic tables (RVR side) ---
+    # RUN THIS BLOCK AGAINST THE RVR PROGRAM. Parent 2D table addresses
+    # from 21000011_1997-2001_RVR_X3_Mt__4g63t_.xml, category="Unknown"
+    # with an "_ISC"-style name fragment or plain TABLE_2D_XXXXXXXX,
+    # paired against axes already run through h8539_find_axis_consumer.py
+    # above. Goal: confirm/re-derive the axis pairing independently (this
+    # script walks backward from the table call instead of forward from
+    # the axis call) as a cross-check, and catch any table whose axis
+    # isn't the one currently listed in the XML.
+    0x000127fc,   # TABLE_2D_000127FC_ISC (axis currently listed: 2d496)
+    0x00012824,   # TABLE_2D_00012824_ISC (axis currently listed: 2d27a, Battery)
+    0x0001284e,   # TABLE_2D_0001284E_ISC (axis currently listed: 2d186)
+    0x00012858,   # TABLE_2D_00012858_ISC (axis currently listed: 2d2a2)
+    0x00012860,   # TABLE_2D_00012860_ISC (axis currently listed: 2d2a2)
+    0x00012950,   # TABLE_2D_00012950_ISC (axis currently listed: 2d200)
+    0x00011e4a,   # TABLE_2D_00011E4A_TableLookup (axis currently listed: 2d136)
 ]
 
 TABLE_BANK = 1
