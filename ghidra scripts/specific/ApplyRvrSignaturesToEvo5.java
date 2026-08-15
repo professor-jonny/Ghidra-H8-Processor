@@ -1,66 +1,95 @@
-// RenameFromRvrFuzzyMatch.java
-// Applies function renames + prototypes to the EVO5 program based on
-// 1.0-score bulk_fuzzy_match results against the RVR source program.
-// Source program: RVR_1998_x3 4g63t 21000011 md352553.hex
-// Target program: 22580006_EVO5_Stock.hex
-// Collision targets (multiple source names -> one target address) are
-// deliberately excluded from the pairs list below (per user decision,
-// 2026-08-03).
+// ApplyRvrSignaturesToEvo5.java
+// Run this with 22580006_EVO5_Stock.hex as the ACTIVE program.
+// Reads C:\Users\j.brophy.CORKILLSYSTEMS\github\Ghidra-H8-Processor\rvr_function_signatures.csv
+// (produced by ExportFunctionSignatures.java against RVR) plus the fixed
+// RVR-source-address -> EVO5-target-address match table below (260 unique
+// 1:1 matches from bulk_fuzzy_match at score 1.0; collisions where
+// multiple RVR names mapped to one EVO5 address were excluded per
+// 2026-08-03 decision). Applies rename + prototype to EVO5 ONLY --
+// never opens a second program, so it can't hit the "wrong/detached
+// program" bug from the two-program script.
+// @category H8Processor
 import ghidra.app.script.GhidraScript;
-import ghidra.app.decompiler.DecompInterface;
-import ghidra.app.decompiler.DecompileResults;
 import ghidra.program.model.listing.*;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.symbol.SourceType;
-import ghidra.framework.model.DomainFile;
-import ghidra.framework.model.DomainFolder;
 import ghidra.app.util.parser.FunctionSignatureParser;
+import ghidra.program.model.data.FunctionDefinitionDataType;
 import ghidra.app.cmd.function.ApplyFunctionSignatureCmd;
+import java.io.*;
 import java.util.*;
-import java.util.regex.*;
 
-public class RenameFromRvrFuzzyMatch extends GhidraScript {
+public class ApplyRvrSignaturesToEvo5 extends GhidraScript {
 
     static class Sig {
-        String returnType;
         String name;
+        String returnType;
         String params;
         String convention;
     }
 
-    Sig parseHeader(String decompText) {
-        String[] lines = decompText.split("\\r?\\n");
-        String header = null;
-        for (String line : lines) {
-            String t = line.trim();
-            if (t.isEmpty()) continue;
-            if (t.startsWith("/*") || t.startsWith("*")) continue;
-            header = t;
-            break;
-        }
-        if (header == null || !header.contains("(")) return null;
-        Matcher m = Pattern.compile("^(.*?)\\s+(\\w+)\\s*\\((.*)\\)\\s*$").matcher(header);
-        if (!m.matches()) return null;
-        Sig s = new Sig();
-        String prefix = m.group(1).trim();
-        s.name = m.group(2);
-        s.params = m.group(3);
-        String[] parts = prefix.split("\\s+");
-        StringBuilder ret = new StringBuilder();
-        for (String p : parts) {
-            if (p.startsWith("__")) {
-                s.convention = p;
+    // Minimal RFC4180-ish CSV line splitter (handles quoted fields with commas).
+    List<String> splitCsvLine(String line) {
+        List<String> out = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (inQuotes) {
+                if (c == '"') {
+                    if (i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                        cur.append('"');
+                        i++;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    cur.append(c);
+                }
             } else {
-                if (ret.length() > 0) ret.append(" ");
-                ret.append(p);
+                if (c == '"') {
+                    inQuotes = true;
+                } else if (c == ',') {
+                    out.add(cur.toString());
+                    cur.setLength(0);
+                } else {
+                    cur.append(c);
+                }
             }
         }
-        s.returnType = ret.toString();
-        return s;
+        out.add(cur.toString());
+        return out;
     }
 
     @Override
     public void run() throws Exception {
+        if (currentProgram == null) {
+            println("ERROR: no current program");
+            return;
+        }
+        println("Applying to: " + currentProgram.getName());
+
+        String csvPath = "C:\\Users\\j.brophy.CORKILLSYSTEMS\\github\\Ghidra-H8-Processor\\rvr_function_signatures.csv";
+        Map<String, Sig> bySrcAddr = new HashMap<>();
+        try (BufferedReader r = new BufferedReader(new FileReader(csvPath))) {
+            String header = r.readLine(); // skip header
+            String line;
+            while ((line = r.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                List<String> parts = splitCsvLine(line);
+                if (parts.size() < 5) continue;
+                Sig s = new Sig();
+                String addr = parts.get(0);
+                s.name = parts.get(1);
+                s.returnType = parts.get(2);
+                s.params = parts.get(3);
+                s.convention = parts.get(4);
+                bySrcAddr.put(addr, s);
+            }
+        }
+        println("Loaded " + bySrcAddr.size() + " signatures from CSV");
+
+        // src RVR address -> dst EVO5 address (260 unique 1:1 matches, score 1.0)
         List<String[]> pairs = new ArrayList<>();
         pairs.add(new String[]{"00014000", "00014000"});
         pairs.add(new String[]{"0001401f", "0001401f"});
@@ -323,97 +352,57 @@ public class RenameFromRvrFuzzyMatch extends GhidraScript {
         pairs.add(new String[]{"0002a796", "0002a54e"});
         pairs.add(new String[]{"0002a980", "0002a700"});
 
-        Program srcProgram = null;
-        Program dstProgram = currentProgram;
-
-        DomainFile srcDf = null;
-        for (DomainFile df : state.getProject().getProjectData().getRootFolder().getFiles()) {
-            if (df.getName().contains("RVR_1998_x3")) {
-                srcDf = df;
-            }
-        }
-        if (srcDf == null) {
-            srcDf = findFileRecursive(state.getProject().getProjectData().getRootFolder(), "RVR_1998_x3");
-        }
-        if (srcDf == null) {
-            println("ERROR: could not locate RVR source program in project");
-            return;
-        }
-        srcProgram = (Program) srcDf.getDomainObject(this, false, false, monitor);
-
-        DecompInterface srcDecomp = new DecompInterface();
-        srcDecomp.openProgram(srcProgram);
-
         int renamed = 0, prototyped = 0, skipped = 0, errors = 0;
 
         for (String[] pair : pairs) {
-            Address srcAddr = srcProgram.getAddressFactory().getAddress(pair[0]);
-            Address dstAddr = dstProgram.getAddressFactory().getAddress(pair[1]);
-            Function srcFunc = srcProgram.getFunctionManager().getFunctionAt(srcAddr);
-            Function dstFunc = dstProgram.getFunctionManager().getFunctionAt(dstAddr);
-            if (srcFunc == null || dstFunc == null) {
-                println("SKIP (missing function) src=" + pair[0] + " dst=" + pair[1]);
+            if (monitor.isCancelled()) break;
+            String srcAddrStr = pair[0];
+            String dstAddrStr = pair[1];
+            Sig sig = bySrcAddr.get(srcAddrStr);
+            if (sig == null) {
+                println("SKIP (no CSV entry) src=" + srcAddrStr);
+                skipped++;
+                continue;
+            }
+            Address dstAddr = currentProgram.getAddressFactory().getAddress(dstAddrStr);
+            Function dstFunc = currentProgram.getFunctionManager().getFunctionAt(dstAddr);
+            if (dstFunc == null) {
+                println("SKIP (no dst function) dst=" + dstAddrStr);
                 skipped++;
                 continue;
             }
             try {
-                DecompileResults res = srcDecomp.decompileFunction(srcFunc, 60, monitor);
-                if (res == null || !res.decompileCompleted()) {
-                    println("SKIP (decompile failed) src=" + pair[0]);
-                    skipped++;
-                    continue;
-                }
-                String decompText = res.getDecompiledFunction() != null
-                        ? res.getDecompiledFunction().getC()
-                        : null;
-                if (decompText == null) {
-                    println("SKIP (no decomp text) src=" + pair[0]);
-                    skipped++;
-                    continue;
-                }
-                Sig sig = parseHeader(decompText);
-                String newName = srcFunc.getName();
-
-                dstFunc.setName(newName, SourceType.USER_DEFINED);
+                dstFunc.setName(sig.name, SourceType.USER_DEFINED);
                 renamed++;
 
-                if (sig != null && sig.convention != null) {
-                    String protoStr = sig.returnType + " " + newName + "(" + sig.params + ")";
+                if (sig.convention != null && !sig.convention.isEmpty()
+                        && sig.returnType != null && !sig.returnType.isEmpty()
+                        && sig.params != null) {
+                    String protoStr = sig.returnType + " " + sig.name + "(" + sig.params + ")";
                     try {
                         FunctionSignatureParser parser = new FunctionSignatureParser(
-                                dstProgram.getDataTypeManager(), null);
+                                currentProgram.getDataTypeManager(), null);
                         FunctionDefinitionDataType fddt = parser.parse(
                                 dstFunc.getSignature(), protoStr);
                         ApplyFunctionSignatureCmd cmd = new ApplyFunctionSignatureCmd(
                                 dstAddr, fddt, SourceType.USER_DEFINED);
-                        if (cmd.applyTo(dstProgram)) {
+                        if (cmd.applyTo(currentProgram)) {
                             dstFunc.setCallingConvention(sig.convention);
                             prototyped++;
                         } else {
-                            println("WARN prototype apply failed for " + newName + ": " + cmd.getStatusMsg());
+                            println("WARN prototype apply failed for " + sig.name + ": " + cmd.getStatusMsg());
                         }
                     } catch (Exception pe) {
-                        println("WARN prototype parse/apply exception for " + newName + ": " + pe.getMessage());
+                        println("WARN prototype parse/apply exception for " + sig.name + ": " + pe.getMessage());
                     }
                 }
             } catch (Exception e) {
-                println("ERROR on " + pair[0] + " -> " + pair[1] + ": " + e.getMessage());
+                println("ERROR on " + srcAddrStr + " -> " + dstAddrStr + ": " + e.getMessage());
                 errors++;
             }
         }
 
         println("DONE. renamed=" + renamed + " prototyped=" + prototyped
                 + " skipped=" + skipped + " errors=" + errors);
-    }
-
-    DomainFile findFileRecursive(DomainFolder folder, String nameContains) {
-        for (DomainFile df : folder.getFiles()) {
-            if (df.getName().contains(nameContains)) return df;
-        }
-        for (DomainFolder sub : folder.getFolders()) {
-            DomainFile r = findFileRecursive(sub, nameContains);
-            if (r != null) return r;
-        }
-        return null;
     }
 }
