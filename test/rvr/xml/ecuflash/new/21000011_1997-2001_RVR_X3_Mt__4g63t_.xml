@@ -48,6 +48,15 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="TABLE_2D_00011834_Knock (possible: Knock/Lambda Composite Correction)" category="Unknown" address="11838" type="2D" scaling="uint8">
 		<table name="RPM" address="2d21e" type="Y Axis" elements="7" scaling="RPM"/>
+		<!-- 2026-08-16: reverted to elements="7" after PJ caught the mistake -- the shared axis
+		     header at 2d218 (hdr_maf_hz_raw) declares 21 elements total, but this table's OWN 2D
+		     data body at 11838 only has 7 real bytes (34 41 2d 31 36 3b 45 = 34,41,45,49,54,59,69)
+		     before a 0xFF terminator and the next table's header (03 00 F0C0 F0C2 09...) begin.
+		     Confirmed via direct ghidra:read_memory at 0x11838. This table uses only the first 7
+		     breakpoints of the shared 21-element MAF Hz raw axis -- elements must match the DATA
+		     body length, not the full axis header count. Scaling name left as "RPM" pending
+		     confirmation of whether it's really RPM or a partial MAF-axis reuse -- not re-verified
+		     this pass, only the element-count regression was fixed. -->
 	</table>
 
 	<table name="TABLE_2D_0001186C_Fueling (possible: Base Injection Fueling - blend component)" category="Unknown" address="11870" type="2D" scaling="uint8">

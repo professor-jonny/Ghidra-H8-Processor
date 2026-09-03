@@ -8,7 +8,8 @@ is closed out.
 - review.md (this file) -- h8539f Sleigh implementation vs ana.cpp.
   OPEN. Items 1, 3, 6, 7, 8, 10, 11 still live here directly; items 4, 9,
   12, 14, 15, 18 are superseded and pointered to the files below; item 13
-  is CLOSED (2026-08-16, DAT_ global renaming complete).
+  is REOPENED (2026-08-17, 7 DAT_ globals remain unrenamed -- the
+  2026-08-16 "CLOSED, zero hits" claim was inaccurate).
 
 - review2.md -- RVR XML axis/table address verification (Batch 1/2 +
   appendix items 19-31). OPEN. ~31 items; still-open threads include
@@ -63,6 +64,17 @@ is closed out.
 - review14.md -- TableHeader struct rollout across the RVR table region
   (0x2d080-0x2d8d6) and xref-based verification of the XML's header
   claims. OPEN -- 7 verification TODOs live there.
+
+
+- review15.md -- register0x0e (SP display resolution) bug: found verifying
+  the farpointerjoin Ghidra patch didn't regress anything. Confirmed
+  register0x0e = SP (h8539f.slaspec offset 0x0e), likely connected to the
+  TP/SP/FP spSegment+constresolve fragility already documented in item 8/
+  h8539f.pspec. OPEN -- root cause not yet confirmed, 5 next steps listed.
+
+- review.md item 19 (below) -- DAT_0001f1fe status/DTC-validity flags word
+  mapping. OPEN, started 2026-08-17 as part of the DAT_ global renaming
+  reopen (item 13).
 
 Review: h8539f Sleigh implementation vs ana.cpp (IDA H8/500 module)
 ====================================================================
@@ -479,9 +491,16 @@ Open items
     ongoing matching work now live in test/functions_evo5.md and
     test/functions_w4a51.md.
 
-13. DAT_ global address renaming -- CLOSED (2026-08-16). All remaining
-    unnamed DAT_ globals in the live Ghidra project have been renamed;
-    list_globals filtered on "DAT_" now returns zero hits project-wide.
+13. DAT_ global address renaming -- REOPENED (2026-08-17): the 2026-08-16
+    "CLOSED, zero hits" claim below was WRONG. Live list_globals(filter="DAT_")
+    just returned 7 remaining unnamed globals: DAT_0000f00e, DAT_0000f012,
+    DAT_0000f014, DAT_0001f1fe, DAT_0000f38c, DAT_0000f3cc, DAT_0001ef90.
+    Do not trust "zero hits" without re-running list_globals live first.
+    NOT YET INVESTIGATED this session -- next step is the same method as the
+    batches below (get_bulk_xrefs under both bank-prefix forms, decompile the
+    owning function, name from confirmed behavior, no blind guessing).
+
+    Prior (inaccurate) closure note retained for its batch history below:
     Two batches:
     - 0x1ef04/0x1ef0c/0x1ef0e/0x1ef1c: a 6-slot TCU gear-ratio rolling
       history buffer (init sentinel 0x8000/0, shifted in from F5FA-F610 on
@@ -565,6 +584,58 @@ corroboration) now continues in review9.md.
 18. table_lookup_interp parameter binding + call-site argument visibility --
     superseded. Full investigation, fixes, and the cspec-driven far-pointer
     call-argument fusion plan now live in review3.md.
+
+19. DAT_0001f1fe status/DTC-validity flags word -- OPEN, started 2026-08-17.
+    Picked as the highest-traffic item among the 7 DAT_ globals reopened in
+    item 13 above (60+ xrefs across ~40 functions when this work began --
+    fueling, ISC, ignition, O2 sensor, EGR, knock/octane, DTC status).
+
+    CONFIRMED (via live decompile, this session):
+    - bit0, bit1, bit2, bit3: each an independent fault/validity condition,
+      confirmed by dtc_status_flags_f204_f206_build (0x1a36f) which ORs each
+      bit directly into a local usDtcBits fault bitfield alongside IAT/
+      coolant/TPS-load-out-of-range checks and an f500==0 check, then maps
+      usDtcBits through a large set of OR conditions into the real DTC output
+      words DAT_0001f204/DAT_0001f206. Exact per-bit physical meaning (which
+      sensor/condition each of bit0-3 corresponds to) NOT YET traced back
+      further -- next step is finding what SETS each of these 4 bits.
+    - bit3 additionally gates fueling logic directly: confirmed via
+      f1fe_bit3_clear_and_f1f2_bit4_set_check (0x242c1), which returns true
+      only when f1fe bit3 is clear AND g_status_flags_f1f2 bit4 is set --
+      i.e. bit3 has at least two independent consumers (DTC builder +
+      fueling gate), not a single-purpose flag.
+    - bit5: confirmed via f1fe_bit5_clear_reset_f09a_check (0x28151), part of
+      f502_state_table_dispatch state 9 (already documented, see review8.md
+      and the H8StateTableDispatchAnalyzer batch). Returns bit5-clear as a
+      bool; when bit5 IS set, also clears DAT_0001f09a -- cooperates with
+      state 8's f1fe_f00c_timer_calc_gate_check, which only READS f09a,
+      suggesting a shared timer/counter reset handshake between these two
+      dispatch states.
+    - bit1, bit6: referenced by name only so far (f1fe_bit1_clear_check
+      @0x28192, f1fe_bit6_clear_check @0x281a6) -- not yet individually
+      decompiled/confirmed this session.
+
+    NOT YET DONE:
+    - Find the writer(s) for DAT_0001f1fe itself (get_bulk_xrefs across both
+      bank-prefix forms per this project's documented blind spot, or grep the
+      .c dump per review.md's SESSION 2026-08-07 methodology notes -- do not
+      trust get_xrefs_to alone).
+    - Decompile the remaining ~35 unchecked caller functions from the full
+      xref list (isc_stepper_enable_check, o2_upstream/downstream_enable_check,
+      egr_sequence_control, ign_advance_table_lookup, isc_integrator_update,
+      manifold_heat_enable_flag_update, map_tps_axis_update, iat_axis_update,
+      and others -- full list was captured via get_xrefs_to(0x1f1fe) this
+      session, not yet copied in here to avoid duplicating a live query;
+      re-run get_xrefs_to if this list needs regenerating).
+    - Once enough consumers are traced, name the individual bits (per-bit
+      renamed constants or a plate comment bit-map on the global itself,
+      matching the style already used for g_status_flags_f0e6 in item 1
+      above) and rename DAT_0001f1fe to a real global name.
+    - The other 6 DAT_ globals from item 13's reopen (f00e -- 9 xrefs all in
+      sci1_meta_cmd_dispatch_c0_ff; f3cc/f38c -- 18 xrefs each, both in
+      tcu_shift_torque_and_knock_mgmt/tcu_shift_timing_state_machine; f012/
+      f014 -- low traffic; 0001ef90 -- not yet checked) still need the same
+      treatment once this one is closed out.
 
 ----------------------------------------------------------------------------------
 Build/test workflow
