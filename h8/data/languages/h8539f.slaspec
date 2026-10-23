@@ -98,6 +98,7 @@ define token addrMode(8)
 
 define token instr8(8)
 	Rd = (0,2)
+	RdN = (0,2)
 	Rdb = (0,2)
 	Rs = (0,2)
 	Rsb = (0,2)
@@ -175,6 +176,7 @@ attach variables [ m5CR ] [ _ CCR _ BR EP DP _ TP ];
 
 
 attach variables [ Rd Rs Rn ]    [ R0  R1  R2  R3  R4  R5  FP  SP  ];
+attach variables [ RdN ]           [ R1  R2  R3  R4  R5  FP  SP  _   ];
 #attach variables [ Rdb Rsb Rnb ] [ R0L R1L R2L R3L R4L R5L FPL SPL ];
 #attach names [ targetReg ] [ R0  R1  R2  R3  R4  R5  FP  SP  ];
 
