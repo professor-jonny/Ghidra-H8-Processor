@@ -17,9 +17,12 @@ is closed out.
   table_lookup_interp/axis_lookup_interp caller family not yet audited.
 
 - review3.md -- cspec-driven far-pointer call-argument fusion (a real
-  Ghidra decompiler C++ patch, the #817-class bug). PLAN ONLY, nothing
-  written to Ghidra source yet. Estimated ~1-2 days of C++ work; one
-  smoke-test (isAddrTiedContiguous no-op check) still needs confirming.
+  Ghidra decompiler C++ patch, the #817-class bug). No longer plan-only:
+  implemented and submitted as PR #9522 (issue #9450), an opt-in
+  <farpointerjoin hislot joinsize> cspec element + ActionFarPointerJoin.
+  Needs a core built with it; the clean master core cannot use it. No in-tree
+  datatest yet (the PR offers one). The smoke-test noted in this file may be
+  out of date. See todo.md item 11.
 
 - review4.md -- return-type audit: table_lookup_interp/axis_lookup_interp/
   table_lookup_indexed/table_read_indexed caller family. COMPLETE
@@ -61,20 +64,36 @@ is closed out.
   function-matching checklists (successor to review.md's old item 12).
   OPEN.
 
+- review11.md -- h8539_import_tables_xml2.py: behavior + implementation plan.
+
+- review12.md -- RVR scaling/axis table verification: header-offset bug + correction batches.
+
+- review13.md -- H8/500 paged/banked addressing issues. (Not the same as item 13 below.)
+
 - review14.md -- TableHeader struct rollout across the RVR table region
   (0x2d080-0x2d8d6) and xref-based verification of the XML's header
   claims. OPEN -- 7 verification TODOs live there.
 
 
-- review15.md -- register0x0e (SP display resolution) bug: found verifying
-  the farpointerjoin Ghidra patch didn't regress anything. Confirmed
-  register0x0e = SP (h8539f.slaspec offset 0x0e), likely connected to the
-  TP/SP/FP spSegment+constresolve fragility already documented in item 8/
-  h8539f.pspec. OPEN -- root cause not yet confirmed, 5 next steps listed.
+- review15.md -- register0x0e investigation. RESOLVED 2026-10: #9540/#9541 print-layer fix
+  (920fcd6) + RdN and displacement-order language fixes; register0x 210 -> 0. See todo.md item 9.
+
+- review16.md -- register0x0e print-layer fix. COMPLETE (landed 2026-08-26).
+
+- review17-19.md -- auStack_/sat_add_u16 chain. HISTORICAL; cause since found (displacement
+  order, RdN pointer store, param_fpN stack offsets). See todo.md.
 
 - review.md item 19 (below) -- DAT_0001f1fe status/DTC-validity flags word
   mapping. OPEN, started 2026-08-17 as part of the DAT_ global renaming
   reopen (item 13).
+
+- review20-24.md, review25-26.md (SUPERSEDED), review-9561-merge-ordering.md,
+  review-calling-convention-regression.md -- muldiv_*/#9561 regression chain. Mostly
+  SUPERSEDED by the above; read review-9561-merge-ordering.md before archiving.
+
+ - todo.md, todo-r0-r5-displacement-order.md -- current work list (2026-10-26).
+
+ - CHANGELOG.md, h8539f-instruction-table.md -- reference.
 
 Review: h8539f Sleigh implementation vs ana.cpp (IDA H8/500 module)
 ====================================================================
