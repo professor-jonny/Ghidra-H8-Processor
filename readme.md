@@ -46,6 +46,16 @@ to compile the `.sla`:
              "<GhidraInstall>\Ghidra\Processors\h8\data\languages\h8539f.sla"
 ```
 
+## Optional: R0-R5 displacement variant (placeholder)
+
+`optional\r0r5-add-before-segment\` holds replacement copies of `h8539f.slaspec` and
+`h8539f-arith.sinc` that fix the bank of R0-R5 displacement addressing (the displacement is
+added before the segment, as the FP/SP forms already do). It is **not** the default: it has
+known decompiler regressions (one function stops decompiling, and more `undefined*` types
+and casts appear), so it is kept as a placeholder until the problem is corrected properly.
+To try it, copy the two files over the ones in `h8\data\languages\`, delete `h8539f.sla`,
+and restart Ghidra. See that folder's `README.md` for the details and how to go back.
+
 ## Opening a ROM in Ghidra
 
 ### 1. Import
@@ -153,6 +163,10 @@ h8\data\languages\
 test\
     h8539_ecu_master_setup_new.py  -- Ghidra script: full ROM setup with GUI (run this first)
     rvr\                -- example ROM files and EcuFlash XMLs
+
+optional\
+    r0r5-add-before-segment\  -- OPTIONAL placeholder: replacement h8539f.slaspec and
+                                 h8539f-arith.sinc (see its README.md); not the default
 
 datasheets\h8539f\      -- Hitachi hardware/programming manuals
 
