@@ -1,5 +1,15 @@
 # Optional: R0-R5 displacement added before the segment (PLACEHOLDER)
 
+**Update 2026-10-29: superseded; kept for reference.** The default files in `h8/data/languages/` are now a *hybrid* of this variant and the old form: for R0-R5 16-bit displacements whose sign bit is clear, the original `spSegment(DP|EP,Rn)+disp` form is kept; with the sign bit set, the form described below (add in 16 bits, then apply the segment) is used. The default cspec is now `<funcptr align="1" />`.
+
+What the 2026-10-29 re-measurements (fresh instruction parse, five ROMs) changed in the "Known regressions" section below:
+
+- The 0x28b2f failure has a cause: it fails when only the grammar change or only `align="1"` is applied, and decompiles when both are. Same for 0x28b21 (EVO5).
+- The typing regression of this unsplit variant is real (RVR 21000011: `undefined*` +63, pointer casts +85 versus the old grammar); the hybrid brings it to +0 / +5, which is why the hybrid is the default.
+- Earlier numbers were taken from stale instruction prototypes stored in the project and are slightly off. After changing a `.slaspec`, clear and re-disassemble before measuring.
+
+See `review28.md` (Correction section) and `review29.md`.
+
 **Status: experimental placeholder. This is NOT the default.** It is kept here so it can be
 tried, or replaced, until the underlying issue is corrected properly.
 
