@@ -12,7 +12,7 @@
     </size_alignment_map>
   </data_organization>
 
-  <funcptr align="2" />
+  <funcptr align="1" />
 
   <global><range space="ram" first="0x00010000" last="0x0002FFFF"/></global>
 

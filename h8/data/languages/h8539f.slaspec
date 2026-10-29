@@ -191,8 +191,8 @@ define token addrByte(8)    addr8  = (0, 7);
 define token addrWord(16)   addr16 = (0, 15);
 define token addrLong(24)   addr24 = (0, 23);
 define token pageByte(8)    page   = (0, 7);
-define token dispByte(8)    disp8  = (0,7)  signed;
-define token dispWord(16)   disp16 = (0,15) signed;
+define token dispByte(8)    disp8  = (0,7)  signed  disp8sg = (7,7);
+define token dispWord(16)   disp16 = (0,15) signed  disp16sg = (15,15);
 define token immByte(8)     imm8   = (0,7);
 define token immWord(16)    imm16  = (0,15);
 define token regListByte(8)
@@ -632,10 +632,54 @@ eab_direct:       Rn                        is Rn & mode = 10 & sz = 0          
 eaw_direct:       Rn                        is Rn & mode = 10 & sz = 1            { export Rn; }
 eab_indirect:     "@"^Rn_banked             is Rn_banked & mode = 13 & sz = 0     { export *:1 Rn_banked; }
 eaw_indirect:     "@"^Rn_banked             is Rn_banked & mode = 13 & sz = 1     { export *:2 Rn_banked; }
-eab_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & Rn < 6 & mode = 14 & sz = 0; disp8     { tmp = (Rn_banked + disp8);  export *:1 tmp; }
-eaw_disp8:        "@("^disp8^":8,"^Rn_banked^")"   is Rn_banked & Rn < 6 & mode = 14 & sz = 1; disp8     { tmp = (Rn_banked + disp8);  export *:2 tmp; }
-eab_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & Rn < 6 & mode = 15 & sz = 0; disp16    { tmp = (Rn_banked + disp16); export *:1 tmp; }
-eaw_disp16:       "@("^disp16^":16,"^Rn_banked^")" is Rn_banked & Rn < 6 & mode = 15 & sz = 1; disp16    { tmp = (Rn_banked + disp16); export *:2 tmp; }
+eab_disp8:        "@("^disp8^":8,R0)" is Rn = 0 & mode = 14 & sz = 0; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R0) + disp8; export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R0)" is Rn = 0 & mode = 14 & sz = 0; disp8 & disp8sg = 1 { local off:2 = R0 + disp8; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R1)" is Rn = 1 & mode = 14 & sz = 0; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R1) + disp8; export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R1)" is Rn = 1 & mode = 14 & sz = 0; disp8 & disp8sg = 1 { local off:2 = R1 + disp8; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R2)" is Rn = 2 & mode = 14 & sz = 0; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R2) + disp8; export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R2)" is Rn = 2 & mode = 14 & sz = 0; disp8 & disp8sg = 1 { local off:2 = R2 + disp8; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R3)" is Rn = 3 & mode = 14 & sz = 0; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R3) + disp8; export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R3)" is Rn = 3 & mode = 14 & sz = 0; disp8 & disp8sg = 1 { local off:2 = R3 + disp8; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R4)" is Rn = 4 & mode = 14 & sz = 0; disp8 & disp8sg = 0 { local a:4 = spSegment(EP, R4) + disp8; export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R4)" is Rn = 4 & mode = 14 & sz = 0; disp8 & disp8sg = 1 { local off:2 = R4 + disp8; local a:4 = spSegment(EP, off); export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R5)" is Rn = 5 & mode = 14 & sz = 0; disp8 & disp8sg = 0 { local a:4 = spSegment(EP, R5) + disp8; export *:1 a; }
+eab_disp8:        "@("^disp8^":8,R5)" is Rn = 5 & mode = 14 & sz = 0; disp8 & disp8sg = 1 { local off:2 = R5 + disp8; local a:4 = spSegment(EP, off); export *:1 a; }
+eaw_disp8:        "@("^disp8^":8,R0)" is Rn = 0 & mode = 14 & sz = 1; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R0) + disp8; export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R0)" is Rn = 0 & mode = 14 & sz = 1; disp8 & disp8sg = 1 { local off:2 = R0 + disp8; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R1)" is Rn = 1 & mode = 14 & sz = 1; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R1) + disp8; export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R1)" is Rn = 1 & mode = 14 & sz = 1; disp8 & disp8sg = 1 { local off:2 = R1 + disp8; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R2)" is Rn = 2 & mode = 14 & sz = 1; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R2) + disp8; export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R2)" is Rn = 2 & mode = 14 & sz = 1; disp8 & disp8sg = 1 { local off:2 = R2 + disp8; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R3)" is Rn = 3 & mode = 14 & sz = 1; disp8 & disp8sg = 0 { local a:4 = spSegment(DP, R3) + disp8; export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R3)" is Rn = 3 & mode = 14 & sz = 1; disp8 & disp8sg = 1 { local off:2 = R3 + disp8; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R4)" is Rn = 4 & mode = 14 & sz = 1; disp8 & disp8sg = 0 { local a:4 = spSegment(EP, R4) + disp8; export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R4)" is Rn = 4 & mode = 14 & sz = 1; disp8 & disp8sg = 1 { local off:2 = R4 + disp8; local a:4 = spSegment(EP, off); export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R5)" is Rn = 5 & mode = 14 & sz = 1; disp8 & disp8sg = 0 { local a:4 = spSegment(EP, R5) + disp8; export *:2 a; }
+eaw_disp8:        "@("^disp8^":8,R5)" is Rn = 5 & mode = 14 & sz = 1; disp8 & disp8sg = 1 { local off:2 = R5 + disp8; local a:4 = spSegment(EP, off); export *:2 a; }
+eab_disp16:       "@("^disp16^":16,R0)" is Rn = 0 & mode = 15 & sz = 0; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R0) + disp16; export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R0)" is Rn = 0 & mode = 15 & sz = 0; disp16 & disp16sg = 1 { local off:2 = R0 + disp16; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R1)" is Rn = 1 & mode = 15 & sz = 0; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R1) + disp16; export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R1)" is Rn = 1 & mode = 15 & sz = 0; disp16 & disp16sg = 1 { local off:2 = R1 + disp16; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R2)" is Rn = 2 & mode = 15 & sz = 0; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R2) + disp16; export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R2)" is Rn = 2 & mode = 15 & sz = 0; disp16 & disp16sg = 1 { local off:2 = R2 + disp16; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R3)" is Rn = 3 & mode = 15 & sz = 0; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R3) + disp16; export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R3)" is Rn = 3 & mode = 15 & sz = 0; disp16 & disp16sg = 1 { local off:2 = R3 + disp16; local a:4 = spSegment(DP, off); export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R4)" is Rn = 4 & mode = 15 & sz = 0; disp16 & disp16sg = 0 { local a:4 = spSegment(EP, R4) + disp16; export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R4)" is Rn = 4 & mode = 15 & sz = 0; disp16 & disp16sg = 1 { local off:2 = R4 + disp16; local a:4 = spSegment(EP, off); export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R5)" is Rn = 5 & mode = 15 & sz = 0; disp16 & disp16sg = 0 { local a:4 = spSegment(EP, R5) + disp16; export *:1 a; }
+eab_disp16:       "@("^disp16^":16,R5)" is Rn = 5 & mode = 15 & sz = 0; disp16 & disp16sg = 1 { local off:2 = R5 + disp16; local a:4 = spSegment(EP, off); export *:1 a; }
+eaw_disp16:       "@("^disp16^":16,R0)" is Rn = 0 & mode = 15 & sz = 1; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R0) + disp16; export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R0)" is Rn = 0 & mode = 15 & sz = 1; disp16 & disp16sg = 1 { local off:2 = R0 + disp16; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R1)" is Rn = 1 & mode = 15 & sz = 1; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R1) + disp16; export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R1)" is Rn = 1 & mode = 15 & sz = 1; disp16 & disp16sg = 1 { local off:2 = R1 + disp16; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R2)" is Rn = 2 & mode = 15 & sz = 1; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R2) + disp16; export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R2)" is Rn = 2 & mode = 15 & sz = 1; disp16 & disp16sg = 1 { local off:2 = R2 + disp16; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R3)" is Rn = 3 & mode = 15 & sz = 1; disp16 & disp16sg = 0 { local a:4 = spSegment(DP, R3) + disp16; export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R3)" is Rn = 3 & mode = 15 & sz = 1; disp16 & disp16sg = 1 { local off:2 = R3 + disp16; local a:4 = spSegment(DP, off); export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R4)" is Rn = 4 & mode = 15 & sz = 1; disp16 & disp16sg = 0 { local a:4 = spSegment(EP, R4) + disp16; export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R4)" is Rn = 4 & mode = 15 & sz = 1; disp16 & disp16sg = 1 { local off:2 = R4 + disp16; local a:4 = spSegment(EP, off); export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R5)" is Rn = 5 & mode = 15 & sz = 1; disp16 & disp16sg = 0 { local a:4 = spSegment(EP, R5) + disp16; export *:2 a; }
+eaw_disp16:       "@("^disp16^":16,R5)" is Rn = 5 & mode = 15 & sz = 1; disp16 & disp16sg = 1 { local off:2 = R5 + disp16; local a:4 = spSegment(EP, off); export *:2 a; }
 # FP/SP displacement operands: add the displacement to the 16-bit offset BEFORE applying the segment (matches disp8_banked above),
 # so the decompiler sees SEGMENTOP(TP, FP+disp) rather than SEGMENTOP(TP, FP) + disp.
 eab_disp8: "@("^disp8^":8,FP)" is Rn = 6 & mode = 14 & sz = 0; disp8 { local off:2 = FP + disp8; local a:4 = spSegment(TP, off); export *:1 a; }

@@ -217,3 +217,16 @@ multiplier) at the same I/O addresses. The full register map from h8539f.pspec c
 ported to h8538f.pspec directly, with the exception of the flash memory control
 registers (FLMCR, FLM_EBR1, FLM_EBR2, FLMER, FLMSR) which are 539F-specific --
 the 538 uses EPROM, not flash.
+
+
+2026-10-29: hybrid R0-R5 displacement grammar and funcptr align=1
+  - @(d:16,Rn) and @(d:8,Rn) for R0-R5: displacement sign bit clear -> spSegment(DP|EP,Rn)+disp (unchanged);
+    sign bit set -> disp added in 16 bits, then spSegment (so a negative displacement wraps inside the bank).
+    Implemented with a sign alias field (disp8sg / disp16sg) and one constructor per register and sign.
+  - h8539f.cspec: <funcptr align="1" />. Function pointers on this CPU can point at odd addresses; align="2" left
+    calls to odd-address functions unresolved (595-948 per ROM) and, together with the grammar change, broke the
+    switch at 0x28b2f.
+  - Both changes belong together: either one alone makes that switch function fail to decompile.
+  - Ghidra stores instruction prototypes in the program database. After editing a .slaspec, an existing project keeps
+    showing the old p-code until instructions are cleared and re-disassembled (or the program is re-imported).
+  - Measurements: review28.md (Correction) and review29.md.
