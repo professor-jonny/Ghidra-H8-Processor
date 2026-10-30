@@ -230,3 +230,15 @@ the 538 uses EPROM, not flash.
   - Ghidra stores instruction prototypes in the program database. After editing a .slaspec, an existing project keeps
     showing the old p-code until instructions are cleared and re-disassembled (or the program is re-imported).
   - Measurements: review28.md (Correction) and review29.md.
+
+2026-10-30: H8PreservedRegsAnalyzer and the _pR1/_pR2/_pR1R2 calling-convention clones
+  - h8539f.cspec ends with 15 clones (5 conventions x R1, R2, R1R2): same as the base convention except the named
+    registers move from killedbycall to unaffected. H8PreservedRegsAnalyzer (h8539f-analyzers.jar, disabled by default)
+    assigns them to functions that save R1/R2 at entry and restore them before every return (stm/ldm or push/pop).
+  - It keeps each function's existing convention (several are inferred) and changes only those registers; every change
+    has a bookmark in category "H8 Preserved Registers"; Dry run option; reverts if the evidence disappears.
+  - After changing the jar or cspec: restart Ghidra, tick the analyzer under Analysis > Auto Analyze, and (for an
+    existing program) clear and re-disassemble first if the grammar also changed.
+  - The stack-pop analyzers (H8ExtraPopAnalyzer, H8FunctionPurgeAnalyzer) already set the purge size of 726/741 RVR
+    functions, so stack pop is NOT the cause of the remaining stack arrays; shrinking the 512-byte stack parameter slot
+    to 32 changed nothing.

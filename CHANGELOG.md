@@ -3,6 +3,26 @@
 All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
+### Added - H8PreservedRegsAnalyzer and R1/R2-preserving calling-convention clones (2026-10-30); hybrid R0-R5 displacement grammar and `funcptr align="1"` (2026-10-29)
+
+**H8PreservedRegsAnalyzer** (`h8/data/src/main/java/h8539f/`, packaged in `h8539f-analyzers.jar`). The cspec's conventions list
+R1 and R2 as killed by a call, but many ROM helpers (div_*, muldiv_*, mul_*, adc_*, ...) save them at entry (`stm` or
+`mov:g.w Rn,@-SP`) and restore them before every return, so callers printed `extraout_R2` and junk base addresses after the
+call. The analyzer finds those functions and switches each to a clone of its current convention, `<base>_pR1`, `_pR2` or
+`_pR1R2`, which is identical except that those registers move from `killedbycall` to `unaffected`. The 15 clones are defined
+at the end of `h8539f.cspec`. Conservative by design: never changes anything but those registers, skips unknown base
+conventions and missing clones, records a bookmark ("H8 Preserved Registers") with the saved/restored instructions for
+every function it changes, reverts a function on re-analysis if the evidence no longer holds, has a "Dry run" option, and
+is **disabled by default** (enable it in Analysis > Auto Analyze). Measured on RVR 21000011 with a fresh parse (305 of 741
+functions switched): `extraout_R2` 307 -> 230, `undefined*` 1574 -> 1534, `&stack0x` 20 -> 7, stack-array declarations
+9 -> 4, `unaff_*` 123 -> 167 (mostly R1/R2 inputs now named `unaff_`), no new decompile failures. Remaining junk base
+addresses: 3 in `mut_configurable_reqid_periodic_snapshot_8word` plus 1 each in three other functions. Not tested:
+the revert path and the dry-run option. See review29.md.
+
+**Hybrid R0-R5 displacement grammar and `funcptr align="1"`.** See NOTES.TXT (2026-10-29) and review29.md.
+
+---
+
 ### Added — AXIS-AMBIGUOUS / PAIRED-AMBIGUOUS status tiers in the axis-pairing checkers
 
 `find_preceding_axis_call()` in both `h8539_import_tables_xml2.py` and `h8539_audit_axis_data_length.py`
