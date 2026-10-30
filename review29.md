@@ -90,3 +90,47 @@ Reading (verified counts; the interpretation is mine):
 - Outlier to spot-check: w4a51 "both" has (short) 121 -> 253, `&stack0x` 750 -> 912 and ptr casts +654 (about +9%); not inspected, cause unknown (more functions resolving under align=1 is one possibility).
 
 Not resolved: why `align="2"` was put in the repo cspec. `git` calls are blocked by the pulsar run-command guard here and the repo notes searched so far do not say; run `git log -S"funcptr align" -- h8/data/languages/h8539f.cspec` yourself (or give the OK for `confirm:true`).
+
+
+## Session 29 continued (2026-10-29/30): final4 diff, calling-convention gap, H8PreservedRegsAnalyzer
+
+Final3 -> final4 (user's GUI exports) diff, read through (verified from the diff text): `align="1"` makes calls land on the right
+function (final3 called `noop_return_void`, `stub_empty_0x2a8d1`, `stub_empty_0x2c129`, `stub_empty_0x26b8b` where final4 calls
+`adc_channel_convert_and_read`, `sci3_rx_process_tcu_byte`, `tcu_periodic_dispatch`, `isc_f428_condition_calc`), hundreds of
+`(*fn)()` became direct calls, about 60 `TableHeader_*` globals and typed table arguments appeared, and
+`sci1_post_handshake_status_broadcast_dispatch` decompiles to an 8-case `switch` that matches the hand-derived table
+(case 3 sends 0x55, case 5 sends 0xEF/0xF8/0x08 0x08, case 7 sends 0x85); its plate comment saying "ignore the decompiled
+body" is now outdated. `(int)0xf814 + 0x33` instead of `0xf847` also appears in a fresh parse of the stock grammar, so it is the
+cost of keeping the old form for non-negative displacements, not a regression.
+
+Findings, in order:
+- Lost registers: the default prototype lists R0, R1, R2 as killedbycall, but `adc_sensor_convert_single` (0x171c3) and about
+  345 of 741 RVR functions save and restore R1 and/or R2 (stm/ldm or mov push/pop; verified by script scan). That produced
+  `extraout_R2`, `(int)extraout_R2 + 2` and `(int)1 + 1` in the ADC/MUT frame builders.
+- Stack pop is already handled: H8ExtraPopAnalyzer / H8FunctionPurgeAnalyzer set the purge size of 726/741 functions (675 are 4 bytes);
+  my headless runs use `-noanalysis`, so they never ran there, but the values are stored in the project.
+- Negative result: shrinking every `maxsize="512"` stack-parameter slot to 32 changed 1 function and no stack array.
+- The stack arrays moved when register preservation was modelled (9 -> 4), so at least some come from the same clobber assumption.
+
+H8PreservedRegsAnalyzer result on RVR 21000011, fresh parse, `align="1"` for both (305 functions switched):
+
+| Metric | before | after |
+|---|---|---|
+| `extraout_R2` | 307 | 230 |
+| `extraout_R1` | 115 | 117 |
+| `undefined*` | 1574 | 1534 |
+| pointer casts | 4133 | 4112 |
+| `&stack0x` | 20 | 7 |
+| stack-array declarations | 9 | 4 |
+| `unaff_*` | 123 | 167 |
+| decompile failures | 0 | 0 |
+
+Watch items (not investigated): `unaff_*` +44 and 17 functions with more `in_stack_`/`unaff_`/`&stack0x` names (largest:
+`tcu_shift_timing_state_machine` +6); 3 junk base addresses remain in `mut_configurable_reqid_periodic_snapshot_8word` and 1 each in
+`table_select_scale_fanout_f1be_f1c2`, `isc_f41a_correction_calc`, `isc_f420_correction_calc`. Only RVR 21000011 was measured.
+The analyzer run is byte-identical to the equivalent one-off script run. Not tested: the revert path and the Dry run option.
+
+Installed: `ghidra_stock` has the new `h8539f-analyzers.jar` (old one kept as `h8539f-analyzers.jar.bak-20261030-224227` in the same lib
+folder) and the cspec with the 15 clones; the repo has the same cspec, `H8PreservedRegsAnalyzer.java`, and the two new class files
+in `h8/build/classes/h8539f/`. Verified from `ghidra_stock` headless: analyzer discovered, disabled by default, 305 set, none skipped.
+The analyzer is disabled by default; enable it under Analysis > Auto Analyze after restarting Ghidra.

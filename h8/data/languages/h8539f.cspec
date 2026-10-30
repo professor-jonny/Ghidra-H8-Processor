@@ -483,4 +483,446 @@
     </unaffected>
   </prototype>
 
+  <!-- 2026-10-30: R1/R2-preserving clones of each calling convention above, named <convention>_pR1, _pR2 and _pR1R2.
+       Each is identical to its base convention except that the named register(s) move from killedbycall to
+       unaffected. They are assigned per function by H8PreservedRegsAnalyzer (disabled by default; see
+       h8/data/src/main/java/h8539f/H8PreservedRegsAnalyzer.java) to functions that save the register at entry
+       and restore it before every return (stm/ldm or mov push/pop), so callers keep R1/R2 across the call
+       instead of printing extraout_R1/extraout_R2. Unused clones are harmless. -->
+  <prototype name="__stdcall_pR1" extrapop="unknown" stackshift="2">
+      <input>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R1"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R2"/>
+        </pentry>
+        <pentry minsize="1" maxsize="512" align="2">
+          <addr offset="4" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+      </output>
+      <killedbycall>
+        <register name="R0"/>
+        <register name="R2"/>
+      </killedbycall>
+      <unaffected>
+        <register name="R3"/>
+        <register name="R4"/>
+        <register name="R5"/>
+        <register name="FP"/>
+        <register name="SP"/>
+        <register name="SP24"/>
+      
+        <register name="R1"/>
+      </unaffected>
+    </prototype>
+  <prototype name="__stdcall_pR2" extrapop="unknown" stackshift="2">
+      <input>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R1"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R2"/>
+        </pentry>
+        <pentry minsize="1" maxsize="512" align="2">
+          <addr offset="4" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+      </output>
+      <killedbycall>
+        <register name="R0"/>
+        <register name="R1"/>
+      </killedbycall>
+      <unaffected>
+        <register name="R3"/>
+        <register name="R4"/>
+        <register name="R5"/>
+        <register name="FP"/>
+        <register name="SP"/>
+        <register name="SP24"/>
+      
+        <register name="R2"/>
+      </unaffected>
+    </prototype>
+  <prototype name="__stdcall_pR1R2" extrapop="unknown" stackshift="2">
+      <input>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R1"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="R2"/>
+        </pentry>
+        <pentry minsize="1" maxsize="512" align="2">
+          <addr offset="4" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="2">
+          <register name="R0"/>
+        </pentry>
+      </output>
+      <killedbycall>
+        <register name="R0"/>
+      </killedbycall>
+      <unaffected>
+        <register name="R3"/>
+        <register name="R4"/>
+        <register name="R5"/>
+        <register name="FP"/>
+        <register name="SP"/>
+        <register name="SP24"/>
+      
+        <register name="R1"/>
+        <register name="R2"/>
+      </unaffected>
+    </prototype>
+  <prototype name="__stdcall_far_allstack_pR1" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_allstack_pR2" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_allstack_pR1R2" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_pR1" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_pR2" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_pR1R2" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_allstack_32ret_pR1" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_allstack_32ret_pR2" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_allstack_32ret_pR1R2" extrapop="4" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="512" align="2">
+        <addr offset="4" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_2arg_pR1" extrapop="6" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="1">
+        <addr offset="6" space="stack"/>
+      </pentry>
+      <pentry minsize="2" maxsize="2">
+        <addr offset="7" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R2"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_2arg_pR2" extrapop="6" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="1">
+        <addr offset="6" space="stack"/>
+      </pentry>
+      <pentry minsize="2" maxsize="2">
+        <addr offset="7" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+      <register name="R1"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+  <prototype name="__stdcall_far_2arg_pR1R2" extrapop="6" stackshift="2">
+    <input>
+      <pentry minsize="1" maxsize="1">
+        <addr offset="6" space="stack"/>
+      </pentry>
+      <pentry minsize="2" maxsize="2">
+        <addr offset="7" space="stack"/>
+      </pentry>
+    </input>
+    <output>
+      <pentry minsize="1" maxsize="2">
+        <register name="R0"/>
+      </pentry>
+    </output>
+    <killedbycall>
+      <register name="R0"/>
+    </killedbycall>
+    <unaffected>
+      <register name="R3"/>
+      <register name="R4"/>
+      <register name="R5"/>
+      <register name="FP"/>
+      <register name="SP"/>
+      <register name="SP24"/>
+    
+        <register name="R1"/>
+        <register name="R2"/>
+      </unaffected>
+  </prototype>
+
 </compiler_spec>
