@@ -3,6 +3,42 @@
 All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
+### Changed - stackshift 0 on every h8539f.cspec prototype; Added - H8 Stack Purge Enforcer, No-stack and Call-graph modes, audit scripts (2026-11-11; work done 2026-11-02 to 2026-11-09)
+
+**stackshift="0" on every prototype in `h8539f.cspec`.** The H8 analyzers (`H8ExtraPopAnalyzer`, `H8FunctionPurgeAnalyzer`) store the whole pop of the
+return instruction as a function's stack purge (`rts` 2, `prts` 4, `rte` 6; the return address is included), and Ghidra
+computes a callee's extrapop as purge + the convention's stackshift. Every prototype used to have stackshift 2 or 4, so each
+call counted the return address twice and the decompiler's tracked SP rose by 2 or 4 per call. Result: `uStackNNNN = <return
+address>` stores in callers and phantom stack arguments. Measured on RVR 21000011 (741 functions, 1614 call sites, 0 decompile
+failures before and after): call sites with a return-address store 353 -> 0. The stack-origin call-argument count (233 -> 246) is
+not a good measure of phantom arguments and did not improve; that part is still open. The eight experiment prototypes
+(`__stdcall_ns0*`, `__stdcall_ns2*`) were removed on 2026-11-11 after checking that no function in the original ROM, `.hex.1`
+or `.hex.2` uses them; the file now has 26 prototypes, all stackshift 0. The generic `h8.cspec` (H8538F and H8520Max only) is
+unchanged: the analyzers only run on H8539F.
+
+**H8PurgeEnforcementAnalyzer** ("H8 Stack Purge Enforcer", last priority, enabled by default). Corrects a stored purge that differs
+from the return pop, but only for a function with no calls whose SP Ghidra's depth tracking shows balanced at every return;
+any other mismatch is only reported, with the evidence. Also warns once per run about any prototype with stackshift != 0.
+Five functions had wrong stored purges (`sat_add_s16`, `sat_sub_u16_clamp0`, `select_min_xy_triple`, `muldiv_u16_scaled`,
+`muldiv_s16_rounded_3op`: 12, 12, 16, 2, 2, all really 4); they are fixed in the Ghidra project copies (project data, not in
+git). Run by Ghidra's own analysis on the copy: `checked 719 functions: 719 correct, 0 corrected, 0 reported for review`.
+
+**No-stack mode and Call-graph mode in `H8PreservedRegsAnalyzer`** (both options off by default) with the new `H8StackReadTracker`
+and four prototypes `__stdcall_ns`, `_ns_pR1`, `_ns_pR2`, `_ns_pR1R2`. Call-graph mode also preserves R1/R2 in functions
+that never write them (real run on RVR 21000011: 693 set, 0 reverted; `extraout_R2` 228 -> 28, "Unknown calling convention"
+105 -> 1). No-stack mode gives convention variants without the stack input entry to functions that read no stack parameter
+(539 of 741 on RVR 21000011); it removed the 8 phantom stack arguments found at call sites, and it only became usable together
+with stackshift 0.
+
+**Audit scripts** in `ghidra scripts/measure/`: `CheckStackPurge.java` (read-only; run after the auto-analysis of any new ROM: prints
+prototypes with stackshift != 0, purge mismatches with evidence, mixed returns and a RESULT line) and `AfterRunCheck.java`.
+
+Removed from git: the seven stale `h8/build/classes/h8539f/*.class` files; `h8/build/` is now in `.gitignore`.
+Not yet verified: the whole chain on a freshly imported ROM (everything above was measured on a program whose purges the
+analyzers had already set), and the other four ROMs in the project (they cannot be opened without a database upgrade).
+See review32.md and todo.md.
+
+---
 ### Added - H8PreservedRegsAnalyzer and R1/R2-preserving calling-convention clones (2026-10-30); hybrid R0-R5 displacement grammar and `funcptr align="1"` (2026-10-29)
 
 **H8PreservedRegsAnalyzer** (`h8/data/src/main/java/h8539f/`, packaged in `h8539f-analyzers.jar`). The cspec's conventions list
