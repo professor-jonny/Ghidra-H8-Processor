@@ -9,6 +9,36 @@ and the decompiler's stack-pointer solver tracking the spacebase fully are two
 separate mechanisms; see the quirk below for why the warning still fires even with
 purge sizes fully determined.
 
+STACKSHIFT AND PURGE RULE (2026-11-11): The analyzers above store the WHOLE pop of
+the return instruction as the function purge (rts 2, prts 4, rte 6; the return
+address is included). Ghidra's FunctionPrototype.grabFromFunction computes a callee's
+extrapop as purge + the calling convention's stackshift, so EVERY prototype in
+h8539f.cspec must have stackshift="0". Any value above 0 counts the return address
+twice and lifts the decompiler's tracked SP by that amount at every call, which
+shows up as "uStackNNNN = <return address>" stores in callers and as phantom stack
+arguments (measured on RVR 21000011: 353 of 1614 call sites with such a store at
+stackshift 2/4, 0 at stackshift 0). Do not set stackshift above 0 on a prototype
+used with an analyzer-set purge. The generic h8.cspec (H8538F, H8520Max) still has
+stackshift 2; the analyzers only run on H8539F (canAnalyze), so it was left alone.
+
+A purge can also be stored first by Ghidra itself (its Stack analysis, or applying a
+function signature), and H8ExtraPopAnalyzer/H8FunctionPurgeAnalyzer never overwrite a
+non-zero value, so a wrong value stays. Five functions in the RVR ROM had one (12, 12,
+16, 2, 2; the real pop is 4). H8PurgeEnforcementAnalyzer ("H8 Stack Purge Enforcer",
+last priority, enabled by default) corrects a stored purge that differs from the return
+pop only when the function has no calls and Ghidra's depth tracking shows SP balanced
+at every return; otherwise it only warns, with the evidence, because Ghidra's
+CallDepthChangeInfo does not model what a callee pops (it shows -4 per pjsr). A wrong
+purge on a function WITH calls is therefore reported, not fixed. It also warns about
+any prototype with stackshift != 0.
+
+For any new ROM: run the auto-analysis, read the log lines of the purge analyzers and
+the enforcer, then run "ghidra scripts/measure/CheckStackPurge.java" (read-only; it is
+not on Ghidra's script path, so copy it to %USERPROFILE%\ghidra_scripts or run it
+inline). It prints stackshift != 0, every purge mismatch with evidence (calls, depth
+at the returns, the caller's cleanup after each call) and a RESULT line. Expect
+RESULT OK. Not yet tested on a freshly imported ROM (only on one whose purges were
+already set).
 QUIRK (understood, accepted, not fixing): the decompiler prints "unable to track
 spacebase fully for stack" on functions that use @-SP/@SP+ (predec/postinc) stack
 addressing -- e.g. isr_sci1_eri. Not an extrapop bug and not a missing DP/EP spacebase
