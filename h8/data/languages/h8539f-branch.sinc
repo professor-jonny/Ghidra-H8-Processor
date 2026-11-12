@@ -364,12 +364,15 @@ absaddr24: "@"^addr24^":24" is addr24 { export *[const]:4 addr24; }
 # "operand cc is undefined" from sleigh. Matching `cc` alongside `cond=0` is
 # fine: since `cc` is built from `cond`, constraining `cond=0` forces `cc` to
 # resolve deterministically to the "ra" production anyway.
-# NOTE: the 16-bit-displacement form below is NOT split out the same way.
-# `opcode47=3 & cond=0` does not collide with `rtd s8`: `rtd s8` is gated on
-# `opcode_special=0x14` (see its constructor above, per ana.cpp's
-# A2[0x14]=H8500_rtd), so the two do not share a byte.
+# NOTE: the 16-bit-displacement form is now split out the same way (2026-11-12).
+# Without this, bra:16 emitted `if (1) goto` (a CBRANCH), leaving a fall-through
+# edge that confused the decompiler's SP/stack-param tracking at merge points
+# (e.g. table_lookup_interp @1469a). `opcode47=3 & cond=0` does not collide with
+# `rtd s8`: `rtd s8` is gated on `opcode_special=0x14` (see its constructor above,
+# per ana.cpp's A2[0x14]=H8500_rtd), so the two do not share a byte.
 :b^cc      "#"^reloffs8^":8"    is   opcode47=2 & cond=0 & cc; reloffs8 { goto reloffs8; }
 :b^cc      "#"^reloffs8^":8"    is   opcode47=2 & cc; reloffs8 { if (cc) goto reloffs8; }
+:b^cc      "#"^reloffs16^":16"  is   opcode47=3 & cond=0 & cc; reloffs16 { goto reloffs16; }
 :b^cc      "#"^reloffs16^":16"  is   opcode47=3 & cc; reloffs16 { if (cc) goto reloffs16; }
 
 # ============================================================================
