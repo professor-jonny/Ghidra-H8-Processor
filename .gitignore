@@ -3,3 +3,10 @@
 \source
 \h8\data\languages\scratch-test
 h8/build/
+
+# ROM images and Ghidra decompiler/program exports are copyrighted ECU firmware; keep them local only
+*.hex
+*.bin
+*.gzf
+test/**/*.c
+test/**/roms/
