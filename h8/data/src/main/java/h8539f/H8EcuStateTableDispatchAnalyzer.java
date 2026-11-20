@@ -56,9 +56,9 @@ import ghidra.util.task.TaskMonitor;
  *   4. The flags field is left untouched; its meaning (a per-state bitmask
  *      condition, see review8.md) is out of scope for this analyzer.
  */
-public class H8StateTableDispatchAnalyzer extends AbstractAnalyzer {
+public class H8EcuStateTableDispatchAnalyzer extends AbstractAnalyzer {
 
-    private static final String ANALYZER_NAME = "H8 State Table Dispatch Analyzer";
+    private static final String ANALYZER_NAME = "H8 ECU State Table Dispatch Analyzer";
     private static final String DESCRIPTION =
         "Resolves the f502_state_table_dispatch computed pjsr mechanism (review8.md): creates "
         + "functions at previously-undisassembled state-table handler targets and adds "
@@ -76,7 +76,7 @@ public class H8StateTableDispatchAnalyzer extends AbstractAnalyzer {
     private static final byte EXPECTED_BANK = 0x02;
     private static final byte EXPECTED_PAD = 0x00;
 
-    public H8StateTableDispatchAnalyzer() {
+    public H8EcuStateTableDispatchAnalyzer() {
         super(ANALYZER_NAME, DESCRIPTION, AnalyzerType.FUNCTION_ANALYZER);
         // Run after the frame-pointer/purge analyzers have settled function
         // boundaries generally, but functions this analyzer creates are new

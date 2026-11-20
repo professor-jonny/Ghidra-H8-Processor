@@ -60,50 +60,52 @@ import ghidra.util.task.TaskMonitor;
  *     16 Nov review, so no reference is made from that hint.
  *   - Constant-offset indexed reads (@(disp:16,Rn) with DP set) are NOT handled yet.
  */
-public class H8TableAnalyzer extends AbstractAnalyzer {
+public class H8EcuTableAnalyzer extends AbstractAnalyzer {
 
-    private static final String NAME = "H8 Table Access Analyzer";
+    private static final String NAME = "H8 ECU Table Access Analyzer";
     private static final String DESCRIPTION =
         "Resolves bank/offset literal pushes passed to the table lookup helpers into real "
             + "flash addresses (mirror-aware) and bookmarks, optionally referencing, each table and axis.";
 
-    // Helper entry points in RVR 21000011 (verified in the live program).
-    private static final long TABLE_LOOKUP_INTERP = 0x14656L;     // 2D interpolated
-    private static final long AXIS_LOOKUP_INTERP = 0x14735L;
-    private static final long TABLE_LOOKUP_INDEXED = 0x14854L;
-    private static final long TABLE_READ_INDEXED = 0x14880L;
-    private static final long TABLE_3AXIS_INTERP_TRIPLE = 0x148a2L; // 3D interpolated
+    // Default helper entry points (RVR 21000011, verified in the live program). They are
+    // overridable analyzer options so a different ROM can point at its own helpers.
+    private static final long DEF_TABLE_LOOKUP_INTERP = 0x14656L;     // 2D interpolated
+    private static final long DEF_AXIS_LOOKUP_INTERP = 0x14735L;
+    private static final long DEF_TABLE_LOOKUP_INDEXED = 0x14854L;
+    private static final long DEF_TABLE_READ_INDEXED = 0x14880L;
+    private static final long DEF_TABLE_3AXIS_INTERP_TRIPLE = 0x148a2L; // 3D interpolated
 
-    private static final long FLASH_START = 0x10000L;
-    private static final long FLASH_END = 0x2ffffL;
-    private static final long MIRROR_END = 0x3fffL;   // page 0 alias of 0x10000-0x13FFF
-    private static final long RAM_START = 0xee80L;
+    private static final String OPT_H_2D = "Helper address: 2D table lookup";
+    private static final String OPT_H_AXIS = "Helper address: axis lookup";
+    private static final String OPT_H_IDX = "Helper address: indexed table lookup";
+    private static final String OPT_H_RIDX = "Helper address: indexed table read";
+    private static final String OPT_H_3D = "Helper address: 3D table lookup";
+
+    private long tableLookupInterp = DEF_TABLE_LOOKUP_INTERP;
+    private long axisLookupInterp = DEF_AXIS_LOOKUP_INTERP;
+    private long tableLookupIndexed = DEF_TABLE_LOOKUP_INDEXED;
+    private long tableReadIndexed = DEF_TABLE_READ_INDEXED;
+    private long table3axisInterpTriple = DEF_TABLE_3AXIS_INTERP_TRIPLE;
+
+    private static final long FLASH_START = H8MemoryMap.FLASH_START;
+    private static final long FLASH_END = H8MemoryMap.FLASH_END;
+    private static final long MIRROR_END = H8MemoryMap.MIRROR_END;   // page 0 alias of 0x10000-0x13FFF
+    private static final long RAM_START = H8MemoryMap.RAM_START;
 
     private static final int MAX_PUSH_WALK = 8;
     private static final int MAX_AXIS_WALK = 80;
 
     private static final String OPT_WRITE_REFS = "Write references";
     private static final String OPT_BOOKMARKS = "Add bookmarks";
-    private static final String OPT_OPERAND_REFS = "DP-aware operand references";
-    private static final String OPT_MIRROR_LABELS = "Mirror labels";
-    private static final String OPT_SPURIOUS = "Remove spurious constant references";
     private static final String OPT_PTRARR = "Follow far-pointer arrays (map selectors)";
     private static final String OPT_STUBS = "Mark header-only table stubs";
-    private static final String MIRROR_BLOCK = "page0_mirror";
-    private static final Pattern ABS_OPERAND =
-        Pattern.compile("@(?:\\()?0x([0-9a-fA-F]+):16(?:,R[0-7]\\))?");
-    private static final Pattern LDC_DP =
-        Pattern.compile("ldc\\.b\\s+(?:0x([0-9a-fA-F]+)|(\\S+))\\s*,\\s*DP");
 
     private boolean writeRefs = false;
     private boolean addBookmarks = true;
-    private boolean operandRefs = true;
-    private boolean mirrorLabels = true;
-    private boolean removeSpurious = true;
     private boolean followPtrArrays = false;
     private boolean markStubs = true;
 
-    public H8TableAnalyzer() {
+    public H8EcuTableAnalyzer() {
         super(NAME, DESCRIPTION, AnalyzerType.FUNCTION_ANALYZER);
         // After function creation and the H8 stack analyzers, so call references exist.
         setPriority(AnalysisPriority.DATA_ANALYSIS.after());
@@ -122,19 +124,14 @@ public class H8TableAnalyzer extends AbstractAnalyzer {
                 + "Leave off for a dry run (bookmarks and log only).");
         options.registerOption(OPT_BOOKMARKS, addBookmarks, null,
             "Add a bookmark at each resolved call site.");
-        options.registerOption(OPT_OPERAND_REFS, operandRefs, null,
-            "Add READ references for absolute @aa:16 operands that reach flash, using the DP in "
-                + "effect (DP=0: page-0 mirror 0x0000-0x3FFF to both the mirror and its 0x1xxxx "
-                + "alias; DP=1/2: that page). Needs the page0_mirror block; skipped without it.");
-        options.registerOption(OPT_MIRROR_LABELS, mirrorLabels, null,
-            "Copy each label in 0x10000-0x13FFF to the page-0 mirror so decompiler output and "
-                + "xrefs agree. Needs the page0_mirror block.");
-        options.registerOption(OPT_SPURIOUS, removeSpurious, null,
-            "Delete analysis DATA references that are not real accesses: references into the "
-                + "undocumented 0xFFC0-0xFFFF range, and bit-mask constants (~(1<<n)) that "
-                + "bset/bclr/bnot/btst instructions leak as pointers.");
         options.registerOption(OPT_STUBS, markStubs, null,
             "Bookmark (H8Table/HeaderStub) and comment table descriptors that are immediately followed by another descriptor or a 0xFF terminator, so they are not mistaken for table data. Flash 0x10100-0x13FFF.");
+        String helperHelp = " (hex, default is the Mitsubishi RVR 21000011 address; set to the matching helper in another ROM)";
+        options.registerOption(OPT_H_2D, hex(DEF_TABLE_LOOKUP_INTERP), null, "Entry point of the 2D table lookup helper" + helperHelp);
+        options.registerOption(OPT_H_AXIS, hex(DEF_AXIS_LOOKUP_INTERP), null, "Entry point of the axis lookup helper" + helperHelp);
+        options.registerOption(OPT_H_IDX, hex(DEF_TABLE_LOOKUP_INDEXED), null, "Entry point of the indexed table lookup helper" + helperHelp);
+        options.registerOption(OPT_H_RIDX, hex(DEF_TABLE_READ_INDEXED), null, "Entry point of the indexed table read helper" + helperHelp);
+        options.registerOption(OPT_H_3D, hex(DEF_TABLE_3AXIS_INTERP_TRIPLE), null, "Entry point of the 3D table lookup helper" + helperHelp);
         options.registerOption(OPT_PTRARR, followPtrArrays, null,
             "Find arrays of 4-byte far pointers (bank 1/2 + offset) that point at table descriptors "
                 + "(02 00 <ram> / 03 00 <ram> <ram>) and add DATA references from each slot, and from "
@@ -146,11 +143,28 @@ public class H8TableAnalyzer extends AbstractAnalyzer {
     public void optionsChanged(Options options, Program program) {
         writeRefs = options.getBoolean(OPT_WRITE_REFS, writeRefs);
         addBookmarks = options.getBoolean(OPT_BOOKMARKS, addBookmarks);
-        operandRefs = options.getBoolean(OPT_OPERAND_REFS, operandRefs);
-        mirrorLabels = options.getBoolean(OPT_MIRROR_LABELS, mirrorLabels);
-        removeSpurious = options.getBoolean(OPT_SPURIOUS, removeSpurious);
         followPtrArrays = options.getBoolean(OPT_PTRARR, followPtrArrays);
         markStubs = options.getBoolean(OPT_STUBS, markStubs);
+        tableLookupInterp = parseHex(options, OPT_H_2D, DEF_TABLE_LOOKUP_INTERP);
+        axisLookupInterp = parseHex(options, OPT_H_AXIS, DEF_AXIS_LOOKUP_INTERP);
+        tableLookupIndexed = parseHex(options, OPT_H_IDX, DEF_TABLE_LOOKUP_INDEXED);
+        tableReadIndexed = parseHex(options, OPT_H_RIDX, DEF_TABLE_READ_INDEXED);
+        table3axisInterpTriple = parseHex(options, OPT_H_3D, DEF_TABLE_3AXIS_INTERP_TRIPLE);
+    }
+
+    private static String hex(long v) {
+        return String.format("0x%x", v);
+    }
+
+    private static long parseHex(Options options, String name, long def) {
+        String s = options.getString(name, hex(def));
+        try {
+            String t = s.trim().toLowerCase();
+            return t.startsWith("0x") ? Long.parseLong(t.substring(2), 16) : Long.parseLong(t, 16);
+        }
+        catch (NumberFormatException e) {
+            return def;   // bad text: keep the default rather than guess
+        }
     }
 
     private static final class Kind {
@@ -169,11 +183,11 @@ public class H8TableAnalyzer extends AbstractAnalyzer {
             throws CancelledException {
 
         Kind[] kinds = {
-            new Kind(TABLE_LOOKUP_INTERP, "2D table", false),
-            new Kind(TABLE_3AXIS_INTERP_TRIPLE, "3D table", false),
-            new Kind(TABLE_LOOKUP_INDEXED, "indexed table", false),
-            new Kind(TABLE_READ_INDEXED, "indexed table read", false),
-            new Kind(AXIS_LOOKUP_INTERP, "axis", true),
+            new Kind(tableLookupInterp, "2D table", false),
+            new Kind(table3axisInterpTriple, "3D table", false),
+            new Kind(tableLookupIndexed, "indexed table", false),
+            new Kind(tableReadIndexed, "indexed table read", false),
+            new Kind(axisLookupInterp, "axis", true),
         };
 
         Listing listing = program.getListing();
@@ -252,31 +266,6 @@ public class H8TableAnalyzer extends AbstractAnalyzer {
             log.appendMsg(NAME, "header-only table stubs marked=" + markHeaderStubs(program, monitor));
         }
 
-        boolean hasMirror = program.getMemory().getBlock(MIRROR_BLOCK) != null;
-        if (!hasMirror && (operandRefs || mirrorLabels)) {
-            log.appendMsg(NAME, "no " + MIRROR_BLOCK + " block - mirror labels and DP-aware operand "
-                + "references skipped (run the setup script step 3 first)");
-        }
-        else if (hasMirror) {
-            if (mirrorLabels) {
-                int n = addMirrorLabels(program, monitor);
-                log.appendMsg(NAME, "mirror labels created=" + n);
-            }
-            if (operandRefs) {
-                int[] c = addOperandRefs(program, monitor);
-                log.appendMsg(NAME, String.format(
-                    "operand refs created=%d (mirror/page-0 %d, DP window %d) already present=%d "
-                        + "unresolved (missing area / unknown DP)=%d",
-                    c[0], c[1], c[2], c[3], c[4]));
-            }
-        }
-        if (removeSpurious) {
-            int[] sp = removeSpuriousRefs(program, monitor);
-            log.appendMsg(NAME, String.format(
-                "spurious refs removed=%d (undocumented 0xFFC0-0xFFFF %d, bit-mask constants %d)",
-                sp[0] + sp[1], sp[0], sp[1]));
-        }
-
         log.appendMsg(NAME, String.format(
             "call sites=%d resolved=%d runtime(non-literal)=%d out-of-range=%d refs added=%d%s%s",
             sites, resolved, runtime, outOfRange, refsAdded,
@@ -285,187 +274,10 @@ public class H8TableAnalyzer extends AbstractAnalyzer {
         return true;
     }
 
-    /**
-     * Ghidra's constant propagation turns constants into DATA references. Two kinds are never
-     * real accesses on the H8/539F: anything into 0xFFC0-0xFFFF (no documented registers there),
-     * and the complement mask (~(1<<n)) that bit instructions, andc/orc/xorc and register pushes carry, e.g. 0xFFFE for bit 0.
-     * Real operand references are READ/WRITE, so only DATA references are removed.
-     */
-    private int[] removeSpuriousRefs(Program program, TaskMonitor monitor) throws CancelledException {
-        ReferenceManager rm = program.getReferenceManager();
-        Listing listing = program.getListing();
-        List<Reference> del = new ArrayList<>();
-        int undoc = 0;
-        int mask = 0;
-        ReferenceIterator it = rm.getReferenceIterator(program.getMinAddress());
-        while (it.hasNext()) {
-            monitor.checkCancelled();
-            Reference r = it.next();
-            if (r.getSource() != SourceType.ANALYSIS || r.getReferenceType() != RefType.DATA
-                    || !r.getToAddress().isMemoryAddress()
-                    || r.getToAddress().getOffset() > 0xFFFFL) {
-                continue;
-            }
-            long off = r.getToAddress().getOffset();
-            if (off >= 0xFFC0L) {
-                del.add(r);
-                undoc++;
-                continue;
-            }
-            Instruction in = listing.getInstructionAt(r.getFromAddress());
-            if (in == null) {
-                continue;
-            }
-            String mn = in.getMnemonicString().toLowerCase();
-            boolean bitOp = mn.startsWith("bset") || mn.startsWith("bclr")
-                || mn.startsWith("bnot") || mn.startsWith("btst")
-                || mn.startsWith("andc") || mn.startsWith("orc") || mn.startsWith("xorc")
-                || in.toString().toLowerCase().endsWith("@-sp");
-            if (!bitOp) {
-                continue;
-            }
-            boolean isMask = false;
-            for (int k = 0; k < 16; k++) {
-                if (off == (0xFFFFL & ~(1L << k))) {
-                    isMask = true;
-                    break;
-                }
-            }
-            String hex = "0x" + Long.toHexString(off);
-            String txt = in.toString().toLowerCase();
-            if (isMask && !txt.contains("@" + hex) && !txt.contains("@(" + hex)) {
-                del.add(r);
-                mask++;
-            }
-        }
-        for (Reference r : del) {
-            rm.delete(r);
-        }
-        return new int[] { undoc, mask };
-    }
-    private int addMirrorLabels(Program program, TaskMonitor monitor) throws CancelledException {
-        SymbolTable st = program.getSymbolTable();
-        AddressSet src = new AddressSet(toAddr(program, FLASH_START), toAddr(program, FLASH_START + MIRROR_END));
-        List<Symbol> syms = new ArrayList<>();
-        SymbolIterator it = st.getSymbols(src, SymbolType.LABEL, true);
-        while (it.hasNext()) {
-            Symbol s = it.next();
-            if (s.getSource() != SourceType.DEFAULT) {
-                syms.add(s);
-            }
-        }
-        int made = 0;
-        for (Symbol s : syms) {
-            monitor.checkCancelled();
-            Address m = toAddr(program, s.getAddress().getOffset() - FLASH_START);
-            boolean has = false;
-            for (Symbol e : st.getSymbols(m)) {
-                if (e.getName().equals(s.getName())) {
-                    has = true;
-                }
-            }
-            if (!has) {
-                try {
-                    st.createLabel(m, s.getName(), SourceType.ANALYSIS);
-                    made++;
-                }
-                catch (Exception e) {
-                    // duplicate / invalid name at this address: leave it
-                }
-            }
-        }
-        return made;
-    }
 
-    /**
-     * Straight-line DP tracking per function: DP=0 at entry, ldc.b #n,DP sets n, a stack pop
-     * (ldc.b @SP+,DP) restores 0, a register load makes DP unknown until the next known value.
-     * Returns {created, mirror, window, alreadyPresent, unresolved}.
-     */
-    private int[] addOperandRefs(Program program, TaskMonitor monitor) throws CancelledException {
-        Listing listing = program.getListing();
-        ReferenceManager rm = program.getReferenceManager();
-        int created = 0, mirror = 0, window = 0, present = 0, unresolved = 0;
-        for (Function f : program.getFunctionManager().getFunctions(true)) {
-            monitor.checkCancelled();
-            int dp = 0;
-            boolean unknown = false;
-            InstructionIterator it = listing.getInstructions(f.getBody(), true);
-            while (it.hasNext()) {
-                Instruction i = it.next();
-                Matcher lm = LDC_DP.matcher(i.toString());
-                if (lm.find()) {
-                    if (lm.group(1) != null) {
-                        dp = Integer.parseInt(lm.group(1), 16);
-                        unknown = false;
-                    }
-                    else if ("@SP+".equals(lm.group(2))) {
-                        dp = 0;
-                        unknown = false;
-                    }
-                    else {
-                        unknown = true;
-                    }
-                    continue;
-                }
-                for (int k = 0; k < i.getNumOperands(); k++) {
-                    Matcher m = ABS_OPERAND.matcher(i.getDefaultOperandRepresentation(k));
-                    if (!m.find()) {
-                        continue;
-                    }
-                    long off = Long.parseLong(m.group(1), 16);
-                    if (off > 0xffffL) {
-                        continue;
-                    }
-                    if (unknown) {
-                        unresolved++;
-                        continue;
-                    }
-                    List<Long> targets = new ArrayList<>();
-                    boolean isMirror = false;
-                    if (dp == 0) {
-                        if (off <= MIRROR_END) {
-                            targets.add(off);
-                            targets.add(FLASH_START + off);
-                            isMirror = true;
-                        }
-                        else if (off >= RAM_START) {
-                            continue;              // RAM/registers: Ghidra already references these
-                        }
-                        else {
-                            unresolved++;          // missing area (0x4000-0xEE7F)
-                            continue;
-                        }
-                    }
-                    else if (dp == 1 || dp == 2) {
-                        targets.add(dp * 0x10000L + off);
-                    }
-                    else {
-                        continue;
-                    }
-                    for (long t : targets) {
-                        Address ta = toAddr(program, t);
-                        if (ta == null || !program.getMemory().contains(ta)) {
-                            continue;
-                        }
-                        if (hasRef(rm, i.getAddress(), ta)) {
-                            present++;
-                            continue;
-                        }
-                        rm.addMemoryReference(i.getAddress(), ta, RefType.READ, SourceType.ANALYSIS, k);
-                        created++;
-                        if (isMirror) {
-                            mirror++;
-                        }
-                        else {
-                            window++;
-                        }
-                    }
-                }
-            }
-        }
-        return new int[] { created, mirror, window, present, unresolved };
-    }
+
+
+
 
     /** Bank/offset to one canonical flash address, or -1 if not a flash table pointer. */
     static long canonical(long bank, long offset) {
@@ -512,12 +324,12 @@ public class H8TableAnalyzer extends AbstractAnalyzer {
         return null;
     }
 
-    private static String nearestAxis(Program program, Instruction tableCall) {
+    private String nearestAxis(Program program, Instruction tableCall) {
         Function fn = program.getFunctionManager().getFunctionContaining(tableCall.getAddress());
         if (fn == null) {
             return null;
         }
-        Address axisEntry = toAddr(program, AXIS_LOOKUP_INTERP);
+        Address axisEntry = toAddr(program, axisLookupInterp);
         Instruction cur = tableCall.getPrevious();
         for (int step = 0; cur != null && step < MAX_AXIS_WALK; step++, cur = cur.getPrevious()) {
             if (cur.getAddress().compareTo(fn.getEntryPoint()) < 0) {

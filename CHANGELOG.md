@@ -3,6 +3,17 @@
 All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
+### Changed - analyzers split into chip-level and ECU-specific (2026-11-21)
+
+**`H8MemoryMapAnalyzer` (new, "H8 Memory Map Analyzer")** now holds the chip-level work that used to be inside the table analyzer: page-0 mirror labels, DP-aware operand references and spurious constant-reference removal (options and defaults unchanged). The shared flash/mirror/RAM constants moved to `H8MemoryMap`.
+
+**ECU-specific analyzers renamed** so they can be switched off as a group: `H8TableAnalyzer` -> `H8EcuTableAnalyzer` ("H8 ECU Table Access Analyzer") and `H8StateTableDispatchAnalyzer` -> `H8EcuStateTableDispatchAnalyzer` ("H8 ECU State Table Dispatch Analyzer"). Analysis option overrides saved under the old names reset to defaults.
+
+**Table helper addresses are now analyzer options** ("Helper address: ..." in Analysis Options, hex) instead of constants. Defaults are the RVR 21000011 addresses (0x14656, 0x14735, 0x14854, 0x14880, 0x148a2), so behaviour is unchanged for that ROM.
+
+Compiles with `javac --release 21` against the 12.2 DEV jars; not yet installed or run inside Ghidra at the time of writing.
+
+---
 ### Changed - DP=0 model with page-0 flash mirror; DP preserved across calls in h8539f.cspec (2026-11-20)
 
 **DP=1 over the whole ROM removed from setup script step 3.** The real baseline is DP=0 (reset code sets DP/EP/TP=0); code only
