@@ -1,8 +1,10 @@
+﻿> **STATUS 2026-11-17 (supersedes the status lines below):** IMPLEMENTED and SUBMITTED as NationalSecurityAgency/ghidra PR #9522 (issue #9450; `<farpointerjoin hislot joinsize>` cspec element + `ActionFarPointerJoin`; 10 files, +316/-43). In upstream triage as of 2026-11-16 (`todo.md` E10); not in master. You tested the patched core on 2026-11-17 and it works. It changes the decompiler display only, not disassembly or listing references (those come from `FixBankOffsetReferences_v2.java` / the E11 script). Needs a native decompiler built with it; a clean master core cannot use it. The "plan only" status, "PIECE D: NOT STARTED" and "A/B/C never run end-to-end" text below are history. The `register0x0e` section at the end is also history: resolved as the print-layer fix #9541 (see `review-core-investigations-closed.md`).
+
 IMPLEMENTATION PLAN: cspec-driven far-pointer call-argument fusion
 (a real Ghidra decompiler C++ patch for the #817-class bug)
 =====================================================================
 
-STATUS: plan only, nothing written to the real Ghidra source yet.
+STATUS (as of 2026-08-03, superseded, see the note above): plan only, nothing written to the real Ghidra source yet.
 Written 2026-08-03 after live investigation of the actual C++ (see
 review2.md items 19, 26, 27 for the full dead-end history -- read
 those first if picking this up cold). This file is the buildable
@@ -523,7 +525,7 @@ immediately after the ActionParamDouble registration line (now at
 coreaction.cc line 5907, drifted from 5865 due to Piece B's ~42 added
 lines) and before ActionSegmentize("base"), exactly as planned.
 
-### PIECE D -- STATUS: NOT STARTED. This is the last piece: actually
+### PIECE D -- STATUS (as of that session, since done; see the note at the top): NOT STARTED. This is the last piece: actually
 annotate the H8/539F cspec prototypes (table_lookup_interp, etc.) with
 <farpointerjoin hislot=N joinsize=N> elements now that A/B/C are done
 and the whole pipeline compiles. This is XML authoring in the cspec
@@ -1849,7 +1851,7 @@ before any Analyzer code was written. Pick this up next session.
   the one register wrapped in custom segmentop/constresolve handling for the
   24-bit ram space, unlike the plain GP registers.
 
-  STATUS: root identity confirmed (register0x0e = SP). Root CAUSE (why SP
+  STATUS (as of 2026-08-19; later resolved as the print-layer fix #9541): root identity confirmed (register0x0e = SP). Root CAUSE (why SP
   fails to resolve to its name in THIS specific instruction shape --
   link/clr.w/mov:f.w on a fresh local, immediately after function entry --
   while apparently resolving fine elsewhere) still not confirmed. Next step:
@@ -1857,3 +1859,4 @@ before any Analyzer code was written. Pick this up next session.
   SP prints correctly, to isolate what's different, OR trace the segmentop/
   constresolve pcode for this specific address (0x149c8) directly via
   analyze_dataflow to see where the name resolution is being lost.
+

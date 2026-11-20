@@ -1,3 +1,5 @@
+﻿> **FOOTNOTE 2026-11-17 (from review8.md):** 4 of this file's 17 zero-caller ([S]/dead) functions are NOT dead: f17a_load_zone_and_ef96_f1d8_check, phase_dispatch_efa2_f500_f5ee_gate_check, FUN_00028038 (named later) and f17a_f13c_load_zone_and_f514_gate_check are real handlers reached only through the computed `pjsr @R0` in f502_state_table_dispatch (0x27e9c), which the xref sweep here could not see. The other 13 remain unchecked against this or any other computed-call mechanism.
+
 RETURN-TYPE AUDIT PART 2: remaining untyped (undefined/undefined1/undefined2)
 function return types outside the 4-lookup-primitive caller family
 ====================================================================
@@ -750,3 +752,4 @@ claim, but the practical outcome (leave untyped, no safe retype target)
 is unchanged for all 17. No return-type changes applied this sweep.
 Genuinely dead-code removal/documentation (as opposed to return-type
 hygiene) is a separate decision outside this file's scope.
+

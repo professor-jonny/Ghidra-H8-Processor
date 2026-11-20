@@ -1,3 +1,5 @@
+﻿> **CORRECTION 2026-11-12:** the RUNNING LOG at the bottom ("No functions individually checked yet") and the review.md index ("no functions individually verified yet") are out of date. The CHECKLIST shows all 11 functions were checked on 2026-08-09: 10 benign [B], 1 concerning [C]. Still open from this file (as of 2026-08-09; not re-verified since): the [C] case `tcu_shift_ratio_buffer_update` (0x2c16e) (its plate comment claims "verified clean", but R2's upper byte is left undefined by `mov:e`/`clr.b`), and the undefined return types of `tcu_shift_torque_and_knock_mgmt` and `lambda_enable_flag_update`.
+
 CALL-SITE CONCAT/EXTRAOUT ARTIFACT AUDIT
 function bodies still showing CONCAT/in_stack/extraout noise despite
 correct return types
@@ -235,8 +237,5 @@ clean" comment against what's actually in its current decompile. Also
 surfaced one genuine review6.md coverage gap in passing (
 tcu_shift_torque_and_knock_mgmt still undefined, never appeared in that
 file's sweep or cohort) -- flagged for separate handling, not folded into
-this file's own checklist scope. No functions individually checked yet
-this session (file setup + checklist assembly only).
-NEXT STEP: begin at isc_f0e6_bit0_update, decompile + confirm callee
-type + check disassembly if the comparison logic's correctness is in
-any doubt, record [B]/[C]/[X] verdict.
+this file's own checklist scope. (Superseded by the checklist above: all 11 functions were checked 2026-08-09. Open: the [C] case and the two undefined return types, see the status note at the top.)
+

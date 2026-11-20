@@ -1,3 +1,5 @@
+﻿> **STATUS 2026-11-17:** OPEN. All 7 TODOs below are as last recorded on 2026-08-15; no later progress is recorded and none was re-verified. The table-reference work in 	odo.md E11 is separate and does not close them.
+
 Review: TableHeader struct rollout + XML header-claim verification
 ====================================================================
 
@@ -113,3 +115,4 @@ Open items
    flagging "struct applied per XML claim, no live xref found as of
    2026-08-15" at each, so a future session doesn't mistake it for a
    fully-verified entry the way the other 33 now can be.
+

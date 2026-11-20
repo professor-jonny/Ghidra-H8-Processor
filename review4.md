@@ -1,3 +1,5 @@
+﻿> **NOTE 2026-11-17:** COMPLETE as of 2026-08-05. Written before the ra:16 sleigh fix (2026-11-13), which changed how 	able_lookup_interp callers decompile (phantom fall-through and ghost stack params removed); the return-type verdicts here were not re-checked after that.
+
 RETURN-TYPE AUDIT: table_lookup_interp / axis_lookup_interp / table_lookup_indexed
 / table_read_indexed caller family
 =====================================================================
@@ -719,3 +721,4 @@ end-to-end (isc_f354_table_lookup_conditional,
 f28e_f292_knock_lambda_composite_calc) -- both already correctly typed,
 no fixes needed yet. Confirms the review2.md item 29-31 lesson still
 applies: don't assume untyped == needs fixing, check every one.
+

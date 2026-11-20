@@ -1,4 +1,6 @@
-# review12.md — RVR scaling/axis table verification: header-offset bug + correction batches
+﻿> **STATUS 2026-11-17:** The "first 4 bytes of the header" question in section 3 and next-step 3 is RESOLVED by section 7 (header = two 0xF0xx/0xF1xx RAM pointers + big-endian element count). Section 6 batches 1-5 are done and applied to `RVRbase.xml`. Next-step 2 (the remaining ~54 of the 78 index entries, one by one) is still open; `review14.md` continues that work.
+
+# review12.md â€” RVR scaling/axis table verification: header-offset bug + correction batches
 
 Date: 2026-08-13
 Scope: `RVRbase.xml` at `test/rvr/xml/ecuflash/new/RVRbase.xml`, cross-checked against
@@ -35,11 +37,11 @@ breakpoint data begins immediately after, at `header_addr + 6`.
 
 | XML name | XML `elements` | Header addr | Header bytes | Data addr (header+6) | Data values | Scaling check |
 |---|---|---|---|---|---|---|
-| Error | 9 | `2d146` | `f0 c0 f0 ba 00 09` | `2d14c` | 0,8,16,24,32,40,48,56,64 | RPM→0-250 RPM (odd, likely delta not absolute RPM — see §3 caution) |
-| Engine Load | 7 | `2d3fe` | `f0 c2 f0 ba 00 07` | `2d404` | 33,65,97,129,161,193,225 | Load(x*10/32)→10.3-70.3%, clean |
-| Engine Temp | 8 | `2d490` | `f0 c0 f1 0e 00 08` | `2d496` | 8,32,47,60,74,90,102,117 | Temp(x-40)→-32 to 77C, clean/plausible |
-| Baro Press. | 5 | `2d28c` | `f0 c0 f1 30 00 05` | `2d292` | 93,125,157,173,189 | Load16(x*5/8)→58-118, plausible |
-| Load (MAF Hz raw) | 21 | `2d218` | (header, unread in this session; prior pass confirmed) | `2d21e` | raw uint16 run | uint16 raw — already correct in XML |
+| Error | 9 | `2d146` | `f0 c0 f0 ba 00 09` | `2d14c` | 0,8,16,24,32,40,48,56,64 | RPMâ†’0-250 RPM (odd, likely delta not absolute RPM â€” see Â§3 caution) |
+| Engine Load | 7 | `2d3fe` | `f0 c2 f0 ba 00 07` | `2d404` | 33,65,97,129,161,193,225 | Load(x*10/32)â†’10.3-70.3%, clean |
+| Engine Temp | 8 | `2d490` | `f0 c0 f1 0e 00 08` | `2d496` | 8,32,47,60,74,90,102,117 | Temp(x-40)â†’-32 to 77C, clean/plausible |
+| Baro Press. | 5 | `2d28c` | `f0 c0 f1 30 00 05` | `2d292` | 93,125,157,173,189 | Load16(x*5/8)â†’58-118, plausible |
+| Load (MAF Hz raw) | 21 | `2d218` | (header, unread in this session; prior pass confirmed) | `2d21e` | raw uint16 run | uint16 raw â€” already correct in XML |
 
 ### XML edit status
 
@@ -130,12 +132,12 @@ entries beyond the batches in section 2 - remaining queue for next pass.
   `2d4ac, 2d4ba/2d4c0, 2d210, 2d24e, 2d308, 2d2b0, 2d0a0, 2d198, 2d42e, 2d446, 2d418, 2d11c,
   2d2e6, 2d382, 2d332, 2d086, 2d63c, 2d656, 2d4d6, 2d100, 2d2d2, 2d59c, 2d3c8, 2d576, 2d5dc`
 
-  **Result: all 24 are already correct** — either no header prefix exists at that address (data
+  **Result: all 24 are already correct** â€” either no header prefix exists at that address (data
   starts directly at the XML-declared address), or a prior fix already applied the +6 offset
   (e.g. `2d59c` Boost Error, `2d4c0` Coolant/Air Temp, `2d21e` MAF Hz raw). No further edits
   needed on any of these.
 
-  Note: the header-offset bug is **not universal** — it appears to affect only a specific
+  Note: the header-offset bug is **not universal** â€” it appears to affect only a specific
   subset of tables (Engine Load, Engine Temp @2d490, Baro Press., Error @2d146, MAF Hz raw,
   Boost Error, Coolant/Air Temp @2d4c0), while the majority of RPM/Load/Temp axes in this XML
   have no header prefix at all and were already pointing at the right place. This matches the
@@ -143,7 +145,7 @@ entries beyond the batches in section 2 - remaining queue for next pass.
 
   One naming-only oddity spotted in passing (not an address bug, not fixed): the axis at
   `2d42e` has two XML entries, one named "Time" and one named "Engine Temp", both with
-  `scaling="Temp"` — the "Time" label looks like a copy/paste or mislabeling artifact. Flagged
+  `scaling="Temp"` â€” the "Time" label looks like a copy/paste or mislabeling artifact. Flagged
   for a future naming pass, out of scope for this address-correction batch.
 
 ## 7. Cross-ROM verification against EVO5
@@ -152,7 +154,7 @@ The EVO5 ROM (`22580006_EVO5_Stock.hex`, also open in this Ghidra project) has i
 scaling-table index (`0x2c500`-`0x2cdc6`, 81 entries). A naive fixed-offset alignment against
 RVR's index (`0x2d080`-`0x2d8d6`) holds for the first 5 entries (constant `+0xB80` offset,
 identical sizes) but drifts after that once individual table sizes diverge between the two
-ROMs/calibrations — so table-by-table index alignment isn't reliable past the first few entries.
+ROMs/calibrations â€” so table-by-table index alignment isn't reliable past the first few entries.
 Direct byte-pattern search (`ghidra:search_byte_patterns`) on EVO5 for the exact confirmed RVR
 data sequences is more reliable and was used instead.
 
@@ -163,7 +165,7 @@ data sequences is more reliable and was used instead.
 | Engine Load | `2d404` | `2c884` -> `2c88a` | `f0 c4 f1 44 00 07` | 7 (same) | Identical data (33,65,...,225). Confirms header-offset fix. |
 | Engine Temp | `2d496` | `2c924` -> `2c92a` | `f0 c4 f1 14 00 08` | 8 (same) | Identical data (8,32,...,117). Confirms header-offset fix. |
 | Baro Press. | `2d292` | `2c758` -> `2c75e` | `f0 c4 f1 36 00 05` | 5 (same) | Identical data (93,125,...,189). Confirms header-offset fix. |
-| Error | `2d14c` (not in XML, see section 2) | `2c9f4` -> `2c9fa` | `f0 da f0 c2 00 11` | **17** (RVR: 9) | Same header structure and same linear step-of-8 pattern (0,8,16...), but EVO5's axis runs to 17 elements (0-128) vs RVR's 9 (0-64). Not a discrepancy in the fix — RVR's own header independently declares count=9 and its own data stops exactly there. Just a coarser/shorter calibration on RVR, or a genuinely different (shorter) axis. |
+| Error | `2d14c` (not in XML, see section 2) | `2c9f4` -> `2c9fa` | `f0 da f0 c2 00 11` | **17** (RVR: 9) | Same header structure and same linear step-of-8 pattern (0,8,16...), but EVO5's axis runs to 17 elements (0-128) vs RVR's 9 (0-64). Not a discrepancy in the fix â€” RVR's own header independently declares count=9 and its own data stops exactly there. Just a coarser/shorter calibration on RVR, or a genuinely different (shorter) axis. |
 
 ### New finding: header's first 4 bytes are meaningful, not padding
 
@@ -180,3 +182,4 @@ opaque.
 **Conclusion:** cross-ROM verification confirms all four RVR fixes were correct, and adds a
 concrete structural finding (header = 2 RAM pointers + count) worth carrying back into the main
 script's shape-detection logic.
+

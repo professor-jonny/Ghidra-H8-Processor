@@ -1,3 +1,9 @@
+﻿> **CORRECTIONS 2026-11-12 (the log at the bottom is right; the sections above it were never updated):**
+> 1. Record layout: the real layout is `[flags:16][pad:8][bank:8][offset:16]` (bank = raw[3]; see the 2026-08-09 BUG FOUND AND FIXED log entry). The body text was corrected to match on 2026-11-17 (it had `[flags][bank][pad][offset]`).
+> 2. Counts: the text says 16 handler targets are undisassembled; the decoded table has 17 such states (1 and 5-20), and the log says 17 were created by `H8StateTableDispatchAnalyzer`, plus the 4 existing functions (one of them, 0x28038, was unnamed).
+> 3. The "FULL DECODED TABLE" still shows those functions as undisassembled/unnamed. All 18 formerly unnamed ones were created and named in the "NAMING PASS COMPLETE" log entry.
+> 4. `review6.md` still needs the footnote that 4 of its 17 "dead" zero-caller functions are real handlers reached by this computed call (not done as of this file's last entry). The other 13 are still unchecked, as are `f502_state_index_update` (0x27f60) and the DAT_0001f1fe bitfield.
+
 COMPUTED-CALL STATE-TABLE DISPATCH: f502_state_table_dispatch AND ITS
 UNRESOLVED HANDLER TARGETS
 ====================================================================
@@ -8,7 +14,7 @@ checked -- but "zero references Ghidra can see" is not the same as "zero
 callers." This file documents a real, confirmed computed-call dispatch
 mechanism that Ghidra's static xref analysis cannot see through, which
 explains at least 4 of those 17 "dead" functions and additionally surfaces
-16 more handler targets that are not even disassembled as functions yet.
+17 more handler targets that were not disassembled as functions at the time (created and named later, see the NAMING PASS COMPLETE log entry).
 
 --------------------------------------------------------------------
 THE MECHANISM (confirmed, not guessed -- cross-checked against an existing
@@ -24,8 +30,7 @@ Two sub-tables:
   - state < 12: base 0x1369a, 12 records (states 0-11)
   - state >= 12: base 0x136e2, 9 records (states 12-20)
 
-Record format, 6 bytes: [flags:16][bank:8, constant 0x02][pad:8, constant
-0x00][handler-offset:16]. Real target address = bank<<16 | offset.
+Record format, 6 bytes: [flags:16][pad:8, constant 0x00][bank:8, constant 0x02][handler-offset:16]. Real target address = bank<<16 | offset.
 
 Companion function f502_state_index_update (0x27f60) almost certainly
 writes the 0xf502 state byte that drives this dispatch -- not yet
@@ -37,28 +42,28 @@ live function list 2026-08-09)
 --------------------------------------------------------------------
 State < 12 (base 0x1369a):
   state 0  flags=0002  -> 0x27fb1  f17a_load_zone_and_ef96_f1d8_check   [FN EXISTS, 0 xrefs]
-  state 1  flags=0040  -> 0x27fea  [NOT A FUNCTION -- undisassembled]
+  state 1  flags=0040  -> 0x27fea  [was undisassembled; created+named later]
   state 2  flags=0080  -> 0x2800a  phase_dispatch_efa2_f500_f5ee_gate_check [FN EXISTS, 0 xrefs]
-  state 3  flags=0101  -> 0x28038  FUN_00028038                          [FN EXISTS, 0 xrefs, unnamed]
+  state 3  flags=0101  -> 0x28038  FUN_00028038                          [FN EXISTS, 0 xrefs; named later]
   state 4  flags=0108  -> 0x28082  f17a_f13c_load_zone_and_f514_gate_check [FN EXISTS, 0 xrefs]
-  state 5  flags=0140  -> 0x280be  [NOT A FUNCTION -- undisassembled]
-  state 6  flags=0180  -> 0x280d3  [NOT A FUNCTION -- undisassembled]
-  state 7  flags=0201  -> 0x280d8  [NOT A FUNCTION -- undisassembled]
-  state 8  flags=0020  -> 0x280dd  [NOT A FUNCTION -- undisassembled]
-  state 9  flags=0110  -> 0x28151  [NOT A FUNCTION -- undisassembled]
-  state 10 flags=0120  -> 0x28253  [NOT A FUNCTION -- undisassembled]
-  state 11 flags=0301  -> 0x28258  [NOT A FUNCTION -- undisassembled]
+  state 5  flags=0140  -> 0x280be  [was undisassembled; created+named later]
+  state 6  flags=0180  -> 0x280d3  [was undisassembled; created+named later]
+  state 7  flags=0201  -> 0x280d8  [was undisassembled; created+named later]
+  state 8  flags=0020  -> 0x280dd  [was undisassembled; created+named later]
+  state 9  flags=0110  -> 0x28151  [was undisassembled; created+named later]
+  state 10 flags=0120  -> 0x28253  [was undisassembled; created+named later]
+  state 11 flags=0301  -> 0x28258  [was undisassembled; created+named later]
 
 State >= 12 (base 0x136e2, index adjusted via adds.b 0xb8,R2 at 0x27ec2):
-  state 12 flags=0002  -> 0x27fe5  [NOT A FUNCTION -- undisassembled]
-  state 13 flags=0104  -> 0x2816c  [NOT A FUNCTION -- undisassembled]
-  state 14 flags=0004  -> 0x28192  [NOT A FUNCTION -- undisassembled]
-  state 15 flags=0008  -> 0x281a1  [NOT A FUNCTION -- undisassembled]
-  state 16 flags=0102  -> 0x281b6  [NOT A FUNCTION -- undisassembled]
-  state 17 flags=0204  -> 0x281e4  [NOT A FUNCTION -- undisassembled]
-  state 18 flags=0208  -> 0x28210  [NOT A FUNCTION -- undisassembled]
-  state 19 flags=0210  -> 0x28215  [NOT A FUNCTION -- undisassembled]
-  state 20 flags=0220  -> 0x28234  [NOT A FUNCTION -- undisassembled]
+  state 12 flags=0002  -> 0x27fe5  [was undisassembled; created+named later]
+  state 13 flags=0104  -> 0x2816c  [was undisassembled; created+named later]
+  state 14 flags=0004  -> 0x28192  [was undisassembled; created+named later]
+  state 15 flags=0008  -> 0x281a1  [was undisassembled; created+named later]
+  state 16 flags=0102  -> 0x281b6  [was undisassembled; created+named later]
+  state 17 flags=0204  -> 0x281e4  [was undisassembled; created+named later]
+  state 18 flags=0208  -> 0x28210  [was undisassembled; created+named later]
+  state 19 flags=0210  -> 0x28215  [was undisassembled; created+named later]
+  state 20 flags=0220  -> 0x28234  [was undisassembled; created+named later]
 
 VERIFICATION METHOD: independently byte-decoded both sub-tables directly
 from ROM memory (ghidra:read_memory at 0x13690-0x136e2 and cross-checked
@@ -67,8 +72,7 @@ part 2 against the existing bookmark's own pasted per-state list at
 lookup via search_functions_enhanced sorted by address confirms the
 function list jumps from f17a_f13c_load_zone_and_f514_gate_check (0x28082)
 directly to eee4_eeda_bit6_update_from_f0f8_bit12 (0x28279) with NOTHING
-in between -- all 16 of the states-1/5-20 targets sit in that gap as raw
-undisassembled bytes, not functions.
+in between -- the 17 states-1/5-20 targets sat in that gap as raw undisassembled bytes (at the time of the decode; all created and named later).
 
 --------------------------------------------------------------------
 IMPACT ON PRIOR FILES
@@ -298,3 +302,5 @@ REMAINING FOLLOW-UPS (updated):
   6. NEW: DAT_0001f1fe is checked by 3 of these handlers (states 9, 14,
      15) plus written by state 8 -- worth formally documenting as a
      bitfield if a future session wants to push this further.
+
+

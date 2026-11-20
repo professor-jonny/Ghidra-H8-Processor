@@ -1,3 +1,5 @@
+﻿> **STATUS 2026-11-17:** OPEN (address verification, items 19-31). Superseded: the closing "STILL OPEN ... the remaining ~50+ functions in the broader axis_lookup_interp/table_lookup_interp/table_lookup_indexed/table_read_indexed caller lists not yet audited for return type" was done afterwards: `review4.md` (COMPLETE 2026-08-05, 15 fixes) and `review6.md`. Still open from this file: `tcu_shift_solenoid_table_init` (item 30 dispatch shape), isolating `isc_integrator_update`'s embedded dispatch blocks, and `isc_openloop_target_calc`'s parameter types. Written before the `bra:16` fix (2026-11-13), which changed how `table_lookup_interp` callers decompile.
+
 Review 2: RVR XML axis/table address verification
 ====================================================================
 
@@ -3018,6 +3020,7 @@ requirement.
     for return type at all (item 31's list was only the 8 spot-checked in
     item 29 -- this is a small fraction of the full untyped-return
     population in this function family).
+
 
 
 

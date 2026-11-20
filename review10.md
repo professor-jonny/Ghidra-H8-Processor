@@ -1,3 +1,5 @@
+﻿> **STATUS 2026-11-17:** OPEN (live items below). Corrections to the text: (1) the "five suspect tables" list names only four (0x12955, 0x12AEB, 0x12D75, 0x11F04); the fifth is not identified anywhere in this file, so re-derive it from the writer-script output (value_ptr outside any memory block) before manual review. (2) The statement that the EP-banked SEGMENTOP path is "used UNIFORMLY" for all 79 tables is an inference from a negative text scan of DP-relative writers, not a demonstrated fact; no writer of any of the value_ptr cells has been found. (3) NEXT STEPS 1-3 below have not been recorded as done. (4) The five tables in the NOTABLE list all have value_ptr=0xF0C0, which lies in the index-cell range 0xF0C0..0xF0D4 listed in `todo.md` E11 (not cross-checked cell by cell).
+
 AXIS-PAIRING VERIFICATION: THE table+2 RAM-POINTER FAMILY AND CONVENTION B
 ============================================================================
 
@@ -154,10 +156,7 @@ to a plain "does any mov-family instruction's final operand mention this
 address, prefixed with @" text scan.
 
 RESULT: ran across all 79 candidates. Zero direct-mode writer candidates
-found for any of them. This is a stronger and more useful negative than
-the original two-table check -- it confirms the EP-banked SEGMENTOP path
-is used UNIFORMLY across this entire table family for value_ptr writes,
-not inconsistently. There is no subset of NOT-PAIRED/UNVERIFIED tables
+found for any of them. This is a stronger negative than the original two-table check. It is consistent with the writers going through the EP-banked SEGMENTOP path for the whole family (inference only; see the status note at the top). There is no subset of NOT-PAIRED/UNVERIFIED tables
 that can be unblocked table-by-table via a DP-relative writer; the writer
 for all 79 goes through the EP-banked SEGMENTOP path, not a per-table
 DP-relative store.
@@ -169,7 +168,7 @@ invisible-to-xref-search RAM pointers into first-class Ghidra references.
 These are correct and safe -- value_ptr is a plain ROM-stored ushort, no
 EP/segmentation involved in reading it, only in finding its WRITER.
 
-FIVE TABLES FLAGGED AS SUSPECT, NOT GENUINE CONVENTION B CANDIDATES --
+FIVE TABLES FLAGGED AS SUSPECT (only four are named below), NOT GENUINE CONVENTION B CANDIDATES --
 value_ptr fell outside any defined memory block for 5 of the 79. Full
 bookmark export cross-checked against the run output; all 79
 WRITER-NOT-FOUND bookmarks confirmed present and consistent with the
@@ -242,4 +241,6 @@ ADDITIONAL NEXT STEPS from this session:
     h8539_find_convention_b_writers.py so future runs separate "genuine
     blocked Convention B table" from "header address looks wrong" instead
     of lumping both into one bookmark category.
+
+
 

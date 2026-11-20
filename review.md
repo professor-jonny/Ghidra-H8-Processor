@@ -1,99 +1,39 @@
-Review document index
+﻿REVIEW INDEX (rewritten 2026-11-12, trimmed 2026-11-17)
 ====================================================================
-This project's review notes span multiple files. This section is the
-table of contents -- what each file covers and whether it's still open.
-Update this list whenever a new reviewN.md is started or an existing one
-is closed out.
+There are no review30.md or review31.md files. Superseded or condensed files (review15-28 other than review29, review-calling-convention-regression, the 2026-11-10 and 2026-11-12 handovers, perplexity review.md, todo-r0-r5-displacement-order.md) were removed 2026-11-17; copies are in ..\H8-review-archive.
+Current work list: todo.md (start there), then HANDOVER-2026-11-13.md.
 
-- review.md (this file) -- h8539f Sleigh implementation vs ana.cpp.
-  OPEN. Items 1, 3, 6, 7, 8, 10, 11 still live here directly; items 4, 9,
-  12, 14, 15, 18 are superseded and pointered to the files below; item 13
-  is REOPENED (2026-08-17, 7 DAT_ globals remain unrenamed -- the
-  2026-08-16 "CLOSED, zero hits" claim was inaccurate).
+OPEN / LIVE
+- review.md (this file): h8539f Sleigh vs ana.cpp; open items below.
+- review2.md: RVR XML axis/table address verification. Open: items 30-31 follow-ups (see its status note); the old '~50+ untyped functions' item was done by review4/review6.
+- review3.md: far-pointer call-argument fusion. Implemented and submitted as PR #9522 (issue #9450), in upstream triage; works in a patched core (tested 2026-11-17). Status note added at top; the 'IMPLEMENTATION PLAN' title is history.
+- review5.md: axis identity/scaling verification vs live callers.
+- review7.md: CONCAT/extraout audit. All 11 functions checked
+  2026-08-09 (10 benign, 1 concerning: tcu_shift_ratio_buffer_update).
+- review8.md: state-table dispatch (f502). Open follow-ups; see the
+  correction block at the top of that file.
+- review9.md: sci1_colon_frame_dispatch jump table (open).
+- review10.md: axis pairing, table+2 RAM-pointer family (open).
+- review11.md: import-script plan (apparently not implemented; see its status note). review12.md: RVR axis corrections (batches 1-5 done; header = 2 RAM ptrs + count).
+- review13.md: banked addressing. Issue B is PR #9522; Issue A (DP-fold)
+  was checked against the manual 2026-08-15.
+- review14.md: TableHeader rollout (open, 7 verification TODOs).
+- mut_verification_status.md: MUT actuator-test mapping (open).
+- test/functions_evo5.md, test/functions_w4a51.md: cross-binary lists.
 
-- review2.md -- RVR XML axis/table address verification (Batch 1/2 +
-  appendix items 19-31). OPEN. ~31 items; still-open threads include
-  item 30's dispatch-block isolation and ~50+ untyped functions in the
-  table_lookup_interp/axis_lookup_interp caller family not yet audited.
+COMPLETE
+- review4.md (return-type audit, 2026-08-05).
+- review6.md (return-type audit part 2). Footnote added 2026-11-17: 4 of its 17 zero-caller functions are real handlers (see review8.md); the other 13 are unchecked.
 
-- review3.md -- cspec-driven far-pointer call-argument fusion (a real
-  Ghidra decompiler C++ patch, the #817-class bug). No longer plan-only:
-  implemented and submitted as PR #9522 (issue #9450), an opt-in
-  <farpointerjoin hislot joinsize> cspec element + ActionFarPointerJoin.
-  Needs a core built with it; the clean master core cannot use it. No in-tree
-  datatest yet (the PR offers one). The smoke-test noted in this file may be
-  out of date. See todo.md item 11.
+CLOSED / HISTORICAL (conclusions in review-summary-2026-11-12.md)
+- review-core-investigations-closed.md: condensed review15-22 and review-calling-convention-regression (register0x0e, auStack_, sat_add_u16, muldiv; all fixed or closed).
+- review-9561-merge-ordering.md: #9561 merge-ordering investigation (cleaned; #9561 fixed upstream).
+- review29: R0-R5 displacement grammar. Final: sign-split hybrid grammar plus <funcptr align="1" /> in the cspec; the 'hybrid grammar hole' was stale project prototypes.
+- review32: stackshift 0 / purge (cleaned; deployed, verified).
 
-- review4.md -- return-type audit: table_lookup_interp/axis_lookup_interp/
-  table_lookup_indexed/table_read_indexed caller family. COMPLETE
-  (2026-08-05).
-
-- review5.md -- axis identity/scaling verification against live ROM
-  callers, picking up from review2.md's address-only pass. OPEN.
-
-- review6.md -- return-type audit part 2, remaining untyped functions
-  outside the 4-lookup-primitive family. CLOSED for its own scope (17
-  zero-caller functions confirmed correctly left untyped, no further
-  action there) -- but review7.md and review8.md both flag follow-up
-  work this file didn't cover.
-
-- review7.md -- call-site CONCAT/extraout artifact audit (functions with
-  correct return types that still show decompiler noise). OPEN --
-  checklist assembled, no functions individually verified yet.
-
-- review8.md -- computed-call state-table dispatch: f502_state_table_
-  dispatch and its unresolved handler targets. OPEN -- several named
-  follow-ups outstanding (review6.md correction, f502_state_index_update,
-  13 of 17 zero-caller functions still unaddressed, a candidate DAT_
-  bitfield).
-
-- review9.md -- sci1_colon_frame_dispatch jump table: emulation
-  feasibility, the spSegment fix, and why DP still blocks recovery.
-  OPEN -- consumer of a fully-decoded flash sector table still unfound;
-  two named functions not yet checked.
-
-- review10.md -- axis-pairing verification: the table+2 RAM-pointer
-  family and Convention B. OPEN -- named next steps outstanding
-  (manual review of 5 flagged tables, optional mode-value sanity check).
-
-- mut_verification_status.md -- full detail backing review.md's item 1
-  (MUT actuator-test mapping) and related SCI1/TCU findings. OPEN,
-  referenced throughout review.md item 1.
-
-- test/functions_evo5.md, test/functions_w4a51.md -- cross-binary
-  function-matching checklists (successor to review.md's old item 12).
-  OPEN.
-
-- review11.md -- h8539_import_tables_xml2.py: behavior + implementation plan.
-
-- review12.md -- RVR scaling/axis table verification: header-offset bug + correction batches.
-
-- review13.md -- H8/500 paged/banked addressing issues. (Not the same as item 13 below.)
-
-- review14.md -- TableHeader struct rollout across the RVR table region
-  (0x2d080-0x2d8d6) and xref-based verification of the XML's header
-  claims. OPEN -- 7 verification TODOs live there.
-
-
-- review15.md -- register0x0e investigation. RESOLVED 2026-10: #9540/#9541 print-layer fix
-  (920fcd6) + RdN and displacement-order language fixes; register0x 210 -> 0. See todo.md item 9.
-
-- review16.md -- register0x0e print-layer fix. COMPLETE (landed 2026-08-26).
-
-- review17-19.md -- auStack_/sat_add_u16 chain. HISTORICAL; cause since found (displacement
-  order, RdN pointer store, param_fpN stack offsets). See todo.md.
-
-- review.md item 19 (below) -- DAT_0001f1fe status/DTC-validity flags word
-  mapping. OPEN, started 2026-08-17 as part of the DAT_ global renaming
-  reopen (item 13).
-
-- review20-24.md, review25-26.md (SUPERSEDED), review-9561-merge-ordering.md,
-  review-calling-convention-regression.md -- muldiv_*/#9561 regression chain. Mostly
-  SUPERSEDED by the above; read review-9561-merge-ordering.md before archiving.
-
- - todo.md, todo-r0-r5-displacement-order.md -- current work list (2026-10-26).
-
- - CHANGELOG.md, h8539f-instruction-table.md -- reference.
+REFERENCE: CHANGELOG.md, h8/data/languages/NOTES.TXT,
+h8539f-instruction-table.md.
+====================================================================
 
 Review: h8539f Sleigh implementation vs ana.cpp (IDA H8/500 module)
 ====================================================================
@@ -362,6 +302,7 @@ Open items
     mechanism identified via live pcode inspection; no fix implemented yet;
     not upstream-filing material (same general class as Ghidra's own x86-16
     issues #817/#5199).
+    UPDATE 2026-11-17: the list of 18 functions below predates the cspec/purge work. The 2026-11-08 clean check (review32.md) counted 16 functions with this warning, all isr_* handlers, plus 9 with "may have set the stack pointer" (entry/boot code). The math helpers in the list (muldiv_*, div_*, sat_*, axis_*) are therefore no longer expected to warn; not re-checked function by function. The untried callotherfixup idea for spSegment is not recorded as tried anywhere.
 
     Affects at least 18 structurally-unrelated functions: isr_sci1_eri,
     isr_tpu5_tci5u, isr_tpu5_tgi5a_sci1_rx_poll,
@@ -477,6 +418,7 @@ Open items
         short/irregular byte patterns that could be small data tables
         (flash constants) rather than code, not confidently classified
         either way.
+    UPDATE 2026-11-17: of the gaps listed above as unresolved, 0x20208-0x202b1 and 0x2031e-0x2036c now lie inside sci1_boot_cmd_dispatch (0x2016e-0x2036c, body fixed; see review9.md), and 0x20a14-0x20a7f is flash_region_classify_table (data, 96 bytes 0x20a14-0x20a73; review9.md). Still unclassified: 0x20747-0x20771, 0x2077d-0x2077e, 0x20134-0x2014b.
     RESOLVED 2026-07-23: 0x149a7-0x149c7 (33b) and 0x276d3-0x276fa (40b),
     the two residual slivers left by the two partial fixes above -- same
     dry-run-create-verify method as the rest of this pass. Both raw byte
@@ -510,7 +452,7 @@ Open items
     ongoing matching work now live in test/functions_evo5.md and
     test/functions_w4a51.md.
 
-13. DAT_ global address renaming -- REOPENED (2026-08-17): the 2026-08-16
+13. DAT_ global address renaming -- REOPENED (2026-08-17) [STATUS 2026-11-17: no later progress recorded here; the 7 globals were last listed on 2026-08-17 and not re-checked]: the 2026-08-16
     "CLOSED, zero hits" claim below was WRONG. Live list_globals(filter="DAT_")
     just returned 7 remaining unnamed globals: DAT_0000f00e, DAT_0000f012,
     DAT_0000f014, DAT_0001f1fe, DAT_0000f38c, DAT_0000f3cc, DAT_0001ef90.
@@ -604,7 +546,7 @@ corroboration) now continues in review9.md.
     superseded. Full investigation, fixes, and the cspec-driven far-pointer
     call-argument fusion plan now live in review3.md.
 
-19. DAT_0001f1fe status/DTC-validity flags word -- OPEN, started 2026-08-17.
+19. DAT_0001f1fe status/DTC-validity flags word -- OPEN, started 2026-08-17. [STATUS 2026-11-17: still open; no later progress recorded. bit1/bit5/bit6 helper functions are named in review8.md's state table.]
     Picked as the highest-traffic item among the 7 DAT_ globals reopened in
     item 13 above (60+ xrefs across ~40 functions when this work began --
     fueling, ISC, ignition, O2 sensor, EGR, knock/octane, DTC status).
@@ -661,6 +603,8 @@ Build/test workflow
 ----------------------------------------------------------------------------------
 Use this every time a .sinc/.slaspec grammar change needs compiling and
 testing against the live ROM. No need to re-ask for these paths again.
+
+OUT OF DATE 2026-11-17: the 12.0.4_PUBLIC paths below are the old install. Later sessions use the ghidra_stock install under Downloads\ghidra_12.2_DEV_20260818 (the 2026-11 application.log is under ghidra_12.3_DEV), languages folder ghidra_stock\Ghidra\Processors\h8\data\languages. The built .sla is gitignored. After ANY .slaspec/.sinc change also run scripts\ReDisasm.java (stale instruction prototypes otherwise survive). A .cspec change needs the copy plus a Ghidra restart. Copying into ghidra_stock needs your approval each time (standing rule). Treat the steps below as the old procedure; confirm paths before use.
 
 - Compiler:  C:\Users\j.brophy.CORKILLSYSTEMS\Downloads\ghidra_12.0.4_PUBLIC\support\sleigh.bat
 - Source (edit here):    C:\Users\j.brophy.CORKILLSYSTEMS\github\Ghidra-H8-Processor\h8\data\languages
@@ -780,6 +724,8 @@ METHODOLOGY LESSONS (the important part for future sessions/tools):
    EEDF/EEE1/F217/F179/F1E7 table-entry hits, which were real matches
    but were table DATA, not code writers).
 
+[2026-11-17: the .c dump named below (28,456 lines, 2026-08-07) is old; use the newest export (final6.hex.c was the newest noted on 2026-11-01, predating the _ns rollout) or regenerate it.]
+
 3. BEST METHOD FOUND THIS SESSION, should be the PRIMARY method going
    forward: the project has a full decompiled-C dump of the entire ROM
    at test/rvr/RVR_1998_x3 4g63t 21000011 md352553.hex.c (28,456 lines,
@@ -803,7 +749,7 @@ METHODOLOGY LESSONS (the important part for future sessions/tools):
    needs regenerating, and always verify its hits against instruction
    boundaries before trusting them.
 
-4. Général process note: several conclusions this session were stated
+4. GÃ©nÃ©ral process note: several conclusions this session were stated
    too confidently on a first pass and had to be walked back after
    direct pushback/re-checking (the "fixed literal RequestID" claim, the
    "dead end" framing on the EEPROM mechanism, the F21D byte-pattern
@@ -878,3 +824,8 @@ output against both the .c dump grep results (which agreed "0 matches"
 for all 6 targets, but is ALSO potentially blind to computed-bank-store
 writers if the decompiler folds them into a form that doesn't textually
 contain the literal) and the EvoScan log question.
+
+
+
+
+

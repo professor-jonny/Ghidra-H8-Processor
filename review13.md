@@ -1,4 +1,6 @@
-# Review 13 — H8/500 Paged/Banked Addressing Issues
+﻿> **STATUS 2026-11-17:** Issue A: resolved by the 2026-08-15 check (`addr16_dp` in `h8539f.slaspec` already folds DP into the address). Issue B: option 3 (implement it ourselves) was carried out as NationalSecurityAgency/ghidra PR #9522 (issue #9450), in upstream triage; see `review3.md` and `todo.md` E5/E10. Options 1 and 2 and the "Suggested priority" section at the end are history. The survey of how many split bank/offset call sites exist in the ROM (what would justify maintaining a patched core) has not been done.
+
+# Review 13 â€” H8/500 Paged/Banked Addressing Issues
 
 ## Context
 
@@ -10,7 +12,7 @@ page-register-relative (`CP`/`DP`/`EP`) addressing.
 
 ---
 
-## Issue A — Symbol collision across page contexts (fixable in this repo)
+## Issue A â€” Symbol collision across page contexts (fixable in this repo)
 
 ### Symptom
 
@@ -18,7 +20,7 @@ page-register-relative (`CP`/`DP`/`EP`) addressing.
 a static ROM-ID-to-baudrate lookup table, but the *same* symbol is also
 written by three unrelated calls in `tcu_shift_torque_and_knock_mgmt` and
 read by `tcu_shift_timing_state_machine` elsewhere in the main vehicle
-firmware — code that almost certainly runs under a different active page
+firmware â€” code that almost certainly runs under a different active page
 register state.
 
 Xrefs to `ram:0xf394`:
@@ -44,12 +46,12 @@ each reference was made.
 Confirmed via `get_current_program_info`: only 2 memory blocks are defined
 (`RAM: 0000ee80-0000ffff`, `ram: 00010000-0002ffff`), and the disassembly
 consistently shows `assume CP = 0x2 / DP = 0x1 / TP = 0x0` headers per
-function — meaning the disassembler is *tracking* the page-register
+function â€” meaning the disassembler is *tracking* the page-register
 assumption per function already, but the pspec/slaspec never turns that
 into distinct address resolution. Every reference collapses onto one flat
 space.
 
-**UPDATE — verified 2026-08-15:** `h8539f.slaspec` line 514 already defines
+**UPDATE â€” verified 2026-08-15:** `h8539f.slaspec` line 514 already defines
 `addr16_dp` with the correct DP-fold:
 
 ```
@@ -61,25 +63,25 @@ Address Calculation" (grepable datasheet, lines 1964-1989):
 
 | Mode | Page register | Confirms |
 |---|---|---|
-| `@Rn`, `@(d:8/16,Rn)`, `@–Rn`, `@Rn+` | `DP` (R0-R3) / `EP` (R4,R5) / `TP` (R6,R7) | matches existing `Rn_banked` in `h8539f-branch.sinc` |
+| `@Rn`, `@(d:8/16,Rn)`, `@â€“Rn`, `@Rn+` | `DP` (R0-R3) / `EP` (R4,R5) / `TP` (R6,R7) | matches existing `Rn_banked` in `h8539f-branch.sinc` |
 | `@aa:8` (short absolute) | `BR` | matches `ana.cpp`'s `aa8()` (`aux_page` + `insn.get_next_byte()`) |
-| **`@aa:16` (absolute)** | **`DP`** — manual shows `23‑15‑0 / DP / EA extension data` | **matches our `addr16_dp` formula exactly** |
+| **`@aa:16` (absolute)** | **`DP`** â€” manual shows `23â€‘15â€‘0 / DP / EA extension data` | **matches our `addr16_dp` formula exactly** |
 | PC-relative `d:8`/`d:16` | `CP` | matches existing `jmp`/branch pcode |
 
 **So `addr16_dp`'s formula is architecturally correct, confirmed by the
 hardware manual itself.** The `DAT_0001f394` collision is *not* a wrong
-formula — it's that `DP` is a genuine runtime CPU register (not a Sleigh
+formula â€” it's that `DP` is a genuine runtime CPU register (not a Sleigh
 `context` field), so Ghidra's static xref/symbol database can't reliably
 resolve `zext(DP)<<16 | addr16` to one concrete `Address` unless the
 decompiler's constant-propagation happens to pin down `DP`'s value within
 that specific function (which is what produces the `assume DP = 0x1`
-annotation on `boot_sci1_rom_id_verify` — but this is local, per-function,
+annotation on `boot_sci1_rom_id_verify` â€” but this is local, per-function,
 best-effort analysis, not guaranteed, and definitely not shared/reconciled
 against other functions like the unrelated `tcu_shift_*` code that also
 happens to reference literal `0xF394`).
 
 **Also worth noting:** `ana.cpp`'s `aa16()` (IDA reference module,
-`h8500/ana.cpp` line ~211) sets only `aux_disp16`, never `aux_page` — i.e.
+`h8500/ana.cpp` line ~211) sets only `aux_disp16`, never `aux_page` â€” i.e.
 it silently drops the `DP` page fold that the hardware manual confirms
 `@aa:16` actually has. Since `ana.cpp` is a work-in-progress reference
 implementation, not authoritative, this looks like a bug/gap in the IDA
@@ -95,12 +97,12 @@ in other processor modules):
 
 1. Declare `CP`, `DP`, `EP` as SLEIGH `context` register fields
    (`define context contextreg ... CP=(...) DP=(...) EP=(...)`) if not
-   already modeled that way in `h8.slaspec` / `h8500.sinc` — check current
+   already modeled that way in `h8.slaspec` / `h8500.sinc` â€” check current
    state first.
 2. Have the relevant addressing-mode constructors propagate the active
    page context so that a `DP`-relative (or `CP`-relative) reference
    resolves through a context-qualified calculation rather than a bare
-   16-bit literal — i.e. the same textual operand can produce different
+   16-bit literal â€” i.e. the same textual operand can produce different
    `Address` objects in different page contexts.
 3. Alternatively/additionally: define distinct logical address spaces per
    page and have the loader/analyzer route `DP=1`-context reads to one
@@ -121,7 +123,7 @@ Ghidra core changes required.
   is in place).
 - Fix `ana.cpp`'s `aa16()` (h8500 module, ~line 211) to set `aux_page`
   sourced from `DP`, matching the hardware manual's Table 3-8 and our
-  `addr16_dp` construct — currently it only sets `aux_disp16` and silently
+  `addr16_dp` construct â€” currently it only sets `aux_disp16` and silently
   drops the page fold, which is a real gap if `ana.cpp` is meant to stay a
   faithful IDA-side reference alongside the Ghidra module.
 - Hardware citation for the record: H8/538-539 Hardware Manual (OMC942723072),
@@ -137,14 +139,14 @@ Ghidra core changes required.
 
 ---
 
-## Issue B — Split far-pointer call arguments (NOT fixable via Sleigh)
+## Issue B â€” Split far-pointer call arguments (NOT fixable via Sleigh)
 
 ### Symptom
 
 Calling conventions on this processor sometimes pass a far pointer as two
 separate immediate pushes to the stack (page byte, then offset word)
 ahead of a call, rather than as one fused value. The decompiler never
-recombines these into one logical pointer parameter — it shows two
+recombines these into one logical pointer parameter â€” it shows two
 independent scalar arguments at the call site with no resolved
 cross-reference to the actual combined target address.
 
@@ -165,24 +167,24 @@ precedent used for double-precision-in-two-registers cases.
 ### Why Sleigh can't fix this
 
 Sleigh only defines **per-instruction** p-code semantics. This bug is a
-**cross-instruction, call-site-level** fusion problem — recognizing that
+**cross-instruction, call-site-level** fusion problem â€” recognizing that
 two separate push instructions, several instructions apart, followed by a
 call, together form one logical far pointer. That analysis lives in the
 decompiler's C++ engine (`ActionParamDouble`, `checkInputJoin()`,
 `doInputJoin()`, `Architecture::constructJoinAddress()`), which no
-`.slaspec`/`.pspec`/`.cspec` file can influence — only a compiled Ghidra
+`.slaspec`/`.pspec`/`.cspec` file can influence â€” only a compiled Ghidra
 core change can.
 
 ### Options
 
-1. **Track upstream** — wait to see if #9450 gets picked up/implemented
+1. **Track upstream** â€” wait to see if #9450 gets picked up/implemented
    by the Ghidra team.
-2. **Manual annotation** — survey the ROM for the split-push-then-call
+2. **Manual annotation** â€” survey the ROM for the split-push-then-call
    pattern and hand-comment/label affected call sites so a human reader
    isn't misled by the decompiler's flattened two-scalar-argument view.
-   (Not yet done — would need a byte-pattern/pattern-matching survey to
+   (Not yet done â€” would need a byte-pattern/pattern-matching survey to
    scope how widespread this is in the RVR ROM.)
-3. **Implement it ourselves** — actually build and PR the proposed
+3. **Implement it ourselves** â€” actually build and PR the proposed
    `<farpointerjoin>` mechanism upstream. This is a real C++ contribution
    to Ghidra core (new cspec element decode in `FuncProto::decode()`, new
    `Action` registered in `ActionDatabase::universalAction()`), separate
@@ -201,3 +203,4 @@ core change can.
   whether (2) manual annotation is sufficient for now, or whether the
   pattern is common enough to justify (3) the upstream Ghidra
   contribution.
+
