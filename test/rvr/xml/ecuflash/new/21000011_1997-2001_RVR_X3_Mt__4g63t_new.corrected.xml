@@ -35,7 +35,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="Auto/Manual Selection Code (Address AAF)" category="Transmission" address="10aaf" type="1D" level="2" scaling="Hex8"/>
 
-	<table name="Trailing Time Counter Start vs Engine Temp (F2A0/F2C6)" category="Fuel" address="11daa" type="2D" level="2" scaling="uint8">
+	<table name="Post Start Enrichment (Trailing Time Counter Start vs Engine Temp, F2A0/F2C6)" category="Fuel" address="11daa" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 9 bytes (ba 7a 4d 20 1a 13 0d 06 06) are identical to Evo 5 Post Start Enrichment at 11bca. Name combined with the earlier code-derived role (trailing time counter start). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2a0_f2c6_dual_timer_decay_and_f2c8_blend_dispatch (0x23523): loads F2A0 and F2C6 from this table (header 11da6, axis engine temp) when F20E bit0 is set (both zeroed when bit4 is set). Each is decremented by 1 whenever its timer target (EFBA / EFBC) reaches 0. F2C8 = F2A0, or a blend of F2A0 and F2C6 when byte 0x10309 is non-zero, and F2C8*2+0x80 is a multiplier in f0ba_f2d0_o2_mode7_8_correction_calc. The BCX-derived entry at 11db8 is called Lean Spool Trailing Time - Rich Side, so this is probably its lean-side partner, but that pairing is a guess. --> <!-- previous name: Unknown Table 11daa -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 11da6 index cell F0CA is written only by axis record 2d428 (input F10E, 9 pts), axis data 2d42e. -->
 		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
@@ -51,7 +52,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d0a0" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="MAF Relative Density" category="Unknown" address="11838" type="2D" scaling="uint8">
+	<table name="MAF Relative Density" category="Air" address="11838" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] REVIEW: these 7 bytes are identical to VR4 11034 labelled MAF_Relative_Density. The table sits next to the fueling airflow tables at 11870-118a0, so the Knock label looks doubtful. Renamed from TABLE_2D_00011834_Knock (possible: Knock/Lambda Composite Correction). EVO5 11838 is a 0.88 near match (8 elements). -->
 		<!-- 2026-11-16 [Ghidra E11] header 11834 index cell F0D0 is written only by axis record 2d4a6 (input F118, 7 pts), axis data 2d4ac. Previous axis: RPM 2d21e (7 pts). -->
 		<table name="Air Temp" address="2d4ac" type="Y Axis" elements="7" scaling="Temp"/>
@@ -76,19 +77,19 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d0f6" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Airflow Compensation vs Coolant Temp" category="Unknown" address="11898" type="2D" scaling="uint8">
+	<table name="Airflow Compensation vs Coolant Temp" category="Air" address="11898" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] bytes identical to VR4 1107c Airflow_Compensation_vs_Coolant_Temp (EVO5 11880 identical). Supports a fueling/airflow role for this table. Renamed from TABLE_2D_00011894_Fueling (possible: Base Injection Fueling - sibling). -->
 		<!-- 2026-11-16 [Ghidra E11] header 11894 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d0f6 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Airflow Compensation vs IAT" category="Unknown" address="118a4" type="2D" scaling="uint8">
+	<table name="Airflow Compensation vs IAT" category="Air" address="118a4" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] bytes identical to VR4 11088 Airflow_Compensation_vs_IAT (EVO5 1188c is 16 elements vs 15 here). Supports a fueling/airflow role for this table. Renamed from TABLE_2D_000118A0_Fueling. -->
 		<!-- 2026-11-16 [Ghidra E11] header 118a0 index cell F0D0 is written only by axis record 2d4a6 (input F118, 7 pts), axis data 2d4ac. Previous axis: RPM 2d332 (15 pts). -->
 		<table name="Air Temp" address="2d4ac" type="Y Axis" elements="7" scaling="Temp"/>
 	</table>
 
-	<table name="F074 Load Value (F212 bit0 event)" category="Unknown" address="11d50" type="2D" scaling="uint8">
+	<table name="F074 Load Value (F212 bit0 event)" category="Fuel" address="11d50" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f240_counter_reset_and_f074_table_load (0x22a57): when F212 bit0 is set it clears F0B0 and F0AE and loads F074 from this table (header 11d4c). What F074 feeds is not traced. --> <!-- previous name: TABLE_2D_00011D4C_CounterReset -->
 		<!-- 2026-11-16 [Ghidra E11] header 11d4c index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (18 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
@@ -101,25 +102,25 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Battery Voltage" address="2d266" type="Y Axis" elements="7" scaling="BatteryVoltage"/>
 	</table>
 
-	<table name="F2D6/F2D8 Lookup Table (axis 2D130)" category="Unknown" address="11e4e" type="2D" scaling="uint8">
+	<table name="F2D6/F2D8 Lookup Table (axis 2D130)" category="Fuel" address="11e4e" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: table_1e4a_lookup_with_f2d6_d8_reset (0x24552): F2D6 and F2D8 are cleared when F20E bit4 is set, then this table (header 11e4a) is read on axis 2d130. The result is returned to the caller; its use was not traced. --> <!-- previous name: TABLE_2D_00011E4A_TableLookup -->
 		<!-- 2026-11-20 [Ghidra] REVIEW axis: labelled RPM but driven by input F2D8, not the RPM input F170. No VR4 axis matches, so not changed. Old: RPM / RPM -->
 		<table name="RPM" address="2d136" type="Y Axis" elements="8" scaling="RPM"/>
 	</table>
 
-	<table name="F2B4 Time Factor Offset (config 2F4 = 2)" category="Unknown" address="11e6e" type="2D" scaling="uint8">
+	<table name="F2B4 Time Factor Offset (config 2F4 = 2)" category="Fuel" address="11e6e" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2b4_threshold_table_lookup (0x245af): when config byte 0x2F4 is 2 and F2B4 (a counter cleared while F0F8 bit6 is clear) is at or below word 0x836, the result is this table (header 11e6a, axis 2d440) plus 0x80, i.e. a signed offset around 0x80. With config 0x2F4 non-zero and not 2 the function uses the byte table at 11e56 instead; with 0 it returns 0x80. --> <!-- previous name: TABLE_2D_00011E6A_ThresholdLookup (possible: Threshold Lookup / Gate Table) -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: the same data was labelled RPM (Y) and Temp (X). Driven by input F10E (coolant temp). Old: RPM / RPM -->
 		<table name="Coolant Temp" address="2d446" type="Y Axis" elements="11" scaling="Temp"/>
 	</table>
 
-	<table name="F2E6 Factor (x F29A)" category="Unknown" address="11e8a" type="2D" scaling="uint8">
+	<table name="F2E6 Factor (x F29A)" category="Fuel" address="11e8a" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2e0_f2ec_composite_correction_calc (0x246ee): when F0F8 bit6 is clear, F2E6 (F2E8 when byte 0x1030E is 0) is built from F28E multiplied by this table (header 11e86) times F29A, then by table 11e7a times a selected constant. --> <!-- previous name: TABLE_2D_00011E86_CompositeCorr -->
 		<!-- 2026-11-16 [Ghidra E11] header 11e86 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (9 pts). -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="9" scaling="RPM"/>
 	</table>
 
-	<table name="F2EC Value" category="Unknown" address="11e98" type="2D" scaling="uint8">
+	<table name="F2EC Value" category="Fuel" address="11e98" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2e0_f2ec_composite_correction_calc (0x246ee): F2EC is loaded directly from this table (header 11e94). --> <!-- previous name: TABLE_2D_00011E94_CompositeCorr -->
 		<!-- 2026-11-16 [Ghidra E11] header 11e94 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
@@ -134,43 +135,43 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Load" address="2d164" type="Y Axis" elements="14" scaling="Load"/>
 	</table>
 
-	<table name="F316 Value" category="Unknown" address="11ecc" type="2D" scaling="uint8">
+	<table name="F316 Value" category="Fuel" address="11ecc" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f310_f316_composite_calc (0x2495c): F316 is loaded directly from this table (header 11ec8). --> <!-- previous name: TABLE_2D_00011EC8_CompositeCalc -->
 		<!-- 2026-11-16 [Ghidra E11] header 11ec8 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (10 pts). -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="F314 Base Value" category="Unknown" address="11eda" type="2D" scaling="uint8">
+	<table name="F314 Base Value" category="Fuel" address="11eda" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f310_f316_composite_calc (0x2495c): F314 = clamp_u8(this table (header 11ed6), scaled by word 0x109C0 (or by word 0x11452/0x20 when byte 0x1030E is non-zero) when F20E bit13 is set, plus table 11ee6). F310 = clamp_u8(F314 * word 0x109BE * 2). --> <!-- previous name: TABLE_2D_00011ED6_CompositeCalc -->
 		<!-- 2026-11-16 [Ghidra E11] header 11ed6 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="F314 Offset" category="Unknown" address="11ee6" type="2D" scaling="uint8">
+	<table name="F314 Offset" category="Fuel" address="11ee6" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f310_f316_composite_calc (0x2495c): added to the base value from table 11eda before clamping to a byte to give F314 (header 11ee2). --> <!-- previous name: TABLE_2D_00011EE2_CompositeCalc -->
 		<!-- 2026-11-16 [Ghidra E11] header 11ee2 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (11 pts). -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="F304/F30C Dwell Threshold (F20E bit13)" category="Unknown" address="11f1a" type="2D" scaling="uint8">
+	<table name="F304/F30C Dwell Threshold (F20E bit13)" category="Timing" address="11f1a" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2e0_f2ec_composite_correction_calc (0x246ee): when F20E bit0 is set both F304 and F30C are loaded from this table (header 11f16). F20E bit13 is set when the zone dwell counter EF6A is below F304*0x50 (F30C if byte 0x1031E is non-zero and F742 bit2 is clear). --> <!-- previous name: TABLE_2D_00011F16_CompositeCorr -->
 		<!-- 2026-11-16 [Ghidra E11] header 11f16 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="F2EA Factor C" category="Unknown" address="11f34" type="2D" scaling="uint8">
+	<table name="F2EA Factor C" category="Fuel" address="11f34" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2ea_f2ee_composite_correction_calc (0x24884): F2EA = (F28E * table 11f40 * F29A / 0x4000) * (table 11f4e * this table (header 11f30)) / 0x800. Zero when EFB2 is non-zero. --> <!-- previous name: TABLE_2D_00011F30_CompositeCorr -->
 		<!-- 2026-11-16 [Ghidra E11] header 11f30 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="F2EA Factor A (x F29A)" category="Unknown" address="11f40" type="2D" scaling="uint8">
+	<table name="F2EA Factor A (x F29A)" category="Fuel" address="11f40" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2ea_f2ee_composite_correction_calc (0x24884): first factor in F2EA = (F28E * this table (header 11f3c) * F29A / 0x4000) * (table 11f4e * table 11f34) / 0x800. --> <!-- previous name: TABLE_2D_00011F3C_CompositeCorr -->
 		<!-- 2026-11-16 [Ghidra E11] header 11f3c index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="8" scaling="RPM"/>
 	</table>
 
-	<table name="F2EA Factor B" category="Unknown" address="11f4e" type="2D" scaling="uint8">
+	<table name="F2EA Factor B" category="Fuel" address="11f4e" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2ea_f2ee_composite_correction_calc (0x24884): second-stage factor in F2EA, multiplied by table 11f34 and divided by 0x800 (header 11f4a). --> <!-- previous name: TABLE_2D_00011F4A_CompositeCorr -->
 		<!-- 2026-11-16 [Ghidra E11] header 11f4a index cell F0C6 is written only by axis record 2d15e (input F190, 14 pts), axis data 2d164. Previous axis: AirTemp_raw_F0C6_UNCONFIRMED f0c6 (14 pts). -->
 		<table name="Load" address="2d164" type="Y Axis" elements="14" scaling="Load"/>
@@ -180,43 +181,49 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- 2026-11-20 removed TABLE_2D_00011F64_HysteresisTimer @11f68: header-only stub run at 11f5c-11f70 (02 00 F0xx x6), no data; axis elements=0. -->
 
-	<table name="ISC F356 Trim vs Air Temp (active above load, gate 127f2)" category="ISCV Control" address="127dc" type="2D" scaling="uint8">
+	<table name="Ignition Trim vs Air Temp (F356 term)" category="Timing" address="127dc" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: read by ign_f356_air_temp_trim_calc (header 27d8) as the air-temp trim term of the F342 ignition advance sum, so this is an ignition table, not ISC. The ROM header (127d8, index F0D0) and axis record 2d4a6 confirm 7 points on axis 2d4ac (input F118). Evo 5 has an 8-point version on a different axis and the data is nearly flat (0x7d to 0x80), so the data match with Evo is weak evidence; the code is the real evidence. BCX also labels 127c2 Ignition Trim vs Air Temp; which of the two is the true one is not settled. -->
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: 8 of 9 bytes match Evo 5 Ignition Trim vs Air Temp (Evo 1226c). Same caveat as 127f2. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f356_correction_calc: F356 starts at 0x80 and is replaced by this table when F18E is above the value looked up from table 127f2 (header 27ee). RESOLVED 2026-11-21: 127f2 is a load threshold against RPM (Load8, 10 points) and its only reader is this function (0x25c48), so it is the gate for this table. The values here (126 to 128 around 0x80) are a small trim against air temp F118. F356 is one of the terms summed into F342 by isc_f342_composite_correction_calc (0x2562b), clamped to the minimum from table 12cf8 (or 10) and 0x46. After the table lookup F356 is reduced by words 0xa78, 0xbaa, 0xb98-0xb9e, 0x14c4 under flag conditions. Physical meaning of F356 not established. Renamed from TABLE_2D_000127D8_ISC. -->
 		<!-- 2026-11-16 [Ghidra E11] header 127d8 index cell F0D0 is written only by axis record 2d4a6 (input F118, 7 pts), axis data 2d4ac. Previous axis: IAT_raw_F0D0_UNCONFIRMED f0d0 (7 pts). -->
 		<table name="Air Temp" address="2d4ac" type="Y Axis" elements="7" scaling="Temp"/>
 	</table>
 
-	<table name="ISC F34C Limit vs Coolant Temp" category="Unknown" address="12800" type="2D" scaling="uint8">
+	<table name="Ignition F34C Limit vs Coolant Temp" category="Timing" address="12800" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: part of the F344 term (ign_f344_correction_calc calls the F34C routine) that feeds the F342 ignition advance sum. Category changed from ISCV Control; the exact meaning of F34C is not yet traced. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f34c_correction_calc: after counter EF6A reaches word 0xb78 and F1F2 bit 9 is set, this table (axis hdr_engine_temp) is optionally capped by F3EE, blended with F34A and used to lower the F34C output. Physical meaning of F34C not established. Renamed from TABLE_2D_000127FC_ISC. -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: was RPM. Driven by input F10E (coolant temp, as axis 2d418); the identical VR4 axis is named Coolant Temp. Old: RPM / RPM -->
 		<table name="Coolant Temp" address="2d496" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Ignition Coil Charge Time Correction 2" category="Unknown" address="12828" type="2D" scaling="uint8">
+	<table name="Ignition Coil Charge Time Correction 2" category="Timing" address="12828" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] renamed from TABLE_2D_00012824_ISC. Bytes are identical to VR4 11fd6 'Coil Dwell Time Correction 2' (BCX VR4 definitions), and the table follows 1280c Ignition Coil Charge Time - Normal, which matches VR4 'Coil Dwell Time'. The ISC label had no supporting evidence. -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: one use was labelled RPM; input F13A is battery voltage and the identical VR4 axis is named Battery Voltage. Old: RPM / RPM -->
 		<table name="Battery Voltage" address="2d27a" type="Y Axis" elements="9" scaling="BatteryVoltage"/>
 	</table>
 
-	<table name="F37A Factor 1" category="Unknown" address="12852" type="2D" scaling="uint8">
+	<table name="Ignition F37A Adder Base vs RPM" category="Timing" address="12852" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: first of three tables multiplied in ign_f37a_adder_calc_from_f33e_bit2_or_f378: F37A = clamp(base(12852) x baroFactor(1285c) x airTempFactor(12864) / 0x4000, 0 to 255). F37A is added to the ignition advance sum in the main knock/ignition routine when F33E bit2 or F378 is set. Renamed from F37A Factor 1 (ISC). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f37a_correction_calc_from_f33e_bit2_or_f378 (0x25401): F37A = clamp_u8( table1 x factor2 x factor3 / 0x4000 ), run only when F33E bit2 or F378 is non-zero. This is factor 1 (axis 2d180). Meaning of F37A not established. Renamed from TABLE_2D_0001284E_ISC. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW axis: labelled RPM but driven by input F35E, not the RPM input F170. No VR4 axis matches, so not changed. Old: RPM / RPM -->
 		<table name="RPM" address="2d186" type="Y Axis" elements="6" scaling="RPM"/>
 	</table>
 
-	<table name="F37A Factor 2 vs Baro" category="Unknown" address="1285c" type="2D" scaling="uint8">
+	<table name="Ignition F37A Baro Factor" category="Timing" address="1285c" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: second factor in the F37A product (see 12852); only applied when the cal fuel-cut-enable flag is zero, otherwise 0x80 is used. Renamed from F37A Factor 2 vs Baro (ISC). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Second factor of F37A (axis 2d29c, barometer-driven). Only looked up when cal_fuel_cut_enable_flag is 0; otherwise the factor is 0x80 (1.0). Renamed from TABLE_2D_00012858_ISC. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW axis: labelled RPM but driven by input F130, the barometer input used by axis 2d292 (Baro Press.). No VR4 axis matches, so not changed. Old: RPM / RPM -->
 		<table name="RPM" address="2d2a2" type="Y Axis" elements="4" scaling="RPM"/>
 	</table>
 
-	<table name="F37A Factor 3 vs Air Temp" category="Unknown" address="12864" type="2D" scaling="uint8">
+	<table name="Ignition F37A Air Temp Factor" category="Timing" address="12864" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: third factor in the F37A product (see 12852). Renamed from F37A Factor 3 vs Air Temp (ISC). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Third factor of F37A (axis 2d4ac, air temp). Renamed from TABLE_2D_00012860_ISC. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12860 index cell F0D0 is written only by axis record 2d4a6 (input F118, 7 pts), axis data 2d4ac. Previous axis: RPM 2d2a2 (4 pts). -->
 		<table name="Air Temp" address="2d4ac" type="Y Axis" elements="4" scaling="Temp"/>
 	</table>
 
-	<table name="F33E Condition Threshold vs F18E" category="Unknown" address="12870" type="2D" scaling="uint8">
+	<table name="Ignition F33E Bit3 Load Threshold vs RPM" category="Timing" address="12870" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): returns 1 only when TPS F10E > word 0xBC0, engine speed F17A (rpm / 31.25) is between words 0xBC2 and 0xBC4, TPS F13E < word 0xBBE and this table (header 1286c) is below F18E. --> <!-- previous name: TABLE_2D_0001286C_ISC -->
 		<!-- 2026-11-16 [Ghidra E11] header 1286c index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (10 pts). -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
@@ -252,19 +259,20 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Load Error Adder (Limp Mode Related)" category="Unknown" address="1298a" type="2D" scaling="uint8">
+	<table name="Load Error Adder (Limp Mode Related)" category="Fuel" address="1298a" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 12180 labelled Load_Error_Adder_Limp_Mode_Related (EVO5 123f0 identical). Conflicts with the O2Mode78 label. Renamed from TABLE_2D_00012986_O2Mode78 (possible: O2 Mode 7/8 Correction - first table). -->
 		<!-- 2026-11-16 [Ghidra E11] header 12986 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Zone Enable Pulse Width Threshold (F186)" category="Unknown" address="12aee" type="2D" scaling="uint8">
+	<table name="Zone Enable Pulse Width Threshold (F186)" category="Fuel" address="12aee" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_advance_rpm_zone_enable_check (0x19364): looked up (header 12aea), reduced by word 0xE0E when output relay flag F0E6 bit6 is clear, and compared with the injector pulse output F186; the check returns 1 when F186 is at or below it, subject to the RPM zone dwell test. The enable meaning comes from the existing function name. --> <!-- previous name: TABLE_2D_00012AE6 -->
 		<!-- 2026-11-16 [Ghidra E11] header 12aea index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (9 pts). -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="9" scaling="RPM"/>
 	</table>
 
-	<table name="F4AC Throttle Threshold (3D)" category="Unknown" address="12b0d" type="3D" scaling="uint8">
+	<table name="F4AC Throttle Threshold (3D)" category="Turbo (tentative)" address="12b0d" type="3D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: same F4AC family as 12cc0/12cd6/12cec, which match VR4 WGDC correction tables. No direct data match for this one. -->
 		<!-- 2026-11-21 [Ghidra] CORRECTION: this is probably NOT a purge duty cycle. The main loop (0x2b460) compares F13E (throttle-position-like, also read by the throttle-zone flags, idle integrator and purge_enable_check) against F4AC with hysteresis words 0xE52/0xE54, so F4AC behaves as a throttle threshold. Output values 0x21..0x5C. The earlier Ghidra note also found no physical duty output. A link to canister purge (enable depends on throttle and TCU state) is plausible but unconfirmed. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: canister_purge_duty_calc_f4ac (0x1960e): the duty value comes from this 3D table (axes 2d530, 2d50c), clamped to 0xFF and stored in g_tcu_purge_duty_setpoint_calib_f4ac. Duty (F4AC) is used only when F4A2 bit7 is set, F4A4 bit7 is clear and F4BE bits 7:6 are not both set and bit2 is clear; otherwise a constant word 0xE5E or 0xFF is used. Existing Ghidra note says the physical output path of F4AC is not traced. Renamed from TABLE_3D_00012B06_CanisterPurge. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12b06: the row length byte at +6 is 15, so the X axis is the F0C0 record 2d50c (data 2d512, 15 pts) and the Y axis is the F0C2 record 2d530 (data 2d536, 9 pts). The XML had the two addresses swapped. Axis names and scaling unverified. -->
@@ -273,27 +281,31 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Error" address="2d536" type="Y Axis" elements="9" scaling="RPM"/>
 	</table>
 
-	<table name="ISC F374 Correction (TCU linked)" category="ISCV Control" address="12b9b" type="3D" scaling="uint8">
+	<table name="Ignition Retard F374 (TCU linked)" category="Timing" address="12b9b" type="3D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: read by ign_f374_correction_calc (header 2b94) and scaled by a TCU-supplied byte (F4BE bits 7 and 6); the result is subtracted from 0x80 in the F342 sum, i.e. a retard. VR4 has a similar Traction Control Timing Subtract table. Renamed from ISC F374 Correction. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f374_correction_calc (0x25ef9): F374 = 0x80 minus (this 3D table x factor / 0xff). The factor depends on TCU receive/link flags F4A2, F4A4, F4BE (words e62/e64/0xff). Only active when F1F2 bit13 is set. Renamed from TABLE_3D_00012B94_ISC. -->
 		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
 		<table name="RPM" address="2d35c" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="F4AC Actuator Step vs TPS Error (TPS below F4AC)" category="Unknown" address="12cc0" type="2D" scaling="uint8">
+	<table name="F4AC Actuator Step vs TPS Error (TPS below F4AC)" category="Turbo (tentative)" address="12cc0" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 17 bytes identical to VR4 tbl2d_Unknown91 (WGDC Correction related). The earlier canister-purge guess is doubtful. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: main_loop_scheduler_aa36 (0x2b4ef): error = F4AC minus TPS (F13E) is looked up on axis 2d548 (input F0BE) and this table gives the step value stored in F4AA, minus word 0xE56 or 0xE5A (depending on timer F4B2) when the direction flag F4A6 differs. The step target is F4A8 (max 0x18); F0EA bits 2 and 3 are then set from the direction and mirrored by mirror_status_f0ea_to_ports (0x15791) to port P1 bits 6 and 7, only when F1F2 bit13 (TCU link enabled) is set, so these look like two ECU-to-TCU signal lines. The setpoint F4AC is built from TCU-reported bytes F4BC/F4BE. UPDATE 2026-11-21 after reading the TCU program (W4A51 21451005): F4BC/F4BE/F4C0/F4C2 are the 4 data bytes of the TCU-to-ECU serial frame (SCI3, 4 bytes + additive checksum, received into F4C4..F4CC, validated, copied at 0x2b183). The TCU always sends 0 in bytes 0 to 2 and a fault index in the low nibble of byte 3, so F4BC is 0 while the TCU answers and is forced to 0x80 (with F4A4 bit7 set) after 50 missed frames. The ECU-to-TCU frame (7 bytes, built from the table at 0x16672) carries TPS low byte, F17A low byte (engine speed / 8), status bits from diagnostic_status_f4b4_build, F18C injector pulse (or scaled F196), a config nibble and a comms-lost flag (0x40); it has no torque-reduction request, and the TCU bits that could take one (F514 low 2 bits) are never set by this ECU. Torque reduction by this path is therefore NOT supported by the code; this table remains a throttle-threshold actuator. Renamed from TABLE_2D_00012CBC_TCU. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 1245c labelled tbl2d_Unknown91_WGDC_Correction_related. Read by main_loop_scheduler_aa36 (formerly named tcu_rx_main_scheduler, a name now considered unsupported). TCU label unverified. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12cbc index cell F0D4 is written only by axis record 2d548 (input F0BE, 17 pts), axis data 2d54e. Previous axis: RPM 2d332 (18 pts). -->
-		<table name="RPM" address="2d54e" type="Y Axis" elements="17" scaling="RPM"/>
+		<table name="Axis (raw 0 to 128 step 8)" address="2d54e" type="Y Axis" elements="17" scaling="uint16"/>
 	</table>
 
-	<table name="F4AC Actuator Step vs TPS Error (TPS at or above F4AC)" category="Unknown" address="12cd6" type="2D" scaling="uint8">
+	<table name="F4AC Actuator Step vs TPS Error (TPS at or above F4AC)" category="Turbo (tentative)" address="12cd6" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 17 bytes identical to VR4 tbl2d_Unknown92 (WGDC Correction related). The earlier canister-purge guess is doubtful. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: main_loop_scheduler_aa36 (0x2b4d9): same as 12cc0 for the opposite direction (TPS minus F4AC), with word 0xE58 subtracted when the direction flag differs. Renamed from TABLE_2D_00012CD2_TCU. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 12472 labelled tbl2d_Unknown92_WGDC_Correction_related. TCU label unverified. -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 12cd2 index cell F0D4 is written only by axis record 2d548 (input F0BE, 17 pts), axis data 2d54e. -->
-		<table name="RPM" address="2d54e" type="Y Axis" elements="17" scaling="RPM"/>
+		<table name="Axis (raw 0 to 128 step 8)" address="2d54e" type="Y Axis" elements="17" scaling="uint16"/>
 	</table>
 
-	<table name="F4AC Throttle Threshold Offset (TCU linked)" category="Unknown" address="12cec" type="2D" scaling="uint8">
+	<table name="F4AC Throttle Threshold Offset (TCU linked)" category="Turbo (tentative)" address="12cec" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 8 bytes (0d 09 07 06 04 01 00 00) identical to VR4 tbl2d_Unknown93 (WGDC Correction?). The earlier canister-purge guess is doubtful. -->
 		<!-- 2026-11-21 [Ghidra] CORRECTION: this is probably NOT a purge duty cycle. The main loop (0x2b460) compares F13E (throttle-position-like, also read by the throttle-zone flags, idle integrator and purge_enable_check) against F4AC with hysteresis words 0xE52/0xE54, so F4AC behaves as a throttle threshold. Output values 0x21..0x5C. The earlier Ghidra note also found no physical duty output. A link to canister purge (enable depends on throttle and TCU state) is plausible but unconfirmed. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: canister_purge_duty_calc_f4ac (0x195ab): this table is added to TCU receive byte F4BC, scaled by 0x80/F298 and 0xCD/F130, and the result (stored in MUT_E1) is the axis input of the 3D purge duty table at 12b0d. Renamed from TABLE_2D_00012CE8_CanisterPurge. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW: CanisterPurge label unverified. Only reader is canister_purge_duty_calc_f4ac (same in VR4 12488). Indexed by axis var F0C8 (8-point coolant temp axis 2d418), data 0D 09 07 06 04 01 ... The function's variables f4a2-f4b2 are named g_tcu_purge_duty_* and sit beside TCU link frame state, so the purge/TCU naming is mixed. VR4 labels the neighbouring tables WGDC_Correction. Name left unchanged; suggest a neutral name until the output the function drives is traced. -->
@@ -301,16 +313,18 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="ISC F342 Minimum" category="ISCV Control" address="12cf8" type="2D" scaling="uint8">
+	<table name="Ignition F342 Minimum vs Engine Temp" category="Timing" address="12cf8" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: lower clamp of the F342 ignition advance when F1F2 bit13 is set (table header 2cf4 in ign_f342_advance_composite_calc); the upper clamp is 0x46. Renamed from ISC F342 Minimum. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f342_composite_correction_calc (0x256f3): final F342 is clamp_u16(value, lo, 0x46) with lo = 10, or this table when F1F2 bit13 is set. Renamed from TABLE_2D_00012CF4_ISC. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 12494 labelled tbl2d_Unknown94_TCL_related_vs_Engine_Temp. ISC label unverified. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12cf4 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Unused Table 12d04 (no code reference)" category="Unknown" address="12d04" type="2D" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle (VR4 match; 12 columns x 9 rows from here)" category="Cooling Fan" address="12d04" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: bytes 12d04..12d6f match the VR4 (20030013) Cooling Fan Duty Cycle 3D data (9 rows of 12; rows 1-3 identical, others differ in places). Previously labelled unused because no code reference was found; the table is probably read through a 3D lookup. Axis corrected to the 12-point temperature axis at 2d478 (record 2d472: out F0C0, in F10E), found by matching the VR4 axis data exactly; this 2D entry is row 1 of 9 (rows 2 to 9 are listed separately). The radiator fan routine radfan_pwm_duty_target_f494_calc reads the neighbouring constants 10e88 to 10e9e, which supports the fan identification. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Ghidra finds no reference to this table or its header (12d00). Data is 02 00 F0 C0 then 00 26 26 2D 33 40 4D 53 5A 5A 80 80, so it looks like a real ramp, perhaps used by code Ghidra has not linked. Keep, do not delete. --> <!-- previous name: TABLE_2D_00012D00 -->
-		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
 
 	<table name="O2 Heater Duty Correction (F4DC adder)" category="O2 Heater" address="12dda" type="2D" scaling="uint8">
@@ -318,7 +332,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d11c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Cranking IPW Related (BCX Unknown15)" category="Unknown" address="12de8" type="2D" scaling="uint8">
+	<table name="Cranking IPW Related (BCX Unknown15)" category="Fuel" address="12de8" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 1161c labelled tbl2d_Unknown15_cranking_ipw_related (EVO5 128c2 identical). Renamed from TABLE_2D_00012DE4_ISC; the BCX name is itself a guess (cranking injector pulse width related), identical bytes in VR4, EVO5 and this ROM. -->
 		<table name="RPM" address="2d5f4" type="Y Axis" elements="9" scaling="RPM"/>
 	</table>
@@ -365,43 +379,43 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 1 Threshold (unused)" category="Unknown" address="12ed2" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 1 Threshold (unused)" category="Transmission" address="12ed2" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FDC <= value < FDE; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012ECE_ThresholdSelect. -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 2 Threshold (unused)" category="Unknown" address="12ee0" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 2 Threshold (unused)" category="Transmission" address="12ee0" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FDE <= value < FE0; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EDC_ThresholdSelect. -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 3 Threshold (unused)" category="Unknown" address="12eee" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 3 Threshold (unused)" category="Transmission" address="12eee" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FE0 <= value < FE2; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EEA_ThresholdSelect. -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 4 Threshold (unused)" category="Unknown" address="12efc" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 4 Threshold (unused)" category="Transmission" address="12efc" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when value >= FE2; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EF8_ThresholdSelect. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="F18C Range Limit vs Engine Speed F17A (F0F8 bit2 clear)" category="Unknown" address="12f0a" type="2D" scaling="uint8">
+	<table name="F18C Range Limit vs Engine Speed F17A (F0F8 bit2 clear)" category="Fuel" address="12f0a" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tcu_sensor_range_check_and_f04e_max_update (0x2bc60): when MUT_DB bit7 is set, F18C is compared with this table (axis 2d636, input F17A (engine speed / 8, 31.25 rpm per count)) and out-of-range results update the running maximum F04E. Selected when F0F8 bit2 is clear. Renamed from TABLE_2D_00012F06_TCU. -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="F18C Range Limit vs Engine Speed F17A (F0F8 bit2 set)" category="Unknown" address="12f18" type="2D" scaling="uint8">
+	<table name="F18C Range Limit vs Engine Speed F17A (F0F8 bit2 set)" category="Fuel" address="12f18" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Sibling of 12f0a, selected when F0F8 bit2 is set (tcu_sensor_range_check_and_f04e_max_update, 0x2bc60). Renamed from TABLE_2D_00012F14_TCU. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="TCU Shift Value F65C" category="Unknown" address="13142" type="2D" scaling="uint8">
+	<table name="TCU Shift Value F65C" category="Transmission" address="13142" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tcu_shift_solenoid_table_init (0x2bb41): F65C is looked up from this table on axis 2d66a. Same function loads the F64E..F66E and F732/F734 shift values from the tables at 2f8e..31fa. Role of F65C inside the shift logic not established. Renamed from TABLE_2D_0001313E_TCU. -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: was RPM. Driven by input F190 (load, as axes 2d198 and 2d5dc); the identical VR4 axis is named Load. Old: RPM / RPM -->
 		<table name="Load" address="2d670" type="Y Axis" elements="10" scaling="Load"/>
 	</table>
 
-	<table name="F27A/F27C Initial Value (x256)" category="Unknown" address="131d8" type="2D" scaling="uint8">
+	<table name="F27A/F27C Initial Value (x256)" category="Fuel" address="131d8" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2f0_f2f8_ring_and_f27x_f2cc_periodic_init (0x23027) loads F27A and F27C with the first byte of this table shifted left 8; f276_f27a_dual_channel_compute_via_table (0x23e8b) reads it per channel (header 131d4) and stores it << 8 into the second channel value (+0x42), or the constant at word 0x8C4 when bit14 of a status word is set. --> <!-- previous name: TABLE_2D_000131D4_DualChannel -->
 		<!-- 2026-11-16 [Ghidra E11] header 131d4 index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Previous axis: RPM 2d332 (8 pts). -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
@@ -413,7 +427,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
 	</table>
 
-	<table name="ADC_Coolant_Temp_Scaling" category="Unknown" address="132fc" type="2D" scaling="uint8">
+	<table name="ADC_Coolant_Temp_Scaling" category="Sensor Scaling" address="132fc" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] renamed from TABLE_2D_000132F8. 121 data bytes are identical in RVR 21000011 (header 132f8, variant 02 28 F0CC), VR4 20030013 (12996, labelled ADC_Coolant_Temp_Scaling there) and EVO5 22580006 (12950). -->
 		<!-- 2026-11-16 [Ghidra E11] header 132f8 index cell F0CC is written only by axis record 1339e (input F0BA, 161 pts), axis data 133a4. The table body 132fc to 1339d is 161 bytes plus a terminator, which matches the 161 point axis. Axis scaling unknown (raw). Previous axis: RPM 2d332 (18 pts). -->
 		<table name="Raw F0BA (rec 1339e)" address="133a4" type="Y Axis" elements="161" scaling="Hex16"/>
@@ -502,7 +516,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Load" address="2d198" type="X Axis" elements="14" scaling="Load"/>
 	</table>
 
-	<table name="Post Start Enrichment" category="Fuel" address="11d9c" type="2D" level="2" scaling="uint8">
+	<table name="Post Start Enrich Decay Multiplier" category="Fuel" address="11d9c" type="2D" level="2" scaling="EnrichmentAdj">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the shape of the 9 bytes (c0 b7 b0 a8 91 8b 86 80 80, close to but not identical with Evo 5 c0 b8 b0 a8 8a 86 84 80 80) and the spacing from 11d8a (0x12) and to 11daa (0xe) match the Evo 5 layout where 11baa is Post Start Enrich Trim vs Load, 11bbc is Post Start Enrich Decay Multiplier and 11bca is Post Start Enrichment. Previously named Post Start Enrichment (BCX). Scaling changed to EnrichmentAdj to follow Evo 5; values c0..80 are x/128 (1.5 down to 1.0). -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 11d98 index cell F0CA is written only by axis record 2d428 (input F10E, 9 pts), axis data 2d42e. -->
 		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
 	</table>
@@ -686,7 +701,9 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Baro Press." address="2d292" type="X Axis" elements="5" scaling="Load16"/>
 	</table>
 
-	<table name="ISC F356 Gate Load vs RPM (BCX: Ignition Trim vs Air Temp Active Above Load)" category="ISCV Control" address="127f2" type="2D" level="3" scaling="Load8">
+	<table name="Ignition Trim vs Air Temp Active Above Load" category="Timing" address="127f2" type="2D" level="3" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] INFERRED: read by ign_f356_air_temp_trim_calc (header 27ee): when this value is below F18E the 127dc trim is applied. Data is 10 of 10 bytes identical to Evo 5 Ignition Trim vs Air Temp Active Above Load (12282). Confirms the BCX name; the earlier ISC naming was wrong. -->
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 10 bytes identical to Evo 5 Ignition Trim vs Air Temp Active Above Load (Evo 12282). Suggests the F356 chain may be ignition timing trim rather than ISC. The consumer of F342 needs tracing before renaming. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: the only reader of this table (header 127ee) is isc_f356_correction_calc (0x25c48, call at 0x25c4d): when engine load F18E is above the value looked up here (axis RPM F170), F356 takes the air-temp trim from table 127dc instead of 0x80. No ignition-timing code reads it, so the old BCX/VR4-based name (Ignition Trim vs Air Temp Active Above Load) is kept in spirit but this ROM uses it in the ISC target calculation. Category changed from Timing to ISCV Control. -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 127ee index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. -->
 		<table name="Engine Speed" address="2d086" type="X Axis" elements="10" scaling="RPM"/>
@@ -918,9 +935,9 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="Boost Control RPM/MPH Crossover" category="Turbo Boost non-JDM" address="12f84" type="1D" level="3" scaling="RPMPerMPH"/>
 
-	<table name="Spec Index" address="10208" type="1D" level="5" scaling="uint16"/>
+	<table name="Spec Index" category="ECU" address="10208" type="1D" level="5" scaling="uint16"/>
 
-	<table name="Software Version" address="1021a" type="2D" level="5" scaling="Hex8">
+	<table name="Software Version" category="ECU" address="1021a" type="2D" level="5" scaling="Hex8">
 		<table name="Byte Position" type="Static X Axis" elements="4">
 			<data>b1</data>
 			<data>b2</data>
@@ -929,7 +946,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		</table>
 	</table>
 
-	<table name="Case Number (Spec 0)" address="10233" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 0)" category="ECU" address="10233" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -938,7 +955,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="10232" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 1)" address="10237" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 1)" category="ECU" address="10237" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -947,7 +964,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="10236" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 2)" address="1023b" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 2)" category="ECU" address="1023b" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -956,7 +973,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="1023a" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 3)" address="1023f" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 3)" category="ECU" address="1023f" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -965,7 +982,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="1023e" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 4)" address="10243" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 4)" category="ECU" address="10243" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -974,7 +991,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="10242" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 5)" address="10247" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 5)" category="ECU" address="10247" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -983,7 +1000,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="10246" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 6)" address="1024b" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 6)" category="ECU" address="1024b" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -992,7 +1009,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="PN1" address="1024a" type="Y Axis" elements="1" scaling="CaseAlphaNumeric"/>
 	</table>
 
-	<table name="Case Number (Spec 7)" address="1024f" type="3D" level="5" scaling="Hex8">
+	<table name="Case Number (Spec 7)" category="ECU" address="1024f" type="3D" level="5" scaling="Hex8">
 		<table name="Part Number" type="Static X Axis" elements="3">
 			<data>PN2 .</data>
 			<data>PN3 .</data>
@@ -1018,19 +1035,19 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="Scaling 1246F" category="Scaling Tables" address="1246f" type="1D" scaling="uint16"/>
 
 	<!-- 2026-11-16 [Ghidra E11] tables found at literal table_lookup_interp call sites but missing from this XML. Axes come from the header cells (F0C0 and F0C2 records, or the dedicated cell); names and scaling are PROVISIONAL. -->
-	<table name="F4DE Table (O2 heater zone / ISC adder)" category="Unknown" address="12d7b" type="3D" scaling="uint8">
+	<table name="F4DE Table (O2 heater zone / ISC adder)" category="O2 Heater" address="12d7b" type="3D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] CORRECTION: not octane. F4DE is read by o2_heater_iat_zone_select_f4f0 (compared with words 0xEF2/0xEF4 to pick the F4EC value) and the stepped counter F4E0 derived from it, multiplied by word 0xF12, is added into the ISC target by f0f8_bit9_constant_or_calc_select. The octane name came from the axis label hdr_octane_correction_axis, which was a guess. Meaning of F4DE not established. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f4de_f4e2_octane_correction_calc (0x2660e): F4DE is looked up from this 3D table (axes 2d3a8 and hdr_octane_correction_axis); zeroed when F20E bit0 or bit4 is set or word 0x2eb is zero. F4DE then feeds the F4E0/F4E2 pair via thresholds F0A/F0C/F0E/F10. Renamed from TABLE_3D_00012D74. -->
 		<!-- header 12d74: F0C0 axis is record 2d3a8 (data 2d3ae, 10 pts), F0C2 axis is record 2d3c2 (data 2d3c8, 9 pts, same axis as Max Total Upward WGDC Correction vs TPS); row length byte at +6 is 10. -->
 		<table name="Axis1 (rec 2d3a8)" address="2d3ae" type="X Axis" elements="10" scaling="Hex16"/>
 		<table name="TPS" address="2d3c8" type="Y Axis" elements="9" scaling="TPS Percent"/>
 	</table>
-	<table name="F276/F278 Initial Value (x256)" category="Unknown" address="131e4" type="2D" scaling="uint8">
+	<table name="F276/F278 Initial Value (x256)" category="Fuel" address="131e4" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2f0_f2f8_ring_and_f27x_f2cc_periodic_init (0x23027) loads F276 and F278 with the first byte of this table shifted left 8; f276_f27a_dual_channel_compute_via_table (0x23e8b) reads it per channel (header 131e0) and stores it << 8 into the first channel value (+0x40). --> <!-- previous name: TABLE_2D_000131E0 -->
 		<!-- header 131e0: index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Body length not verified. -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
-	<table name="MAF_IAT_Scaling" category="Unknown" address="134ea" type="2D" scaling="uint8">
+	<table name="MAF_IAT_Scaling" category="Sensor Scaling" address="134ea" type="2D" scaling="uint8">
 		<!-- 2026-11-20 [Ghidra] renamed from TABLE_2D_000134E6. 102 data bytes are identical in RVR (header 134e6), VR4 (12b84, labelled MAF_IAT_Scaling there) and EVO5 (12b3e). -->
 		<!-- header 134e6: index cell F0D2 is written only by axis record 13576 (input F116, 139 pts), axis data 1357c. The body 134ea to 13575 is 139 bytes plus a terminator, which matches the axis. Axis scaling unknown (raw). -->
 		<table name="Raw F116 (rec 13576)" address="1357c" type="Y Axis" elements="139" scaling="Hex16"/>
@@ -1041,10 +1058,303 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Unused Table 13270 (no code reference)" category="Unknown" address="13270" type="2D" scaling="uint8">
+	<table name="Unused Table 13270 (no code reference)" category="Unused" address="13270" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Ghidra finds no reference to this table or its header (1326c). Data starts 80 80 80 80 80 80 80 73 66 59. Keep, do not delete. --> <!-- previous name: TABLE_2D_00011326C -->
 		<!-- 2026-11-20 added from header scan: header 1326c = 02 00 F0C4 then 10 data bytes then another header. Axis 2d086 (10 pts) is the axis used by all other tables whose header index var is F0C4; name and scaling unverified. -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
+	<table name="F1BA Drop Limit: F1DE Threshold" category="Fuel" address="1081c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): if F1DE is below this word and F1B6 minus F1BA is at least word 1081e, F1BA is forced to F1B6 minus word 10820 (limits how far the measured load F1BA may fall below the composite load F1B6). -->
+	</table>
+	<table name="F1BA Drop Limit: Minimum Difference" category="Fuel" address="1081e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): minimum F1B6 minus F1BA difference that triggers the drop limit (see word 1081c). -->
+	</table>
+	<table name="F1BA Drop Limit: Limited Step" category="Fuel" address="10820" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F1BA is set to F1B6 minus this value when the drop limit (word 1081c) is triggered. -->
+	</table>
+	<table name="F1BA Rise Detect Threshold (F224 bit15)" category="Fuel" address="10a64" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): when F224 bit15 is set, F012 is zero and F1BA is above F1B6 by at least this amount, F1BA is limited to F1B6 plus word 10a66. -->
+	</table>
+	<table name="F1BA Rise Limited Step (F224 bit15)" category="Fuel" address="10a66" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F1BA is set to F1B6 plus this value when the rise limit (word 10a64) is triggered. -->
+	</table>
+	<table name="F014 Reload After Fall Limit" category="Fuel" address="10a68" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): timer F014 is reloaded with this value after the fall limit (word 10a6a) is applied; the fall limit is not applied again until F014 reaches 0. -->
+	</table>
+	<table name="F1BA Fall Detect Threshold (F224 bit15)" category="Fuel" address="10a6a" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): when F224 bit15 is set, F014 is zero and F1B6 is above F1BA by at least this amount, F1BA is set to F1B6 minus word 10a6c. -->
+	</table>
+	<table name="F1BA Fall Limited Step (F224 bit15)" category="Fuel" address="10a6c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F1BA is set to F1B6 minus this value when the fall limit (word 10a6a) is triggered. -->
+	</table>
+	<table name="F1D0 Rate Limit Multiplier (F31C bit7 set)" category="Fuel" address="1095e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): rate limiter on the measured load F1D0: the F1C4/F1C6 difference is multiplied by this word when F31C bit7 is set (word 10960 when clear) and divided by word 10962. -->
+	</table>
+	<table name="F1D0 Rate Limit Multiplier (F31C bit7 clear)" category="Fuel" address="10960" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): rate limiter on the measured load F1D0: multiplier used when F31C bit7 is clear (word 1095e when set); divided by word 10962. -->
+	</table>
+	<table name="F1D0 Rate Limit Divisor" category="Fuel" address="10962" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): divisor of the F1D0 rate limiter (see words 1095e and 10960). -->
+	</table>
+	<table name="F2DC Decay Floor" category="Fuel" address="1096c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F2DC is replaced by F2DC * F2EC / 256 when F2DC minus that product is above this word; otherwise it counts down by 1 once F2FE is zero. -->
+	</table>
+	<table name="F2FE Reload Zone 1 TPS Threshold" category="Fuel" address="1096e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): if TPS F10E is above this word F2FE is reloaded from word 10970; else if above word 10974 from word 10972; else from word 10976. -->
+	</table>
+	<table name="F2FE Reload Value (TPS above zone 1)" category="Fuel" address="10970" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F2FE reload used when TPS F10E is above word 1096e. -->
+	</table>
+	<table name="F2FE Reload Value (TPS above zone 2)" category="Fuel" address="10972" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F2FE reload used when TPS F10E is above word 10974 but not above 1096e. Both thresholds are 60 in this ROM, so this branch is never reached. -->
+	</table>
+	<table name="F2FE Reload Zone 2 TPS Threshold" category="Fuel" address="10974" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): second TPS F10E threshold for the F2FE reload (see word 1096e). -->
+	</table>
+	<table name="F2FE Reload Value (TPS low)" category="Fuel" address="10976" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): F2FE reload used when TPS F10E is at or below both thresholds. -->
+	</table>
+	<table name="F302 Reload (F1B6 below F2E0)" category="Fuel" address="10954" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): timer F302 is reloaded with this value whenever the composite load F1B6 is below F2E0; F302 counts down by 1 each pass. -->
+	</table>
+	<table name="F2F0-F2F8 Initial Value (F226 bit9 set)" category="Fuel" address="10956" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): when F226 bit9 is set the five F2F0 to F2F8 cells and the F2F4/F2F6 pair are loaded with this value; f2f0_f2f8_ring_and_f27x_f2cc_periodic_init (0x23027) also writes it to all five cells. -->
+	</table>
+	<table name="Cooling Fan Duty Related 1" category="Cooling Fan" address="10e8a" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 2" category="Cooling Fan" address="10e8c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 3" category="Cooling Fan" address="10e8e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 4" category="Cooling Fan" address="10e90" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 5" category="Cooling Fan" address="10e92" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 6" category="Cooling Fan" address="10e94" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 7" category="Cooling Fan" address="10e96" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Related 8" category="Cooling Fan" address="10e98" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 2 (VR4 match)" category="Cooling Fan" address="12d10" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 2 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 3 (VR4 match)" category="Cooling Fan" address="12d1c" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 3 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 4 (VR4 match)" category="Cooling Fan" address="12d28" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 4 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 5 (VR4 match)" category="Cooling Fan" address="12d34" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 5 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 6 (VR4 match)" category="Cooling Fan" address="12d40" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 6 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 7 (VR4 match)" category="Cooling Fan" address="12d4c" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 7 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 8 (VR4 match)" category="Cooling Fan" address="12d58" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 8 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Cooling Fan Duty Cycle Row 9 (VR4 match)" category="Cooling Fan" address="12d64" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 9 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
+		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
+	</table>
+	<table name="Ignition Index Trim (F33E bit3 set, bit5 clear)" category="Timing" address="1287a" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: tcu_shift_torque_and_knock_mgmt (0x28fff) adds byte [F5E8 + this address] to the ignition advance sum when F33E bit3 is set and F33E bit5 is clear (engine speed F17A not above word 0xBC6). F5E8 counts 0 to 3 and looks like a cylinder or firing index. All four bytes are 0 in this ROM, so the term is inactive. Units follow the F350 sum and are not confirmed. -->
+		<table name="Index (F5E8)" type="Static X Axis" elements="4">
+			<data>0</data>
+			<data>1</data>
+			<data>2</data>
+			<data>3</data>
+		</table>
+	</table>
+	<table name="Ignition Index Trim (F33E bit3 set, bit5 set)" category="Timing" address="1287e" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: tcu_shift_torque_and_knock_mgmt (0x28fff) adds byte [F5E8 + this address] to the ignition advance sum when F33E bit3 is set and F33E bit5 is set (engine speed F17A above word 0xBC6). F5E8 counts 0 to 3 and looks like a cylinder or firing index. All four bytes are 0 in this ROM, so the term is inactive. Units follow the F350 sum and are not confirmed. -->
+		<table name="Index (F5E8)" type="Static X Axis" elements="4">
+			<data>0</data>
+			<data>1</data>
+			<data>2</data>
+			<data>3</data>
+		</table>
+	</table>
+	<table name="F350 Offset (F350 = this + 0x39 - F342*256/90)" category="Timing" address="10ac4" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f350_from_f342_calc (0x25fee): ROM value 174. Offset in the conversion from the F342 advance sum to F350, which is the base of the final ignition advance. -->
+	</table>
+	<table name="F342 Override Base (F33E bit7 or F20E 0x11)" category="Timing" address="10ac6" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f342_advance_composite_calc (0x2562b): ROM value 5. When F33E bit7 or F20E bits 0/4 are set, F342 is forced to this word plus 0x14. -->
+	</table>
+	<table name="F342 Sum Floor Offset (F358 below 0x80)" category="Timing" address="10af4" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f342_advance_composite_calc (0x2562b): ROM value 0. When F358 is below 0x80 the F342 sum is not allowed below this word plus 0x8000. -->
+	</table>
+	<table name="F342 Minimum when F35A Active" category="Timing" address="10b94" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f342_advance_composite_calc (0x2562b): ROM value 0. Lower limit on the F342 sum while F35A is not 0x80. -->
+	</table>
+	<table name="F356 Subtract (F226 bit1)" category="Timing" address="10a78" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 12. Subtracted from the F356 term while F226 bit1 is set. -->
+	</table>
+	<table name="F356 Subtract (F33E bit12)" category="Timing" address="10baa" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 3. Subtracted from the F356 term while F33E bit12 is set. -->
+	</table>
+	<table name="F356 Subtract (F33E bit15 hysteresis)" category="Timing" address="114c4" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 15. Subtracted from the F356 term when the F33E bit15 hysteresis is active. -->
+	</table>
+	<table name="F356 Load Minimum (F18E)" category="Timing" address="10b96" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 96. The TPS-based subtraction only applies when F18E is at or above this word. -->
+	</table>
+	<table name="F356 TPS Minimum (F10E)" category="Timing" address="10b9a" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 137. The TPS-based subtraction only applies when F10E is at or above this word. -->
+	</table>
+	<table name="F356 TPS Split (F10E)" category="Timing" address="10b98" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 146. Below this TPS the subtraction is word 10b9e, otherwise word 10b9c. -->
+	</table>
+	<table name="F356 Subtract (TPS below split)" category="Timing" address="10b9e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 1. Subtracted when F10E is between words 10b9a and 10b98. -->
+	</table>
+	<table name="F356 Subtract (TPS at or above split)" category="Timing" address="10b9c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 2. Subtracted when F10E is at or above word 10b98. -->
+	</table>
+	<table name="F358 Non-idle Threshold" category="Timing" address="10b86" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f358_idle_stability_timing_calc (0x25d27): ROM value 16. Outside idle (F33E bit4 clear) the term only applies when the throttle-position target F170 minus a scaled F182 exceeds this word. -->
+	</table>
+	<table name="F358 Non-idle Multiplier" category="Timing" address="10b88" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f358_idle_stability_timing_calc (0x25d27): ROM value 120. Fixed-point multiplier applied to the excess over word 10b86. -->
+	</table>
+	<table name="F358 Idle Target Multiplier" category="Timing" address="10af2" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f358_idle_stability_timing_calc (0x25d27): ROM value 240. The idle target F400 is multiplied by this word (saturating x2) to form the idle comparison value. -->
+	</table>
+	<table name="F35A TPS Minimum (F10E)" category="Timing" address="10b8a" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 115. F35A is only active when F10E is at or above this word. -->
+	</table>
+	<table name="F35A Counter Limit (EF6A)" category="Timing" address="10b8c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 120. F35A is only active while the EF6A counter is below this word. -->
+	</table>
+	<table name="F35A F170 Offset" category="Timing" address="10b8e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 333. Subtracted from F170 before scaling. -->
+	</table>
+	<table name="F35A Multiplier" category="Timing" address="10b92" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 25. Fixed-point multiplier applied to F170 minus word 10b8e. -->
+	</table>
+	<table name="F35A Maximum" category="Timing" address="10b90" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 20. Upper limit of the F35A reduction (result is 0x80 minus this at most). -->
+	</table>
+	<table name="F374 Scale (TCU F4BE bit7 clear)" category="Timing" address="10e62" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f374_correction_calc (0x25e8b): ROM value 170. Scale used when TCU byte F4BE bit7 is clear and bit6 is set (word 10e64 when bit7 set and bit6 clear, 0xFF when both set). -->
+	</table>
+	<table name="F374 Scale (TCU F4BE bit7 set, bit6 clear)" category="Timing" address="10e64" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f374_correction_calc (0x25e8b): ROM value 255. See word 10e62. -->
+	</table>
+	<table name="F36E Load F18E Maximum" category="Timing" address="10bc8" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 160. F36E/F370 targets are only applied when F18E is at or below this word. -->
+	</table>
+	<table name="F36E Load F18E Minimum" category="Timing" address="10bca" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 48. F18E must be at or above this word. -->
+	</table>
+	<table name="F36E Engine Speed Minimum (F17A)" category="Timing" address="10bce" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 48 (1500 rpm at x31.25). -->
+	</table>
+	<table name="F36E Engine Speed Maximum (F17A)" category="Timing" address="10bcc" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 128 (4000 rpm at x31.25). -->
+	</table>
+	<table name="F36E TPS Minimum (F10E)" category="Timing" address="10bd0" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 118. -->
+	</table>
+	<table name="F36E F17E Excess Minimum" category="Timing" address="10bd2" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 7. F17E minus 0x80 must be at least this word. -->
+	</table>
+	<table name="F33E Bit1 Set Engine Speed (F17A)" category="Timing" address="10aee" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit1_hysteresis_gate_check (0x255d4): ROM value 64 (2000 rpm at x31.25). F33E bit1 is set when F17A rises above this word. -->
+	</table>
+	<table name="F33E Bit1 Clear Engine Speed (F17A)" category="Timing" address="10af0" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit1_hysteresis_gate_check (0x255d4): ROM value 58 (1812 rpm at x31.25). F33E bit1 is cleared when F17A falls to this word or below. -->
+	</table>
+	<table name="F33E Bit2 F14C Minimum" category="Timing" address="10bac" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 3. F14C must be above this word. -->
+	</table>
+	<table name="F33E Bit2 TPS Minimum (F10E)" category="Timing" address="10bae" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 110. -->
+	</table>
+	<table name="F33E Bit2 F1E6 Gate Minimum" category="Timing" address="10bb0" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 81. -->
+	</table>
+	<table name="F33E Bit2 Load Maximum (F18E)" category="Timing" address="10bb2" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 32. F18E must be at or below this word. -->
+	</table>
+	<table name="F33E Bit2 Engine Speed Minimum (F17A)" category="Timing" address="10bb4" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 48 (1500 rpm). -->
+	</table>
+	<table name="F33E Bit2 Engine Speed Maximum (F17A)" category="Timing" address="10bb6" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 224 (7000 rpm). -->
+	</table>
+	<table name="F33E Bit2 F242 Maximum (half value)" category="Timing" address="10bb8" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 1391. F242 divided by 2 must be below this word. -->
+	</table>
+	<table name="F33E Bit2 F242 Minimum (half value)" category="Timing" address="10bba" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 36. F242 divided by 2 must be above this word. -->
+	</table>
+	<table name="F33E Bit5 TPS F13E Maximum" category="Timing" address="10bbe" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 230. The trimmed TPS F13E must be below this word. -->
+	</table>
+	<table name="F33E Bit5 TPS F10E Minimum" category="Timing" address="10bc0" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 255. F10E must exceed this word, so this ROM keeps the F33E bit3 term effectively disabled. -->
+	</table>
+	<table name="F33E Bit5 Engine Speed Minimum (F17A)" category="Timing" address="10bc2" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 96 (3000 rpm). -->
+	</table>
+	<table name="F33E Bit5 Engine Speed Maximum (F17A)" category="Timing" address="10bc4" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 128 (4000 rpm). -->
+	</table>
+	<table name="F33E Bit5 Set Engine Speed (F17A)" category="Timing" address="10bc6" type="1D" level="2" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 224 (7000 rpm). F33E bit5 is set when F17A is above this word, which selects table 1287e instead of 1287a. -->
+	</table>
+	<table name="Cooling Fan Duty Forced Value (SCI 0xCD/0xCE test)" category="Cooling Fan" address="10e6e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 128. F494 is set to this when the actuator-test gate check_mode_gate_f510 is true (F20E bit4 and F510 bit11/12). -->
+	</table>
+	<table name="Cooling Fan Duty Override (F1FE 0x11)" category="Cooling Fan" address="10e7c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 128. F494 target is forced to this word when F1FE bit0 or bit4 is set. -->
+	</table>
+	<table name="Cooling Fan Duty when F490 Gate True" category="Cooling Fan" address="10e88" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. F494 target is set to this when check_hysteresis_gate_f490 returns true. -->
+	</table>
+	<table name="Cooling Fan Dwell Counter Limit (EF6A)" category="Cooling Fan" address="10e9a" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. Normal fan logic runs only when the EF6A counter is at or above this word. -->
+	</table>
+	<table name="Cooling Fan Duty Minimum Clamp" category="Cooling Fan" address="10e9c" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. If target is above this word and below word 10e9e, it is set to this word. -->
+	</table>
+	<table name="Cooling Fan Duty Clamp Upper" category="Cooling Fan" address="10e9e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. See word 10e9c. -->
+	</table>
+	<table name="Fan Gate F13C Clear Threshold" category="Cooling Fan" address="10e7e" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 199. Clears F490 bit12 when ADC ch7 raw F13C is at or below this word. -->
+	</table>
+	<table name="Fan Gate F13C Set Threshold" category="Cooling Fan" address="10e80" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 210. Sets F490 bit12 when F13C rises above this word. -->
+	</table>
+	<table name="Fan Gate F110 Clear Threshold" category="Cooling Fan" address="10e82" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 145. Clears F490 bit10 when F110 is at or below this word. -->
+	</table>
+	<table name="Fan Gate F110 Set Threshold" category="Cooling Fan" address="10e84" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 150. Sets F490 bit10 when F110 rises above this word. -->
+	</table>
+	<table name="Fan Gate F13C Fallback Value" category="Cooling Fan" address="10e86" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 200. Loaded into EFF6 while F490 bit12 is clear. -->
+	</table>
 </rom>
