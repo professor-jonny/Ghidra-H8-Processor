@@ -218,3 +218,6 @@ touch the reference database.
 - H8/500 Series Programming Manual -- `datasheets\h8539f\H8 500 programming.pdf`
 - EcuFlash ROM definitions: https://github.com/EcuFlash/OpenECU (community ROM XMLs)
 
+## License
+
+This project is licensed under the Apache License 2.0 (see [LICENSE](LICENSE)). It does not include any ECU ROM images or decompiler exports of them; those are copyrighted firmware and must be supplied by the user.
