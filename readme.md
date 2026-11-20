@@ -87,7 +87,10 @@ It will:
 1. Validate the import base address (aborts with a clear message if wrong), and print a
    ROM signature banner (first 16 bytes) to help tell ROMs apart across sessions
 2. Create the on-chip RAM memory block (`0xEE80-0xFFFF`)
-3. Set CP/DP/TP context registers over both ROM pages
+3. Set CP/TP context registers over both ROM pages. DP is left at its hardware default of 0
+   (no DP=1 over the ROM), and a `page0_mirror` block (`0x0000-0x3FFF`, byte-mapped onto the
+   flash at `0x10000`) is created so page-0 calibration reads resolve. RAM and registers are page 0 only.
+   Needs the `h8539f.cspec` that lists DP under `<unaffected>`.
 4. Read the reset vector and create the `entry` function
    - **4b.** Mark the interrupt vector table (`0x10000-0x1013F`) as data, auto-create
      functions at every unique handler address it points to, flag duplicate targets

@@ -3,6 +3,40 @@
 All notable changes to the Ghidra H8/500 Processor Module are recorded here.
 
 ---
+### Changed - DP=0 model with page-0 flash mirror; DP preserved across calls in h8539f.cspec (2026-11-20)
+
+**DP=1 over the whole ROM removed from setup script step 3.** The real baseline is DP=0 (reset code sets DP/EP/TP=0); code only
+sets DP=1/2 briefly (`ldc.b #n,DP`) to reach data above `0x13FFF`. DP=1 everywhere put every RAM/register access
+(`0xEE80-0xFFFF`, page 0 only) at the wrong address and made the decompiler inject `COPY DP=1` at each function entry, giving
+`(uint)bVarN << 0x10 | 0xNNNN` expressions. Step 3 now clears the DP context and creates a `page0_mirror` block
+(`0x0000-0x3FFF`, byte-mapped onto `0x10000`, RWX) per the datasheet's page 0/page 1 mapping areas for the same flash.
+
+**DP added to `<unaffected>` in all 26 prototypes of `h8539f.cspec`.** Scan: 90 of 741 functions write DP, and none ends
+with DP left at 1 or 2 (last write is `ldc.b 0x0,DP` or a pop of the saved DP in ISRs/`memcpy_banked`; checked in address order,
+not per return path). Live test on RVR 21000011 (in-memory, unsaved): `<< 0x10` expressions 3,440 in 277 functions -> 5 in 5
+functions (all genuine 32-bit math in `muldiv_*` and one passthrough), 0 decompile failures of 741. The sleigh files are unchanged;
+a rule forcing `@aa:16` offsets >= `0xEE80` to page 0 was rejected because page-1 flash also lives there.
+
+The repo `h8539f.cspec` was replaced by the newer live copy (it had diverged and lacked `__stdcall_far_allstack_32ret_farcall` and
+`__stdcall_far_allstack_noR1kill`); the old repo file is kept as `h8539f.cspec.bak-20261120-repo-premerge`.
+
+Open: calibration bytes at `0x0000-0x3FFF` are unlabeled (955 distinct addresses referenced); listing xrefs made under DP=1 need
+re-creating; table/axis analyzer must use the mirror model and `@(disp,Rn)` with the DP in effect; EP (R4/R5) accesses not handled.
+
+
+**Added: H8TableAnalyzer** ("H8 Table Access Analyzer", `h8/data/src/main/java/h8539f/`, packaged in `h8539f-analyzers.jar`, built with
+`javac --release 21` against the Ghidra jars, 15 classes). Resolves the literal bank/offset pushes before each call to the table helpers
+(`table_lookup_interp` 0x14656, `table_3axis_interp_triple` 0x148a2, `table_lookup_indexed` 0x14854, `table_read_indexed` 0x14880,
+`axis_lookup_interp` 0x14735) to one canonical flash address (bank 0 below 0x4000 is normalised to 0x10000+offset), bookmarks each call
+site, and with option "Write references" (default off) adds DATA references. Dry run on RVR 21000011 (old DP=1 program, analyzer run via
+script): 239 call sites, 235 resolved, 4 non-literal (runtime) left alone, 0 out of range, 235 bookmarks, 0 references written. Nearest-earlier
+axis call is only a bookmark hint (60 tables were ambiguous on 16 Nov). Not handled: `@(disp,Rn)` constant-offset reads, EP accesses,
+other ROM versions (helper addresses are hard-coded; the analyzer skips with a log line if no function is there).
+**H8TableAnalyzer v2** (jar 48,027 bytes): two further options, both default on and both skipped with a log line if the program has no `page0_mirror` block. "Mirror labels" copies each label in 0x10000-0x13FFF to the page-0 mirror. "DP-aware operand references" tracks DP in a straight line per function (`ldc.b #n,DP` sets it, `ldc.b @SP+,DP` resets to 0) and adds READ references for `@aa:16` operands: DP=0 below 0x4000 refs both the mirror and 0x10000+off, DP=1/2 refs dp*0x10000+off, RAM >= 0xEE80 is skipped. On hex.4 (already patched by script) it created 0 labels and 0 refs (2546 already present, 1 unresolved). With "Write references" on, 211 DATA references to 163 distinct tables were written from the 235 resolved call sites.
+
+**H8TableAnalyzer v3** (jar 49,074 bytes): new option "Remove spurious constant references" (default on). Ghidra's constant propagation leaks constants as DATA references; the H8/539F datasheet (Appendix B) documents registers only up to 0xFFBF, so the analyzer now deletes analysis DATA references (a) into the undocumented 0xFFC0-0xFFFF range and (b) to bit-mask constants (`~(1<<n)`, e.g. 0xFFFE for bit 0) that `bset/bclr/bnot/btst`, `andc/orc/xorc` and register pushes carry. Real operand references are READ/WRITE and are never touched. Priority moved to `DATA_ANALYSIS.after()` so it runs after the propagation passes. On hex.4: 103 + 76 references removed; the false "variables" at 0xFFFE/FFFD/FFFB/FFBF/FF7F now have 0 references and FEFF has 2 (register-to-RAM stores, left alone). A second run removes 0. Root cause (the propagation settings themselves) is not changed.
+
+---
 ### Changed - stackshift 0 on every h8539f.cspec prototype; Added - H8 Stack Purge Enforcer, No-stack and Call-graph modes, audit scripts (2026-11-11; work done 2026-11-02 to 2026-11-09)
 
 **stackshift="0" on every prototype in `h8539f.cspec`.** The H8 analyzers (`H8ExtraPopAnalyzer`, `H8FunctionPurgeAnalyzer`) store the whole pop of the
@@ -156,6 +190,10 @@ filled wits offsets and pointers in stead of proper variables.
 This is a big plus for C code output it looks much better.
 
 ### Fixed — stale "scraper only scans page 1" comments in `h8539_ecu_master_setup_new.py`
+
+**H8TableAnalyzer v4** (jar 50,543 bytes): new option "Follow far-pointer arrays (map selectors)" (default off). The indexed table helpers (0x14854 / 0x14880) are called with the address of a slot in an array of 4-byte far pointers, so the fuel/ignition/boost maps are never named at a call site. The option finds those arrays (runs of >=4 far pointers, bank word 1 or 2, at least 40% pointing at a table descriptor: `02 00 <ram>` (2D), `03 00 <ram> <ram> <cols>` (3D) or `03 14 <ram> <ram> <cols>` (indexed 3D, used by the ignition and warm-up maps), adds a DATA reference from every slot to its table, and from every instruction that names a slot to the table that slot selects, bookmarks the array and labels it `ptr_array_xxxxx`. Both ROMs use groups of 8 identical pointers per map (RVR 21000011: array at 0x2d8ec, 24 groups; EVO5 22580006: array at 0x2cdde, 20 groups). Tested on a copy of the EVO5 (DP=0, page0_mirror): the five table helpers sit at the same addresses as in the RVR, so the existing hard-coded addresses work unchanged there (223 of 226 call sites resolved).
+
+**H8TableAnalyzer v5** (jar 51,362 bytes). New option "Mark header-only table stubs" (on by default): bookmarks (H8Table/HeaderStub) and comments table descriptors (02 00 / 02 28 / 03 00 / 03 14 + RAM pointers) that are directly followed by another descriptor or a 0xFF terminator. They have no data and are not tables; scrapers that read "header + N bytes" swallowed the next header as data. 60 found in the RVR 21000011 (clusters at 0x11f5c-0x11f70 and 0x1314c-0x13212). Also: the RVR XML had 3 entries on such stubs (11f60, 11f68, 131fa) and was missing 2 tables (11cee, 13270); corrected copy at test/rvr/xml/ecuflash/new/*.corrected.xml.
 
 `MUT_OFFSET` (0x1FAD0) is a CPU offset from `ROM_BASE`, not an absolute address, so the
 scraper's `0x0..MUT_OFFSET` scan loops (`protect_data_regions_early()` in Step 5b and

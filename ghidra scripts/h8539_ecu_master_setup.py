@@ -368,9 +368,24 @@ if do_ctx:
             ctx.setValue(cp_reg, addr(0x00010000), addr(0x0001FFFF), BigInteger.valueOf(1))
             ctx.setValue(cp_reg, addr(0x00020000), addr(0x0002FFFF), BigInteger.valueOf(2))
             print("[3] OK: CP=1 over page 1, CP=2 over page 2")
+        # CHANGED 2026-11-20: DP is NOT set to 1 over the ROM any more. The real
+        # hardware default is DP=0 (reset code sets DP/EP/TP=0); code only sets
+        # DP=1/2 briefly (ldc.b #n,DP) to reach data above 0x13FFF, and the
+        # decompiler tracks that inside each window. DP=1 over the whole ROM put
+        # every RAM/register access (0xEE80-0xFFFF, page 0 only) at the wrong
+        # address. Calibration reads at 0x0000-0x3FFF (DP=0) are served by the
+        # page-0 mirror of flash page 1 (0x10000-0x13FFF) created below, per the
+        # H8/539F memory map. Requires the cspec with DP in <unaffected>.
         if dp_reg:
-            ctx.setValue(dp_reg, addr(0x00010000), addr(0x0002FFFF), BigInteger.valueOf(1))
-            print("[3] OK: DP=1 over full ROM")
+            ctx.remove(addr(0x00010000), addr(0x0002FFFF), dp_reg)
+            print("[3] OK: DP context cleared over ROM (DP=0 default)")
+        if mem.getBlock("page0_mirror") is None:
+            mb = mem.createByteMappedBlock("page0_mirror", addr(0x00000000),
+                                           addr(0x00010000), 0x4000, False)
+            mb.setRead(True); mb.setWrite(True); mb.setExecute(True)
+            print("[3] OK: Created page0_mirror 0x0000-0x3FFF -> 0x10000 (flash alias)")
+        else:
+            print("[3] OK: page0_mirror already exists - skipped")
         if tp_reg:
             ctx.setValue(tp_reg, addr(0x00010000), addr(0x0002FFFF), BigInteger.valueOf(0))
             print("[3] OK: TP=0 over full ROM")
