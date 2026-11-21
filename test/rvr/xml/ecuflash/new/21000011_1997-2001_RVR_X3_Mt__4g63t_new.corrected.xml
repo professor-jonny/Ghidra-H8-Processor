@@ -35,7 +35,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="Auto/Manual Selection Code (Address AAF)" category="Transmission" address="10aaf" type="1D" level="2" scaling="Hex8"/>
 
-	<table name="Post Start Enrichment (Trailing Time Counter Start vs Engine Temp, F2A0/F2C6)" category="Fuel" address="11daa" type="2D" level="2" scaling="uint8">
+	<table name="Post Start Enrichment (Trailing Time Counter Start vs Engine Temp, F2A0/F2C6)" category="Fuel" address="11daa" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] CEDDY: Ceddy Evo5/6 XML (25570100) scales this identical 9-byte table as Percent128_8bit, x*100/128 %, named Engine Temp Fuel Enrichment (128 = 100%). Scaling taken from it; the code role (trailing time counter start) is unchanged. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 9 bytes (ba 7a 4d 20 1a 13 0d 06 06) are identical to Evo 5 Post Start Enrichment at 11bca. Name combined with the earlier code-derived role (trailing time counter start). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f2a0_f2c6_dual_timer_decay_and_f2c8_blend_dispatch (0x23523): loads F2A0 and F2C6 from this table (header 11da6, axis engine temp) when F20E bit0 is set (both zeroed when bit4 is set). Each is decremented by 1 whenever its timer target (EFBA / EFBC) reaches 0. F2C8 = F2A0, or a blend of F2A0 and F2C6 when byte 0x10309 is non-zero, and F2C8*2+0x80 is a multiplier in f0ba_f2d0_o2_mode7_8_correction_calc. The BCX-derived entry at 11db8 is called Lean Spool Trailing Time - Rich Side, so this is probably its lean-side partner, but that pairing is a guess. --> <!-- previous name: Unknown Table 11daa -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 11da6 index cell F0CA is written only by axis record 2d428 (input F10E, 9 pts), axis data 2d42e. -->
@@ -127,12 +128,20 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	</table>
 
 	<!-- 2026-11-21 [Ghidra] INFERRED from code: second 13-byte copy of the threshold table, used for F2F4/F2F6 when F028 is non-zero (see 11ea4). Index is F1B6 / 128 capped at 12, direct byte lookup. Added as a 1D table because no axis applies. Bytes currently identical to 11ea4. -->
-	<table name="Accel Decel Load Change Threshold vs Load (F028 non-zero)" category="Fuel" address="11eb1" type="1D" level="2" elements="13" scaling="uint8"/>
+	<table name="Accel Decel Load Change Threshold vs Load (F028 non-zero)" category="Fuel" address="11eb1" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] was type 1D with 13 elements, which EcuFlash shows as a single cell. Now 2D with a static index axis. Bytes 06 06 06 06 07 0e 10 12 15 18 1b 1b 1b follow the F028 = 0 copy at 11ea4 directly, with no header. Index = F1B6 shifted right 7 bits, capped at 12 (see 11ea4). -->
+		<table name="Index (F1B6 / 128, capped at 12)" type="Static Y Axis" elements="13">
+			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data>
+		</table>
+	</table>
 
 	<table name="Accel Decel Load Change Threshold vs Load (F028 = 0)" category="Fuel" address="11ea4" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x2a32d): index = F1B6 shifted right 7 bits (F1B6 / 128, capped at 12), a direct byte lookup with no interpolation, so the Load axis (2d164) listed below comes from the header index cell and probably does not describe this lookup. F2F0 = F2F2 = F2F8 = this table when no F028 override; the second 13-byte copy at 11eb1 gives F2F4/F2F6 when F028 is non-zero. The thresholds are compared with the load change F1BC minus F1B6 to trigger accel enrichment (F2DC) or decel (F2DE). The two copies are currently identical. Renamed from TABLE_2D_00011EA0. -->
 		<!-- 2026-11-18 [Ghidra E12] header 11ea0 index cell F0C6 is written only by axis record 2d15e (input F190, 14 pts), axis data 2d164. Name and scaling inferred, unverified. Previous axis: RPM 2d332 (18 pts). -->
-		<table name="Load" address="2d164" type="Y Axis" elements="14" scaling="Load"/>
+		<!-- 2026-11-21 [Ghidra] axis replaced: the header axis (2d164, Load, 14 points) did not match the code, which reads only 13 entries by F1B6 / 128 capped at 12; the 14th row displayed the first byte of the next table (11eb1). Now a static index axis, 13 elements, same as 11eb1. -->
+		<table name="Index (F1B6 / 128, capped at 12)" type="Static Y Axis" elements="13">
+			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data>
+		</table>
 	</table>
 
 	<table name="F316 Value" category="Fuel" address="11ecc" type="2D" scaling="uint8">
@@ -181,7 +190,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- 2026-11-20 removed TABLE_2D_00011F64_HysteresisTimer @11f68: header-only stub run at 11f5c-11f70 (02 00 F0xx x6), no data; axis elements=0. -->
 
-	<table name="Ignition Trim vs Air Temp (F356 term)" category="Timing" address="127dc" type="2D" scaling="uint8">
+	<table name="Ignition Trim vs Air Temp (F356 term)" category="Timing" address="127dc" type="2D" scaling="DegreesOffset128">
+		<!-- 2026-11-21 [Ghidra] CEDDY: Ceddy scales this table (identical bytes, 8 points there) as degrees x-128. Scaling taken from it. RVR keeps 7 points: bytes 7e 7f 80 80 7f 7e 7d then ff terminator. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED: read by ign_f356_air_temp_trim_calc (header 27d8) as the air-temp trim term of the F342 ignition advance sum, so this is an ignition table, not ISC. The ROM header (127d8, index F0D0) and axis record 2d4a6 confirm 7 points on axis 2d4ac (input F118). Evo 5 has an 8-point version on a different axis and the data is nearly flat (0x7d to 0x80), so the data match with Evo is weak evidence; the code is the real evidence. BCX also labels 127c2 Ignition Trim vs Air Temp; which of the two is the true one is not settled. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: 8 of 9 bytes match Evo 5 Ignition Trim vs Air Temp (Evo 1226c). Same caveat as 127f2. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f356_correction_calc: F356 starts at 0x80 and is replaced by this table when F18E is above the value looked up from table 127f2 (header 27ee). RESOLVED 2026-11-21: 127f2 is a load threshold against RPM (Load8, 10 points) and its only reader is this function (0x25c48), so it is the gate for this table. The values here (126 to 128 around 0x80) are a small trim against air temp F118. F356 is one of the terms summed into F342 by isc_f342_composite_correction_calc (0x2562b), clamped to the minimum from table 12cf8 (or 10) and 0x46. After the table lookup F356 is reduced by words 0xa78, 0xbaa, 0xb98-0xb9e, 0x14c4 under flag conditions. Physical meaning of F356 not established. Renamed from TABLE_2D_000127D8_ISC. -->
@@ -189,7 +199,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Air Temp" address="2d4ac" type="Y Axis" elements="7" scaling="Temp"/>
 	</table>
 
-	<table name="Ignition F34C Limit vs Coolant Temp" category="Timing" address="12800" type="2D" scaling="uint8">
+	<table name="Ignition F34C Blend Weight vs Coolant Temp" category="Timing" address="12800" type="2D" scaling="Fraction255">
+		<!-- 2026-11-21 [Ghidra] re-read from code: isc_f34c_correction_calc (0x258e8) passes this table output as the weight (0 to 255) of weighted_blend_u8frac(F34A, F34C input, weight), after capping it by F3EE when byte 0x1030f is non-zero; the result is used only if it is lower than the input. The data 00 00 00 00 ff ff ff 00 is therefore a blend weight, 0 % outside 34 to 62 C and 100 % between them, with ramps in between. It is not a limit value, hence the rename from Ignition F34C Limit vs Coolant Temp. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED: part of the F344 term (ign_f344_correction_calc calls the F34C routine) that feeds the F342 ignition advance sum. Category changed from ISCV Control; the exact meaning of F34C is not yet traced. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f34c_correction_calc: after counter EF6A reaches word 0xb78 and F1F2 bit 9 is set, this table (axis hdr_engine_temp) is optionally capped by F3EE, blended with F34A and used to lower the F34C output. Physical meaning of F34C not established. Renamed from TABLE_2D_000127FC_ISC. -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: was RPM. Driven by input F10E (coolant temp, as axis 2d418); the identical VR4 axis is named Coolant Temp. Old: RPM / RPM -->
@@ -197,6 +208,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	</table>
 
 	<table name="Ignition Coil Charge Time Correction 2" category="Timing" address="12828" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] checked: in this ROM all 9 values are 0x60 (96), a flat table. isc_f380_f37e_correction_calc (0x26034) copies the interpolated value straight into F37E (axis 2d274, battery voltage). With every point equal the voltage has no effect; the table is live but constant. Units not established, so the CoilTimeMs scaling is not applied. -->
 		<!-- 2026-11-20 [Ghidra] renamed from TABLE_2D_00012824_ISC. Bytes are identical to VR4 11fd6 'Coil Dwell Time Correction 2' (BCX VR4 definitions), and the table follows 1280c Ignition Coil Charge Time - Normal, which matches VR4 'Coil Dwell Time'. The ISC label had no supporting evidence. -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: one use was labelled RPM; input F13A is battery voltage and the identical VR4 axis is named Battery Voltage. Old: RPM / RPM -->
 		<table name="Battery Voltage" address="2d27a" type="Y Axis" elements="9" scaling="BatteryVoltage"/>
@@ -265,10 +277,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Zone Enable Pulse Width Threshold (F186)" category="Fuel" address="12aee" type="2D" scaling="uint8">
+	<table name="Zone Enable Load Threshold vs RPM (F186)" category="Fuel" address="12aee" type="2D" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] CORRECTED: F186 is engine load, not an injector pulse width (its low byte F187 is MUT 0x1C Load, x*5/8; word 0xE0E, value 8, is subtracted when F0E6 bit6 is clear), so the values are Load8 percentages: all ten are 0x80 = 80 %. The axis record 2d080 has 10 points (500 to 5000 RPM) but the XML had 9, so one value was hidden; data is 80 80 80 80 80 80 80 80 80 80. Formerly named Zone Enable Pulse Width Threshold (F186). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_advance_rpm_zone_enable_check (0x19364): looked up (header 12aea), reduced by word 0xE0E when output relay flag F0E6 bit6 is clear, and compared with the injector pulse output F186; the check returns 1 when F186 is at or below it, subject to the RPM zone dwell test. The enable meaning comes from the existing function name. --> <!-- previous name: TABLE_2D_00012AE6 -->
 		<!-- 2026-11-16 [Ghidra E11] header 12aea index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (9 pts). -->
-		<table name="RPM" address="2d086" type="Y Axis" elements="9" scaling="RPM"/>
+		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
 	<table name="F4AC Throttle Threshold (3D)" category="Turbo (tentative)" address="12b0d" type="3D" scaling="uint8">
@@ -285,23 +298,26 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- 2026-11-21 [Ghidra] INFERRED: read by ign_f374_correction_calc (header 2b94) and scaled by a TCU-supplied byte (F4BE bits 7 and 6); the result is subtracted from 0x80 in the F342 sum, i.e. a retard. VR4 has a similar Traction Control Timing Subtract table. Renamed from ISC F374 Correction. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: isc_f374_correction_calc (0x25ef9): F374 = 0x80 minus (this 3D table x factor / 0xff). The factor depends on TCU receive/link flags F4A2, F4A4, F4BE (words e62/e64/0xff). Only active when F1F2 bit13 is set. Renamed from TABLE_3D_00012B94_ISC. -->
 		<table name="RPM" address="2d332" type="X Axis" elements="18" scaling="RPM"/>
-		<table name="RPM" address="2d35c" type="Y Axis" elements="16" scaling="RPM"/>
+		<!-- 2026-11-21 [Ghidra] Y axis corrected: ign_f374_correction_calc (0x25ef9) looks up axis 2d32c (RPM, 18 points, last point 11000 is an end stop) and then axis 2d356 on F0BA, which it sets from select_value_f194_f196, a load-type input. The 16 axis values 0..832 match the Load axes (0 to 260 % with x*10/32), not RPM (they displayed as 0 to 3250 RPM). Exact source of F194/F196 not re-verified. -->
+		<table name="Load (F194/F196 select)" address="2d35c" type="Y Axis" elements="16" scaling="Load"/>
 	</table>
 
 	<table name="F4AC Actuator Step vs TPS Error (TPS below F4AC)" category="Turbo (tentative)" address="12cc0" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] axis units: code at 0x2b460-0x2b48d sets the lookup input F0BE to the absolute difference of F13E (throttle position) and F4AC, in raw TPS counts, so the axis is shown in TPS Percent (x*100/255, 0 to 128 = 0 to 50.2 percent). Differences at or below the dead band words 0xE52/0xE54 give no step (value 0x18). Table values are a 0 to 24 step count stored in F4AA (0x18 = none), not a physical unit; their scaling is left raw. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 17 bytes identical to VR4 tbl2d_Unknown91 (WGDC Correction related). The earlier canister-purge guess is doubtful. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: main_loop_scheduler_aa36 (0x2b4ef): error = F4AC minus TPS (F13E) is looked up on axis 2d548 (input F0BE) and this table gives the step value stored in F4AA, minus word 0xE56 or 0xE5A (depending on timer F4B2) when the direction flag F4A6 differs. The step target is F4A8 (max 0x18); F0EA bits 2 and 3 are then set from the direction and mirrored by mirror_status_f0ea_to_ports (0x15791) to port P1 bits 6 and 7, only when F1F2 bit13 (TCU link enabled) is set, so these look like two ECU-to-TCU signal lines. The setpoint F4AC is built from TCU-reported bytes F4BC/F4BE. UPDATE 2026-11-21 after reading the TCU program (W4A51 21451005): F4BC/F4BE/F4C0/F4C2 are the 4 data bytes of the TCU-to-ECU serial frame (SCI3, 4 bytes + additive checksum, received into F4C4..F4CC, validated, copied at 0x2b183). The TCU always sends 0 in bytes 0 to 2 and a fault index in the low nibble of byte 3, so F4BC is 0 while the TCU answers and is forced to 0x80 (with F4A4 bit7 set) after 50 missed frames. The ECU-to-TCU frame (7 bytes, built from the table at 0x16672) carries TPS low byte, F17A low byte (engine speed / 8), status bits from diagnostic_status_f4b4_build, F18C injector pulse (or scaled F196), a config nibble and a comms-lost flag (0x40); it has no torque-reduction request, and the TCU bits that could take one (F514 low 2 bits) are never set by this ECU. Torque reduction by this path is therefore NOT supported by the code; this table remains a throttle-threshold actuator. Renamed from TABLE_2D_00012CBC_TCU. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 1245c labelled tbl2d_Unknown91_WGDC_Correction_related. Read by main_loop_scheduler_aa36 (formerly named tcu_rx_main_scheduler, a name now considered unsupported). TCU label unverified. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12cbc index cell F0D4 is written only by axis record 2d548 (input F0BE, 17 pts), axis data 2d54e. Previous axis: RPM 2d332 (18 pts). -->
-		<table name="Axis (raw 0 to 128 step 8)" address="2d54e" type="Y Axis" elements="17" scaling="uint16"/>
+		<table name="TPS Error (F13E vs F4AC)" address="2d54e" type="Y Axis" elements="17" scaling="TPS Percent"/>
 	</table>
 
 	<table name="F4AC Actuator Step vs TPS Error (TPS at or above F4AC)" category="Turbo (tentative)" address="12cd6" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] axis units: code at 0x2b460-0x2b48d sets the lookup input F0BE to the absolute difference of F13E (throttle position) and F4AC, in raw TPS counts, so the axis is shown in TPS Percent (x*100/255, 0 to 128 = 0 to 50.2 percent). Differences at or below the dead band words 0xE52/0xE54 give no step (value 0x18). Table values are a 0 to 24 step count stored in F4AA (0x18 = none), not a physical unit; their scaling is left raw. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 17 bytes identical to VR4 tbl2d_Unknown92 (WGDC Correction related). The earlier canister-purge guess is doubtful. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: main_loop_scheduler_aa36 (0x2b4d9): same as 12cc0 for the opposite direction (TPS minus F4AC), with word 0xE58 subtracted when the direction flag differs. Renamed from TABLE_2D_00012CD2_TCU. -->
 		<!-- 2026-11-20 [Ghidra] REVIEW: bytes identical to VR4 12472 labelled tbl2d_Unknown92_WGDC_Correction_related. TCU label unverified. -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 12cd2 index cell F0D4 is written only by axis record 2d548 (input F0BE, 17 pts), axis data 2d54e. -->
-		<table name="Axis (raw 0 to 128 step 8)" address="2d54e" type="Y Axis" elements="17" scaling="uint16"/>
+		<table name="TPS Error (F13E vs F4AC)" address="2d54e" type="Y Axis" elements="17" scaling="TPS Percent"/>
 	</table>
 
 	<table name="F4AC Throttle Threshold Offset (TCU linked)" category="Turbo (tentative)" address="12cec" type="2D" scaling="uint8">
@@ -321,7 +337,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Cooling Fan Duty Cycle (VR4 match; 12 columns x 9 rows from here)" category="Cooling Fan" address="12d04" type="2D" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle (VR4 match; 12 columns x 9 rows from here)" category="Cooling Fan" address="12d04" type="2D" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: bytes 12d04..12d6f match the VR4 (20030013) Cooling Fan Duty Cycle 3D data (9 rows of 12; rows 1-3 identical, others differ in places). Previously labelled unused because no code reference was found; the table is probably read through a 3D lookup. Axis corrected to the 12-point temperature axis at 2d478 (record 2d472: out F0C0, in F10E), found by matching the VR4 axis data exactly; this 2D entry is row 1 of 9 (rows 2 to 9 are listed separately). The radiator fan routine radfan_pwm_duty_target_f494_calc reads the neighbouring constants 10e88 to 10e9e, which supports the fan identification. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Ghidra finds no reference to this table or its header (12d00). Data is 02 00 F0 C0 then 00 26 26 2D 33 40 4D 53 5A 5A 80 80, so it looks like a real ramp, perhaps used by code Ghidra has not linked. Keep, do not delete. --> <!-- previous name: TABLE_2D_00012D00 -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
@@ -451,7 +468,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Identical data pattern to the already-confirmed "Engine Load" axis (review12.md batch-1),
 		     and cross-ROM verified against EVO5 (2c884->2c88a, identical values). -->
 		<!-- 2026-11-20 [Ghidra] REVIEW axis: RVR calls it Load, but the identical EVO5 axis at 2c8ae is named TPS. Input is the scratch variable F0BA so the data cannot decide. Not changed. -->
-		<table name="Axis2 (Load)" address="2d404" type="Y Axis" elements="7" scaling="Load"/>
+		<!-- 2026-11-21 [Ghidra] axis re-traced: f0ba_f2d0_o2_mode7_8_correction_calc (0x242f5) does axis lookup 0x2d3ee (input F170, RPM, 5 points) then 0x2d3fe (input F0BA, 7 points, data 33 65 97 129 161 193 225), then table header 11dc2. F0BA = F13E plus table 0x2986, clamped to 8 bits, so it is the throttle-position value plus a trim, not engine load. The same 33..225 values on input F13E are the Throttle Position axis AXIS_2D3E0 (TPS Percent), so this Y axis is scaled as TPS Percent (13 to 88 %), not Load (10 to 70 %). The trim table 0x2986 is not traced; if it is large the axis is only roughly throttle. -->
+		<table name="Throttle Position + trim (F0BA)" address="2d404" type="Y Axis" elements="7" scaling="TPS Percent"/>
 	</table>
 
 	<table name="MAF Scaling" category="Air" address="11804" type="2D" level="3" scaling="AirFlow8">
@@ -656,7 +674,12 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="Injector Minimum Pulse Width" category="Fuel" address="10804" type="1D" level="2" scaling="InjectorMinPulse"/>
 
 	<!-- 2026-11-21 [Ghidra] VERIFIED (code, values inferred): 8-byte table at 118ab, all 0x80 (1.0). In f28e_f292_knock_lambda_composite_calc (0x23448) the last step is F28E = F290 x byte[118ab + (F1FC and 7)] x word@10808 / 0x400, so the byte scales the airflow gain per configuration index F1FC. F1FC comes from gear_state_config_loader_f1fc: calibration word 0x208 (0x0002 here) unless word 0x20a is non-zero, then it is table 0x222 indexed by F1FA, which is always 0. So entry 2 is the one in use and 0x80 means no change. Because the factor is the same as the 0x808 injector scale, changing this byte rescales fuel the same way (+1 count = +0.78 percent). Meaning of the index is not proven; do not treat it as a per-injector trim, the pulse path has no per-cylinder term. -->
-	<table name="Injector Scale Trim by Config Index" category="Fuel" address="118ab" type="1D" level="2" elements="8" scaling="uint8"/>
+	<table name="Injector Scale Trim by Config Index" category="Fuel" address="118ab" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] was type 1D with 8 elements, which EcuFlash shows as a single cell. Now 2D with a static config index axis. -->
+		<table name="Config Index" type="Static Y Axis" elements="8">
+			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
+		</table>
+	</table>
 
 	<table name="Lean Spool Start RPM" category="Lean Spool" address="109e4" type="1D" level="2" scaling="RPMStatLimit">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: this address also has a second XML entry (Boost Enhancement (Anti-Lag) Start RPM) with identical type and scaling; they are the same bytes (word 0x0050 = 80). Only reader: f0ba_f2b2_threshold_blend_calc (0x238d8, called from o2_closed_loop_fuel_trim_compute): the lookup in table 1f68 is used when F17A >= this word. F17A = clamp_u8((F170 + 4) >> 3) where F170 = 0x1D4C00 / the newest RPM-period value (engine_torque_pct_scale_calc, 0x2184b), so F17A looks like engine speed / 8, not a torque percentage (the Ghidra name engine_torque_pct_f17a is probably misleading). With the RPM axis scaling x*1000/256 used elsewhere in this file, 80 is about 2500 rpm. Both names are therefore plausible as an RPM threshold; which feature (lean spool or anti-lag) this serves is not settled. -->
@@ -696,14 +719,16 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
 	</table>
 
-	<table name="Ignition Trim vs Eng Temp" category="Timing" address="127b4" type="2D" level="3" scaling="Enrich">
+	<table name="Ignition F35E Term vs RPM (F1FE bit3 clear)" category="Timing" address="127b4" type="2D" level="3" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] CORRECTED: the axis record 2d080 has 10 points (500 to 5000 RPM, input F170) but the XML showed 8, so the last two values (0x38, 0x30) were hidden; data is 80 80 80 80 80 80 60 40 38 30. The name Eng Temp (from BCX/VR4) is not supported: the axis is RPM. isc_f35e_correction_calc (0x2586f): when F1FE bit3 is clear, F35E = select_value_f194_f196 + (F366 x word 0x10ae0 x this table, fixed-point). So the values are a gain, not degrees, and the Enrich (degrees) scaling is removed; units not established. -->
 		<!-- 2026-11-16 [Ghidra E11] header 127b0 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. NOTE: the table NAME says engine temperature but its cell is the RPM axis, so the name may be wrong. Previous axis: Engine Temp 2d418 (8 pts). -->
-		<table name="RPM" address="2d086" type="X Axis" elements="8" scaling="RPM"/>
+		<table name="RPM" address="2d086" type="X Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Ignition Trim vs Air Temp" category="Timing" address="127c2" type="2D" level="3" scaling="Enrich">
+	<table name="Ignition F35E Value vs RPM (F1FE bit3 set)" category="Timing" address="127c2" type="2D" level="3" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] CORRECTED: axis 2d080 has 10 points (500 to 5000 RPM), not 8; data is 78 84 98 c0 e0 e8 e8 e8 e8 e0. The name Air Temp (from BCX/VR4) is not supported: the axis is RPM. isc_f35e_correction_calc (0x2586f): when F1FE bit3 is set, F35E = this table (via pointer array 2da2c, 8 identical entries) x 2. The Enrich (degrees) scaling is removed; units not established. -->
 		<!-- 2026-11-16 [Ghidra E11] header 127be index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. NOTE: the table NAME says air temperature but its cell is the RPM axis, so the name may be wrong. Previous axis: Engine Temp 2d418 (8 pts). -->
-		<table name="RPM" address="2d086" type="X Axis" elements="8" scaling="RPM"/>
+		<table name="RPM" address="2d086" type="X Axis" elements="10" scaling="RPM"/>
 	</table>
 
 	<table name="Ignition Trim - Baro" category="Timing" address="127e8" type="2D" level="2" scaling="Enrich">
@@ -711,7 +736,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Baro Press." address="2d292" type="X Axis" elements="5" scaling="Load16"/>
 	</table>
 
-	<table name="Ignition Trim vs Air Temp Active Above Load" category="Timing" address="127f2" type="2D" level="3" scaling="Load8">
+	<table name="Air Temp Trim Enable Load Threshold vs RPM" category="Timing" address="127f2" type="2D" level="3" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] renamed from Ignition Trim vs Air Temp Active Above Load (the name used by Ceddy Evo5/6 for the same bytes). The table holds loads against RPM, not air temperatures: isc_f356_correction_calc applies the Air Temp trim (127dc) only when F18E is above this value. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED: read by ign_f356_air_temp_trim_calc (header 27ee): when this value is below F18E the 127dc trim is applied. Data is 10 of 10 bytes identical to Evo 5 Ignition Trim vs Air Temp Active Above Load (12282). Confirms the BCX name; the earlier ISC naming was wrong. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: all 10 bytes identical to Evo 5 Ignition Trim vs Air Temp Active Above Load (Evo 12282). Suggests the F356 chain may be ignition timing trim rather than ISC. The consumer of F342 needs tracing before renaming. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: the only reader of this table (header 127ee) is isc_f356_correction_calc (0x25c48, call at 0x25c4d): when engine load F18E is above the value looked up here (axis RPM F170), F356 takes the air-temp trim from table 127dc instead of 0x80. No ignition-timing code reads it, so the old BCX/VR4-based name (Ignition Trim vs Air Temp Active Above Load) is kept in spirit but this ROM uses it in the ISC target calculation. Category changed from Timing to ISCV Control. -->
@@ -724,20 +750,23 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="X Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Ignition Coil Charge Time - Normal" category="Timing" address="1280c" type="2D" level="2" scaling="uint8">
+	<table name="Ignition Coil Charge Time - Normal" category="Timing" address="1280c" type="2D" level="2" scaling="CoilTimeMs">
+		<!-- 2026-11-21 [Ghidra] CEDDY: Ceddy names this identical table Coil Dwell Time vs Voltage, scaled x*64/1000 mSec. Same name is used by VR4 BCX. Axis battery volts x*75/1024 agrees. -->
 		<!-- 2026-11-20 [Ghidra] bytes identical to VR4 11fba 'Coil Dwell Time' (BCX VR4 definitions); the names agree (dwell = coil charge time). -->
 		<table name="Battery Voltage" address="2d27a" type="X Axis" elements="9" scaling="BatteryVoltage"/>
 	</table>
 
-	<table name="Ignition Coil Charge Time - Alt" category="Timing" address="1281a" type="2D" level="4" scaling="uint8">
+	<table name="Ignition Coil Charge Time Reduction Gain vs Battery Voltage" category="Timing" address="1281a" type="2D" level="4" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] CORRECTED: this is not a charge time. isc_f380_f37e_correction_calc (0x26034): F380 = (1280c value x 16), then when F5CA is at or below word 0x10adc the difference is multiplied (mul_fixedpoint_8) by this table (header 2816) and subtracted from it, so the values are a gain per unit of F5CA, not mSec. The CoilTimeMs scaling applied earlier today to this table was wrong and is removed; units not established. Formerly named Ignition Coil Charge Time - Alt. -->
 		<table name="Battery Voltage" address="2d27a" type="X Axis" elements="9" scaling="BatteryVoltage"/>
 	</table>
 
 	<table name="Idle Stability Timing Control" category="Timing" address="10ae4" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] re-read from code, ign_f358_idle_stability_timing_calc (0x25d27): three 16-bit words 10ae4 (0x80), 10ae6 (6), 10ae8 (6). 10ae4 is the gain multiplied (mul_fixedpoint_8) by the difference between the idle target (F400 x word 10af2, or F180) and F170. The result is capped at 10ae8 when F0F8 bit5 is clear and byte 102FA is non-zero, otherwise at 10ae6, then added to or subtracted from 0x80 to give F358. The third word, previously labelled Untested, is the second cap, not an untested setting. Both caps are 6 in this ROM. Units assumed to be degrees (F358 is centred on 0x80), not verified. -->
 		<table name="Settings" type="Static X Axis" elements="3">
-			<data>Sensitivity</data>
-			<data>Timing Limit</data>
-			<data>Untested</data>
+			<data>Gain (fixed-point)</data>
+			<data>Limit A (F0F8 bit5 set, or 102FA = 0)</data>
+			<data>Limit B (F0F8 bit5 clear, 102FA non-zero)</data>
 		</table>
 	</table>
 
@@ -755,11 +784,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	</table>
 
 	<table name="Knock Control Above Load" category="Timing" address="12836" type="2D" level="2" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] checked: the bytes are ff ff ff ff 50 50 60 60 60 70. f3a4_bit12_13_update_and_check (0x250ac) compares word F186 (inj_pw_output_f186) with this table (header 2832, RPM axis 2d080): bit 12 of F3A4 is set when F186 is not below the table value, so this is a threshold above which knock control is active. 0xff is a maximum that F186 cannot reach, so it means off: knock control is disabled up to 2000 RPM, then switches on above 50 % at 2500 RPM, rising to 70 % at 5000 RPM. The drop at 2500 RPM is therefore intended, not an error. SCALE RESOLVED: the byte at F187 (low byte of word F186) is MUT_1C in this ROM, and the same request id 0x1C is ECULoad, x*5/8 (max 160), in Ceddy's EvoScan MUT list, at the same shifted RAM address. So F186 is engine load and Load8 (x*5/8) is the right scale; the Ghidra name inj_pw_output_f186 is wrong. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12832 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d2e6 (14 pts). -->
 		<table name="RPM" address="2d086" type="X Axis" elements="10" scaling="RPM"/>
 	</table>
 
 	<table name="Octane Control Above Load" category="Timing" address="12844" type="2D" level="2" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] checked: bytes ff ff ff ff 90 a0 c0 c0 c0 (10 points on RPM 2d080; the last byte is read from the 10th point). f3a4_bit6_gate_condition_check (0x2523e, header 2840) returns 1 only when the load F186 is not below this value, and only if F10E is at least word 0x10b3c, F200 bit0 and F1FE bit3 are clear and F3A4 bit6 is set. 0xff means never (load is a byte, at most 159.4 %), so octane control is off up to 2000 RPM, then needs load above 90 % at 2500 RPM, rising to 120 % from 4000 RPM. Same pattern as Knock Control Above Load at 12836. F186 is engine load, so Load8 is the right scale. -->
 		<!-- 2026-11-16 [Ghidra E11] header 12840 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d2e6 (14 pts). -->
 		<table name="RPM" address="2d086" type="X Axis" elements="10" scaling="RPM"/>
 	</table>
@@ -825,12 +856,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="Window Cond F13A Minimum (10b76)" category="Constants (unverified)" address="10b76" type="1D" level="2" scaling="uint16"/>
 	<!-- rpm_load_window_condition_check returns 1 when F0F8 bit1 is set, F20E and 0x11 is 0, F17A is below 10b70 and F13A is above 10b76 and below 10b74. -->
 
-	<table name="High Intake Air Temp ISCV Increase" category="ISCV Control" address="11aa2" type="2D" level="2" flipy="true" scaling="ISCVSteps16">
-		<table name="Condition" type="Static Y Axis">
-			<data>AC Off</data>
-			<data>AC On</data>
-		</table>
-	</table>
+	<!-- 2026-11-21 [Ghidra] REMOVED table "High Intake Air Temp ISCV Increase" (2D, ISCVSteps16, address 11aa2, AC Off/AC On). 11aa2 is inside the data of High Octane Fuel Map 1 (119bf): the words there read 38324 and 46776, nothing in the ROM references them, and the Ceddy Evo5/6 XML has no such table. It was inherited from the original XML and never verified. -->
 
 	<table name="Idle Stepper Lookup Table" category="ISCV Control" address="12999" type="3D" level="2" scaling="ISCVSteps">
 		<!-- 2026-11-16 [Ghidra E11] header 12992: X axis address was 2d4be, which is the COUNT word of record 2d4ba; the 8 breakpoints start at 2d4c0. Y axis is record 2d4d0 (27 pts), data 2d4d6. Row length byte at +6 is 8, matching the X axis. -->
@@ -1062,10 +1088,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- header 131e0: index cell F0C8 is written only by axis record 2d412 (input F10E, 8 pts), axis data 2d418. Body length not verified. -->
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
-	<table name="MAF_IAT_Scaling" category="Sensor Scaling" address="134ea" type="2D" scaling="uint8">
+	<table name="MAF_IAT_Scaling" category="Sensor Scaling" address="134ea" type="2D" scaling="TempC8">
+		<!-- 2026-11-21 [Ghidra] CEDDY: Ceddy IAT Scaling (Speed Density) is the identical 102+ bytes: values are Celsius x-40, axis is ADC volts x*5/256 (139 points). Both taken from it. Values at the high-voltage end wrap through 0xff (de dc db d9 d8), so they are probably below -40 C stored modulo 256; the display shows them as large positive temperatures. -->
 		<!-- 2026-11-20 [Ghidra] renamed from TABLE_2D_000134E6. 102 data bytes are identical in RVR (header 134e6), VR4 (12b84, labelled MAF_IAT_Scaling there) and EVO5 (12b3e). -->
 		<!-- header 134e6: index cell F0D2 is written only by axis record 13576 (input F116, 139 pts), axis data 1357c. The body 134ea to 13575 is 139 bytes plus a terminator, which matches the axis. Axis scaling unknown (raw). -->
-		<table name="Raw F116 (rec 13576)" address="1357c" type="Y Axis" elements="139" scaling="Hex16"/>
+		<table name="IAT Sensor Voltage (F116, rec 13576)" address="1357c" type="Y Axis" elements="139" scaling="Volts16"/>
 	</table>
 
 
@@ -1132,59 +1159,75 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F2F0-F2F8 Initial Value (F226 bit9 set)" category="Fuel" address="10956" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: fuel_pw_and_airvol_compute (0x29fba): when F226 bit9 is set the five F2F0 to F2F8 cells and the F2F4/F2F6 pair are loaded with this value; f2f0_f2f8_ring_and_f27x_f2cc_periodic_init (0x23027) also writes it to all five cells. -->
 	</table>
-	<table name="Cooling Fan Duty Related 1" category="Cooling Fan" address="10e8a" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 1 Off Threshold (vehicle speed at or below)" category="Cooling Fan" address="10e8a" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 2" category="Cooling Fan" address="10e8c" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 1 On Threshold (vehicle speed above)" category="Cooling Fan" address="10e8c" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 3" category="Cooling Fan" address="10e8e" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 2 Off Threshold (vehicle speed at or below)" category="Cooling Fan" address="10e8e" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 4" category="Cooling Fan" address="10e90" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 2 On Threshold (vehicle speed above)" category="Cooling Fan" address="10e90" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 5" category="Cooling Fan" address="10e92" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 3 Off Threshold (vehicle speed at or below)" category="Cooling Fan" address="10e92" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 6" category="Cooling Fan" address="10e94" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 3 On Threshold (vehicle speed above)" category="Cooling Fan" address="10e94" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 7" category="Cooling Fan" address="10e96" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 4 Off Threshold (vehicle speed at or below)" category="Cooling Fan" address="10e96" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Related 8" category="Cooling Fan" address="10e98" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Stage 4 On Threshold (vehicle speed above)" category="Cooling Fan" address="10e98" type="1D" level="2" scaling="VehicleSpeed2Kph16">
+		<!-- 2026-11-21 [Ghidra] INFERRED from code 0x18bc2: four hysteresis stages in F492 bits0-3. A stage clears when F1E8 is at or below the Off value and sets when F1E8 is above the On value. Each is a single value read directly (not an array). F1E8 is vehicle speed: its low byte F1E9 is MUT_2F, and MUT request 0x2F is Speed in Ceddy's EvoScan MUT list (km/h = x*2). It counts falling edges on pin P42 (T5IOC1) per 0x11b ticks. Scaling set to VehicleSpeed2Kph16 on that basis; the x*2 is carried over from the Evo MUT list, not measured on this ECU. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: the 8 words at 10e8a (20,22,35,40,20,22,35,40) are identical to VR4 tbl1d_Unknown1..8 (Fan Duty Cycle Related). Exact role of each word is not yet known. -->
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 2 (VR4 match)" category="Cooling Fan" address="12d10" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 2 (VR4 match)" category="Cooling Fan" address="12d10" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 2 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 3 (VR4 match)" category="Cooling Fan" address="12d1c" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 3 (VR4 match)" category="Cooling Fan" address="12d1c" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 3 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 4 (VR4 match)" category="Cooling Fan" address="12d28" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 4 (VR4 match)" category="Cooling Fan" address="12d28" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 4 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 5 (VR4 match)" category="Cooling Fan" address="12d34" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 5 (VR4 match)" category="Cooling Fan" address="12d34" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 5 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 6 (VR4 match)" category="Cooling Fan" address="12d40" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 6 (VR4 match)" category="Cooling Fan" address="12d40" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 6 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 7 (VR4 match)" category="Cooling Fan" address="12d4c" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 7 (VR4 match)" category="Cooling Fan" address="12d4c" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 7 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 8 (VR4 match)" category="Cooling Fan" address="12d58" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 8 (VR4 match)" category="Cooling Fan" address="12d58" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 8 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
-	<table name="Cooling Fan Duty Cycle Row 9 (VR4 match)" category="Cooling Fan" address="12d64" type="2D" level="2" scaling="uint8">
+	<table name="Cooling Fan Duty Cycle Row 9 (VR4 match)" category="Cooling Fan" address="12d64" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from cross-ROM data match: row 9 of 9 of the VR4 Cooling Fan Duty Cycle data (12 bytes, values up to 0x80). What selects the row is not known. -->
 		<table name="Engine Temp (12 pts)" address="2d478" type="Y Axis" elements="12" scaling="Temp"/>
 	</table>
@@ -1227,19 +1270,22 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F356 Subtract (F33E bit15 hysteresis)" category="Timing" address="114c4" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 15. Subtracted from the F356 term when the F33E bit15 hysteresis is active. -->
 	</table>
-	<table name="F356 Load Minimum (F18E)" category="Timing" address="10b96" type="1D" level="2" scaling="uint16">
+	<table name="F356 Load Minimum (F18E)" category="Timing" address="10b96" type="1D" level="2" scaling="Load8_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Load8_16bit: F18E is compared directly with the Load8 table at 127f2 (isc_f356_correction_calc), so it uses the Load8 scale x*5/8. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 96. The TPS-based subtraction only applies when F18E is at or above this word. -->
 	</table>
-	<table name="F356 TPS Minimum (F10E)" category="Timing" address="10b9a" type="1D" level="2" scaling="uint16">
+	<table name="F356 Coolant Temp Minimum (F10E)" category="Timing" address="10b9a" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: the word F10E is coolant temperature: its low byte F10F is MUT_10, and MUT request 0x10 is Coolant Temp Scaled, x-40 C, in Ceddy's EvoScan MUT list; the older name TPS was wrong. Renamed from F356 TPS Minimum (F10E). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 137. The TPS-based subtraction only applies when F10E is at or above this word. -->
 	</table>
-	<table name="F356 TPS Split (F10E)" category="Timing" address="10b98" type="1D" level="2" scaling="uint16">
+	<table name="F356 Coolant Temp Split (F10E)" category="Timing" address="10b98" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: the word F10E is coolant temperature: its low byte F10F is MUT_10, and MUT request 0x10 is Coolant Temp Scaled, x-40 C, in Ceddy's EvoScan MUT list; the older name TPS was wrong. Renamed from F356 TPS Split (F10E). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 146. Below this TPS the subtraction is word 10b9e, otherwise word 10b9c. -->
 	</table>
-	<table name="F356 Subtract (TPS below split)" category="Timing" address="10b9e" type="1D" level="2" scaling="uint16">
+	<table name="F356 Subtract (coolant below split)" category="Timing" address="10b9e" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 1. Subtracted when F10E is between words 10b9a and 10b98. -->
 	</table>
-	<table name="F356 Subtract (TPS at or above split)" category="Timing" address="10b9c" type="1D" level="2" scaling="uint16">
+	<table name="F356 Subtract (coolant at or above split)" category="Timing" address="10b9c" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f356_air_temp_trim_calc (0x25c48): ROM value 2. Subtracted when F10E is at or above word 10b98. -->
 	</table>
 	<table name="F358 Non-idle Threshold" category="Timing" address="10b86" type="1D" level="2" scaling="uint16">
@@ -1251,7 +1297,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F358 Idle Target Multiplier" category="Timing" address="10af2" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f358_idle_stability_timing_calc (0x25d27): ROM value 240. The idle target F400 is multiplied by this word (saturating x2) to form the idle comparison value. -->
 	</table>
-	<table name="F35A TPS Minimum (F10E)" category="Timing" address="10b8a" type="1D" level="2" scaling="uint16">
+	<table name="F35A Coolant Temp Minimum (F10E)" category="Timing" address="10b8a" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: the word F10E is coolant temperature: its low byte F10F is MUT_10, and MUT request 0x10 is Coolant Temp Scaled, x-40 C, in Ceddy's EvoScan MUT list; the older name TPS was wrong. Renamed from F35A TPS Minimum (F10E). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 115. F35A is only active when F10E is at or above this word. -->
 	</table>
 	<table name="F35A Counter Limit (EF6A)" category="Timing" address="10b8c" type="1D" level="2" scaling="uint16">
@@ -1266,16 +1313,20 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F35A Maximum" category="Timing" address="10b90" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f35a_correction_calc (0x25e1b): ROM value 20. Upper limit of the F35A reduction (result is 0x80 minus this at most). -->
 	</table>
-	<table name="F374 Scale (TCU F4BE bit7 clear)" category="Timing" address="10e62" type="1D" level="2" scaling="uint16">
+	<table name="F374 Scale (TCU F4BE bit7 clear)" category="Timing" address="10e62" type="1D" level="2" scaling="Fraction255_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Fraction255_16bit: ign_f374_correction_calc (0x25ef9) multiplies the table value by this and divides by 0xff, so it is a fraction of 255. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f374_correction_calc (0x25e8b): ROM value 170. Scale used when TCU byte F4BE bit7 is clear and bit6 is set (word 10e64 when bit7 set and bit6 clear, 0xFF when both set). -->
 	</table>
-	<table name="F374 Scale (TCU F4BE bit7 set, bit6 clear)" category="Timing" address="10e64" type="1D" level="2" scaling="uint16">
+	<table name="F374 Scale (TCU F4BE bit7 set, bit6 clear)" category="Timing" address="10e64" type="1D" level="2" scaling="Fraction255_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Fraction255_16bit: ign_f374_correction_calc (0x25ef9) multiplies the table value by this and divides by 0xff, so it is a fraction of 255. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f374_correction_calc (0x25e8b): ROM value 255. See word 10e62. -->
 	</table>
-	<table name="F36E Load F18E Maximum" category="Timing" address="10bc8" type="1D" level="2" scaling="uint16">
+	<table name="F36E Load F18E Maximum" category="Timing" address="10bc8" type="1D" level="2" scaling="Load8_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Load8_16bit: F18E uses the Load8 scale x*5/8 (same input as table 127f2). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 160. F36E/F370 targets are only applied when F18E is at or below this word. -->
 	</table>
-	<table name="F36E Load F18E Minimum" category="Timing" address="10bca" type="1D" level="2" scaling="uint16">
+	<table name="F36E Load F18E Minimum" category="Timing" address="10bca" type="1D" level="2" scaling="Load8_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Load8_16bit: F18E uses the Load8 scale x*5/8 (same input as table 127f2). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 48. F18E must be at or above this word. -->
 	</table>
 	<table name="F36E Engine Speed Minimum (F17A)" category="Timing" address="10bce" type="1D" level="2" scaling="RPMStatLimit">
@@ -1284,7 +1335,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F36E Engine Speed Maximum (F17A)" category="Timing" address="10bcc" type="1D" level="2" scaling="RPMStatLimit">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 128 (4000 rpm at x31.25). -->
 	</table>
-	<table name="F36E TPS Minimum (F10E)" category="Timing" address="10bd0" type="1D" level="2" scaling="uint16">
+	<table name="F36E Coolant Temp Minimum (F10E)" category="Timing" address="10bd0" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: the word F10E is coolant temperature: its low byte F10F is MUT_10, and MUT request 0x10 is Coolant Temp Scaled, x-40 C, in Ceddy's EvoScan MUT list; the older name TPS was wrong. Renamed from F36E TPS Minimum (F10E). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: ign_f36e_f370_target_calc (0x25f45): ROM value 118. -->
 	</table>
 	<table name="F36E F17E Excess Minimum" category="Timing" address="10bd2" type="1D" level="2" scaling="uint16">
@@ -1299,13 +1351,15 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F33E Bit2 F14C Minimum" category="Timing" address="10bac" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 3. F14C must be above this word. -->
 	</table>
-	<table name="F33E Bit2 TPS Minimum (F10E)" category="Timing" address="10bae" type="1D" level="2" scaling="uint16">
+	<table name="F33E Bit2 Coolant Temp Minimum (F10E)" category="Timing" address="10bae" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: the word F10E is coolant temperature: its low byte F10F is MUT_10, and MUT request 0x10 is Coolant Temp Scaled, x-40 C, in Ceddy's EvoScan MUT list; the older name TPS was wrong. Renamed from F33E Bit2 TPS Minimum (F10E). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 110. -->
 	</table>
 	<table name="F33E Bit2 F1E6 Gate Minimum" category="Timing" address="10bb0" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 81. -->
 	</table>
-	<table name="F33E Bit2 Load Maximum (F18E)" category="Timing" address="10bb2" type="1D" level="2" scaling="uint16">
+	<table name="F33E Bit2 Load Maximum (F18E)" category="Timing" address="10bb2" type="1D" level="2" scaling="Load8_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Load8_16bit: F18E uses the Load8 scale x*5/8 (same input as table 127f2). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 32. F18E must be at or below this word. -->
 	</table>
 	<table name="F33E Bit2 Engine Speed Minimum (F17A)" category="Timing" address="10bb4" type="1D" level="2" scaling="RPMStatLimit">
@@ -1320,10 +1374,12 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F33E Bit2 F242 Minimum (half value)" category="Timing" address="10bba" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit2_source_condition_check (0x25378): ROM value 36. F242 divided by 2 must be above this word. -->
 	</table>
-	<table name="F33E Bit5 TPS F13E Maximum" category="Timing" address="10bbe" type="1D" level="2" scaling="uint16">
+	<table name="F33E Bit5 TPS F13E Maximum" category="Timing" address="10bbe" type="1D" level="2" scaling="TPS Percent">
+		<!-- 2026-11-21 [Ghidra] scaling set to TPS Percent: F13E is the throttle position input and the axes on it use TPS Percent (x*100/255); scale not verified beyond that. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 230. The trimmed TPS F13E must be below this word. -->
 	</table>
-	<table name="F33E Bit5 TPS F10E Minimum" category="Timing" address="10bc0" type="1D" level="2" scaling="uint16">
+	<table name="F33E Bit5 Coolant Temp F10E Minimum" category="Timing" address="10bc0" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: the word F10E is coolant temperature: its low byte F10F is MUT_10, and MUT request 0x10 is Coolant Temp Scaled, x-40 C, in Ceddy's EvoScan MUT list; the older name TPS was wrong. 0xFF = 215 C is effectively never. Renamed from F33E Bit5 TPS F10E Minimum. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 255. F10E must exceed this word, so this ROM keeps the F33E bit3 term effectively disabled. -->
 	</table>
 	<table name="F33E Bit5 Engine Speed Minimum (F17A)" category="Timing" address="10bc2" type="1D" level="2" scaling="RPMStatLimit">
@@ -1335,37 +1391,47 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="F33E Bit5 Set Engine Speed (F17A)" category="Timing" address="10bc6" type="1D" level="2" scaling="RPMStatLimit">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f33e_bit5_update_and_condition_check (0x2547e): ROM value 224 (7000 rpm). F33E bit5 is set when F17A is above this word, which selects table 1287e instead of 1287a. -->
 	</table>
-	<table name="Cooling Fan Duty Forced Value (SCI 0xCD/0xCE test)" category="Cooling Fan" address="10e6e" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Duty Forced Value (SCI 0xCD/0xCE test)" category="Cooling Fan" address="10e6e" type="1D" level="2" scaling="Percent128_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128_16bit: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 128. F494 is set to this when the actuator-test gate check_mode_gate_f510 is true (F20E bit4 and F510 bit11/12). -->
 	</table>
-	<table name="Cooling Fan Duty Override (F1FE 0x11)" category="Cooling Fan" address="10e7c" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Duty Override (F1FE 0x11)" category="Cooling Fan" address="10e7c" type="1D" level="2" scaling="Percent128_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128_16bit: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 128. F494 target is forced to this word when F1FE bit0 or bit4 is set. -->
 	</table>
-	<table name="Cooling Fan Duty when F490 Gate True" category="Cooling Fan" address="10e88" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Duty when F490 Gate True" category="Cooling Fan" address="10e88" type="1D" level="2" scaling="Percent128_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128_16bit: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. F494 target is set to this when check_hysteresis_gate_f490 returns true. -->
 	</table>
 	<table name="Cooling Fan Dwell Counter Limit (EF6A)" category="Cooling Fan" address="10e9a" type="1D" level="2" scaling="uint16">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. Normal fan logic runs only when the EF6A counter is at or above this word. -->
 	</table>
-	<table name="Cooling Fan Duty Minimum Clamp" category="Cooling Fan" address="10e9c" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Duty Minimum Clamp" category="Cooling Fan" address="10e9c" type="1D" level="2" scaling="Percent128_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128_16bit: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. If target is above this word and below word 10e9e, it is set to this word. -->
 	</table>
-	<table name="Cooling Fan Duty Clamp Upper" category="Cooling Fan" address="10e9e" type="1D" level="2" scaling="uint16">
+	<table name="Cooling Fan Duty Clamp Upper" category="Cooling Fan" address="10e9e" type="1D" level="2" scaling="Percent128_16bit">
+		<!-- 2026-11-21 [Ghidra] scaling set to Percent128_16bit: fan duty is on a 0 to 128 scale (0x80 = 100 percent): the duty table peaks at 0x80 and the forced (SCI test) and override values are 0x80; the scaling Percent128 (x*100/128) is carried over on that basis. Output path checked: radfan_pwm_duty_target_f494_calc stores the duty in F494, and ff88_set_scaled_clamped (0x16c33) shifts it left 4 bits and clamps the result at 0x800 before writing timer register FF88, so 0x80 is the largest duty the code will command (full scale). That the output is linear in percent of the timer period is assumed, not measured. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: radfan_pwm_duty_target_f494_calc (0x18bc2): ROM value 0. See word 10e9c. -->
 	</table>
-	<table name="Fan Gate F13C Clear Threshold" category="Cooling Fan" address="10e7e" type="1D" level="2" scaling="uint16">
+	<table name="Fan Gate TPS (F13C) Clear Threshold" category="Cooling Fan" address="10e7e" type="1D" level="2" scaling="TPS Percent">
+		<!-- 2026-11-21 [Ghidra] scaling set to TPS Percent: F13C is the throttle position word: its low byte F13D is MUT_17 and MUT request 0x17 is Throttle Position, x*100/255 percent, in Ceddy's EvoScan MUT list. The fan gate therefore compares throttle position. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 199. Clears F490 bit12 when ADC ch7 raw F13C is at or below this word. -->
 	</table>
-	<table name="Fan Gate F13C Set Threshold" category="Cooling Fan" address="10e80" type="1D" level="2" scaling="uint16">
+	<table name="Fan Gate TPS (F13C) Set Threshold" category="Cooling Fan" address="10e80" type="1D" level="2" scaling="TPS Percent">
+		<!-- 2026-11-21 [Ghidra] scaling set to TPS Percent: F13C is the throttle position word: its low byte F13D is MUT_17 and MUT request 0x17 is Throttle Position, x*100/255 percent, in Ceddy's EvoScan MUT list. The fan gate therefore compares throttle position. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 210. Sets F490 bit12 when F13C rises above this word. -->
 	</table>
-	<table name="Fan Gate F110 Clear Threshold" category="Cooling Fan" address="10e82" type="1D" level="2" scaling="uint16">
+	<table name="Fan Gate Temp (F110) Clear Threshold" category="Cooling Fan" address="10e82" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: calc_f110_f10e_via_table (0x21314) converts F10A into F110 and F10C into F10E with the same lookup (table at 132fc, ADC_Coolant_Temp_Scaling, axis 339e), so F110 has the same representation as the coolant word F10E, which is x-40 C (MUT_10, and the 88 to 111 C fan axis). F110 is therefore a second reading of a coolant-type thermistor; which physical sensor feeds ADC input F10A is not identified. Not reconciled: the table's own values only reach 120, yet F10E axes reach 151, so the lookup helper may add an offset I did not check. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 145. Clears F490 bit10 when F110 is at or below this word. -->
 	</table>
-	<table name="Fan Gate F110 Set Threshold" category="Cooling Fan" address="10e84" type="1D" level="2" scaling="uint16">
+	<table name="Fan Gate Temp (F110) Set Threshold" category="Cooling Fan" address="10e84" type="1D" level="2" scaling="Temp">
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: calc_f110_f10e_via_table (0x21314) converts F10A into F110 and F10C into F10E with the same lookup (table at 132fc, ADC_Coolant_Temp_Scaling, axis 339e), so F110 has the same representation as the coolant word F10E, which is x-40 C (MUT_10, and the 88 to 111 C fan axis). F110 is therefore a second reading of a coolant-type thermistor; which physical sensor feeds ADC input F10A is not identified. Not reconciled: the table's own values only reach 120, yet F10E axes reach 151, so the lookup helper may add an offset I did not check. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 150. Sets F490 bit10 when F110 rises above this word. -->
 	</table>
-	<table name="Fan Gate F13C Fallback Value" category="Cooling Fan" address="10e86" type="1D" level="2" scaling="uint16">
+	<table name="Fan Gate TPS (F13C) Fallback Value" category="Cooling Fan" address="10e86" type="1D" level="2" scaling="TPS Percent">
+		<!-- 2026-11-21 [Ghidra] scaling set to TPS Percent: F13C is the throttle position word: its low byte F13D is MUT_17 and MUT request 0x17 is Throttle Position, x*100/255 percent, in Ceddy's EvoScan MUT list. The fan gate therefore compares throttle position. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 200. Loaded into EFF6 while F490 bit12 is clear. -->
 	</table>
 
@@ -1398,7 +1464,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     none in 0x120xx-0x124xx). Moved to 21000011_1997-2001_RVR_X3_Mt__4g63t_.xml (the
 	     ROM-specific file, not this shared base) as corrected 1D scalars. -->
 
-	<table name="AXIS_1357C_139x16" category="Axis Tables - input F116 (unscaled)" address="1357C" type="2D" level="3" scaling="uint16">
+	<table name="AXIS_1357C_139x16" category="Axis Tables - IAT Sensor Voltage (F116)" address="1357C" type="2D" level="3" scaling="Volts16">
 		<table name="Index (axis input: RAM F116)" type="Static X Axis" elements="139">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data><data>21</data><data>22</data><data>23</data><data>24</data><data>25</data><data>26</data><data>27</data><data>28</data><data>29</data><data>30</data><data>31</data><data>32</data><data>33</data><data>34</data><data>35</data><data>36</data><data>37</data><data>38</data><data>39</data><data>40</data><data>41</data><data>42</data><data>43</data><data>44</data><data>45</data><data>46</data><data>47</data><data>48</data><data>49</data><data>50</data><data>51</data><data>52</data><data>53</data><data>54</data><data>55</data><data>56</data><data>57</data><data>58</data><data>59</data><data>60</data><data>61</data><data>62</data><data>63</data><data>64</data><data>65</data><data>66</data><data>67</data><data>68</data><data>69</data><data>70</data><data>71</data><data>72</data><data>73</data><data>74</data><data>75</data><data>76</data><data>77</data><data>78</data><data>79</data><data>80</data><data>81</data><data>82</data><data>83</data><data>84</data><data>85</data><data>86</data><data>87</data><data>88</data><data>89</data><data>90</data><data>91</data><data>92</data><data>93</data><data>94</data><data>95</data><data>96</data><data>97</data><data>98</data><data>99</data><data>100</data><data>101</data><data>102</data><data>103</data><data>104</data><data>105</data><data>106</data><data>107</data><data>108</data><data>109</data><data>110</data><data>111</data><data>112</data><data>113</data><data>114</data><data>115</data><data>116</data><data>117</data><data>118</data><data>119</data><data>120</data><data>121</data><data>122</data><data>123</data><data>124</data><data>125</data><data>126</data><data>127</data><data>128</data><data>129</data><data>130</data><data>131</data><data>132</data><data>133</data><data>134</data><data>135</data><data>136</data><data>137</data><data>138</data>
 		</table>
@@ -1637,7 +1703,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by High Octane Ignition Map 1 etc). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D35C_16x16" category="Axis Tables - input F0BA (unscaled)" address="2D35C" type="2D" level="3" scaling="uint16">
+	<table name="AXIS_2D35C_16x16" category="Axis Tables - Load (F194/F196 select)" address="2D35C" type="2D" level="3" scaling="Load">
 		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="16">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data>
 		</table>
@@ -1691,7 +1757,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     500,1000,2000,3000,4000, clean coarse. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D404_7x16" category="Axis Tables - input F0BA (unscaled)" address="2D404" type="2D" level="3" scaling="uint16">
+	<table name="AXIS_2D404_7x16" category="Axis Tables - Throttle Position + trim (F0BA)" address="2D404" type="2D" level="3" scaling="TPS Percent">
 		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
