@@ -131,7 +131,7 @@
     <symbol name="PCDR"  address="ram:0xFE97" entry="false"/>
     <symbol name="PBPCR" address="ram:0xFE98" entry="false"/>
     <symbol name="PCPCR" address="ram:0xFE99" entry="false"/>
-    <symbol name="oCR"   address="ram:0xFE9A" entry="false"/>
+    <symbol name="PHICR"   address="ram:0xFE9A" entry="false"/>
 
     <!-- A/D Converter result registers -->
     <symbol name="ADDR0H" address="ram:0xFEA0" entry="false"/>
@@ -209,7 +209,7 @@
     <symbol name="SYSC_BRCR"  address="ram:0xFF1B" entry="false"/>
     <symbol name="SYSC_NMICR" address="ram:0xFF1C" entry="false"/>
     <symbol name="SYSC_IRQCR" address="ram:0xFF1D" entry="false"/>
-    <symbol name="SYSC_writeCR" address="ram:0xFF1E" entry="false"/>
+    <symbol name="SYSC_RSTCSR_WKEY" address="ram:0xFF1E" entry="false"/>
     <symbol name="SYSC_RSTCSR" address="ram:0xFF1F" entry="false"/>
 
     <!-- Timer 1 (16-bit, Channel A) -->
