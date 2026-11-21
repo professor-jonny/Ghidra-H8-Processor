@@ -423,7 +423,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- 2026-11-20 removed TABLE_3D_000131FA_TCU @131fa: header-only stub (03 00 F0C0 F0C2 0A FF) followed directly by another header, no data. -->
 
-	<table name="TABLE_2D_0001327A" category="Unknown" address="13282" type="2D" scaling="uint8">
+	<table name="MUT_RequestID_Bound_Block_13282" category="Sensor Scaling" address="13282" type="2D" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] renamed from TABLE_2D_0001327A. The only readers (17186 adc_sensor_convert_multi, 171d2 adc_sensor_convert_single) read a 16-bit value at 13282 as the upper bound of the MUT RequestID pointer table at 2fad0. First word is 010F. They do not index it as a 2D table, so the 2D layout and RPM axis here are unverified. -->
 		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
 	</table>
 
