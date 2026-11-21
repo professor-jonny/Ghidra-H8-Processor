@@ -857,7 +857,9 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Error" address="2d14c" type="X Axis" elements="9" scaling="RPM"/>
 	</table>
 
-	<table name="Boost Limit" category="Limits" type="2D" level="2" scaling="LoadBoost">
+	<table name="Load Limit vs RPM (closed-loop ready check, F20E 0x11 clear)" category="Fuel" address="11cee" type="2D" level="2" scaling="LoadBoost">
+		<!-- 2026-11-21 [Ghidra] renamed from 'Boost Limit'. closedloop_fuel_ready_check (226fd) looks this up through the pointer array at 2da4c (all 8 slots point at header 11cea), multiplies the value by 4 and compares it with load F190. When load is above it, F016 is set to the constant at 0894. Nothing in that code is a boost limit. All 10 entries are A0, which is 200 on this scale, so the limit never triggers. Name follows the two sibling Load Limit vs RPM tables at 11870 and 11884. -->
+		<!-- 2026-11-21 [Ghidra] address added: the table had none, so EcuFlash could not place it. Header 11cea (02 00 F0 C4) holds 10 data bytes from 11cee, all A0 (160, which is 200 on the LoadBoost scale), and is looked up on axis 2d080 / 2d086. -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 11cea index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
