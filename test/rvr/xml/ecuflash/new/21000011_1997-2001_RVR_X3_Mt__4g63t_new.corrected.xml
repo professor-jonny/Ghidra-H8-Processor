@@ -443,9 +443,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- 2026-11-20 removed TABLE_3D_000131FA_TCU @131fa: header-only stub (03 00 F0C0 F0C2 0A FF) followed directly by another header, no data. -->
 
-	<table name="MUT_RequestID_Bound_Block_13282" category="Sensor Scaling" address="13282" type="2D" scaling="uint8">
-		<!-- 2026-11-21 [Ghidra] renamed from TABLE_2D_0001327A. The only readers (17186 adc_sensor_convert_multi, 171d2 adc_sensor_convert_single) read a 16-bit value at 13282 as the upper bound of the MUT RequestID pointer table at 2fad0. First word is 010F. They do not index it as a 2D table, so the 2D layout and RPM axis here are unverified. -->
-		<table name="RPM" address="2d332" type="Y Axis" elements="18" scaling="RPM"/>
+	<table name="MUT RequestID Table Upper Bound" category="Sensor Scaling" address="13282" type="1D" scaling="Hex16">
+		<!-- 2026-11-21 [Ghidra] Was a 2D table with an RPM axis, which showed unrelated bytes. The only readers (17186 adc_sensor_convert_multi, 171d2 adc_sensor_convert_single) read one 16-bit value here (010F) as the upper bound for the MUT RequestID pointer table at 2fad0. It is a single scalar. The words after it are separate tables: 13284 TCU Link Sync Pattern (4 words), 1328c compare mask, 1328e and 13296 phase masks. Bytes from 1329e onward (0002 0001 0004 0008 0002 000B ...) are read by fuel_pw_and_airvol_compute and are not defined here. ROM 1327a and 1327e hold two 4-byte 2D headers (02 00 F0 C0, 02 00 F0 C8) with no data of their own before them. -->
 	</table>
 
 	<table name="ADC_Coolant_Temp_Scaling" category="Sensor Scaling" address="132fc" type="2D" scaling="uint8">
@@ -560,8 +559,19 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="X Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Decel Fuel Cut Resume Enrich" category="Fuel" address="11f08" type="2D" level="2" swapxy="true" scaling="EnrichmentAdj">
-		<table name="Engine Temp" address="2d42e" type="X Axis" elements="9" scaling="Temp"/>
+	<table name="Decel Fuel Cut Resume Enrich" category="Fuel" address="11f08" type="2D" level="2" scaling="EnrichmentAdj">
+		<!-- 2026-11-21 [Ghidra] Read as bytes at 11f08 + F29E (0 to 8) in f2b6_knock_retard_state_select (0x2371f), result stored in F2B6 (default 0x80). Index is the step counter F29E, not engine temperature as the old X axis (2d42e) said. Name and category are unverified: the only evidence for fuel enrichment is the EnrichmentAdj (x/128) scaling. -->
+		<table name="F29E step" type="Static X Axis" elements="9">
+			<data>0</data>
+			<data>1</data>
+			<data>2</data>
+			<data>3</data>
+			<data>4</data>
+			<data>5</data>
+			<data>6</data>
+			<data>7</data>
+			<data>8</data>
+		</table>
 	</table>
 
 	<table name="Decel Fuel Cut Delay - Neutral A/C Off" category="Fuel" address="128fa" type="2D" level="2" scaling="uint8">
@@ -777,6 +787,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<table name="Stationary Rev Limit" category="Limits" address="10872" type="1D" level="1" scaling="RPMStatLimit"/>
 
 	<table name="Speed Limit" category="Limits" address="10888" type="2D" level="2" scaling="VehicleSpeed">
+		<!-- 2026-11-21 [Ghidra] VERIFIED by reader o2_temp_ready_check (0x22740): F224 bit13 sets when the F1E8 value (vehicle speed, x*2 km/h) is above the first word (10888 = 92, 184 km/h) and clears at or below the second (1088a = 87, 174 km/h). -->
 		<table name="Condition" type="Static Y Axis" elements="2">
 			<data>On</data>
 			<data>Off</data>
@@ -895,12 +906,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="Boost Control Load Offset" category="Turbo" address="10e0a" type="1D" level="2" scaling="Load16"/>
 
-	<table name="Wastegate Solenoid Activation RPM" category="Turbo" address="10e02" type="2D" level="1" scaling="RPMStatLimit">
+	<table name="Ign Advance Flags F440 RPM Thresholds (F17A)" category="Turbo" address="10e02" type="2D" level="1" scaling="RPMStatLimit">
+		<!-- 2026-11-21 [Ghidra] Renamed from Wastegate Solenoid Activation RPM (rows were Reactivate/Deactivate On/Off). Read only by ign_advance_enable_flags_f440_update (0x18e9a to 0x18f3a). Four on/off hysteresis thresholds compared with engine speed F17A (31.25 rpm per count): F440 bit0 sets above the first value and clears at or below the second; F440 bit1 sets above the third and clears at or below the fourth (bit1 is forced on when ROM byte 102f0 = 2). What F440 bit0 and bit1 control downstream has not been traced, so the old wastegate meaning is unconfirmed. -->
 		<table name="Condition" type="Static Y Axis" elements="4">
-			<data>Reactivate On</data>
-			<data>Reactivate Off</data>
-			<data>Deactivate On</data>
-			<data>Deactivate Off</data>
+			<data>F440 bit0 Set Above</data>
+			<data>F440 bit0 Clear At/Below</data>
+			<data>F440 bit1 Set Above</data>
+			<data>F440 bit1 Clear At/Below</data>
 		</table>
 	</table>
 
@@ -912,12 +924,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="Octane Above to Enable Boost Control" category="Turbo" address="10dfd" type="1D" level="2" scaling="Percent (256)"/>
 
-	<table name="Boost Control Limiting Vehicle Speed" category="Turbo" address="12f84" type="2D" level="3" scaling="VehicleSpeed8">
-		<table name="Condition" type="Static Y Axis" elements="2">
-			<data>On</data>
-			<data>Off</data>
-		</table>
-	</table>
+	<!-- 2026-11-21 [Ghidra] REMOVED two entries at address 12f84 ("Boost Control Limiting Vehicle Speed" 2D with On/Off axis, and "Boost Control RPM/MPH Crossover" 1D, category Turbo Boost non-JDM). The ROM bytes from 12f80 to 12f8d are all 0xFF padding (the next real table header, 03 00 F0C0 F0C2, starts at 12f8e), nothing references 12f84 (a read of @0xf84 in f0ec_bit1_threshold_gate_check is the page-1 address 10f84, not 12f84), and both entries came from the original XML unverified. -->
 
 	<table name="Boost Enhancement (Anti-Lag) Start RPM" category="Turbo" address="109e4" type="1D" level="2" scaling="RPMStatLimit"/>
 
@@ -954,13 +961,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Boost Target Load vs RPM # 3 (F44E, F0F8 bit5 set)" category="Turbo" address="12ac2" type="2D" level="2" scaling="Load16">
-		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 3 and rescaled from WGDuty to Load16. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Result F44E is not a duty: wgdc_correction_integrator_update (0x18fe0) computes boost error = (F196>>1) + 0x20 minus (F44E + word 10e0a), clamps it to a byte and looks it up in 12a84. So F44E is the target load for this load-based (MAF only) car, in the same half-load units as 10e0a (one unit 0.625 % load, Load16 scaling). Target load % = x*0.625 + 20 when 10e0a = 64. Values 0xFF at low RPM falling to 0xAD at 7000 RPM. -->
+	<table name="Boost Target Load vs RPM # 3 (F44E, F0F8 bit5 set)" category="Turbo" address="12ac2" type="2D" level="2" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 3 and rescaled from WGDuty to Load8 (single bytes; Load16 read two bytes per cell and ran into the next table's header). Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Result F44E is not a duty: wgdc_correction_integrator_update (0x18fe0) computes boost error = (F196>>1) + 0x20 minus (F44E + word 10e0a), clamps it to a byte and looks it up in 12a84. So F44E is the target load for this load-based (MAF only) car, in the same half-load units as 10e0a (one unit 0.625 % load; this table is bytes so it uses Load8, 10e0a is a word and uses Load16). Target load % = x*0.625 + 20 when 10e0a = 64. Values 0xFF at low RPM falling to 0xAD at 7000 RPM. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Boost Target Load vs RPM # 4 (F44E, F0F8 bit5 clear)" category="Turbo" address="12ad6" type="2D" level="2" scaling="Load16">
-		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 4 and rescaled from WGDuty to Load16. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Same role as # 3 for the bit5-clear case. -->
+	<table name="Boost Target Load vs RPM # 4 (F44E, F0F8 bit5 clear)" category="Turbo" address="12ad6" type="2D" level="2" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 4 and rescaled from WGDuty to Load8 (single bytes; Load16 read two bytes per cell and ran into the next table's header). Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Same role as # 3 for the bit5-clear case. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
@@ -974,7 +981,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<table name="WGDC Correction update delay #2" category="Turbo" address="10df2" type="1D" level="1" scaling="uint16"/>
 
-	<table name="Boost Control RPM/MPH Crossover" category="Turbo Boost non-JDM" address="12f84" type="1D" level="3" scaling="RPMPerMPH"/>
+	
 
 	<table name="Spec Index" category="ECU" address="10208" type="1D" level="5" scaling="uint16"/>
 
@@ -1423,11 +1430,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 210. Sets F490 bit12 when F13C rises above this word. -->
 	</table>
 	<table name="Fan Gate Temp (F110) Clear Threshold" category="Cooling Fan" address="10e82" type="1D" level="2" scaling="Temp">
-		<!-- 2026-11-21 [Ghidra] scaling set to Temp: calc_f110_f10e_via_table (0x21314) converts F10A into F110 and F10C into F10E with the same lookup (table at 132fc, ADC_Coolant_Temp_Scaling, axis 339e), so F110 has the same representation as the coolant word F10E, which is x-40 C (MUT_10, and the 88 to 111 C fan axis). F110 is therefore a second reading of a coolant-type thermistor; which physical sensor feeds ADC input F10A is not identified. Not reconciled: the table's own values only reach 120, yet F10E axes reach 151, so the lookup helper may add an offset I did not check. -->
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: calc_f110_f10e_via_table (0x21314) converts F10A into F110 and F10C into F10E with the same lookup (table at 132fc, ADC_Coolant_Temp_Scaling, axis 339e), so F110 has the same representation as the coolant word F10E, which is x-40 C (MUT_10, and the 88 to 111 C fan axis). F110 is therefore a second reading of a coolant-type thermistor; which physical sensor feeds ADC input F10A is not identified. Offset resolved: the lookup helper at 0x14656 adds header byte 1 of the table record (0x28 = 40 for table 32f8) to every interpolated value, so the stored degrees C (120 down to -40) come out as C + 40 = x-40 form (0 to 160), matching the F10E axes that reach 151. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 145. Clears F490 bit10 when F110 is at or below this word. -->
 	</table>
 	<table name="Fan Gate Temp (F110) Set Threshold" category="Cooling Fan" address="10e84" type="1D" level="2" scaling="Temp">
-		<!-- 2026-11-21 [Ghidra] scaling set to Temp: calc_f110_f10e_via_table (0x21314) converts F10A into F110 and F10C into F10E with the same lookup (table at 132fc, ADC_Coolant_Temp_Scaling, axis 339e), so F110 has the same representation as the coolant word F10E, which is x-40 C (MUT_10, and the 88 to 111 C fan axis). F110 is therefore a second reading of a coolant-type thermistor; which physical sensor feeds ADC input F10A is not identified. Not reconciled: the table's own values only reach 120, yet F10E axes reach 151, so the lookup helper may add an offset I did not check. -->
+		<!-- 2026-11-21 [Ghidra] scaling set to Temp: calc_f110_f10e_via_table (0x21314) converts F10A into F110 and F10C into F10E with the same lookup (table at 132fc, ADC_Coolant_Temp_Scaling, axis 339e), so F110 has the same representation as the coolant word F10E, which is x-40 C (MUT_10, and the 88 to 111 C fan axis). F110 is therefore a second reading of a coolant-type thermistor; which physical sensor feeds ADC input F10A is not identified. Offset resolved: the lookup helper at 0x14656 adds header byte 1 of the table record (0x28 = 40 for table 32f8) to every interpolated value, so the stored degrees C (120 down to -40) come out as C + 40 = x-40 form (0 to 160), matching the F10E axes that reach 151. -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: check_hysteresis_gate_f490 (0x18a55): ROM value 150. Sets F490 bit10 when F110 rises above this word. -->
 	</table>
 	<table name="Fan Gate TPS (F13C) Fallback Value" category="Cooling Fan" address="10e86" type="1D" level="2" scaling="TPS Percent">
@@ -1472,13 +1479,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- header 13576: F0D2 F116 008B (count=139). Data starts at 1357C. Not yet shape/value checked. -->
 	</table>
 
-	<table name="AXIS_23CF0_84x16" category="Axis Tables - not a breakpoint axis" address="23CF0" type="2D" level="3" scaling="uint16">
-		<table name="Index (values not monotonic, input F436)" type="Static X Axis" elements="84">
-			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data><data>21</data><data>22</data><data>23</data><data>24</data><data>25</data><data>26</data><data>27</data><data>28</data><data>29</data><data>30</data><data>31</data><data>32</data><data>33</data><data>34</data><data>35</data><data>36</data><data>37</data><data>38</data><data>39</data><data>40</data><data>41</data><data>42</data><data>43</data><data>44</data><data>45</data><data>46</data><data>47</data><data>48</data><data>49</data><data>50</data><data>51</data><data>52</data><data>53</data><data>54</data><data>55</data><data>56</data><data>57</data><data>58</data><data>59</data><data>60</data><data>61</data><data>62</data><data>63</data><data>64</data><data>65</data><data>66</data><data>67</data><data>68</data><data>69</data><data>70</data><data>71</data><data>72</data><data>73</data><data>74</data><data>75</data><data>76</data><data>77</data><data>78</data><data>79</data><data>80</data><data>81</data><data>82</data><data>83</data>
-		</table>
-		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_00023CEA. Name is AXIS_<data address>_<element count>x<bits>. Data is 84 big-endian 16-bit words (168 bytes) after a 6 byte header at 23CEA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
-		<!-- header 23CEA: F216 F436 0054 (count=84). Data starts at 23CF0. Not yet shape/value checked. -->
-	</table>
+	<!-- 2026-11-21 [Ghidra] REMOVED AXIS_23CF0_84x16 (category Axis Tables - not a breakpoint axis, 84 words at 23CF0). ROM 23CF0 to 23D97 is machine code, the tail of knock_octane_trim_gate_condition_check (starts 23c5c). The words repeat 1DF1 / 1DF2 / 1D09 because 1D xx is the opcode prefix for absolute RAM access (for example 1d f2 18 80 = mov @0xf218,r0). Ghidra had this region as a 174-byte data block starting at 23cea instead of code. A scan of every other entry in this file found no other table whose bytes are code. -->
 
 	<table name="AXIS_2D086_10x16" category="Axis Tables - Engine RPM" address="2D086" type="2D" level="3" scaling="RPM">
 		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
@@ -2273,12 +2274,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Gear ratio table: 4 entries (gears 0-3), H8 timer period counts for ratio detection -->
 	<!-- gear_ratio_table @ ROM 0x3284: 0x9191, 0x4646, 0x1919, 0x6464 -->
-	<table name="TCU Gear Ratio Periods" category="TCU Link (AT only)" address="13284" type="2D" level="2" scaling="uint16">
-		<table name="Gear" type="Static X Axis" elements="4">
-			<data>1st</data>
-			<data>2nd</data>
-			<data>3rd</data>
-			<data>4th</data>
+	<table name="TCU Link Sync Pattern (F5E6 XOR, by F5E8 phase)" category="TCU Link (AT only)" address="13284" type="2D" level="2" scaling="Hex16">
+		<!-- 2026-11-21 [Ghidra] Renamed and re-axised from a gear-ratio / shift-torque guess. Read only by tcu_shift_torque_and_knock_mgmt (0x29000). F5E6 is a 16-bit shift register of samples from the input at pin bit 1 of FE87 (via 0x15555). Each entry is XORed with F5E6 and masked with the compare mask at 1328c (000F). Previously named TCU Gear Ratio Periods with a 1st-4th gear axis, which the code does not support. -->
+		<table name="Phase (F5E8, 0-3)" type="Static X Axis" elements="4">
+			<data>0</data>
+			<data>1</data>
+			<data>2</data>
+			<data>3</data>
 		</table>
 	</table>
 
@@ -2294,12 +2296,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     arithmetic/scaling operation. The existing uint16 "units" scaling (not a
 	     torque/Nm scaling) is CORRECT as-is; small values like 1-2 are expected and
 	     not a data error. -->
-	<table name="TCU Shift Torque Cmd Lo - Per Gear" category="TCU Link (AT only)" address="1328e" type="2D" level="2" scaling="uint16">
-		<table name="Gear" type="Static X Axis" elements="4">
-			<data>1st</data>
-			<data>2nd</data>
-			<data>3rd</data>
-			<data>4th</data>
+	<table name="TCU Link Phase Mask A (to F39E)" category="TCU Link (AT only)" address="1328e" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] Renamed and re-axised from a gear-ratio / shift-torque guess. Read only by tcu_shift_torque_and_knock_mgmt (0x29000). F5E6 is a 16-bit shift register of samples from the input at pin bit 1 of FE87 (via 0x15555). Indexed by F5E6 AND 3 and stored to F39E. Values 2 1 2 1, used as bit masks / compared with 1 later. Previously named TCU Shift Torque Cmd Lo - Per Gear. -->
+		<table name="F5E6 low 2 bits" type="Static X Axis" elements="4">
+			<data>0</data>
+			<data>1</data>
+			<data>2</data>
+			<data>3</data>
 		</table>
 	</table>
 
@@ -2308,13 +2311,18 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- [SESSION 10, 2026-07-03 CONFIRMED] Same trace as Cmd Lo above - read into
 	     RAM 0xf3a0 alongside the Lo table, part of the same per-gear SCI3 command
 	     byte pair sent to the TCU. uint16 "units" scaling confirmed correct. -->
-	<table name="TCU Shift Torque Cmd Hi - Per Gear" category="TCU Link (AT only)" address="13296" type="2D" level="2" scaling="uint16">
-		<table name="Gear" type="Static X Axis" elements="4">
-			<data>1st</data>
-			<data>2nd</data>
-			<data>3rd</data>
-			<data>4th</data>
+	<table name="TCU Link Phase Mask B (to F3A0)" category="TCU Link (AT only)" address="13296" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] Renamed and re-axised from a gear-ratio / shift-torque guess. Read only by tcu_shift_torque_and_knock_mgmt (0x29000). F5E6 is a 16-bit shift register of samples from the input at pin bit 1 of FE87 (via 0x15555). Indexed by F5E6 AND 3 and stored to F3A0. Values 1 2 1 2, the complement of mask A. Previously named TCU Shift Torque Cmd Hi - Per Gear. -->
+		<table name="F5E6 low 2 bits" type="Static X Axis" elements="4">
+			<data>0</data>
+			<data>1</data>
+			<data>2</data>
+			<data>3</data>
 		</table>
+	</table>
+
+	<table name="TCU Link Sync Pattern Compare Mask" category="TCU Link (AT only)" address="1328c" type="1D" level="2" scaling="Hex16">
+		<!-- 2026-11-21 [Ghidra] ANDed with the F5E6 XOR sync pattern result at 0x2905c in tcu_shift_torque_and_knock_mgmt. Value 000F. -->
 	</table>
 
 	<!-- Upshift torque offset per gear (added to torque request when sport mode active, f33e bit3 set) -->
@@ -2387,10 +2395,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Solenoid duty delta threshold (normal / sport mode) for slip detection -->
 	<!-- ROM 0xf8a / 0xf8c -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Solenoid Delta Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="F3A8 Delta Threshold (F0EC bit1 clear, set)" category="Constants (unverified)" address="10f8a" type="2D" level="3" scaling="uint16">
-		<table name="Mode" type="Static X Axis" elements="2">
-			<data>Normal</data>
-			<data>Sport</data>
+	<table name="F3A8 Delta Threshold (F0EC bit1 clear, set)" category="Knock Control" address="10f8a" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] Read in tcu_shift_torque_and_knock_mgmt (0x29874-0x2989c), the knock block. F3A8 is the knock ADC value (MUT 0x6A). The drop from the previous F3A8 sample is compared with 10f8a, or with 10f8c when F0EC bit1 is set; a drop below it increments the counter F3B6, which sets F200 bit0 at the limit in 10f8e. Axis labels were Normal/Sport, which the code does not support. -->
+		<table name="F0EC bit1" type="Static X Axis" elements="2">
+			<data>clear</data>
+			<data>set</data>
 		</table>
 	</table>
 
@@ -2402,31 +2411,34 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Slip-based duty cycle gain (normal / lockup) -->
 	<!-- ROM 0xb0a / 0xb08 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Duty Gain'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="F3AA Gain (F3A4 bit7 set, clear)" category="Constants (unverified)" address="10b08" type="2D" level="3" scaling="uint16">
-		<table name="Mode" type="Static X Axis" elements="2">
-			<data>Lockup</data>
-			<data>Normal</data>
+	<table name="F3AA Gain (F3A4 bit7 set, clear)" category="Knock Control" address="10b08" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] tcu_shift_torque_and_knock_mgmt (0x29916-0x2991c): F3B0 * this value / (F3AA * 8). The first value (10b08) is used when F3A4 bit7 is set, otherwise the second (10b0a). Axis labels were Lockup/Normal, which the code does not support. -->
+		<table name="F3A4 bit7" type="Static X Axis" elements="2">
+			<data>set</data>
+			<data>clear</data>
 		</table>
 	</table>
 
 	<!-- Max slip adjustment ceiling (normal / lockup) -->
 	<!-- ROM 0xb0c / 0xb0e -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adj Ceiling'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Adjustment Ceiling (F3A4 bit7 set, clear)" category="Constants (unverified)" address="10b0c" type="2D" level="3" scaling="uint16">
-		<table name="Mode" type="Static X Axis" elements="2">
-			<data>Lockup</data>
-			<data>Normal</data>
+	<table name="Adjustment Ceiling (F3A4 bit7 set, clear)" category="Knock Control" address="10b0c" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] tcu_shift_torque_and_knock_mgmt (0x29a1e-0x29a24): upper limit on the F3A2 knock sum step. The first value (10b0c) is used when F3A4 bit7 is set, otherwise the second (10b0e). Axis labels were Lockup/Normal, which the code does not support. -->
+		<table name="F3A4 bit7" type="Static X Axis" elements="2">
+			<data>set</data>
+			<data>clear</data>
 		</table>
 	</table>
 
 	<!-- Lockup entry/exit slip thresholds and decay rate -->
 	<!-- ROM 0xb2a = min slip for lockup exit, 0xb2c = max for entry, 0xb2e = decay rate -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Thresholds'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="F3AA Thresholds for F3A6 bit4 (exit, enter, F17A decay)" category="Constants (unverified)" address="10b2a" type="2D" level="2" scaling="uint16">
+	<table name="F3AA Thresholds for F3A6 bit4 (exit, enter, F17A decay)" category="Knock Control" address="10b2a" type="2D" level="2" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] tcu_shift_torque_and_knock_mgmt (0x29b2f-0x29b60). F3A6 bit4 sets when F3AA is at or above 10b2c (and F3DE takes F17A). While F0EC bit1 is set it clears when F3AA falls below 10b2a or F17A drops below F3DE minus 10b2e. Labels were Exit Min Slip / Entry Max Slip / Decay Rate; no slip is involved and the entry test is a minimum, not a maximum. -->
 		<table name="Parameter" type="Static X Axis" elements="3">
-			<data>Exit Min Slip</data>
-			<data>Entry Max Slip</data>
-			<data>Decay Rate</data>
+			<data>F3AA Exit Below</data>
+			<data>F3AA Entry At/Above</data>
+			<data>F17A Decay (31.25 rpm/count)</data>
 		</table>
 	</table>
 
