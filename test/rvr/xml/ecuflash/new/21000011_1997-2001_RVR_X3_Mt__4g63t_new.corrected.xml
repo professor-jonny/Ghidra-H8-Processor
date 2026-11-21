@@ -817,14 +817,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Engine Temp" address="2d418" type="Y Axis" elements="8" scaling="Temp"/>
 	</table>
 
-	<table name="Desired Idle RPM with AC on" category="ISCV Control" address="10b6c" type="2D" level="2" scaling="RPMTarget">
-		<table name="Condition" type="Static Y Axis" elements="4">
-			<data>Neut</data>
-			<data>Drive</data>
-			<data>Neut</data>
-			<data>Drive</data>
-		</table>
-	</table>
+	<!-- 2026-11-21 [Ghidra] removed: 'Desired Idle RPM with AC on' at 10b6c (4 x uint16, RPMTarget). It overlaid separate scalar constants: 10b70, 10b74 and 10b76 are read one by one by rpm_load_window_condition_check (22013), so they are not entries of an idle RPM table. The bytes there are 0064 0037 00a0 0020 00f5 006d. The real AC-on idle target, if it exists, is elsewhere. -->
+	<table name="Window Cond F17A Maximum (10b70)" category="Constants (unverified)" address="10b70" type="1D" level="2" scaling="uint16"/>
+	<table name="Window Cond F13A Maximum (10b74)" category="Constants (unverified)" address="10b74" type="1D" level="2" scaling="uint16"/>
+	<table name="Window Cond F13A Minimum (10b76)" category="Constants (unverified)" address="10b76" type="1D" level="2" scaling="uint16"/>
+	<!-- rpm_load_window_condition_check returns 1 when F0F8 bit1 is set, F20E and 0x11 is 0, F17A is below 10b70 and F13A is above 10b76 and below 10b74. -->
 
 	<table name="High Intake Air Temp ISCV Increase" category="ISCV Control" address="11aa2" type="2D" level="2" flipy="true" scaling="ISCVSteps16">
 		<table name="Condition" type="Static Y Axis">
@@ -1939,11 +1936,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- TCU torque target rate-of-change limit (used in sat_sub for rise/fall slew rate) -->
 	<!-- ROM 0xad0 = 0x0040 = 64 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Rise Rate Limit'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10ad0" category="TCU Link (unverified)" address="10ad0" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10ad0 (unverified)" category="Constants (unverified)" address="10ad0" type="1D" level="2" scaling="uint16"/>
 
 	<!-- ROM 0xace = 0x061a = 1562 — torque target slew rate when approaching from below -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Fall Rate Limit'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10ace" category="TCU Link (unverified)" address="10ace" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10ace (unverified)" category="Constants (unverified)" address="10ace" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Min throttle load for TCU active (below this, TCU shift mgmt exits early) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad2" (claimed 0x00bc=188); verified via live ROM read
@@ -1957,7 +1954,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     that 0x0014 actually sits at 0x10ad6. -->
 	<!-- ROM 0xad6 = 0x0014 = 20 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Max'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10ad6" category="TCU Link (unverified)" address="10ad6" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10ad6 (unverified)" category="Constants (unverified)" address="10ad6" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque ramp rate limit (added to tcu_torque_actual for max rate) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad8" (claimed 0x000f=15); verified via live ROM read
@@ -1965,39 +1962,39 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     "Torque Reduction Scale" below were also address-swapped in the original entry). -->
 	<!-- ROM 0xada = 0x000f = 15 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Ramp Rate'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10ada" category="TCU Link (unverified)" address="10ada" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10ada (unverified)" category="Constants (unverified)" address="10ada" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque reduction scaling divisor for shift events (muldiv, 0x200 = 512 = 1.0 scale) -->
 	<!-- CORRECTED 2026-07-26: was address="10ada" (claimed 0x00fa=250); verified via live ROM read
 	     that 0x00fa actually sits at 0x10ad8. -->
 	<!-- ROM 0xad8 = 0x00fa = 250 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Reduction Scale'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10ad8" category="TCU Link (unverified)" address="10ad8" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10ad8 (unverified)" category="Constants (unverified)" address="10ad8" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Max slip adjustment clamp (tcu_torque_slip_adj ceiling) -->
 	<!-- ROM 0xb1a -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adjustment'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b1a" category="TCU Link (unverified)" address="10b1a" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10b1a (unverified)" category="Constants (unverified)" address="10b1a" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in lockup mode -->
 	<!-- ROM 0xb26 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Adj Step - Lockup'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b26" category="TCU Link (unverified)" address="10b26" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10b26 (unverified)" category="Constants (unverified)" address="10b26" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in non-lockup mode -->
 	<!-- ROM 0xb28 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Adj Step - Normal'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b28" category="TCU Link (unverified)" address="10b28" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10b28 (unverified)" category="Constants (unverified)" address="10b28" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip counter threshold to enter lockup solenoid mode -->
 	<!-- ROM 0xb62 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Counter Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b62" category="TCU Link (unverified)" address="10b62" type="1D" level="2" scaling="uint16"/>
+	<table name="Constant 10b62 (unverified)" category="Constants (unverified)" address="10b62" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Solenoid duty delta threshold (normal / sport mode) for slip detection -->
 	<!-- ROM 0xf8a / 0xf8c -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Solenoid Delta Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10f8a" category="TCU Link (unverified)" address="10f8a" type="2D" level="3" scaling="uint16">
+	<table name="Constant 10f8a (unverified)" category="Constants (unverified)" address="10f8a" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Normal</data>
 			<data>Sport</data>
@@ -2007,12 +2004,12 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Slip counter max before lockup flag set (f200 bit0) -->
 	<!-- ROM 0xf8e -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Counter Max'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10f8e" category="TCU Link (unverified)" address="10f8e" type="1D" level="3" scaling="uint16"/>
+	<table name="Constant 10f8e (unverified)" category="Constants (unverified)" address="10f8e" type="1D" level="3" scaling="uint16"/>
 
 	<!-- Slip-based duty cycle gain (normal / lockup) -->
 	<!-- ROM 0xb0a / 0xb08 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Duty Gain'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b08" category="TCU Link (unverified)" address="10b08" type="2D" level="3" scaling="uint16">
+	<table name="Constant 10b08 (unverified)" category="Constants (unverified)" address="10b08" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2022,7 +2019,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Max slip adjustment ceiling (normal / lockup) -->
 	<!-- ROM 0xb0c / 0xb0e -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adj Ceiling'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b0c" category="TCU Link (unverified)" address="10b0c" type="2D" level="3" scaling="uint16">
+	<table name="Constant 10b0c (unverified)" category="Constants (unverified)" address="10b0c" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2032,7 +2029,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Lockup entry/exit slip thresholds and decay rate -->
 	<!-- ROM 0xb2a = min slip for lockup exit, 0xb2c = max for entry, 0xb2e = decay rate -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Thresholds'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="TCU Link Unverified 10b2a" category="TCU Link (unverified)" address="10b2a" type="2D" level="2" scaling="uint16">
+	<table name="Constant 10b2a (unverified)" category="Constants (unverified)" address="10b2a" type="2D" level="2" scaling="uint16">
 		<table name="Parameter" type="Static X Axis" elements="3">
 			<data>Exit Min Slip</data>
 			<data>Entry Max Slip</data>
