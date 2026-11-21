@@ -6,11 +6,11 @@
 # Run IMMEDIATELY after import, BEFORE clicking "Analyze".
 #
 # PIPELINE (run in this order):
-#   1. h8539_ecu_master_setup_new3.py   <- this script (setup + analysis)
-#   2. h8539_import_tables_xml.py       <- XML import + ROM scraper,
-#                                           runs AFTER auto-analysis
-#   3. h8539_export_tables_xml.py       <- writes labeled tables back
-#                                           out to EcuFlash-style XML
+#   1. h8539_ecu_master_setup.py     <- this script (setup + analysis)
+#   2. h8539_import_tables_xml2.py   <- XML import + ROM scraper,
+#                                       runs AFTER auto-analysis
+#   The H8 analyzers (Memory Map, ECU Table Access, ECU State Table Dispatch)
+#   run during Step 6 auto-analysis; the ECU ones take helper addresses as options.
 #
 # WHY XML/SCRAPER MOVED OUT AND MOVED LATER (2026-07-29):
 #   XML import and scraping used to run in this script, BEFORE Step 6
@@ -64,7 +64,7 @@
 #             only generic xref/flow signals (not tied to any known table
 #             byte-signature -- covers page 2 too)
 #
-# Once this script completes, run h8539_import_tables_xml.py to apply
+# Once this script completes, run h8539_import_tables_xml2.py to apply
 # EcuFlash XML labels and the ROM scraper against the now-analyzed program.
 #
 # IMPORT SETTINGS REQUIRED:
@@ -737,7 +737,7 @@ print("[5] OK: Decompiler is healthy")
 # further down in this function for why the general scaling/2D/3D
 # heuristic pass was deliberately removed from this step. XML- and
 # scraper-detected tables are handled entirely by the separate
-# h8539_import_tables_xml.py script, which runs AFTER this script's
+# h8539_import_tables_xml2.py script, which runs AFTER this script's
 # Step 6 auto-analysis (see this file's header comment for the full
 # pipeline rationale) -- a live gap-scan showed auto-analysis doesn't
 # need pre-typing to stay out of most table regions on this ROM, so
@@ -787,7 +787,7 @@ def protect_data_regions_early(xml_touched=None):
     def find_sentinel_data_len(start, max_len=0x1FF):
         """
         Sentinel-based length scan (same logic used by the scraper in
-        h8539_import_tables_xml.py). Not actually called by this function
+        h8539_import_tables_xml2.py). Not actually called by this function
         for anything anymore now that only the fixed-offset MUT table is
         marked here (see the comment above 'marked = 0' below) -- kept in
         case a future targeted fix needs it, so this scope doesn't have to
@@ -812,7 +812,7 @@ def protect_data_regions_early(xml_touched=None):
     # has actually run), so the two passes could re-type the same bytes
     # with different boundaries and produce duplicate/conflicting plate
     # comments (e.g. 0x12844). All XML- and scraper-driven table typing
-    # now happens entirely in h8539_import_tables_xml.py, which runs
+    # now happens entirely in h8539_import_tables_xml2.py, which runs
     # AFTER this script's Step 6 auto-analysis -- see this file's header
     # comment for the full rationale. Only the fixed-offset MUT table is
     # typed here, pre-analysis.
@@ -838,7 +838,7 @@ do_protect = askYesNo("Step 5b - Pre-Analysis MUT Table Protection",
     "this ROM before).\n\n"
     "This only types bytes as data - labels/plate comments for the MUT\n"
     "table, and all XML/scraper table detection, happen properly later\n"
-    "in h8539_import_tables_xml.py.")
+    "in h8539_import_tables_xml2.py.")
 if do_protect:
     tx = currentProgram.startTransaction("Pre-analysis MUT table protection")
     try:
@@ -1075,6 +1075,6 @@ else:
 print("")
 print("=" * 60)
 print("H8/539F Master Setup (ROM + auto-analysis) complete!")
-print("Next: run h8539_import_tables_xml.py to apply EcuFlash XML labels")
+print("Next: run h8539_import_tables_xml2.py to apply EcuFlash XML labels")
 print("and the ROM scraper against this now-analyzed program.")
 print("=" * 60)

@@ -1,12 +1,12 @@
 # H8/539F ECU - XML Table Import + ROM Scraper
 # @category MitsubishiECU
 #
-# Split out of h8539_ecu_master_setup_new3.py (2026-07-29) so table
+# Split out of h8539_ecu_master_setup.py (2026-07-29) so table
 # annotation runs as its OWN pass, separate from ROM setup/auto-analysis.
 #
-# RUN ORDER: run h8539_ecu_master_setup_new3.py FIRST (base setup +
-# auto-analysis), THEN this script, THEN (optionally, any time after)
-# h8539_export_tables_xml.py to write back out.
+# RUN ORDER: run h8539_ecu_master_setup.py FIRST (base setup + auto-analysis),
+# THEN this script. It is self-contained: the axis/data-length audit and the
+# Convention B writer check are built in, and it calls no other script.
 #
 # WHY THIS RUNS AFTER AUTO-ANALYSIS, NOT BEFORE:
 #   The original master script ran XML import before Step 6 auto-analysis
@@ -2566,7 +2566,7 @@ def run_rom_scraper():
 print("=" * 60)
 print("H8/539F XML Table Import + ROM Scraper")
 print("=" * 60)
-print("Run this AFTER h8539_ecu_master_setup_new3.py (base setup + auto-analysis).")
+print("Run this AFTER h8539_ecu_master_setup.py (base setup + auto-analysis).")
 print("")
 
 if mem.getBlock(addr(ROM_BASE)) is None:
@@ -2744,7 +2744,7 @@ print("[8d] Page 2 (0x%08X-0x%08X) has %d labeled symbol(s). The ROM scraper "
 print("")
 print("=" * 60)
 print("H8/539F XML Import + Scraper complete!")
-print("You can now run h8539_export_tables_xml.py to write these labels back out.")
+print("Table labelling complete.")
 if _log_fh is not None:
     print("Full [XML-VERIFY] detail (every table, not just what printed above) "
           "was written to:")
