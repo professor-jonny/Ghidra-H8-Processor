@@ -542,19 +542,23 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	</table>
 
 	<table name="Decel Fuel Cut Delay - Neutral A/C Off" category="Fuel" address="128fa" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] header 128f6 is selected by isc_f438_correction_calc (26ad8): code stores 0x28f6 in a local when F0F8 bit5 set, bit4 clear, then calls table_lookup_interp. No direct reference exists because the address is held in a local. The result feeds F438 via 1a212, an ISC-side variable (F402 target adds F42A and F43A), so the 'Decel Fuel Cut Delay' name is from earlier work and is not confirmed by this code. Name left unchanged. -->
 		<!-- 2026-11-20 [Ghidra] address fixed: was 2d3fe, which is the axis header (F0C2 F0BA 0007). The 7 data points start at 2d404, matching the Axis2 (Load) entry. Old: Engine Load / Load -->
 		<table name="Engine Load" address="2d404" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
 	<table name="Decel Fuel Cut Delay - In Gear A/C Off" category="Fuel" address="12906" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] header 12902 is selected by isc_f438_correction_calc (26ad8): code stores 0x2902 in a local when F0F8 bit5 clear, bit4 clear, then calls table_lookup_interp. No direct reference exists because the address is held in a local. The result feeds F438 via 1a212, an ISC-side variable (F402 target adds F42A and F43A), so the 'Decel Fuel Cut Delay' name is from earlier work and is not confirmed by this code. Name left unchanged. -->
 		<table name="Engine Load" address="2d404" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
 	<table name="Decel Fuel Cut Delay - Neutral A/C On" category="Fuel" address="12912" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] header 1290e is selected by isc_f438_correction_calc (26ad8): code stores 0x290e in a local when F0F8 bit5 set, bit4 set, then calls table_lookup_interp. No direct reference exists because the address is held in a local. The result feeds F438 via 1a212, an ISC-side variable (F402 target adds F42A and F43A), so the 'Decel Fuel Cut Delay' name is from earlier work and is not confirmed by this code. Name left unchanged. -->
 		<table name="Engine Load" address="2d404" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
 	<table name="Decel Fuel Cut Delay - In Gear A/C On" category="Fuel" address="1291e" type="2D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] header 1291a is selected by isc_f438_correction_calc (26ad8): code stores 0x291a in a local when F0F8 bit5 clear, bit4 set, then calls table_lookup_interp. No direct reference exists because the address is held in a local. The result feeds F438 via 1a212, an ISC-side variable (F402 target adds F42A and F43A), so the 'Decel Fuel Cut Delay' name is from earlier work and is not confirmed by this code. Name left unchanged. -->
 		<table name="Engine Load" address="2d404" type="X Axis" elements="7" scaling="Load"/>
 	</table>
 
