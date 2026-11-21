@@ -379,22 +379,25 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 1 Threshold (unused)" category="Transmission" address="12ed2" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 1 Threshold (unused)" category="TCU Link (AT only)" address="12ed2" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FDC <= value < FDE; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012ECE_ThresholdSelect. -->
-		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- 2026-11-21 [Ghidra] axis fixed: was RPM 2d332 (18 point axis, first 10 shown). The code looks this table up on header 2d636, data 2d63c, the same axis tier 4 uses. -->
+		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 2 Threshold (unused)" category="Transmission" address="12ee0" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 2 Threshold (unused)" category="TCU Link (AT only)" address="12ee0" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FDE <= value < FE0; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EDC_ThresholdSelect. -->
-		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- 2026-11-21 [Ghidra] axis fixed: was RPM 2d332 (18 point axis, first 10 shown). The code looks this table up on header 2d636, data 2d63c, the same axis tier 4 uses. -->
+		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 3 Threshold (unused)" category="Transmission" address="12eee" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 3 Threshold (unused)" category="TCU Link (AT only)" address="12eee" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FE0 <= value < FE2; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EEA_ThresholdSelect. -->
-		<table name="RPM" address="2d332" type="Y Axis" elements="10" scaling="RPM"/>
+		<!-- 2026-11-21 [Ghidra] axis fixed: was RPM 2d332 (18 point axis, first 10 shown). The code looks this table up on header 2d636, data 2d63c, the same axis tier 4 uses. -->
+		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 4 Threshold (unused)" category="Transmission" address="12efc" type="2D" scaling="uint8">
+	<table name="Torque Converter Slip Tier 4 Threshold (unused)" category="TCU Link (AT only)" address="12efc" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when value >= FE2; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EF8_ThresholdSelect. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
@@ -409,7 +412,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="TCU Shift Value F65C" category="Transmission" address="13142" type="2D" scaling="uint8">
+	<table name="TCU Shift Value F65C" category="TCU Link (AT only)" address="13142" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tcu_shift_solenoid_table_init (0x2bb41): F65C is looked up from this table on axis 2d66a. Same function loads the F64E..F66E and F732/F734 shift values from the tables at 2f8e..31fa. Role of F65C inside the shift logic not established. Renamed from TABLE_2D_0001313E_TCU. -->
 		<!-- 2026-11-20 [Ghidra] axis fixed: was RPM. Driven by input F190 (load, as axes 2d198 and 2d5dc); the identical VR4 axis is named Load. Old: RPM / RPM -->
 		<table name="Load" address="2d670" type="Y Axis" elements="10" scaling="Load"/>
