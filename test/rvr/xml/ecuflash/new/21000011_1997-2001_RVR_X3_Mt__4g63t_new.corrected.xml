@@ -468,7 +468,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Air Temp" address="2d4ac" type="X Axis" elements="7" scaling="Temp"/>
 	</table>
 
-	<table name="Barometric Pressure Compensation" category="Air" address="11847" type="3D" level="3" swapxy="true" scaling="BoostBar">
+	<table name="Barometric Pressure Compensation" category="Air" address="11847" type="3D" level="3" swapxy="true" scaling="EnrichmentAdj">
+		<!-- 2026-11-21 [Ghidra] scaling BoostBar (x/93.7 bar) replaced by EnrichmentAdj (x/128): the bytes are 0x7a to 0x86 around 0x80, a multiplier near 1.0, and the only reader is f28e_f292_knock_lambda_composite_calc (0x23448), not a boost path. This car has no MAP sensor. -->
 		<table name="Atmosphere Pressure" address="2d210" type="X Axis" elements="4" scaling="Load16"/>
 		<!-- 2026-11-20 [Ghidra] axis fixed: was RPM. Driven by input F1E0, the same input as axis 2d21e (MAF Hz raw); the identical VR4 axis is named MAF Frequency. Old: RPM / RPM -->
 		<table name="MAF Frequency (raw)" address="2d24e" type="Y Axis" elements="9" scaling="uint16"/>
@@ -858,7 +859,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Error" address="2d14c" type="X Axis" elements="9" scaling="RPM"/>
 	</table>
 
-	<table name="Load Limit vs RPM (closed-loop ready check, F20E 0x11 clear)" category="Fuel" address="11cee" type="2D" level="2" scaling="LoadBoost">
+	<table name="Closed-Loop Ready Load Threshold vs RPM (F20E 0x11 clear)" category="Fuel" address="11cee" type="2D" level="2" scaling="LoadBoost">
+		<!-- 2026-11-21 [Ghidra] Reader confirmed: closedloop_fuel_ready_check (0x226fd) reads it through the 8-entry pointer array 2da4c (all point at header 11cea), shifts the byte left 2 and compares it with F190/F196 (load). Byte x4 is in F190 units, which is the Load scale x*10/32, so one byte = 1.25 % load (LoadBoost scaling). All bytes are 0xA0 = 200 %. Name was Pointer-Array Table 11cee (flat 0xA0), a duplicate entry at the same address, now merged into this one. Role of the result (ready above or below the threshold) not yet traced. -->
 		<!-- 2026-11-21 [Ghidra] renamed from 'Boost Limit'. closedloop_fuel_ready_check (226fd) looks this up through the pointer array at 2da4c (all 8 slots point at header 11cea), multiplies the value by 4 and compares it with load F190. When load is above it, F016 is set to the constant at 0894. Nothing in that code is a boost limit. All 10 entries are A0, which is 200 on this scale, so the limit never triggers. Name follows the two sibling Load Limit vs RPM tables at 11870 and 11884. -->
 		<!-- 2026-11-21 [Ghidra] address added: the table had none, so EcuFlash could not place it. Header 11cea (02 00 F0 C4) holds 10 data bytes from 11cee, all A0 (160, which is 200 on the LoadBoost scale), and is looked up on axis 2d080 / 2d086. -->
 		<!-- 2026-11-16 [Ghidra E11] agrees: header 11cea index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. -->
@@ -932,7 +934,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Boost Desired Engine Load # 1" category="Turbo" address="12afc" type="2D" level="2" scaling="Load8">
+	<table name="F450 Output vs Load (was Boost Desired Engine Load # 1)" category="Turbo (tentative)" address="12afc" type="2D" level="2" scaling="Load8">
+		<!-- 2026-11-21 [Ghidra] ign_advance_load_correction_f450 (0x191a0) looks this table up against load (axis 2d5d6, input F190) and stores the byte in F450, or writes a constant when F20E bit4 is set, or 0 when the F4A4 hold gate is clear or validity bit3 is set. F450 is then scaled x250/255 and sent by serial_fef9_duty_scale_and_set (0x15a06) to serial_fef9_set_clamped. No boost target is involved in this path, so the old Boost Desired Engine Load name is not supported by code. -->
 		<!-- 2026-11-18 [Ghidra E12] the axis is record 2d5d6 (input F190, 9 pts, data 2d5dc), found before the table call in ign_advance_load_correction_f450; the XML had an RPM axis (2d334, 2 bytes into the RPM data). Axis name and scaling are inferred from the input cell, unverified. Previous axis: RPM 2d334 (9 pts). -->
 		<table name="Load" address="2d5dc" type="Y Axis" elements="9" scaling="Load"/>
 	</table>
@@ -1060,11 +1063,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- header 134e6: index cell F0D2 is written only by axis record 13576 (input F116, 139 pts), axis data 1357c. The body 134ea to 13575 is 139 bytes plus a terminator, which matches the axis. Axis scaling unknown (raw). -->
 		<table name="Raw F116 (rec 13576)" address="1357c" type="Y Axis" elements="139" scaling="Hex16"/>
 	</table>
-	<table name="Pointer-Array Table 11cee (flat 0xA0)" category="Unknown" address="11cee" type="2D" scaling="uint8">
-		<!-- 2026-11-21 [Ghidra] INFERRED from code: Referenced only from the pointer array at 0x2D9F0 to 0x2DA6B (8 consecutive entries at 0x2DA4C to 0x2DA68 point at header 11cea; the same array also points at 124ec, 1264a and 127be). No code was found that reads the array, so the reader and purpose are unknown. All 10 data bytes are 0xA0. --> <!-- previous name: TABLE_2D_000111CEA -->
-		<!-- 2026-11-20 added from header scan: header 11cea = 02 00 F0C4 then 10 data bytes then another header. Axis 2d086 (10 pts) is the axis used by all other tables whose header index var is F0C4; name and scaling unverified. -->
-		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
-	</table>
+
 
 	<table name="Unused Table 13270 (no code reference)" category="Unused" address="13270" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Ghidra finds no reference to this table or its header (1326c). Data starts 80 80 80 80 80 80 80 73 66 59. Keep, do not delete. --> <!-- previous name: TABLE_2D_00011326C -->
