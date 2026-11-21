@@ -1394,234 +1394,280 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     none in 0x120xx-0x124xx). Moved to 21000011_1997-2001_RVR_X3_Mt__4g63t_.xml (the
 	     ROM-specific file, not this shared base) as corrected 1D scalars. -->
 
-	<table name="SCALING_TABLE_00013576" category="Scaling Tables" address="1357C" type="1D" level="3" elements="139" scaling="uint8">
+	<table name="AXIS_1357C_139x16" category="Scaling Tables" address="1357C" type="1D" level="3" elements="139" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_00013576. Name is AXIS_<data address>_<element count>x<bits>. Data is 139 big-endian 16-bit words (278 bytes) after a 6 byte header at 13576; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 13576: F0D2 F116 008B (count=139). Data starts at 1357C. Not yet shape/value checked. -->
 	</table>
 
-	<table name="SCALING_TABLE_00023CEA" category="Scaling Tables" address="23CF0" type="1D" level="3" elements="84" scaling="uint8">
+	<table name="AXIS_23CF0_84x16" category="Scaling Tables" address="23CF0" type="1D" level="3" elements="84" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_00023CEA. Name is AXIS_<data address>_<element count>x<bits>. Data is 84 big-endian 16-bit words (168 bytes) after a 6 byte header at 23CEA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 23CEA: F216 F436 0054 (count=84). Data starts at 23CF0. Not yet shape/value checked. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D080" category="Scaling Tables" address="2D086" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D086_10x16" category="Scaling Tables" address="2D086" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D080. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D080; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d080: out-ptr F0C4, in-ptr F170. Data starts at 2d086. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D09A" category="Scaling Tables" address="2D0A0" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D0A0_16x16" category="Scaling Tables" address="2D0A0" type="1D" level="3" elements="16" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D09A. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D09A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 16 to match the ROM header. -->
 		<!-- header 2d09a: out-ptr F0C0, in-ptr F170. Data starts at 2d0a0. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D0C0" category="Scaling Tables" address="2D0C6" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D0C6_6x16" category="Scaling Tables" address="2D0C6" type="1D" level="3" elements="6" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D0C0. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D0C0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 6 to match the ROM header. -->
 		<!-- header 2d0c0: out-ptr F0C0, in-ptr F170. Data starts at 2d0c6. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D0D2" category="Scaling Tables" address="2D0D8" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D0D8_12x16" category="Scaling Tables" address="2D0D8" type="1D" level="3" elements="12" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D0D2. Name is AXIS_<data address>_<element count>x<bits>. Data is 12 big-endian 16-bit words (24 bytes) after a 6 byte header at 2D0D2; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 12 to match the ROM header. -->
 		<!-- header 2d0d2: out-ptr F0C0, in-ptr F170. Data starts at 2d0d8. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D0F0" category="Scaling Tables" address="2D0F6" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D0F6_16x16" category="Scaling Tables" address="2D0F6" type="1D" level="3" elements="16" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D0F0. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D0F0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 16 to match the ROM header. -->
 		<!-- header 2d0f0: out-ptr F0C0, in-ptr F170. Data starts at 2d0f6. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D116" category="Scaling Tables" address="2D11C" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D11C_10x16" category="Scaling Tables" address="2D11C" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D116. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D116; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d116: out-ptr F0C0, in-ptr F170. Data starts at 2d11c. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D130" category="Scaling Tables" address="2D136" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D136_8x16" category="Scaling Tables" address="2D136" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D130. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D130; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d130: out-ptr F0C0, in-ptr F2D8, count=8. Data: 1875,2562.5,2812.5,3000,3187.5,3375,3562.5
 		     as RPM (x*1000/256) - not round. As Load (x*10/32): 150,205,225,240,255,270,285 - out of normal
 		     0-100 range. Neither candidate fits cleanly. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D146" category="Scaling Tables" address="2D14C" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D14C_9x16" category="Scaling Tables" address="2D14C" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D146. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D146; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as the already-documented "Error" axis (Idle Error Correction - Neutral,
 		     address 2d146, X Axis, elements=9, scaling=RPM). Data 0,8,16,24,32,40,48,56,64. Kept here for
 		     quick comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D15E" category="Scaling Tables" address="2D164" type="1D" level="3" elements="14" scaling="uint8">
+	<table name="AXIS_2D164_14x16" category="Scaling Tables" address="2D164" type="1D" level="3" elements="14" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D15E. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D15E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d15e: out-ptr F0C6 (AirTemp/ADC), in-ptr F190. Data 32,64,96...448, linear step-32.
 		     Too high for direct Temp(x-40); consistent with raw ADC-domain Air Temp. Try scalings here. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D180" category="Scaling Tables" address="2D186" type="1D" level="3" elements="6" scaling="uint8">
+	<table name="AXIS_2D186_6x16" category="Scaling Tables" address="2D186" type="1D" level="3" elements="6" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D180. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D180; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d180: out-ptr F0C0 (RPM), in-ptr F35E. Data 0,64,128,192,256,320 -> RPM(x*1000/256) =
 		     0,250,500,750,1000,1250, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D192" category="Scaling Tables" address="2D198" type="1D" level="3" elements="14" scaling="uint8">
+	<table name="AXIS_2D198_14x16" category="Scaling Tables" address="2D198" type="1D" level="3" elements="14" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D192. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D192; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: identical header/data to the already-documented RPM axis at 2d192->2d198
 		     ("Post Start Enrich Trim vs Load", X Axis, elements=14, scaling=RPM). Kept here for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D1B4" category="Scaling Tables" address="2D1BA" type="1D" level="3" elements="32" scaling="uint8">
+	<table name="AXIS_2D1BA_32x16" category="Scaling Tables" address="2D1BA" type="1D" level="3" elements="32" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D1B4. Name is AXIS_<data address>_<element count>x<bits>. Data is 32 big-endian 16-bit words (64 bytes) after a 6 byte header at 2D1B4; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d1b4: out-ptr F0C0, in-ptr F0BA (matches "Error" family, see 2d146/2d192). Data
 		     10,11,12...41, linear step-1, very small - same anomalous-small pattern as "Error". Try
 		     Error-style scalings here. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D1FA" category="Scaling Tables" address="2D200" type="1D" level="3" elements="5" scaling="uint8">
+	<table name="AXIS_2D200_5x16" category="Scaling Tables" address="2D200" type="1D" level="3" elements="5" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D1FA. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D1FA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d1fa: out-ptr F0C0, in-ptr F436. Data as Load(x*10/32): 20,25,30,35,40 - clean round
 		     5%-step curve despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D20A" category="Scaling Tables" address="2D210" type="1D" level="3" elements="4" scaling="uint8">
+	<table name="AXIS_2D210_4x16" category="Scaling Tables" address="2D210" type="1D" level="3" elements="4" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D20A. Name is AXIS_<data address>_<element count>x<bits>. Data is 4 big-endian 16-bit words (8 bytes) after a 6 byte header at 2D20A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d20a: out-ptr F0C2 (Load/MAP), in-ptr F0BA. Data 34,50,66,82 -> Load(x*10/32) =
 		     10.6,15.6,20.6,25.6, clean. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D218" category="Scaling Tables" address="2D21E" type="1D" level="3" elements="21" scaling="uint8">
+	<table name="AXIS_2D21E_21x16" category="Scaling Tables" address="2D21E" type="1D" level="3" elements="21" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D218. Name is AXIS_<data address>_<element count>x<bits>. Data is 21 big-endian 16-bit words (42 bytes) after a 6 byte header at 2D218; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Load (MAF Hz raw)" table (address 2d21e,
 		     elements=21, scaling=uint16, used by MAF Scaling / MAF Smoothing Table). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D248" category="Scaling Tables" address="2D24E" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D24E_9x16" category="Scaling Tables" address="2D24E" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D248. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D248; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d248: out-ptr F0C0 (RPM), in-ptr F1E0. Data 0,256,512,768,1024,1280,1536,1792,2048 ->
 		     RPM = 0,1000,2000...8000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D260" category="Scaling Tables" address="2D266" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D266_7x16" category="Scaling Tables" address="2D266" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D260. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D260; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d260: out-ptr F0C0, in-ptr F13A. Data as Load(x*10/32): 20,30,40,50,60,70,~80 -
 		     clean round 10%-step, despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D274" category="Scaling Tables" address="2D27A" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D27A_9x16" category="Scaling Tables" address="2D27A" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D274. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D274; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d274: out-ptr F0C0, in-ptr F13A (same as 2d260). Data as Load(x*10/32):
 		     40,45,50,55,60,65,70,75,~80 - clean round 5%-step. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D28C" category="Scaling Tables" address="2D292" type="1D" level="3" elements="5" scaling="uint8">
+	<table name="AXIS_2D292_5x16" category="Scaling Tables" address="2D292" type="1D" level="3" elements="5" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D28C. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D28C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Baro Press." table (address 2d292, elements=5,
 		     scaling=Load16, used by "Ignition Trim - Baro"). Data matches exactly (93,125,157,173,189).
 		     Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D29C" category="Scaling Tables" address="2D2A2" type="1D" level="3" elements="4" scaling="uint8">
+	<table name="AXIS_2D2A2_4x16" category="Scaling Tables" address="2D2A2" type="1D" level="3" elements="4" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D29C. Name is AXIS_<data address>_<element count>x<bits>. Data is 4 big-endian 16-bit words (8 bytes) after a 6 byte header at 2D29C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d29c: same in-ptr F130 as Baro Press. family. Data 157,173,189,205 -> Load16(x*5/8) =
 		     98,108,118,128, plausible Baro-family values. Likely Baro Press.-family. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D2AA" category="Scaling Tables" address="2D2B0" type="1D" level="3" elements="14" scaling="uint8">
+	<table name="AXIS_2D2B0_14x16" category="Scaling Tables" address="2D2B0" type="1D" level="3" elements="14" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D2AA. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D2AA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented RPM axis at 2d2b0 (elements=14, scaling=RPM,
 		     used by High Octane Fuel Map etc). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D2CC" category="Scaling Tables" address="2D2D2" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D2D2_7x16" category="Scaling Tables" address="2D2D2" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D2CC. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D2CC; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "RPM" axis at 2d2d2 (elements=7,
 		     scaling=RPMStatLimit, used by Boost Enhancement Anti-lag Table). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D2E0" category="Scaling Tables" address="2D2E6" type="1D" level="3" elements="14" scaling="uint8">
+	<table name="AXIS_2D2E6_14x16" category="Scaling Tables" address="2D2E6" type="1D" level="3" elements="14" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D2E0. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D2E0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "RPM" axis at 2d2e6 (elements=14, scaling=RPM,
 		     used by Knock Control Above Load / Lean Spool Trailing Time). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D302" category="Scaling Tables" address="2D308" type="1D" level="3" elements="18" scaling="uint8">
+	<table name="AXIS_2D308_18x16" category="Scaling Tables" address="2D308" type="1D" level="3" elements="18" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D302. Name is AXIS_<data address>_<element count>x<bits>. Data is 18 big-endian 16-bit words (36 bytes) after a 6 byte header at 2D302; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Load" axis at 2d308 (elements=18, scaling=Load,
 		     used by High/Low Octane Fuel Map). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D32C" category="Scaling Tables" address="2D332" type="1D" level="3" elements="18" scaling="uint8">
+	<table name="AXIS_2D332_18x16" category="Scaling Tables" address="2D332" type="1D" level="3" elements="18" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D32C. Name is AXIS_<data address>_<element count>x<bits>. Data is 18 big-endian 16-bit words (36 bytes) after a 6 byte header at 2D32C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "RPM" axis at 2d332 (elements=18, scaling=RPM,
 		     used by High Octane Ignition Map 1 etc). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D356" category="Scaling Tables" address="2D35C" type="1D" level="3" elements="16" scaling="uint8">
+	<table name="AXIS_2D35C_16x16" category="Scaling Tables" address="2D35C" type="1D" level="3" elements="16" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D356. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D356; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d356: out-ptr F0C2 (Load/MAP), in-ptr F0BA. Data as Load(x*10/32):
 		     0,10,20...180,260 - mostly clean, tail clamp value. Not matched elsewhere. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D37C" category="Scaling Tables" address="2D382" type="1D" level="3" elements="19" scaling="uint8">
+	<table name="AXIS_2D382_19x16" category="Scaling Tables" address="2D382" type="1D" level="3" elements="19" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D37C. Name is AXIS_<data address>_<element count>x<bits>. Data is 19 big-endian 16-bit words (38 bytes) after a 6 byte header at 2D37C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Load" axis at 2d382 (elements=19, scaling=Load,
 		     used by High Octane Ignition Map 1 etc). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D3A8" category="Scaling Tables" address="2D3AE" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D3AE_10x16" category="Scaling Tables" address="2D3AE" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3A8. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D3A8; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d3a8: out-ptr F0C0, in-ptr F0BA. Data as Load(x*10/32):
 		     40,50,60,70,80,90,100,120,140,160 - clean 10%-step, extends past 100%. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D3C2" category="Scaling Tables" address="2D3C8" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D3C8_9x16" category="Scaling Tables" address="2D3C8" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3C2. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D3C2; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "TPS" axis at 2d3c8 (elements=9,
 		     scaling="TPS Percent", used by Max Total Upward WGDC Correction vs TPS). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D3DA" category="Scaling Tables" address="2D3E0" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D3E0_7x16" category="Scaling Tables" address="2D3E0" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3DA. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D3DA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d3da: out-ptr F0C0 (RPM), but data 33,65,97,129,161,193,225 exactly matches the
 		     "Engine Load" data pattern (Load x*10/32 -> 10.3-70.3%, clean). Likely Load despite out-ptr. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D3EE" category="Scaling Tables" address="2D3F4" type="1D" level="3" elements="5" scaling="uint8">
+	<table name="AXIS_2D3F4_5x16" category="Scaling Tables" address="2D3F4" type="1D" level="3" elements="5" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3EE. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D3EE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d3ee: out-ptr F0C0 (RPM), in-ptr F170. Data 128,256,512,768,1024 -> RPM =
 		     500,1000,2000,3000,4000, clean coarse. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D3FE" category="Scaling Tables" address="2D404" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D404_7x16" category="Scaling Tables" address="2D404" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3FE. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D3FE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Engine Load" table (address 2d404, elements=7,
 		     scaling=Load - see review12.md batch-1 fix). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D412" category="Scaling Tables" address="2D418" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D418_8x16" category="Scaling Tables" address="2D418" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D412. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D412; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d412: out-ptr F0C8 (CoolantTempB/ADC), in-ptr F10E. Data 8,32,47,60,74,90,117,122 ->
 		     Temp(x-40) = -32,-8,7,20,34,50,77,82, closely matches documented Engine Temp curve shape.
 		     Likely Engine Temp (CoolantTempB/ADC domain). -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D428" category="Scaling Tables" address="2D42E" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D42E_9x16" category="Scaling Tables" address="2D42E" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D428. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D428; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d428: out-ptr F0CA (TimeAfterStart), in-ptr F10E. Data 8,22,32,47,60,74,90,117,122 is
 		     Temp-shaped, not a typical time ramp. Address 2d42e also hosts the documented "Time"/
 		     "Engine Temp" duplicate-name oddity (review12.md section 6, unresolved). Out-ptr says Time,
 		     data shape says Temp - unresolved conflict, try both scalings. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D440" category="Scaling Tables" address="2D446" type="1D" level="3" elements="11" scaling="uint8">
+	<table name="AXIS_2D446_11x16" category="Scaling Tables" address="2D446" type="1D" level="3" elements="11" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D440. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D440; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Temp" axis at 2d446 (elements=11, scaling=Temp,
 		     used by Cranking Primer - First Pulse). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D45C" category="Scaling Tables" address="2D462" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D462_8x16" category="Scaling Tables" address="2D462" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D45C. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D45C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d45c: out-ptr F0CE (ISCVDemand), in-ptr F10E. Data 8,32,47,60,74,90,117,122 identical
 		     to Engine Temp family. Likely Engine Temp axis used in an ISCV-demand-context caller. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D472" category="Scaling Tables" address="2D478" type="1D" level="3" elements="12" scaling="uint8">
+	<table name="AXIS_2D478_12x16" category="Scaling Tables" address="2D478" type="1D" level="3" elements="12" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D472. Name is AXIS_<data address>_<element count>x<bits>. Data is 12 big-endian 16-bit words (24 bytes) after a 6 byte header at 2D472; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d472: out-ptr F0C0, in-ptr F110. Data is a tight step-2 ramp (128-151), unlike any
 		     other axis in this file. Neither RPM nor Load scale fits. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D490" category="Scaling Tables" address="2D496" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D496_8x16" category="Scaling Tables" address="2D496" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D490. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D490; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Engine Temp" table (address 2d496, elements=8,
 		     scaling=Temp - see review12.md batch-1 fix). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D4A6" category="Scaling Tables" address="2D4AC" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D4AC_7x16" category="Scaling Tables" address="2D4AC" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D4A6. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D4A6; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Air Temp" table (address 2d4ac, elements=7,
 		     scaling=Temp, used by Air Temperature Compensation). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D4BA" category="Scaling Tables" address="2D4C0" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D4C0_8x16" category="Scaling Tables" address="2D4C0" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D4BA. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D4BA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d4ba: same in-ptr F10E as Engine Temp family. Data 8,32,47,53,60,67,74,81 ->
 		     Temp(x-40) = -32,-8,7,13,20,27,34,41, clean Temp-shaped curve (variant breakpoints). Likely
 		     Engine Temp. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D4D0" category="Scaling Tables" address="2D4D6" type="1D" level="3" elements="27" scaling="uint8">
+	<table name="AXIS_2D4D6_27x16" category="Scaling Tables" address="2D4D6" type="1D" level="3" elements="27" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D4D0. Name is AXIS_<data address>_<element count>x<bits>. Data is 27 big-endian 16-bit words (54 bytes) after a 6 byte header at 2D4D0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "ISCV Demand" axis at 2d4d6 (elements=27,
 		     scaling=ISCV_AX2_16, used by Idle Stepper Lookup Table). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D50C" category="Scaling Tables" address="2D512" type="1D" level="3" elements="15" scaling="uint8">
+	<table name="AXIS_2D512_15x16" category="Scaling Tables" address="2D512" type="1D" level="3" elements="15" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D50C. Name is AXIS_<data address>_<element count>x<bits>. Data is 15 big-endian 16-bit words (30 bytes) after a 6 byte header at 2D50C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d50c: out-ptr F0C0 (RPM), in-ptr F170. Data 192,256,320,384,512,640,768,896,1024,1152,
 		     1280,1408,1536,1664,1792 -> RPM = 750,1000,1250,1500,2000...7000, clean linear. Not matched
 		     elsewhere. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D530" category="Scaling Tables" address="2D536" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D536_9x16" category="Scaling Tables" address="2D536" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D530. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D530; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d530: out-ptr F0C2, in-ptr F0BA. Data 0,8,16,24,32,40,48,56,64 - identical sequence to
 		     documented "Error" axis at 2d146 (same F0BA in-ptr, different out-ptr F0C2). Likely
 		     Error-family. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D548" category="Scaling Tables" address="2D54E" type="1D" level="3" elements="17" scaling="uint8">
+	<table name="AXIS_2D54E_17x16" category="Scaling Tables" address="2D54E" type="1D" level="3" elements="17" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D548. Name is AXIS_<data address>_<element count>x<bits>. Data is 17 big-endian 16-bit words (34 bytes) after a 6 byte header at 2D548; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d548: out-ptr F0D4 (not in documented pointer map), in-ptr F0BE. Data
 		     0,8,16,24,32,...128, linear step-8, extends the "Error" axis pattern (0,8,16...64 at 2d146,
 		     9 elements) to a full 17-element run - matches EVO5 cross-check (review12.md section 7:
@@ -1629,180 +1675,214 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     extended/sibling table. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D570" category="Scaling Tables" address="2D576" type="1D" level="3" elements="16" scaling="uint8">
+	<table name="AXIS_2D576_16x16" category="Scaling Tables" address="2D576" type="1D" level="3" elements="16" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D570. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D570; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "RPM" axis at 2d576 (elements=16, scaling=RPM,
 		     used by Max Wastegate Duty #1-4). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D596" category="Scaling Tables" address="2D59C" type="1D" level="3" elements="17" scaling="uint8">
+	<table name="AXIS_2D59C_17x16" category="Scaling Tables" address="2D59C" type="1D" level="3" elements="17" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D596. Name is AXIS_<data address>_<element count>x<bits>. Data is 17 big-endian 16-bit words (34 bytes) after a 6 byte header at 2D596; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Boost Error" axis at 2d59c (elements=17,
 		     scaling=BoostError, used by Turbo Boost Error Correction). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D5BE" category="Scaling Tables" address="2D5C4" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D5C4_9x16" category="Scaling Tables" address="2D5C4" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D5BE. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D5BE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d5be: out-ptr F0C0, in-ptr F13E. Data as Load(x*10/32):
 		     0,10,20,30,40,50,60,70,~80 - clean round 10%-step, despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D5D6" category="Scaling Tables" address="2D5DC" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D5DC_9x16" category="Scaling Tables" address="2D5DC" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D5D6. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D5D6; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "RPM" axis at 2d5dc (elements=9, scaling=RPM,
 		     used by Boost Desired Engine Load #1). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D5EE" category="Scaling Tables" address="2D5F4" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D5F4_9x16" category="Scaling Tables" address="2D5F4" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D5EE. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D5EE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d5ee: out-ptr F0C0 (RPM), in-ptr F170. Data 0,128,256,384,512,640,768,896,1024 -> RPM
 		     = 0,500,1000...4000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D606" category="Scaling Tables" address="2D60C" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D60C_10x16" category="Scaling Tables" address="2D60C" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D606. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D606; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d606: out-ptr F0C0 (RPM), in-ptr F170. Data 256,320,384,448,512,640,768,896,1024,1152
 		     -> RPM = 1000,1250,1500,1750,2000,2500,3000,3500,4000,4500, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D620" category="Scaling Tables" address="2D626" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D626_8x16" category="Scaling Tables" address="2D626" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D620. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D620; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d620: out-ptr F0C2 (Load/MAP), in-ptr F190. Data 48,64,80,96,128,160,192,224 ->
 		     Load(x*10/32) = 15,20,25,30,40,50,60,70, clean. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D636" category="Scaling Tables" address="2D63C" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D63C_10x16" category="Scaling Tables" address="2D63C" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D636. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D636; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "RPM" axis at 2d63c (elements=10, scaling=RPM,
 		     used by all 5 Knock Sensor Filter Map tables). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D650" category="Scaling Tables" address="2D656" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D656_10x16" category="Scaling Tables" address="2D656" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D650. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D650; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- DUPLICATE: same header as already-documented "Load" axis at 2d656 (elements=10, scaling=Load,
 		     used by all 5 Knock Sensor Filter Map tables). Kept for comparison. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D66A" category="Scaling Tables" address="2D670" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D670_10x16" category="Scaling Tables" address="2D670" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D66A. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D66A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d66a: out-ptr F0C0, in-ptr F190. Data as Load(x*10/32):
 		     10,20,30,40,50,60,70,80,90,100 - perfectly clean 10%-step, despite RPM out-ptr tag. Likely
 		     Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D684" category="Scaling Tables" address="2D68A" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D68A_10x16" category="Scaling Tables" address="2D68A" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D684. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D684; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d684: out-ptr F0C0 (RPM), in-ptr F170. Data 128,256,384,512,640,768,896,1024,1152,1280
 		     -> RPM = 500,1000,1500...5000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D69E" category="Scaling Tables" address="2D6A4" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D6A4_8x16" category="Scaling Tables" address="2D6A4" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D69E. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D69E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d69e: out-ptr F0C0 (RPM), in-ptr F170. Data 192,256,320,384,512,640,768,896 -> RPM =
 		     750,1000,1250,1500,2000,2500,3000,3500, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D6B4" category="Scaling Tables" address="2D6BA" type="1D" level="3" elements="16" scaling="uint8">
+	<table name="AXIS_2D6BA_16x16" category="Scaling Tables" address="2D6BA" type="1D" level="3" elements="16" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D6B4. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D6B4; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d6b4: out-ptr F0C0 (RPM), in-ptr F170. Data 128,192,256,320,384,512,640,768,896,1024,
 		     1152,1280,1408,1536,1664,1792 -> RPM = 500,750,1000,1250,1500,2000...7000, clean, denser at
 		     low range. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D6DA" category="Scaling Tables" address="2D6E0" type="1D" level="3" elements="17" scaling="uint8">
+	<table name="AXIS_2D6E0_17x16" category="Scaling Tables" address="2D6E0" type="1D" level="3" elements="17" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D6DA. Name is AXIS_<data address>_<element count>x<bits>. Data is 17 big-endian 16-bit words (34 bytes) after a 6 byte header at 2D6DA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d6da: out-ptr F0C0, in-ptr F0BA (same as "Error" family). Data
 		     0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16, linear step-1, extremely small - same anomalous
 		     pattern as "Error"/2d146 and 2d1b4. Likely Error-family. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D702" category="Scaling Tables" address="2D708" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D708_9x16" category="Scaling Tables" address="2D708" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D702. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D702; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d702: out-ptr F0C0 (RPM), in-ptr F170. Data 192,256,320,384,512,640,768,896,1024 ->
 		     RPM = 750,1000,1250,1500,2000,2500,3000,3500,4000, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D71A" category="Scaling Tables" address="2D720" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D720_8x16" category="Scaling Tables" address="2D720" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D71A. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D71A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d71a: out-ptr F0C2 (Load/MAP), in-ptr F13E. Data 24,32,40,48,56,64,72,80 ->
 		     Load(x*10/32) = 7.5,10,12.5,15,17.5,20,22.5,25, clean small curve. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D730" category="Scaling Tables" address="2D736" type="1D" level="3" elements="11" scaling="uint16">
+	<table name="AXIS_2D736_11x16" category="Scaling Tables" address="2D736" type="1D" level="3" elements="11" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D730. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D730; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d730: out-ptr F0C0 (RPM), in-ptr F0BA. Raw uint16 data runs approx
 		     29491,29819,30147,...33000 - far larger than any RPM-scaled axis elsewhere in this file. Does
 		     not fit RPM, Load, or Temp cleanly. Left UNIDENTIFIED, try scaling here (declared uint16
 		     since values exceed uint8 range). -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D74C" category="Scaling Tables" address="2D752" type="1D" level="3" elements="4" scaling="uint8">
+	<table name="AXIS_2D752_4x16" category="Scaling Tables" address="2D752" type="1D" level="3" elements="4" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D74C. Name is AXIS_<data address>_<element count>x<bits>. Data is 4 big-endian 16-bit words (8 bytes) after a 6 byte header at 2D74C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d74c: out-ptr F0C0 (RPM), in-ptr F170. Data 0,128,192,256 -> RPM = 0,500,750,1000,
 		     clean small linear. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D75A" category="Scaling Tables" address="2D760" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D760_7x16" category="Scaling Tables" address="2D760" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D75A. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D75A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d75a: out-ptr F0C2 (Load/MAP), in-ptr F0BA. Data 0,32,64,96,128,160,192 ->
 		     Load(x*10/32) = 0,10,20,30,40,50,60, clean. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D76E" category="Scaling Tables" address="2D774" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D774_8x16" category="Scaling Tables" address="2D774" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D76E. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D76E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d76e: out-ptr F0C0 (RPM), in-ptr F170. Data 128,256,384,512,640,768,896,1024 -> RPM =
 		     500,1000,1500...4000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D784" category="Scaling Tables" address="2D78A" type="1D" level="3" elements="7" scaling="uint8">
+	<table name="AXIS_2D78A_7x16" category="Scaling Tables" address="2D78A" type="1D" level="3" elements="7" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D784. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D784; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d784: out-ptr F0C0 (RPM), in-ptr F170. Data 128,192,256,320,384,448,512 -> RPM =
 		     500,750,1000,1250,1500,1750,2000, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D798" category="Scaling Tables" address="2D79E" type="1D" level="3" elements="9" scaling="uint8">
+	<table name="AXIS_2D79E_9x16" category="Scaling Tables" address="2D79E" type="1D" level="3" elements="9" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D798. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D798; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d798: out-ptr F0C0 (RPM), in-ptr F170. Data 192,256,320,384,448,512,640,768,896 ->
 		     RPM = 750,1000,1250,1500,1750,2000,2500,3000,3500, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D7B0" category="Scaling Tables" address="2D7B6" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D7B6_10x16" category="Scaling Tables" address="2D7B6" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D7B0. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D7B0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d7b0: out-ptr F0C2 (Load/MAP), in-ptr F190. Data 32,64,96,128,160,192,224,256,288,320
 		     -> Load(x*10/32) = 10,20,30...100, very clean. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D7DA" category="Scaling Tables" address="2D7E0" type="1D" level="3" elements="19" scaling="uint8">
+	<table name="AXIS_2D7E0_19x16" category="Scaling Tables" address="2D7E0" type="1D" level="3" elements="19" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D7DA. Name is AXIS_<data address>_<element count>x<bits>. Data is 19 big-endian 16-bit words (38 bytes) after a 6 byte header at 2D7DA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d7da: out-ptr F0C0 (RPM), in-ptr F170. Data 128,192,256,320,384,448,512,576,640,704,
 		     768,896,1024,1152,1280,1408,1536,1664,1792 -> RPM = 500,750,1000...7000, clean dense. Likely
 		     RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D806" category="Scaling Tables" address="2D80C" type="1D" level="3" elements="11" scaling="uint8">
+	<table name="AXIS_2D80C_11x16" category="Scaling Tables" address="2D80C" type="1D" level="3" elements="11" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D806. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D806; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d806: out-ptr F0C2 (Load/MAP), in-ptr F190. Data 86,113,140,167,194,248,302,356,383,
 		     410,463 -> Load(x*10/32) = 27,35,44,52,61,78,94,111,120,128,145, clean monotonic. Likely
 		     Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D822" category="Scaling Tables" address="2D828" type="1D" level="3" elements="15" scaling="uint8">
+	<table name="AXIS_2D828_15x16" category="Scaling Tables" address="2D828" type="1D" level="3" elements="15" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D822. Name is AXIS_<data address>_<element count>x<bits>. Data is 15 big-endian 16-bit words (30 bytes) after a 6 byte header at 2D822; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d822: out-ptr F0C0, in-ptr F13E. Data as Load(x*10/32): 5,10,15,20,25,30,35,40,45,50,
 		     55,60,65,70,75 - perfectly clean 5%-step, despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D846" category="Scaling Tables" address="2D84C" type="1D" level="3" elements="5" scaling="uint8">
+	<table name="AXIS_2D84C_5x16" category="Scaling Tables" address="2D84C" type="1D" level="3" elements="5" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D846. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D846; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d846: same in-ptr F130 as Baro Press. family (2d28c, 2d29c). Data 125,141,157,173,189
 		     -> Load16(x*5/8) = 78,88,98,108,118, plausible Baro-family values. Likely Baro Press.-family. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D856" category="Scaling Tables" address="2D85C" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D85C_10x16" category="Scaling Tables" address="2D85C" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D856. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D856; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d856: out-ptr F0C0 (RPM), in-ptr F170. Data 128,256,320,384,448,512,640,768,896,1024
 		     -> RPM = 500,1000,1250,1500,1750,2000,2500,3000,3500,4000, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D870" category="Scaling Tables" address="2D876" type="1D" level="3" elements="11" scaling="uint8">
+	<table name="AXIS_2D876_11x16" category="Scaling Tables" address="2D876" type="1D" level="3" elements="11" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D870. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D870; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d870: out-ptr F0C0, in-ptr EF56 (unusual - not the F0Cx/F0Dx/F1xx/F2xx family used
 		     elsewhere). Data 20,22,24,26,28,30,32,34,36,38,40, linear step-2, small values similar in
 		     scale to "Error"-family but distinct in-ptr. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D88C" category="Scaling Tables" address="2D892" type="1D" level="3" elements="6" scaling="uint8">
+	<table name="AXIS_2D892_6x16" category="Scaling Tables" address="2D892" type="1D" level="3" elements="6" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D88C. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D88C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d88c: out-ptr F0C0, in-ptr F1E8. Neither RPM (117.2,148.4...273.4) nor Load
 		     (9.4,11.9...21.9) scale lands on round numbers. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D89E" category="Scaling Tables" address="2D8A4" type="1D" level="3" elements="6" scaling="uint8">
+	<table name="AXIS_2D8A4_6x16" category="Scaling Tables" address="2D8A4" type="1D" level="3" elements="6" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D89E. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D89E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d89e: out-ptr F0C0 (RPM), in-ptr F170. Data 384,512,640,768,896,1024 -> RPM =
 		     1500,2000,2500,3000,3500,4000, clean. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D8B0" category="Scaling Tables" address="2D8B6" type="1D" level="3" elements="3" scaling="uint8">
+	<table name="AXIS_2D8B6_3x16" category="Scaling Tables" address="2D8B6" type="1D" level="3" elements="3" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D8B0. Name is AXIS_<data address>_<element count>x<bits>. Data is 3 big-endian 16-bit words (6 bytes) after a 6 byte header at 2D8B0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d8b0: out-ptr F0C2 (Load/MAP), in-ptr F190. Data 194,301,409 -> Load(x*10/32) =
 		     61,94,128, clean small curve. Likely Load. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D8BC" category="Scaling Tables" address="2D8C2" type="1D" level="3" elements="10" scaling="uint8">
+	<table name="AXIS_2D8C2_10x16" category="Scaling Tables" address="2D8C2" type="1D" level="3" elements="10" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D8BC. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D8BC; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d8bc: out-ptr F0C0 (RPM), in-ptr F170. Data 128,256,384,512,640,768,896,1024,1152,1280
 		     -> RPM = 500,1000...5000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="SCALING_TABLE_0002D8D6" category="Scaling Tables" address="2D8DC" type="1D" level="3" elements="8" scaling="uint8">
+	<table name="AXIS_2D8DC_8x16" category="Scaling Tables" address="2D8DC" type="1D" level="3" elements="8" scaling="uint16">
+		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D8D6. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D8D6; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d8d6: out-ptr F0C0, in-ptr F1A8. Neither RPM (168,273.4...902.3) nor Load
 		     (13.4,21.9...72.2) is fully round, though Load is closer. Try scaling here; tentatively
 		     Load. -->
