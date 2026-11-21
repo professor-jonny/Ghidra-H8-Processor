@@ -144,6 +144,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		</table>
 	</table>
 
+	<table name="Accel Enrichment TPS Delta Multiplier (Evo name, reader not traced)" category="Fuel" address="11ebe" type="2D" level="2" scaling="Percent128">
+		<!-- 2026-11-22 [Ghidra] INFERRED from the Evo 5/6 ROM (Ceddy 25570100.xml table Accel Enrichment TPS Delta Multiplier, 11ce6): nine bytes 02 04 05 07 0a 0e 12 18 21 directly after the two 13-byte Accel Decel Load Change Threshold arrays at 11ea4 and 11eb1, with 0xFF after them at 11ec7. In the Evo the same position holds 07 07 09 0b 0d 0f 11 13 17 and the axis is TPS delta 0.0 to 12.5 percent in 1.56 percent steps. Percent128 scaling (x*100/128) is also the Evo author's. The RVR reader has not been traced, so the axis steps are carried over from the Evo and are unconfirmed. -->
+		<table name="TPS Delta (Evo axis, unconfirmed)" type="Static Y Axis" elements="9">
+			<data>0.0%</data><data>1.6%</data><data>3.1%</data><data>4.7%</data><data>6.3%</data><data>7.8%</data><data>9.4%</data><data>11.0%</data><data>12.5%</data>
+		</table>
+	</table>
+
 	<table name="F316 Value" category="Fuel" address="11ecc" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f310_f316_composite_calc (0x2495c): F316 is loaded directly from this table (header 11ec8). --> <!-- previous name: TABLE_2D_00011EC8_CompositeCalc -->
 		<!-- 2026-11-16 [Ghidra E11] header 11ec8 index cell F0C4 is written only by axis record 2d080 (input F170, 10 pts), axis data 2d086. Previous axis: RPM 2d332 (10 pts). -->
@@ -453,7 +460,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Raw F0BA (rec 1339e)" address="133a4" type="Y Axis" elements="161" scaling="Hex16"/>
 	</table>
 
-	<table name="O2 Mode 7/8 Correction (3D)" category="Fuel" address="11dc9" type="3D" level="2" scaling="uint8">
+	<table name="Limp Mode Fueling Table (MAF Fault per Evo/VR4 XMLs; F2D0, O2 Mode 7/8 Correction)" category="Fuel" address="11dc9" type="3D" level="2" scaling="uint8">
+		<!-- 2026-11-22 [Ghidra] Same table as the Evo 5/6 Limp Home - TPS Table (Evo 11beb, header 03 00 f0 xx f0 xx 05) and the Legnum VR4 Limp Mode Fueling Table (MAF Fault) (VR4 1157b, 7 x 5 bytes, TPS x engine speed axes, pulse width scaling). The data shapes match (last rows 51 56 bc c8 dc here, 4e 5a 9a c9 a4 in the VR4). The multiplier the RVR code applies to this table, word 0x10814 = 0x0048, equals the VR4 LimpHome Scaling word at 10310 (0x0048). That is enough to name it the MAF fault limp fuel table. RVR code path: f0ba_f2d0_o2_mode7_8_correction_calc (0x242f5) writes F2D0; f25a_f2xx_state_mirror_update (0x24d3a) copies F2D0 to F2D4 (F2D2 when F20E bit0, cranking, is set); fuel_pw_and_airvol_compute (0x2a4c6) uses F2D4 as the base pulse width when F25A bit0 is set or (F25A and 3) is non-zero, otherwise the normal F1D0 airflow calculation runs. F25A bit1 comes from F20E bit1, copied from F1FE bit3 by f20e_bit1_mirror_from_f1fe_bit3 (0x229c0); lambda_enable_flag_update (0x21942) sets that when config byte 0x10201 is 6, 7 or 8 or the EF96 counter is 0. A MAF fault flag feeding that switch has NOT been found. The F20E full-word writers were traced: warmup_mode_state_machine (0x2254b) only sets bits 2, 3, 8 and 9 and keeps the rest (mask 0xfcf3), and f20e_f210_clear_chain_and_o2_closedloop_gate (0x22f0a) only clears bits so the mode bits stay mutually exclusive. F20E bit1 is written only by the F1FE bit3 mirror, so in this ROM the table is selected by the lambda-enable flag (config 0x10201 = 6/7/8 or the EF96 counter), not by a MAF fault. The limp name comes from the Evo and VR4 definitions and the matching 0x0048 constant; whether this ECU really uses it on a MAF fault is unproven. o2_mode7_8_correction_apply (0x1a0c4) shows how config byte 0x10201 changes the table value before it becomes F2D0: 7 = value x (F5B4 + 0x80) in fixed point, 8 = F5B4 replaces the value, any other setting (0 here) = value unchanged. So modes 7 and 8 are a wideband lambda feedback strategy built on this table, which fits the O2 Mode 7/8 name. The EF96 counter is reloaded to 12 (word 0x10f56) while F20E bit0 or bit4 is set and counted down by decrement_counters_in_range(0xef90, 0xf012) from rpm_load_zone_counter_update (0x21df5) on the F208 bit0 tick, so with 0x10201 = 0 F1FE bit3 can still be set once the delay has run out. Whether that happens in normal running depends on how often F20E bit4 is set and the F208 bit0 tick rate, neither measured. Check the F1D0 airflow path (F1DA/F1D8 period inputs) for a fault substitution. The second axis is labelled engine load in the code but the Evo and VR4 definitions use engine speed; unverified here. -->
 		<!-- 2026-11-21 [Ghidra] swapxy removed: the 35 data bytes at 11dc9 are stored row by row with 5 RPM columns per row (7 load rows), so rows 35 18 18 09 08 / 3c 40 20 18 16 / 4f 54 73 74 5a ... rise smoothly. With swapxy the grid was read in the wrong order and looked random (roughness 3175 vs 1346 unswapped). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f0ba_f2d0_o2_mode7_8_correction_calc (0x242f5): looked up after the axis inputs (F0BA = TPS F13E plus table 0x2986, clamped, and engine load); result F2DA from o2_mode7_8_correction_apply is multiplied by word 0x10814, then by F298*F29A/0x4000, by F29C and by (F2C8*2+0x80), giving F2D0. The earlier guess Lean Spool Load is unconfirmed. --> <!-- previous name: TABLE_3D_00011DC9_O2Mode7_8Correction (possible: Lean Spool Load) -->
 		<!-- 2026-08-14 [Ghidra] Confirmed RPM: header 2d3ee (out-ptr F0C0=RPM, in-ptr F170), data
@@ -951,22 +959,24 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="TPS" address="2d5c4" type="X Axis" elements="9" scaling="TPS Percent"/>
 	</table>
 
-	<table name="Max Wastegate Duty # 1 (F860, F0F8 bit5 set)" category="Turbo" address="12a9a" type="2D" level="2" scaling="WGDuty">
+	<table name="Base Wastegate Duty (F860, F0F8 bit5 set)" category="Turbo" address="12a9a" type="2D" level="2" scaling="WGDuty">
+		<!-- 2026-11-22 [Ghidra] Names aligned with the Evo 5/6 ROM, which has the same 16-byte table layout (header 02 00 f0 ce, 200-ish duty values with a small dip, 0xFF load values with a dip): Evo 12506/1251a are Base WasteGate Duty Primary/Secondary and 12542/12556 are Boost Desired Engine Load Primary/Secondary (names in the Ceddy 25570100.xml). The Evo has extra pairs (a third in the same block, a fourth at 13648/1368a); this RVR has only the bit5 set/clear pair of each. Previous names: Max Wastegate Duty # 1/# 2 and Boost Target Load vs RPM # 3/# 4. -->
 		<!-- 2026-11-21 [Ghidra] Base wastegate duty. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Result F860 is the base duty (clamped 0 to 200 in wgdc_output_clamp_f44c, so 200 = 100 %, WGDuty scaling x/2). Final WGDC is F44C (MUT RequestID 0x86). -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Max Wastegate Duty # 2 (F860, F0F8 bit5 clear)" category="Turbo" address="12aae" type="2D" level="2" scaling="WGDuty">
+	<table name="Base Wastegate Duty (F860, F0F8 bit5 clear)" category="Turbo" address="12aae" type="2D" level="2" scaling="WGDuty">
 		<!-- 2026-11-21 [Ghidra] Base wastegate duty. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Same role as # 1 for the bit5-clear case. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Boost Target Load vs RPM # 3 (F44E, F0F8 bit5 set)" category="Turbo" address="12ac2" type="2D" level="2" scaling="Load8">
+	<table name="Boost Desired Engine Load (F44E, F0F8 bit5 set)" category="Turbo" address="12ac2" type="2D" level="2" scaling="Load8">
+		<!-- 2026-11-22 [Ghidra] Names aligned with the Evo 5/6 ROM, which has the same 16-byte table layout (header 02 00 f0 ce, 200-ish duty values with a small dip, 0xFF load values with a dip): Evo 12506/1251a are Base WasteGate Duty Primary/Secondary and 12542/12556 are Boost Desired Engine Load Primary/Secondary (names in the Ceddy 25570100.xml). The Evo has extra pairs (a third in the same block, a fourth at 13648/1368a); this RVR has only the bit5 set/clear pair of each. Previous names: Max Wastegate Duty # 1/# 2 and Boost Target Load vs RPM # 3/# 4. -->
 		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 3 and rescaled from WGDuty to Load8 (single bytes; Load16 read two bytes per cell and ran into the next table's header). Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Result F44E is not a duty: wgdc_correction_integrator_update (0x18fe0) computes boost error = (F196>>1) + 0x20 minus (F44E + word 10e0a), clamps it to a byte and looks it up in 12a84. So F44E is the target load for this load-based (MAF only) car, in the same half-load units as 10e0a (one unit 0.625 % load; this table is bytes so it uses Load8, 10e0a is a word and uses Load16). Target load % = x*0.625 + 20 when 10e0a = 64. Values 0xFF at low RPM falling to 0xAD at 7000 RPM. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Boost Target Load vs RPM # 4 (F44E, F0F8 bit5 clear)" category="Turbo" address="12ad6" type="2D" level="2" scaling="Load8">
+	<table name="Boost Desired Engine Load (F44E, F0F8 bit5 clear)" category="Turbo" address="12ad6" type="2D" level="2" scaling="Load8">
 		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 4 and rescaled from WGDuty to Load8 (single bytes; Load16 read two bytes per cell and ran into the next table's header). Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Same role as # 3 for the bit5-clear case. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
@@ -1107,6 +1117,10 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: Ghidra finds no reference to this table or its header (1326c). Data starts 80 80 80 80 80 80 80 73 66 59. Keep, do not delete. --> <!-- previous name: TABLE_2D_00011326C -->
 		<!-- 2026-11-20 added from header scan: header 1326c = 02 00 F0C4 then 10 data bytes then another header. Axis 2d086 (10 pts) is the axis used by all other tables whose header index var is F0C4; name and scaling unverified. -->
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
+	</table>
+
+	<table name="LimpHome Scaling (word, x Limp Mode Fueling Table)" category="Fuel" address="10814" type="1D" level="2" scaling="uint16">
+		<!-- 2026-11-22 [Ghidra] Word 0x0048 (72). Multiplied into F2DA in f0ba_f2d0_o2_mode7_8_correction_calc (0x242f5), so it scales the Limp Mode Fueling Table (11dc9). The Legnum VR4 XML names its equivalent LimpHome Scaling (VR4 10310) and holds the same value 0x0048. Units not confirmed. -->
 	</table>
 
 	<table name="F1BA Drop Limit: F1DE Threshold" category="Fuel" address="1081c" type="1D" level="2" scaling="uint16">
