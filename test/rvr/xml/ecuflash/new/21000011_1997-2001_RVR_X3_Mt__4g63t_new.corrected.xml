@@ -1874,6 +1874,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     ============================================================ -->
 
 	<!-- ===== TCU / TRANSMISSION ===== -->
+	<!-- 2026-11-21 [Ghidra] these tables are in the ECU ROM: 22 of 24 have direct READ references from code at 24efa to 29e22 (knock_fuel_o2_mgmt_8fff, 28fff-29c32, plus 2601c). The TCU-style names came from earlier work and are not confirmed; 1287a/1287e/10ad4 clashed with confirmed ECU definitions and were removed. 10ad6 has no reference. The TCU ROM has its own separate XML. -->
 	<!-- Addresses confirmed from Ghidra analysis of tcu_shift_torque_mgmt @ 0x28fff -->
 	<!-- Called from isr_sci3_eri @ 0x168e3 on every crank pulse via SCI3 channel -->
 	<!-- ECU communicates with TCU over SCI3 serial (sci3_rx_process_tcu_byte, isr_sci3_rxi_tcu_rx) -->
