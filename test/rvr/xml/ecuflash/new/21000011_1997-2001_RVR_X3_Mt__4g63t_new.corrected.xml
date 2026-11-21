@@ -1394,72 +1394,72 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     none in 0x120xx-0x124xx). Moved to 21000011_1997-2001_RVR_X3_Mt__4g63t_.xml (the
 	     ROM-specific file, not this shared base) as corrected 1D scalars. -->
 
-	<table name="AXIS_1357C_139x16" category="Scaling Tables" address="1357C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="139">
+	<table name="AXIS_1357C_139x16" category="Axis Tables - input F116 (unscaled)" address="1357C" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F116)" type="Static X Axis" elements="139">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data><data>21</data><data>22</data><data>23</data><data>24</data><data>25</data><data>26</data><data>27</data><data>28</data><data>29</data><data>30</data><data>31</data><data>32</data><data>33</data><data>34</data><data>35</data><data>36</data><data>37</data><data>38</data><data>39</data><data>40</data><data>41</data><data>42</data><data>43</data><data>44</data><data>45</data><data>46</data><data>47</data><data>48</data><data>49</data><data>50</data><data>51</data><data>52</data><data>53</data><data>54</data><data>55</data><data>56</data><data>57</data><data>58</data><data>59</data><data>60</data><data>61</data><data>62</data><data>63</data><data>64</data><data>65</data><data>66</data><data>67</data><data>68</data><data>69</data><data>70</data><data>71</data><data>72</data><data>73</data><data>74</data><data>75</data><data>76</data><data>77</data><data>78</data><data>79</data><data>80</data><data>81</data><data>82</data><data>83</data><data>84</data><data>85</data><data>86</data><data>87</data><data>88</data><data>89</data><data>90</data><data>91</data><data>92</data><data>93</data><data>94</data><data>95</data><data>96</data><data>97</data><data>98</data><data>99</data><data>100</data><data>101</data><data>102</data><data>103</data><data>104</data><data>105</data><data>106</data><data>107</data><data>108</data><data>109</data><data>110</data><data>111</data><data>112</data><data>113</data><data>114</data><data>115</data><data>116</data><data>117</data><data>118</data><data>119</data><data>120</data><data>121</data><data>122</data><data>123</data><data>124</data><data>125</data><data>126</data><data>127</data><data>128</data><data>129</data><data>130</data><data>131</data><data>132</data><data>133</data><data>134</data><data>135</data><data>136</data><data>137</data><data>138</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_00013576. Name is AXIS_<data address>_<element count>x<bits>. Data is 139 big-endian 16-bit words (278 bytes) after a 6 byte header at 13576; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 13576: F0D2 F116 008B (count=139). Data starts at 1357C. Not yet shape/value checked. -->
 	</table>
 
-	<table name="AXIS_23CF0_84x16" category="Scaling Tables" address="23CF0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="84">
+	<table name="AXIS_23CF0_84x16" category="Axis Tables - not a breakpoint axis" address="23CF0" type="2D" level="3" scaling="uint16">
+		<table name="Index (values not monotonic, input F436)" type="Static X Axis" elements="84">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data><data>21</data><data>22</data><data>23</data><data>24</data><data>25</data><data>26</data><data>27</data><data>28</data><data>29</data><data>30</data><data>31</data><data>32</data><data>33</data><data>34</data><data>35</data><data>36</data><data>37</data><data>38</data><data>39</data><data>40</data><data>41</data><data>42</data><data>43</data><data>44</data><data>45</data><data>46</data><data>47</data><data>48</data><data>49</data><data>50</data><data>51</data><data>52</data><data>53</data><data>54</data><data>55</data><data>56</data><data>57</data><data>58</data><data>59</data><data>60</data><data>61</data><data>62</data><data>63</data><data>64</data><data>65</data><data>66</data><data>67</data><data>68</data><data>69</data><data>70</data><data>71</data><data>72</data><data>73</data><data>74</data><data>75</data><data>76</data><data>77</data><data>78</data><data>79</data><data>80</data><data>81</data><data>82</data><data>83</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_00023CEA. Name is AXIS_<data address>_<element count>x<bits>. Data is 84 big-endian 16-bit words (168 bytes) after a 6 byte header at 23CEA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 23CEA: F216 F436 0054 (count=84). Data starts at 23CF0. Not yet shape/value checked. -->
 	</table>
 
-	<table name="AXIS_2D086_10x16" category="Scaling Tables" address="2D086" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D086_10x16" category="Axis Tables - Engine RPM" address="2D086" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D080. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D080; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d080: out-ptr F0C4, in-ptr F170. Data starts at 2d086. -->
 	</table>
 
-	<table name="AXIS_2D0A0_16x16" category="Scaling Tables" address="2D0A0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="16">
+	<table name="AXIS_2D0A0_16x16" category="Axis Tables - Engine RPM" address="2D0A0" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="16">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D09A. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D09A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 16 to match the ROM header. -->
 		<!-- header 2d09a: out-ptr F0C0, in-ptr F170. Data starts at 2d0a0. -->
 	</table>
 
-	<table name="AXIS_2D0C6_6x16" category="Scaling Tables" address="2D0C6" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="6">
+	<table name="AXIS_2D0C6_6x16" category="Axis Tables - Engine RPM" address="2D0C6" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="6">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D0C0. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D0C0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 6 to match the ROM header. -->
 		<!-- header 2d0c0: out-ptr F0C0, in-ptr F170. Data starts at 2d0c6. -->
 	</table>
 
-	<table name="AXIS_2D0D8_12x16" category="Scaling Tables" address="2D0D8" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="12">
+	<table name="AXIS_2D0D8_12x16" category="Axis Tables - Engine RPM" address="2D0D8" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="12">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D0D2. Name is AXIS_<data address>_<element count>x<bits>. Data is 12 big-endian 16-bit words (24 bytes) after a 6 byte header at 2D0D2; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 12 to match the ROM header. -->
 		<!-- header 2d0d2: out-ptr F0C0, in-ptr F170. Data starts at 2d0d8. -->
 	</table>
 
-	<table name="AXIS_2D0F6_16x16" category="Scaling Tables" address="2D0F6" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="16">
+	<table name="AXIS_2D0F6_16x16" category="Axis Tables - Engine RPM" address="2D0F6" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="16">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D0F0. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D0F0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. Element count corrected from 10 to 16 to match the ROM header. -->
 		<!-- header 2d0f0: out-ptr F0C0, in-ptr F170. Data starts at 2d0f6. -->
 	</table>
 
-	<table name="AXIS_2D11C_10x16" category="Scaling Tables" address="2D11C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D11C_10x16" category="Axis Tables - Engine RPM" address="2D11C" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D116. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D116; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
 		<!-- header 2d116: out-ptr F0C0, in-ptr F170. Data starts at 2d11c. -->
 	</table>
 
-	<table name="AXIS_2D136_8x16" category="Scaling Tables" address="2D136" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D136_8x16" category="Axis Tables - input F2D8 (unscaled)" address="2D136" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F2D8)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D130. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D130; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1468,8 +1468,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     0-100 range. Neither candidate fits cleanly. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="AXIS_2D14C_9x16" category="Scaling Tables" address="2D14C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D14C_9x16" category="Axis Tables - input F0BA (unscaled)" address="2D14C" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D146. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D146; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1478,8 +1478,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     quick comparison. -->
 	</table>
 
-	<table name="AXIS_2D164_14x16" category="Scaling Tables" address="2D164" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="14">
+	<table name="AXIS_2D164_14x16" category="Axis Tables - input F190 (unscaled)" address="2D164" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="14">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D15E. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D15E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1487,8 +1487,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Too high for direct Temp(x-40); consistent with raw ADC-domain Air Temp. Try scalings here. -->
 	</table>
 
-	<table name="AXIS_2D186_6x16" category="Scaling Tables" address="2D186" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="6">
+	<table name="AXIS_2D186_6x16" category="Axis Tables - input F35E (unscaled)" address="2D186" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F35E)" type="Static X Axis" elements="6">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D180. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D180; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1496,8 +1496,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     0,250,500,750,1000,1250, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D198_14x16" category="Scaling Tables" address="2D198" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="14">
+	<table name="AXIS_2D198_14x16" category="Axis Tables - input F190 (unscaled)" address="2D198" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="14">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D192. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D192; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1505,8 +1505,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     ("Post Start Enrich Trim vs Load", X Axis, elements=14, scaling=RPM). Kept here for comparison. -->
 	</table>
 
-	<table name="AXIS_2D1BA_32x16" category="Scaling Tables" address="2D1BA" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="32">
+	<table name="AXIS_2D1BA_32x16" category="Axis Tables - input F0BA (unscaled)" address="2D1BA" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="32">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data><data>21</data><data>22</data><data>23</data><data>24</data><data>25</data><data>26</data><data>27</data><data>28</data><data>29</data><data>30</data><data>31</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D1B4. Name is AXIS_<data address>_<element count>x<bits>. Data is 32 big-endian 16-bit words (64 bytes) after a 6 byte header at 2D1B4; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1515,8 +1515,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Error-style scalings here. -->
 	</table>
 
-	<table name="AXIS_2D200_5x16" category="Scaling Tables" address="2D200" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="5">
+	<table name="AXIS_2D200_5x16" category="Axis Tables - input F436 (unscaled)" address="2D200" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F436)" type="Static X Axis" elements="5">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D1FA. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D1FA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1524,8 +1524,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     5%-step curve despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D210_4x16" category="Scaling Tables" address="2D210" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="4">
+	<table name="AXIS_2D210_4x16" category="Axis Tables - input F0BA (unscaled)" address="2D210" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="4">
 			<data>0</data><data>1</data><data>2</data><data>3</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D20A. Name is AXIS_<data address>_<element count>x<bits>. Data is 4 big-endian 16-bit words (8 bytes) after a 6 byte header at 2D20A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1533,8 +1533,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     10.6,15.6,20.6,25.6, clean. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D21E_21x16" category="Scaling Tables" address="2D21E" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="21">
+	<table name="AXIS_2D21E_21x16" category="Axis Tables - MAF Frequency" address="2D21E" type="2D" level="3" scaling="Airflow Hz">
+		<table name="Index (axis input: MAF Frequency F1E0)" type="Static X Axis" elements="21">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D218. Name is AXIS_<data address>_<element count>x<bits>. Data is 21 big-endian 16-bit words (42 bytes) after a 6 byte header at 2D218; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1542,8 +1542,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     elements=21, scaling=uint16, used by MAF Scaling / MAF Smoothing Table). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D24E_9x16" category="Scaling Tables" address="2D24E" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D24E_9x16" category="Axis Tables - MAF Frequency" address="2D24E" type="2D" level="3" scaling="Airflow Hz">
+		<table name="Index (axis input: MAF Frequency F1E0)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D248. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D248; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1551,8 +1551,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     RPM = 0,1000,2000...8000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D266_7x16" category="Scaling Tables" address="2D266" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D266_7x16" category="Axis Tables - Battery Voltage" address="2D266" type="2D" level="3" scaling="BatteryVoltage">
+		<table name="Index (axis input: Battery Voltage F13A)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D260. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D260; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1560,8 +1560,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     clean round 10%-step, despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D27A_9x16" category="Scaling Tables" address="2D27A" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D27A_9x16" category="Axis Tables - Battery Voltage" address="2D27A" type="2D" level="3" scaling="BatteryVoltage">
+		<table name="Index (axis input: Battery Voltage F13A)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D274. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D274; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1569,8 +1569,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     40,45,50,55,60,65,70,75,~80 - clean round 5%-step. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D292_5x16" category="Scaling Tables" address="2D292" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="5">
+	<table name="AXIS_2D292_5x16" category="Axis Tables - input F130 (unscaled)" address="2D292" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F130)" type="Static X Axis" elements="5">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D28C. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D28C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1579,8 +1579,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D2A2_4x16" category="Scaling Tables" address="2D2A2" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="4">
+	<table name="AXIS_2D2A2_4x16" category="Axis Tables - input F130 (unscaled)" address="2D2A2" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F130)" type="Static X Axis" elements="4">
 			<data>0</data><data>1</data><data>2</data><data>3</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D29C. Name is AXIS_<data address>_<element count>x<bits>. Data is 4 big-endian 16-bit words (8 bytes) after a 6 byte header at 2D29C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1588,8 +1588,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     98,108,118,128, plausible Baro-family values. Likely Baro Press.-family. -->
 	</table>
 
-	<table name="AXIS_2D2B0_14x16" category="Scaling Tables" address="2D2B0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="14">
+	<table name="AXIS_2D2B0_14x16" category="Axis Tables - Engine RPM" address="2D2B0" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="14">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D2AA. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D2AA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1597,8 +1597,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by High Octane Fuel Map etc). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D2D2_7x16" category="Scaling Tables" address="2D2D2" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D2D2_7x16" category="Axis Tables - input F0BA (unscaled)" address="2D2D2" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D2CC. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D2CC; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1606,8 +1606,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling=RPMStatLimit, used by Boost Enhancement Anti-lag Table). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D2E6_14x16" category="Scaling Tables" address="2D2E6" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="14">
+	<table name="AXIS_2D2E6_14x16" category="Axis Tables - Engine RPM" address="2D2E6" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="14">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D2E0. Name is AXIS_<data address>_<element count>x<bits>. Data is 14 big-endian 16-bit words (28 bytes) after a 6 byte header at 2D2E0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1615,8 +1615,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by Knock Control Above Load / Lean Spool Trailing Time). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D308_18x16" category="Scaling Tables" address="2D308" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="18">
+	<table name="AXIS_2D308_18x16" category="Axis Tables - input F0BA (unscaled)" address="2D308" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="18">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D302. Name is AXIS_<data address>_<element count>x<bits>. Data is 18 big-endian 16-bit words (36 bytes) after a 6 byte header at 2D302; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1624,8 +1624,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by High/Low Octane Fuel Map). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D332_18x16" category="Scaling Tables" address="2D332" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="18">
+	<table name="AXIS_2D332_18x16" category="Axis Tables - Engine RPM" address="2D332" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="18">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D32C. Name is AXIS_<data address>_<element count>x<bits>. Data is 18 big-endian 16-bit words (36 bytes) after a 6 byte header at 2D32C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1633,8 +1633,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by High Octane Ignition Map 1 etc). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D35C_16x16" category="Scaling Tables" address="2D35C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="16">
+	<table name="AXIS_2D35C_16x16" category="Axis Tables - input F0BA (unscaled)" address="2D35C" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="16">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D356. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D356; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1642,8 +1642,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     0,10,20...180,260 - mostly clean, tail clamp value. Not matched elsewhere. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D382_19x16" category="Scaling Tables" address="2D382" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="19">
+	<table name="AXIS_2D382_19x16" category="Axis Tables - input F0BA (unscaled)" address="2D382" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="19">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D37C. Name is AXIS_<data address>_<element count>x<bits>. Data is 19 big-endian 16-bit words (38 bytes) after a 6 byte header at 2D37C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1651,8 +1651,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by High Octane Ignition Map 1 etc). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D3AE_10x16" category="Scaling Tables" address="2D3AE" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D3AE_10x16" category="Axis Tables - input F0BA (unscaled)" address="2D3AE" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3A8. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D3A8; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1660,8 +1660,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     40,50,60,70,80,90,100,120,140,160 - clean 10%-step, extends past 100%. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D3C8_9x16" category="Scaling Tables" address="2D3C8" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D3C8_9x16" category="Axis Tables - input F4EA (unscaled)" address="2D3C8" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F4EA)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3C2. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D3C2; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1669,8 +1669,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling="TPS Percent", used by Max Total Upward WGDC Correction vs TPS). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D3E0_7x16" category="Scaling Tables" address="2D3E0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D3E0_7x16" category="Axis Tables - Throttle Position" address="2D3E0" type="2D" level="3" scaling="TPS Percent">
+		<table name="Index (axis input: Throttle Position F13E)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3DA. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D3DA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1678,8 +1678,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     "Engine Load" data pattern (Load x*10/32 -> 10.3-70.3%, clean). Likely Load despite out-ptr. -->
 	</table>
 
-	<table name="AXIS_2D3F4_5x16" category="Scaling Tables" address="2D3F4" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="5">
+	<table name="AXIS_2D3F4_5x16" category="Axis Tables - Engine RPM" address="2D3F4" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="5">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3EE. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D3EE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1687,8 +1687,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     500,1000,2000,3000,4000, clean coarse. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D404_7x16" category="Scaling Tables" address="2D404" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D404_7x16" category="Axis Tables - input F0BA (unscaled)" address="2D404" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D3FE. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D3FE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1696,8 +1696,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling=Load - see review12.md batch-1 fix). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D418_8x16" category="Scaling Tables" address="2D418" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D418_8x16" category="Axis Tables - input F10E (unscaled)" address="2D418" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F10E)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D412. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D412; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1706,8 +1706,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Likely Engine Temp (CoolantTempB/ADC domain). -->
 	</table>
 
-	<table name="AXIS_2D42E_9x16" category="Scaling Tables" address="2D42E" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D42E_9x16" category="Axis Tables - input F10E (unscaled)" address="2D42E" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F10E)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D428. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D428; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1717,8 +1717,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     data shape says Temp - unresolved conflict, try both scalings. -->
 	</table>
 
-	<table name="AXIS_2D446_11x16" category="Scaling Tables" address="2D446" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="11">
+	<table name="AXIS_2D446_11x16" category="Axis Tables - input F10E (unscaled)" address="2D446" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F10E)" type="Static X Axis" elements="11">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D440. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D440; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1726,8 +1726,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by Cranking Primer - First Pulse). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D462_8x16" category="Scaling Tables" address="2D462" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D462_8x16" category="Axis Tables - input F10E (unscaled)" address="2D462" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F10E)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D45C. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D45C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1735,8 +1735,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     to Engine Temp family. Likely Engine Temp axis used in an ISCV-demand-context caller. -->
 	</table>
 
-	<table name="AXIS_2D478_12x16" category="Scaling Tables" address="2D478" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="12">
+	<table name="AXIS_2D478_12x16" category="Axis Tables - input F110 (unscaled)" address="2D478" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F110)" type="Static X Axis" elements="12">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D472. Name is AXIS_<data address>_<element count>x<bits>. Data is 12 big-endian 16-bit words (24 bytes) after a 6 byte header at 2D472; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1744,8 +1744,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     other axis in this file. Neither RPM nor Load scale fits. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="AXIS_2D496_8x16" category="Scaling Tables" address="2D496" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D496_8x16" category="Axis Tables - input F10E (unscaled)" address="2D496" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F10E)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D490. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D490; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1753,8 +1753,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling=Temp - see review12.md batch-1 fix). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D4AC_7x16" category="Scaling Tables" address="2D4AC" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D4AC_7x16" category="Axis Tables - input F118 (unscaled)" address="2D4AC" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F118)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D4A6. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D4A6; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1762,8 +1762,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling=Temp, used by Air Temperature Compensation). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D4C0_8x16" category="Scaling Tables" address="2D4C0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D4C0_8x16" category="Axis Tables - input F10E (unscaled)" address="2D4C0" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F10E)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D4BA. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D4BA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1772,8 +1772,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Engine Temp. -->
 	</table>
 
-	<table name="AXIS_2D4D6_27x16" category="Scaling Tables" address="2D4D6" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="27">
+	<table name="AXIS_2D4D6_27x16" category="Axis Tables - input F0BA (unscaled)" address="2D4D6" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="27">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data><data>19</data><data>20</data><data>21</data><data>22</data><data>23</data><data>24</data><data>25</data><data>26</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D4D0. Name is AXIS_<data address>_<element count>x<bits>. Data is 27 big-endian 16-bit words (54 bytes) after a 6 byte header at 2D4D0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1781,8 +1781,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling=ISCV_AX2_16, used by Idle Stepper Lookup Table). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D512_15x16" category="Scaling Tables" address="2D512" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="15">
+	<table name="AXIS_2D512_15x16" category="Axis Tables - Engine RPM" address="2D512" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="15">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D50C. Name is AXIS_<data address>_<element count>x<bits>. Data is 15 big-endian 16-bit words (30 bytes) after a 6 byte header at 2D50C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1791,8 +1791,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     elsewhere. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D536_9x16" category="Scaling Tables" address="2D536" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D536_9x16" category="Axis Tables - input F0BA (unscaled)" address="2D536" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D530. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D530; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1801,8 +1801,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Error-family. -->
 	</table>
 
-	<table name="AXIS_2D54E_17x16" category="Scaling Tables" address="2D54E" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="17">
+	<table name="AXIS_2D54E_17x16" category="Axis Tables - input F0BE (unscaled)" address="2D54E" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BE)" type="Static X Axis" elements="17">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D548. Name is AXIS_<data address>_<element count>x<bits>. Data is 17 big-endian 16-bit words (34 bytes) after a 6 byte header at 2D548; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1813,8 +1813,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     extended/sibling table. -->
 	</table>
 
-	<table name="AXIS_2D576_16x16" category="Scaling Tables" address="2D576" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="16">
+	<table name="AXIS_2D576_16x16" category="Axis Tables - Engine RPM" address="2D576" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="16">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D570. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D570; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1822,8 +1822,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by Max Wastegate Duty #1-4). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D59C_17x16" category="Scaling Tables" address="2D59C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="17">
+	<table name="AXIS_2D59C_17x16" category="Axis Tables - input F0BA (unscaled)" address="2D59C" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="17">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D596. Name is AXIS_<data address>_<element count>x<bits>. Data is 17 big-endian 16-bit words (34 bytes) after a 6 byte header at 2D596; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1831,8 +1831,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scaling=BoostError, used by Turbo Boost Error Correction). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D5C4_9x16" category="Scaling Tables" address="2D5C4" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D5C4_9x16" category="Axis Tables - Throttle Position" address="2D5C4" type="2D" level="3" scaling="TPS Percent">
+		<table name="Index (axis input: Throttle Position F13E)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D5BE. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D5BE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1840,8 +1840,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     0,10,20,30,40,50,60,70,~80 - clean round 10%-step, despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D5DC_9x16" category="Scaling Tables" address="2D5DC" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D5DC_9x16" category="Axis Tables - input F190 (unscaled)" address="2D5DC" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D5D6. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D5D6; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1849,8 +1849,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by Boost Desired Engine Load #1). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D5F4_9x16" category="Scaling Tables" address="2D5F4" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D5F4_9x16" category="Axis Tables - Engine RPM" address="2D5F4" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D5EE. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D5EE; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1858,8 +1858,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     = 0,500,1000...4000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D60C_10x16" category="Scaling Tables" address="2D60C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D60C_10x16" category="Axis Tables - Engine RPM" address="2D60C" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D606. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D606; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1867,8 +1867,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     -> RPM = 1000,1250,1500,1750,2000,2500,3000,3500,4000,4500, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D626_8x16" category="Scaling Tables" address="2D626" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D626_8x16" category="Axis Tables - input F190 (unscaled)" address="2D626" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D620. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D620; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1876,8 +1876,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Load(x*10/32) = 15,20,25,30,40,50,60,70, clean. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D63C_10x16" category="Scaling Tables" address="2D63C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D63C_10x16" category="Axis Tables - Engine RPM" address="2D63C" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D636. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D636; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1885,8 +1885,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by all 5 Knock Sensor Filter Map tables). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D656_10x16" category="Scaling Tables" address="2D656" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D656_10x16" category="Axis Tables - input F196 (unscaled)" address="2D656" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F196)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D650. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D650; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1894,8 +1894,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     used by all 5 Knock Sensor Filter Map tables). Kept for comparison. -->
 	</table>
 
-	<table name="AXIS_2D670_10x16" category="Scaling Tables" address="2D670" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D670_10x16" category="Axis Tables - input F190 (unscaled)" address="2D670" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D66A. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D66A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1904,8 +1904,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Load. -->
 	</table>
 
-	<table name="AXIS_2D68A_10x16" category="Scaling Tables" address="2D68A" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D68A_10x16" category="Axis Tables - Engine RPM" address="2D68A" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D684. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D684; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1913,8 +1913,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     -> RPM = 500,1000,1500...5000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D6A4_8x16" category="Scaling Tables" address="2D6A4" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D6A4_8x16" category="Axis Tables - Engine RPM" address="2D6A4" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D69E. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D69E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1922,8 +1922,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     750,1000,1250,1500,2000,2500,3000,3500, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D6BA_16x16" category="Scaling Tables" address="2D6BA" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="16">
+	<table name="AXIS_2D6BA_16x16" category="Axis Tables - Engine RPM" address="2D6BA" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="16">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D6B4. Name is AXIS_<data address>_<element count>x<bits>. Data is 16 big-endian 16-bit words (32 bytes) after a 6 byte header at 2D6B4; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1932,8 +1932,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     low range. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D6E0_17x16" category="Scaling Tables" address="2D6E0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="17">
+	<table name="AXIS_2D6E0_17x16" category="Axis Tables - input F0BA (unscaled)" address="2D6E0" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="17">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D6DA. Name is AXIS_<data address>_<element count>x<bits>. Data is 17 big-endian 16-bit words (34 bytes) after a 6 byte header at 2D6DA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1942,8 +1942,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     pattern as "Error"/2d146 and 2d1b4. Likely Error-family. -->
 	</table>
 
-	<table name="AXIS_2D708_9x16" category="Scaling Tables" address="2D708" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D708_9x16" category="Axis Tables - Engine RPM" address="2D708" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D702. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D702; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1951,8 +1951,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     RPM = 750,1000,1250,1500,2000,2500,3000,3500,4000, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D720_8x16" category="Scaling Tables" address="2D720" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D720_8x16" category="Axis Tables - Throttle Position" address="2D720" type="2D" level="3" scaling="TPS Percent">
+		<table name="Index (axis input: Throttle Position F13E)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D71A. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D71A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1960,8 +1960,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Load(x*10/32) = 7.5,10,12.5,15,17.5,20,22.5,25, clean small curve. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D736_11x16" category="Scaling Tables" address="2D736" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="11">
+	<table name="AXIS_2D736_11x16" category="Axis Tables - input F0BA (unscaled)" address="2D736" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="11">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D730. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D730; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1971,8 +1971,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     since values exceed uint8 range). -->
 	</table>
 
-	<table name="AXIS_2D752_4x16" category="Scaling Tables" address="2D752" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="4">
+	<table name="AXIS_2D752_4x16" category="Axis Tables - Engine RPM" address="2D752" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="4">
 			<data>0</data><data>1</data><data>2</data><data>3</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D74C. Name is AXIS_<data address>_<element count>x<bits>. Data is 4 big-endian 16-bit words (8 bytes) after a 6 byte header at 2D74C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1980,8 +1980,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     clean small linear. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D760_7x16" category="Scaling Tables" address="2D760" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D760_7x16" category="Axis Tables - input F0BA (unscaled)" address="2D760" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F0BA)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D75A. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D75A; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1989,8 +1989,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Load(x*10/32) = 0,10,20,30,40,50,60, clean. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D774_8x16" category="Scaling Tables" address="2D774" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D774_8x16" category="Axis Tables - Engine RPM" address="2D774" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D76E. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D76E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -1998,8 +1998,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     500,1000,1500...4000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D78A_7x16" category="Scaling Tables" address="2D78A" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="7">
+	<table name="AXIS_2D78A_7x16" category="Axis Tables - Engine RPM" address="2D78A" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="7">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D784. Name is AXIS_<data address>_<element count>x<bits>. Data is 7 big-endian 16-bit words (14 bytes) after a 6 byte header at 2D784; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2007,8 +2007,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     500,750,1000,1250,1500,1750,2000, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D79E_9x16" category="Scaling Tables" address="2D79E" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="9">
+	<table name="AXIS_2D79E_9x16" category="Axis Tables - Engine RPM" address="2D79E" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="9">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D798. Name is AXIS_<data address>_<element count>x<bits>. Data is 9 big-endian 16-bit words (18 bytes) after a 6 byte header at 2D798; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2016,8 +2016,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     RPM = 750,1000,1250,1500,1750,2000,2500,3000,3500, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D7B6_10x16" category="Scaling Tables" address="2D7B6" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D7B6_10x16" category="Axis Tables - input F190 (unscaled)" address="2D7B6" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D7B0. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D7B0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2025,8 +2025,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     -> Load(x*10/32) = 10,20,30...100, very clean. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D7E0_19x16" category="Scaling Tables" address="2D7E0" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="19">
+	<table name="AXIS_2D7E0_19x16" category="Axis Tables - Engine RPM" address="2D7E0" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="19">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data><data>15</data><data>16</data><data>17</data><data>18</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D7DA. Name is AXIS_<data address>_<element count>x<bits>. Data is 19 big-endian 16-bit words (38 bytes) after a 6 byte header at 2D7DA; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2035,8 +2035,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     RPM. -->
 	</table>
 
-	<table name="AXIS_2D80C_11x16" category="Scaling Tables" address="2D80C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="11">
+	<table name="AXIS_2D80C_11x16" category="Axis Tables - input F190 (unscaled)" address="2D80C" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="11">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D806. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D806; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2045,8 +2045,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     Load. -->
 	</table>
 
-	<table name="AXIS_2D828_15x16" category="Scaling Tables" address="2D828" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="15">
+	<table name="AXIS_2D828_15x16" category="Axis Tables - Throttle Position" address="2D828" type="2D" level="3" scaling="TPS Percent">
+		<table name="Index (axis input: Throttle Position F13E)" type="Static X Axis" elements="15">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data><data>11</data><data>12</data><data>13</data><data>14</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D822. Name is AXIS_<data address>_<element count>x<bits>. Data is 15 big-endian 16-bit words (30 bytes) after a 6 byte header at 2D822; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2054,8 +2054,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     55,60,65,70,75 - perfectly clean 5%-step, despite RPM out-ptr tag. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D84C_5x16" category="Scaling Tables" address="2D84C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="5">
+	<table name="AXIS_2D84C_5x16" category="Axis Tables - input F130 (unscaled)" address="2D84C" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F130)" type="Static X Axis" elements="5">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D846. Name is AXIS_<data address>_<element count>x<bits>. Data is 5 big-endian 16-bit words (10 bytes) after a 6 byte header at 2D846; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2063,8 +2063,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     -> Load16(x*5/8) = 78,88,98,108,118, plausible Baro-family values. Likely Baro Press.-family. -->
 	</table>
 
-	<table name="AXIS_2D85C_10x16" category="Scaling Tables" address="2D85C" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D85C_10x16" category="Axis Tables - Engine RPM" address="2D85C" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D856. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D856; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2072,8 +2072,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     -> RPM = 500,1000,1250,1500,1750,2000,2500,3000,3500,4000, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D876_11x16" category="Scaling Tables" address="2D876" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="11">
+	<table name="AXIS_2D876_11x16" category="Axis Tables - input EF56 (unscaled)" address="2D876" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM EF56)" type="Static X Axis" elements="11">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data><data>10</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D870. Name is AXIS_<data address>_<element count>x<bits>. Data is 11 big-endian 16-bit words (22 bytes) after a 6 byte header at 2D870; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2082,8 +2082,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     scale to "Error"-family but distinct in-ptr. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="AXIS_2D892_6x16" category="Scaling Tables" address="2D892" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="6">
+	<table name="AXIS_2D892_6x16" category="Axis Tables - input F1E8 (unscaled)" address="2D892" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F1E8)" type="Static X Axis" elements="6">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D88C. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D88C; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2091,8 +2091,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     (9.4,11.9...21.9) scale lands on round numbers. Left UNIDENTIFIED, try scaling here. -->
 	</table>
 
-	<table name="AXIS_2D8A4_6x16" category="Scaling Tables" address="2D8A4" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="6">
+	<table name="AXIS_2D8A4_6x16" category="Axis Tables - Engine RPM" address="2D8A4" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="6">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D89E. Name is AXIS_<data address>_<element count>x<bits>. Data is 6 big-endian 16-bit words (12 bytes) after a 6 byte header at 2D89E; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2100,8 +2100,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     1500,2000,2500,3000,3500,4000, clean. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D8B6_3x16" category="Scaling Tables" address="2D8B6" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="3">
+	<table name="AXIS_2D8B6_3x16" category="Axis Tables - input F190 (unscaled)" address="2D8B6" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F190)" type="Static X Axis" elements="3">
 			<data>0</data><data>1</data><data>2</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D8B0. Name is AXIS_<data address>_<element count>x<bits>. Data is 3 big-endian 16-bit words (6 bytes) after a 6 byte header at 2D8B0; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2109,8 +2109,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     61,94,128, clean small curve. Likely Load. -->
 	</table>
 
-	<table name="AXIS_2D8C2_10x16" category="Scaling Tables" address="2D8C2" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="10">
+	<table name="AXIS_2D8C2_10x16" category="Axis Tables - Engine RPM" address="2D8C2" type="2D" level="3" scaling="RPM">
+		<table name="Index (axis input: Engine RPM F170)" type="Static X Axis" elements="10">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data><data>8</data><data>9</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D8BC. Name is AXIS_<data address>_<element count>x<bits>. Data is 10 big-endian 16-bit words (20 bytes) after a 6 byte header at 2D8BC; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
@@ -2118,8 +2118,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		     -> RPM = 500,1000...5000, clean linear. Likely RPM. -->
 	</table>
 
-	<table name="AXIS_2D8DC_8x16" category="Scaling Tables" address="2D8DC" type="2D" level="3" scaling="uint16">
-		<table name="Index" type="Static X Axis" elements="8">
+	<table name="AXIS_2D8DC_8x16" category="Axis Tables - input F1A8 (unscaled)" address="2D8DC" type="2D" level="3" scaling="uint16">
+		<table name="Index (axis input: RAM F1A8)" type="Static X Axis" elements="8">
 			<data>0</data><data>1</data><data>2</data><data>3</data><data>4</data><data>5</data><data>6</data><data>7</data>
 		</table>
 		<!-- 2026-11-21 [Ghidra] renamed from SCALING_TABLE_0002D8D6. Name is AXIS_<data address>_<element count>x<bits>. Data is 8 big-endian 16-bit words (16 bytes) after a 6 byte header at 2D8D6; width 16 bit because the next header starts at the end of the data for 72 of 79 consecutive axes. Scaling was uint8 and is now uint16. -->
