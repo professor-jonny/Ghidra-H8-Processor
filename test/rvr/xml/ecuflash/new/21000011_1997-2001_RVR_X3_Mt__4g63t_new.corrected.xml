@@ -918,19 +918,23 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="TPS" address="2d5c4" type="X Axis" elements="9" scaling="TPS Percent"/>
 	</table>
 
-	<table name="Max Wastegate Duty # 1" category="Turbo" address="12a9a" type="2D" level="2" scaling="WGDuty">
+	<table name="Max Wastegate Duty # 1 (F860, F0F8 bit5 set)" category="Turbo" address="12a9a" type="2D" level="2" scaling="WGDuty">
+		<!-- 2026-11-21 [Ghidra] Base wastegate duty. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Result F860 is the base duty (clamped 0 to 200 in wgdc_output_clamp_f44c, so 200 = 100 %, WGDuty scaling x/2). Final WGDC is F44C (MUT RequestID 0x86). -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Max Wastegate Duty # 2" category="Turbo" address="12aae" type="2D" level="2" scaling="WGDuty">
+	<table name="Max Wastegate Duty # 2 (F860, F0F8 bit5 clear)" category="Turbo" address="12aae" type="2D" level="2" scaling="WGDuty">
+		<!-- 2026-11-21 [Ghidra] Base wastegate duty. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Same role as # 1 for the bit5-clear case. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Max Wastegate Duty # 3" category="Turbo" address="12ac2" type="2D" level="2" scaling="WGDuty">
+	<table name="Boost Target Load vs RPM # 3 (F44E, F0F8 bit5 set)" category="Turbo" address="12ac2" type="2D" level="2" scaling="Load16">
+		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 3 and rescaled from WGDuty to Load16. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Result F44E is not a duty: wgdc_correction_integrator_update (0x18fe0) computes boost error = (F196>>1) + 0x20 minus (F44E + word 10e0a), clamps it to a byte and looks it up in 12a84. So F44E is the target load for this load-based (MAF only) car, in the same half-load units as 10e0a (one unit 0.625 % load, Load16 scaling). Target load % = x*0.625 + 20 when 10e0a = 64. Values 0xFF at low RPM falling to 0xAD at 7000 RPM. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
-	<table name="Max Wastegate Duty # 4" category="Turbo" address="12ad6" type="2D" level="2" scaling="WGDuty">
+	<table name="Boost Target Load vs RPM # 4 (F44E, F0F8 bit5 clear)" category="Turbo" address="12ad6" type="2D" level="2" scaling="Load16">
+		<!-- 2026-11-21 [Ghidra] Renamed from Max Wastegate Duty # 4 and rescaled from WGDuty to Load16. Read by ign_advance_top_update (0x18e70) -> ign_advance_base_calc_f860 (0x18f8a) / ign_advance_idle_correction_f44e (0x190df), axis 2d570 (header: out F0C0, in F170 = RPM), table chosen by F0F8 bit5 (set: 12a96/12abe, clear: 12aaa/12ad2). Same role as # 3 for the bit5-clear case. -->
 		<table name="RPM" address="2d576" type="Y Axis" elements="16" scaling="RPM"/>
 	</table>
 
