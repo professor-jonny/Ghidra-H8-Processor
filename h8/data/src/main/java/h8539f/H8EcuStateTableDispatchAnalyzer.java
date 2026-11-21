@@ -6,6 +6,7 @@ import ghidra.app.services.AbstractAnalyzer;
 import ghidra.app.services.AnalysisPriority;
 import ghidra.app.services.AnalyzerType;
 import ghidra.app.util.importer.MessageLog;
+import ghidra.framework.options.Options;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.listing.Function;
@@ -65,11 +66,22 @@ public class H8EcuStateTableDispatchAnalyzer extends AbstractAnalyzer {
         + "COMPUTED_CALL references so the xref graph reflects real callers.";
 
     // Known-good, independently-verified dispatch site and table bases (review8.md).
-    private static final String DISPATCH_FUNC_ADDR = "00027e9c";
-    private static final String PJSR_SITE_ADDR = "00027ed4";
-    private static final String TABLE1_BASE = "0001369a";
+    // Defaults are the RVR 21000011 addresses; each is an analyzer option.
+    private static final String DEF_DISPATCH_FUNC_ADDR = "00027e9c";
+    private static final String DEF_PJSR_SITE_ADDR = "00027ed4";
+    private static final String DEF_TABLE1_BASE = "0001369a";
     private static final int TABLE1_RECORD_COUNT = 12;
-    private static final String TABLE2_BASE = "000136e2";
+    private static final String DEF_TABLE2_BASE = "000136e2";
+
+    private static final String OPT_DISPATCH = "Dispatch function address";
+    private static final String OPT_PJSR = "Dispatch pjsr site address";
+    private static final String OPT_TABLE1 = "State table 1 base address";
+    private static final String OPT_TABLE2 = "State table 2 base address";
+
+    private String dispatchFuncAddr = DEF_DISPATCH_FUNC_ADDR;
+    private String pjsrSiteAddr = DEF_PJSR_SITE_ADDR;
+    private String table1Base = DEF_TABLE1_BASE;
+    private String table2Base = DEF_TABLE2_BASE;
     private static final int TABLE2_RECORD_COUNT = 9;
 
     private static final int RECORD_SIZE = 6;
@@ -84,6 +96,22 @@ public class H8EcuStateTableDispatchAnalyzer extends AbstractAnalyzer {
         // is expected to pick them up for FP-relative param derivation, etc.
         setPriority(AnalysisPriority.FUNCTION_ANALYSIS.after().after());
         setDefaultEnablement(true);
+    }
+
+    @Override
+    public void registerOptions(Options options, Program program) {
+        options.registerOption(OPT_DISPATCH, DEF_DISPATCH_FUNC_ADDR, null, "Address of the state-table dispatch function (hex).");
+        options.registerOption(OPT_PJSR, DEF_PJSR_SITE_ADDR, null, "Address of the computed pjsr inside the dispatch function (hex).");
+        options.registerOption(OPT_TABLE1, DEF_TABLE1_BASE, null, "Base address of state table 1 (hex, 12 records).");
+        options.registerOption(OPT_TABLE2, DEF_TABLE2_BASE, null, "Base address of state table 2 (hex, 9 records).");
+    }
+
+    @Override
+    public void optionsChanged(Options options, Program program) {
+        dispatchFuncAddr = options.getString(OPT_DISPATCH, DEF_DISPATCH_FUNC_ADDR).trim();
+        pjsrSiteAddr = options.getString(OPT_PJSR, DEF_PJSR_SITE_ADDR).trim();
+        table1Base = options.getString(OPT_TABLE1, DEF_TABLE1_BASE).trim();
+        table2Base = options.getString(OPT_TABLE2, DEF_TABLE2_BASE).trim();
     }
 
     @Override
@@ -102,15 +130,15 @@ public class H8EcuStateTableDispatchAnalyzer extends AbstractAnalyzer {
         // this analysis pass, since the table locations are fixed evidence
         // from review8.md, not derived from whatever region is being
         // (re)analyzed right now.
-        Address dispatchFuncAddr = program.getAddressFactory().getAddress(DISPATCH_FUNC_ADDR);
-        Address pjsrSite = program.getAddressFactory().getAddress(PJSR_SITE_ADDR);
+        Address dispatchFuncAt = program.getAddressFactory().getAddress(dispatchFuncAddr);
+        Address pjsrSite = program.getAddressFactory().getAddress(pjsrSiteAddr);
 
         FunctionManager functionManager = program.getFunctionManager();
-        Function dispatchFunc = functionManager.getFunctionAt(dispatchFuncAddr);
+        Function dispatchFunc = functionManager.getFunctionAt(dispatchFuncAt);
         if (dispatchFunc == null) {
             log.appendMsg(ANALYZER_NAME, String.format(
                 "Expected dispatch function at %s (f502_state_table_dispatch) not found -- "
-                + "skipping, table addresses may not apply to this program", DISPATCH_FUNC_ADDR));
+                + "skipping, table addresses may not apply to this program", dispatchFuncAddr));
             return true;
         }
 
@@ -119,7 +147,7 @@ public class H8EcuStateTableDispatchAnalyzer extends AbstractAnalyzer {
         int refsAdded = 0;
         int skipped = 0;
 
-        String[] bases = { TABLE1_BASE, TABLE2_BASE };
+        String[] bases = { table1Base, table2Base };
         int[] counts = { TABLE1_RECORD_COUNT, TABLE2_RECORD_COUNT };
 
         for (int t = 0; t < bases.length; t++) {
