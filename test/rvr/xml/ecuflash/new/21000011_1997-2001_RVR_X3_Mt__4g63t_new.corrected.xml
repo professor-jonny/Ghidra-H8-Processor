@@ -1874,14 +1874,14 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     ============================================================ -->
 
 	<!-- ===== TCU / TRANSMISSION ===== -->
-	<!-- 2026-11-21 [Ghidra] these tables are in the ECU ROM: 22 of 24 have direct READ references from code at 24efa to 29e22 (knock_fuel_o2_mgmt_8fff, 28fff-29c32, plus 2601c). The TCU-style names came from earlier work and are not confirmed; 1287a/1287e/10ad4 clashed with confirmed ECU definitions and were removed. 10ad6 has no reference. The TCU ROM has its own separate XML. -->
+	<!-- 2026-11-21 [Ghidra] ECU ROM 21000011 is a universal AT/MT image. On the AT cars the ECU and the TCU are separate processors in one case linked by serial (SCI3), and the ECU side holds these tables. They are dormant on the manual car but real: 22 of 24 have direct READ references from the ECU code at 24efa to 29e22 (knock_fuel_o2_mgmt_8fff plus 2601c). Example: 1328e and 13296 are indexed by gear (F5E6 and 3) and loaded into F39E and F3A0, matching the Shift Torque Cmd names. 10ad6 has no reference. The TCU ROM has its own separate XML. 1287a, 1287e and 10ad4 clashed with confirmed ECU definitions and were removed. Category renamed to TCU Link (AT ROM only). -->
 	<!-- Addresses confirmed from Ghidra analysis of tcu_shift_torque_mgmt @ 0x28fff -->
 	<!-- Called from isr_sci3_eri @ 0x168e3 on every crank pulse via SCI3 channel -->
 	<!-- ECU communicates with TCU over SCI3 serial (sci3_rx_process_tcu_byte, isr_sci3_rxi_tcu_rx) -->
 
 	<!-- Gear ratio table: 4 entries (gears 0-3), H8 timer period counts for ratio detection -->
 	<!-- gear_ratio_table @ ROM 0x3284: 0x9191, 0x4646, 0x1919, 0x6464 -->
-	<table name="TCU Gear Ratio Periods" category="Transmission" address="13284" type="2D" level="2" scaling="uint16">
+	<table name="TCU Gear Ratio Periods" category="TCU Link (AT only)" address="13284" type="2D" level="2" scaling="uint16">
 		<table name="Gear" type="Static X Axis" elements="4">
 			<data>1st</data>
 			<data>2nd</data>
@@ -1902,7 +1902,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     arithmetic/scaling operation. The existing uint16 "units" scaling (not a
 	     torque/Nm scaling) is CORRECT as-is; small values like 1-2 are expected and
 	     not a data error. -->
-	<table name="TCU Shift Torque Cmd Lo - Per Gear" category="Transmission" address="1328e" type="2D" level="2" scaling="uint16">
+	<table name="TCU Shift Torque Cmd Lo - Per Gear" category="TCU Link (AT only)" address="1328e" type="2D" level="2" scaling="uint16">
 		<table name="Gear" type="Static X Axis" elements="4">
 			<data>1st</data>
 			<data>2nd</data>
@@ -1916,7 +1916,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- [SESSION 10, 2026-07-03 CONFIRMED] Same trace as Cmd Lo above - read into
 	     RAM 0xf3a0 alongside the Lo table, part of the same per-gear SCI3 command
 	     byte pair sent to the TCU. uint16 "units" scaling confirmed correct. -->
-	<table name="TCU Shift Torque Cmd Hi - Per Gear" category="Transmission" address="13296" type="2D" level="2" scaling="uint16">
+	<table name="TCU Shift Torque Cmd Hi - Per Gear" category="TCU Link (AT only)" address="13296" type="2D" level="2" scaling="uint16">
 		<table name="Gear" type="Static X Axis" elements="4">
 			<data>1st</data>
 			<data>2nd</data>
@@ -1935,10 +1935,10 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- TCU torque target rate-of-change limit (used in sat_sub for rise/fall slew rate) -->
 	<!-- ROM 0xad0 = 0x0040 = 64 -->
-	<table name="TCU Torque Target Rise Rate Limit" category="Transmission" address="10ad0" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Torque Target Rise Rate Limit" category="TCU Link (AT only)" address="10ad0" type="1D" level="2" scaling="uint16"/>
 
 	<!-- ROM 0xace = 0x061a = 1562 — torque target slew rate when approaching from below -->
-	<table name="TCU Torque Target Fall Rate Limit" category="Transmission" address="10ace" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Torque Target Fall Rate Limit" category="TCU Link (AT only)" address="10ace" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Min throttle load for TCU active (below this, TCU shift mgmt exits early) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad2" (claimed 0x00bc=188); verified via live ROM read
@@ -1951,40 +1951,40 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- CORRECTED 2026-07-26: was address="10ad4" (claimed 0x0014=20); verified via live ROM read
 	     that 0x0014 actually sits at 0x10ad6. -->
 	<!-- ROM 0xad6 = 0x0014 = 20 -->
-	<table name="TCU Torque Target Max" category="Transmission" address="10ad6" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Torque Target Max" category="TCU Link (AT only)" address="10ad6" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque ramp rate limit (added to tcu_torque_actual for max rate) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad8" (claimed 0x000f=15); verified via live ROM read
 	     that 0x000f actually sits at 0x10ada, and 0x10ad8 holds 0x00fa=250 (this table and
 	     "Torque Reduction Scale" below were also address-swapped in the original entry). -->
 	<!-- ROM 0xada = 0x000f = 15 -->
-	<table name="TCU Torque Ramp Rate" category="Transmission" address="10ada" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Torque Ramp Rate" category="TCU Link (AT only)" address="10ada" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque reduction scaling divisor for shift events (muldiv, 0x200 = 512 = 1.0 scale) -->
 	<!-- CORRECTED 2026-07-26: was address="10ada" (claimed 0x00fa=250); verified via live ROM read
 	     that 0x00fa actually sits at 0x10ad8. -->
 	<!-- ROM 0xad8 = 0x00fa = 250 -->
-	<table name="TCU Torque Reduction Scale" category="Transmission" address="10ad8" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Torque Reduction Scale" category="TCU Link (AT only)" address="10ad8" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Max slip adjustment clamp (tcu_torque_slip_adj ceiling) -->
 	<!-- ROM 0xb1a -->
-	<table name="TCU Max Slip Adjustment" category="Transmission" address="10b1a" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Max Slip Adjustment" category="TCU Link (AT only)" address="10b1a" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in lockup mode -->
 	<!-- ROM 0xb26 -->
-	<table name="TCU Slip Adj Step - Lockup" category="Transmission" address="10b26" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Slip Adj Step - Lockup" category="TCU Link (AT only)" address="10b26" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in non-lockup mode -->
 	<!-- ROM 0xb28 -->
-	<table name="TCU Slip Adj Step - Normal" category="Transmission" address="10b28" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Slip Adj Step - Normal" category="TCU Link (AT only)" address="10b28" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip counter threshold to enter lockup solenoid mode -->
 	<!-- ROM 0xb62 -->
-	<table name="TCU Lockup Slip Counter Threshold" category="Transmission" address="10b62" type="1D" level="2" scaling="uint16"/>
+	<table name="TCU Lockup Slip Counter Threshold" category="TCU Link (AT only)" address="10b62" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Solenoid duty delta threshold (normal / sport mode) for slip detection -->
 	<!-- ROM 0xf8a / 0xf8c -->
-	<table name="TCU Solenoid Delta Threshold" category="Transmission" address="10f8a" type="2D" level="3" scaling="uint16">
+	<table name="TCU Solenoid Delta Threshold" category="TCU Link (AT only)" address="10f8a" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Normal</data>
 			<data>Sport</data>
@@ -1993,11 +1993,11 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Slip counter max before lockup flag set (f200 bit0) -->
 	<!-- ROM 0xf8e -->
-	<table name="TCU Slip Counter Max" category="Transmission" address="10f8e" type="1D" level="3" scaling="uint16"/>
+	<table name="TCU Slip Counter Max" category="TCU Link (AT only)" address="10f8e" type="1D" level="3" scaling="uint16"/>
 
 	<!-- Slip-based duty cycle gain (normal / lockup) -->
 	<!-- ROM 0xb0a / 0xb08 -->
-	<table name="TCU Slip Duty Gain" category="Transmission" address="10b08" type="2D" level="3" scaling="uint16">
+	<table name="TCU Slip Duty Gain" category="TCU Link (AT only)" address="10b08" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2006,7 +2006,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Max slip adjustment ceiling (normal / lockup) -->
 	<!-- ROM 0xb0c / 0xb0e -->
-	<table name="TCU Max Slip Adj Ceiling" category="Transmission" address="10b0c" type="2D" level="3" scaling="uint16">
+	<table name="TCU Max Slip Adj Ceiling" category="TCU Link (AT only)" address="10b0c" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2015,7 +2015,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Lockup entry/exit slip thresholds and decay rate -->
 	<!-- ROM 0xb2a = min slip for lockup exit, 0xb2c = max for entry, 0xb2e = decay rate -->
-	<table name="TCU Lockup Slip Thresholds" category="Transmission" address="10b2a" type="2D" level="2" scaling="uint16">
+	<table name="TCU Lockup Slip Thresholds" category="TCU Link (AT only)" address="10b2a" type="2D" level="2" scaling="uint16">
 		<table name="Parameter" type="Static X Axis" elements="3">
 			<data>Exit Min Slip</data>
 			<data>Entry Max Slip</data>
