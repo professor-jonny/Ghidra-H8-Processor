@@ -1938,11 +1938,12 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- TCU torque target rate-of-change limit (used in sat_sub for rise/fall slew rate) -->
 	<!-- ROM 0xad0 = 0x0040 = 64 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Rise Rate Limit'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10ad0 (unverified)" category="Constants (unverified)" address="10ad0" type="1D" level="2" scaling="uint16"/>
+	<table name="F38C Maximum Decrease per Step" category="Constants (unverified)" address="10ad0" type="1D" level="2" scaling="uint16"/>
 
 	<!-- ROM 0xace = 0x061a = 1562 — torque target slew rate when approaching from below -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Fall Rate Limit'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10ace (unverified)" category="Constants (unverified)" address="10ace" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] names for 10ace to 10f8e come from the RAM variable each constant is compared with or added to in knock_fuel_o2_mgmt_8fff (28fff-29c32). Evidence: 29269 limits a rise of F38C/F38E to F38C + [10ace]; 291f1 and 2921a limit a fall to F38C - [10ad0] (saturating subtract 14036). That is the reverse of the old Rise/Fall labels. 29366 and 2938c scale F38C/F38E by [10ada] against 0x200 into F390. 29443 adds [10ad8] to F398 as a floor. 29169 resets F3A2 when it exceeds [10b1a]. 298ef and 298f9 load F3A2 from [10b26] or [10b28] by F3A4 bit7. 29a8f compares F3B8 with [10b62]. 29874 and 2987a pick [10f8c] or [10f8a] by F0EC bit1 as a threshold on a F3A8 difference. 2989c compares F3B6 with [10f8e] and sets F200 bit0. 29916 and 2991c pick [10b08] or [10b0a] by F3A4 bit7 as a gain on F3AA. 29a1e and 29a24 pick [10b0c] or [10b0e] as a ceiling. 29b2f, 29b43 and 29b60 compare F3AA with [10b2c] and [10b2a] and use [10b2e] against F17A for F3A6 bit4. What the F38x and F3Ax variables mean physically is not established. 10ad6 has no reference. -->
+	<table name="F38C Maximum Increase per Step" category="Constants (unverified)" address="10ace" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Min throttle load for TCU active (below this, TCU shift mgmt exits early) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad2" (claimed 0x00bc=188); verified via live ROM read
@@ -1964,39 +1965,39 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	     "Torque Reduction Scale" below were also address-swapped in the original entry). -->
 	<!-- ROM 0xada = 0x000f = 15 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Ramp Rate'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10ada (unverified)" category="Constants (unverified)" address="10ada" type="1D" level="2" scaling="uint16"/>
+	<table name="F390 Scale from F38C (0x200 = 1.0)" category="Constants (unverified)" address="10ada" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque reduction scaling divisor for shift events (muldiv, 0x200 = 512 = 1.0 scale) -->
 	<!-- CORRECTED 2026-07-26: was address="10ada" (claimed 0x00fa=250); verified via live ROM read
 	     that 0x00fa actually sits at 0x10ad8. -->
 	<!-- ROM 0xad8 = 0x00fa = 250 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Reduction Scale'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10ad8 (unverified)" category="Constants (unverified)" address="10ad8" type="1D" level="2" scaling="uint16"/>
+	<table name="F398 Floor Offset" category="Constants (unverified)" address="10ad8" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Max slip adjustment clamp (tcu_torque_slip_adj ceiling) -->
 	<!-- ROM 0xb1a -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adjustment'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b1a (unverified)" category="Constants (unverified)" address="10b1a" type="1D" level="2" scaling="uint16"/>
+	<table name="F3A2 Reset Limit" category="Constants (unverified)" address="10b1a" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in lockup mode -->
 	<!-- ROM 0xb26 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Adj Step - Lockup'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b26 (unverified)" category="Constants (unverified)" address="10b26" type="1D" level="2" scaling="uint16"/>
+	<table name="F3A2 Value (F3A4 bit7 set)" category="Constants (unverified)" address="10b26" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in non-lockup mode -->
 	<!-- ROM 0xb28 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Adj Step - Normal'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b28 (unverified)" category="Constants (unverified)" address="10b28" type="1D" level="2" scaling="uint16"/>
+	<table name="F3A2 Value (F3A4 bit7 clear)" category="Constants (unverified)" address="10b28" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip counter threshold to enter lockup solenoid mode -->
 	<!-- ROM 0xb62 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Counter Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b62 (unverified)" category="Constants (unverified)" address="10b62" type="1D" level="2" scaling="uint16"/>
+	<table name="F3B8 Limit" category="Constants (unverified)" address="10b62" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Solenoid duty delta threshold (normal / sport mode) for slip detection -->
 	<!-- ROM 0xf8a / 0xf8c -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Solenoid Delta Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10f8a (unverified)" category="Constants (unverified)" address="10f8a" type="2D" level="3" scaling="uint16">
+	<table name="F3A8 Delta Threshold (F0EC bit1 clear, set)" category="Constants (unverified)" address="10f8a" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Normal</data>
 			<data>Sport</data>
@@ -2006,12 +2007,12 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Slip counter max before lockup flag set (f200 bit0) -->
 	<!-- ROM 0xf8e -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Counter Max'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10f8e (unverified)" category="Constants (unverified)" address="10f8e" type="1D" level="3" scaling="uint16"/>
+	<table name="F3B6 Counter Limit (sets F200 bit0)" category="Constants (unverified)" address="10f8e" type="1D" level="3" scaling="uint16"/>
 
 	<!-- Slip-based duty cycle gain (normal / lockup) -->
 	<!-- ROM 0xb0a / 0xb08 -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Duty Gain'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b08 (unverified)" category="Constants (unverified)" address="10b08" type="2D" level="3" scaling="uint16">
+	<table name="F3AA Gain (F3A4 bit7 set, clear)" category="Constants (unverified)" address="10b08" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2021,7 +2022,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Max slip adjustment ceiling (normal / lockup) -->
 	<!-- ROM 0xb0c / 0xb0e -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adj Ceiling'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b0c (unverified)" category="Constants (unverified)" address="10b0c" type="2D" level="3" scaling="uint16">
+	<table name="Adjustment Ceiling (F3A4 bit7 set, clear)" category="Constants (unverified)" address="10b0c" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2031,7 +2032,7 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- Lockup entry/exit slip thresholds and decay rate -->
 	<!-- ROM 0xb2a = min slip for lockup exit, 0xb2c = max for entry, 0xb2e = decay rate -->
 	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Thresholds'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
-	<table name="Constant 10b2a (unverified)" category="Constants (unverified)" address="10b2a" type="2D" level="2" scaling="uint16">
+	<table name="F3AA Thresholds for F3A6 bit4 (exit, enter, F17A decay)" category="Constants (unverified)" address="10b2a" type="2D" level="2" scaling="uint16">
 		<table name="Parameter" type="Static X Axis" elements="3">
 			<data>Exit Min Slip</data>
 			<data>Entry Max Slip</data>
