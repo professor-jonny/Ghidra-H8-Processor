@@ -437,7 +437,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="Raw F0BA (rec 1339e)" address="133a4" type="Y Axis" elements="161" scaling="Hex16"/>
 	</table>
 
-	<table name="O2 Mode 7/8 Correction (3D)" category="Fuel" address="11dc9" type="3D" level="2" swapxy="true" scaling="uint8">
+	<table name="O2 Mode 7/8 Correction (3D)" category="Fuel" address="11dc9" type="3D" level="2" scaling="uint8">
+		<!-- 2026-11-21 [Ghidra] swapxy removed: the 35 data bytes at 11dc9 are stored row by row with 5 RPM columns per row (7 load rows), so rows 35 18 18 09 08 / 3c 40 20 18 16 / 4f 54 73 74 5a ... rise smoothly. With swapxy the grid was read in the wrong order and looked random (roughness 3175 vs 1346 unswapped). -->
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: f0ba_f2d0_o2_mode7_8_correction_calc (0x242f5): looked up after the axis inputs (F0BA = TPS F13E plus table 0x2986, clamped, and engine load); result F2DA from o2_mode7_8_correction_apply is multiplied by word 0x10814, then by F298*F29A/0x4000, by F29C and by (F2C8*2+0x80), giving F2D0. The earlier guess Lean Spool Load is unconfirmed. --> <!-- previous name: TABLE_3D_00011DC9_O2Mode7_8Correction (possible: Lean Spool Load) -->
 		<!-- 2026-08-14 [Ghidra] Confirmed RPM: header 2d3ee (out-ptr F0C0=RPM, in-ptr F170), data
 		     128,256,512,768,1024 -> RPM scaling (x*1000/256) = 500,1000,2000,3000,4000, clean coarse
