@@ -379,25 +379,25 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 		<table name="RPM" address="2d086" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 1 Threshold (unused)" category="TCU Link (AT only)" address="12ed2" type="2D" scaling="uint8">
+	<table name="Slip Threshold Tier 1 (F730 chain, blank FF)" category="TCU Link (AT only)" address="12ed2" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FDC <= value < FDE; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012ECE_ThresholdSelect. -->
 		<!-- 2026-11-21 [Ghidra] axis fixed: was RPM 2d332 (18 point axis, first 10 shown). The code looks this table up on header 2d636, data 2d63c, the same axis tier 4 uses. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 2 Threshold (unused)" category="TCU Link (AT only)" address="12ee0" type="2D" scaling="uint8">
+	<table name="Slip Threshold Tier 2 (F730 chain, blank FF)" category="TCU Link (AT only)" address="12ee0" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FDE <= value < FE0; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EDC_ThresholdSelect. -->
 		<!-- 2026-11-21 [Ghidra] axis fixed: was RPM 2d332 (18 point axis, first 10 shown). The code looks this table up on header 2d636, data 2d63c, the same axis tier 4 uses. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 3 Threshold (unused)" category="TCU Link (AT only)" address="12eee" type="2D" scaling="uint8">
+	<table name="Slip Threshold Tier 3 (F730 chain, blank FF)" category="TCU Link (AT only)" address="12eee" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when FE0 <= value < FE2; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EEA_ThresholdSelect. -->
 		<!-- 2026-11-21 [Ghidra] axis fixed: was RPM 2d332 (18 point axis, first 10 shown). The code looks this table up on header 2d636, data 2d63c, the same axis tier 4 uses. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
 
-	<table name="Torque Converter Slip Tier 4 Threshold (unused)" category="TCU Link (AT only)" address="12efc" type="2D" scaling="uint8">
+	<table name="Slip Threshold Tier 4 (F730 chain, blank FF)" category="TCU Link (AT only)" address="12efc" type="2D" scaling="uint8">
 		<!-- 2026-11-21 [Ghidra] INFERRED from code: tiered_threshold_table_select (0x2bfc9, called only from tcu_torque_converter_slip_calc) picks one of four tables by comparing its input with the tier words at 0xFDC, 0xFDE, 0xFE0, 0xFE2 and looks the result up on axis 2d636. This table is used when value >= FE2; below word 0xFDC it returns 0xFFFF. In this ROM all four tier words are 0xFFFF and all four tables are 0xFF, so the function always returns 0xFFFF and the tables have no effect. Renamed from TABLE_2D_00012EF8_ThresholdSelect. -->
 		<table name="RPM" address="2d63c" type="Y Axis" elements="10" scaling="RPM"/>
 	</table>
@@ -1938,10 +1938,12 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- TCU torque target rate-of-change limit (used in sat_sub for rise/fall slew rate) -->
 	<!-- ROM 0xad0 = 0x0040 = 64 -->
-	<table name="TCU Torque Target Rise Rate Limit" category="TCU Link (AT only)" address="10ad0" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Rise Rate Limit'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10ad0" category="TCU Link (unverified)" address="10ad0" type="1D" level="2" scaling="uint16"/>
 
 	<!-- ROM 0xace = 0x061a = 1562 — torque target slew rate when approaching from below -->
-	<table name="TCU Torque Target Fall Rate Limit" category="TCU Link (AT only)" address="10ace" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Fall Rate Limit'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10ace" category="TCU Link (unverified)" address="10ace" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Min throttle load for TCU active (below this, TCU shift mgmt exits early) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad2" (claimed 0x00bc=188); verified via live ROM read
@@ -1954,40 +1956,48 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 	<!-- CORRECTED 2026-07-26: was address="10ad4" (claimed 0x0014=20); verified via live ROM read
 	     that 0x0014 actually sits at 0x10ad6. -->
 	<!-- ROM 0xad6 = 0x0014 = 20 -->
-	<table name="TCU Torque Target Max" category="TCU Link (AT only)" address="10ad6" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Target Max'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10ad6" category="TCU Link (unverified)" address="10ad6" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque ramp rate limit (added to tcu_torque_actual for max rate) -->
 	<!-- CORRECTED 2026-07-26: was address="10ad8" (claimed 0x000f=15); verified via live ROM read
 	     that 0x000f actually sits at 0x10ada, and 0x10ad8 holds 0x00fa=250 (this table and
 	     "Torque Reduction Scale" below were also address-swapped in the original entry). -->
 	<!-- ROM 0xada = 0x000f = 15 -->
-	<table name="TCU Torque Ramp Rate" category="TCU Link (AT only)" address="10ada" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Ramp Rate'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10ada" category="TCU Link (unverified)" address="10ada" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Torque reduction scaling divisor for shift events (muldiv, 0x200 = 512 = 1.0 scale) -->
 	<!-- CORRECTED 2026-07-26: was address="10ada" (claimed 0x00fa=250); verified via live ROM read
 	     that 0x00fa actually sits at 0x10ad8. -->
 	<!-- ROM 0xad8 = 0x00fa = 250 -->
-	<table name="TCU Torque Reduction Scale" category="TCU Link (AT only)" address="10ad8" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Torque Reduction Scale'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10ad8" category="TCU Link (unverified)" address="10ad8" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Max slip adjustment clamp (tcu_torque_slip_adj ceiling) -->
 	<!-- ROM 0xb1a -->
-	<table name="TCU Max Slip Adjustment" category="TCU Link (AT only)" address="10b1a" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adjustment'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b1a" category="TCU Link (unverified)" address="10b1a" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in lockup mode -->
 	<!-- ROM 0xb26 -->
-	<table name="TCU Slip Adj Step - Lockup" category="TCU Link (AT only)" address="10b26" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Adj Step - Lockup'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b26" category="TCU Link (unverified)" address="10b26" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip adjustment step in non-lockup mode -->
 	<!-- ROM 0xb28 -->
-	<table name="TCU Slip Adj Step - Normal" category="TCU Link (AT only)" address="10b28" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Adj Step - Normal'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b28" category="TCU Link (unverified)" address="10b28" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Slip counter threshold to enter lockup solenoid mode -->
 	<!-- ROM 0xb62 -->
-	<table name="TCU Lockup Slip Counter Threshold" category="TCU Link (AT only)" address="10b62" type="1D" level="2" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Counter Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b62" category="TCU Link (unverified)" address="10b62" type="1D" level="2" scaling="uint16"/>
 
 	<!-- Solenoid duty delta threshold (normal / sport mode) for slip detection -->
 	<!-- ROM 0xf8a / 0xf8c -->
-	<table name="TCU Solenoid Delta Threshold" category="TCU Link (AT only)" address="10f8a" type="2D" level="3" scaling="uint16">
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Solenoid Delta Threshold'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10f8a" category="TCU Link (unverified)" address="10f8a" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Normal</data>
 			<data>Sport</data>
@@ -1996,11 +2006,13 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Slip counter max before lockup flag set (f200 bit0) -->
 	<!-- ROM 0xf8e -->
-	<table name="TCU Slip Counter Max" category="TCU Link (AT only)" address="10f8e" type="1D" level="3" scaling="uint16"/>
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Counter Max'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10f8e" category="TCU Link (unverified)" address="10f8e" type="1D" level="3" scaling="uint16"/>
 
 	<!-- Slip-based duty cycle gain (normal / lockup) -->
 	<!-- ROM 0xb0a / 0xb08 -->
-	<table name="TCU Slip Duty Gain" category="TCU Link (AT only)" address="10b08" type="2D" level="3" scaling="uint16">
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Slip Duty Gain'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b08" category="TCU Link (unverified)" address="10b08" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2009,7 +2021,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Max slip adjustment ceiling (normal / lockup) -->
 	<!-- ROM 0xb0c / 0xb0e -->
-	<table name="TCU Max Slip Adj Ceiling" category="TCU Link (AT only)" address="10b0c" type="2D" level="3" scaling="uint16">
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Max Slip Adj Ceiling'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b0c" category="TCU Link (unverified)" address="10b0c" type="2D" level="3" scaling="uint16">
 		<table name="Mode" type="Static X Axis" elements="2">
 			<data>Lockup</data>
 			<data>Normal</data>
@@ -2018,7 +2031,8 @@ Fuel maps confirmed: AFR = 14.7*128/x (stoichiometric = 0x80 = 14.7 AFR)
 
 	<!-- Lockup entry/exit slip thresholds and decay rate -->
 	<!-- ROM 0xb2a = min slip for lockup exit, 0xb2c = max for entry, 0xb2e = decay rate -->
-	<table name="TCU Lockup Slip Thresholds" category="TCU Link (AT only)" address="10b2a" type="2D" level="2" scaling="uint16">
+	<!-- 2026-11-21 [Ghidra] renamed from 'TCU Lockup Slip Thresholds'. That name was a guess from earlier code reading, and the address of this block was corrected several times in the old base. Code in knock_fuel_o2_mgmt_8fff (28fff-29c32) reads it, but its purpose is not confirmed. -->
+	<table name="TCU Link Unverified 10b2a" category="TCU Link (unverified)" address="10b2a" type="2D" level="2" scaling="uint16">
 		<table name="Parameter" type="Static X Axis" elements="3">
 			<data>Exit Min Slip</data>
 			<data>Entry Max Slip</data>
